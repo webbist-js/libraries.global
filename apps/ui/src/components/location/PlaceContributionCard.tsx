@@ -1,6 +1,5 @@
 "use client"
 
-import { Icon } from "@iconify/react"
 import { useId, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -24,11 +23,6 @@ import type { PlaceGapInsight } from "./PlaceInsights"
 
 const LINK =
   "inline-flex min-h-[44px] items-center rounded-md text-sm font-semibold underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
-const TINTS: Record<string, { bg: string; fg: string }> = {
-  indigo: { bg: "var(--t-accent-chip)", fg: T.accent.primary },
-  green: { bg: "var(--t-palette-mint-soft)", fg: "var(--t-palette-mint-fg)" },
-  rust: { bg: "var(--t-palette-coral-soft)", fg: "var(--t-palette-coral-fg)" },
-}
 
 export function PlaceContributionCard({
   name,
@@ -114,16 +108,24 @@ export function PlaceContributionCard({
       : choices.length > (drive ? 0 : 1)
   const chooserNoun = level === "region" ? "region" : childNoun
   const requirement = contributionRequirement(ask.kind, primaryGap)
+  const actionLabel =
+    ask.kind === "gap"
+      ? "Find libraries"
+      : ask.kind === "add"
+        ? "Add a library"
+        : ask.kind === "drive"
+          ? "Help with this drive"
+          : ask.label
 
   return (
     <section
       aria-labelledby={`${id}-title`}
-      className={`place-contribution-card grid gap-8 rounded-[28px] border p-5 sm:p-8 ${alternatives.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-10" : ""}`}
+      className={`place-contribution-card grid gap-5 rounded-[24px] border p-5 ${alternatives.length ? "lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] lg:gap-6" : ""}`}
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
       <div className="min-w-0">
         <p
-          className="m-0 mb-3 text-sm font-semibold"
+          className="m-0 mb-2 text-sm font-semibold"
           style={{ color: T.accent.primary }}
         >
           {ask.eyebrow}
@@ -131,7 +133,7 @@ export function PlaceContributionCard({
         <h2
           id={`${id}-title`}
           aria-live="polite"
-          className="type-h2 m-0 max-w-[28ch] text-balance"
+          className="type-h3 m-0 max-w-[28ch] text-balance"
           style={{
             color: T.ink.base,
           }}
@@ -139,21 +141,27 @@ export function PlaceContributionCard({
           {ask.title}
         </h2>
         <p
-          className="mt-5 mb-6 max-w-[62ch] text-base leading-[1.65] text-pretty"
+          className="mt-3 mb-4 max-w-[62ch] text-sm leading-[1.6] text-pretty"
           style={{ color: T.ink.dim }}
         >
           {ask.description}
         </p>
         <GlobalLink
           href={ask.href}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-(--t-action-primary) px-6 py-3 text-center text-base font-semibold text-white no-underline hover:bg-(--t-action-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
+          aria-label={ask.label}
+          className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-(--t-action-primary) px-4 py-2.5 text-center text-sm font-semibold text-white no-underline hover:bg-(--t-action-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:w-auto"
         >
-          {ask.label}
+          {actionLabel}
         </GlobalLink>
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-          <p className="m-0 text-sm leading-[1.6]" style={{ color: T.ink.dim }}>
-            {ask.context}
-          </p>
+          {ask.kind !== "gap" ? (
+            <p
+              className="m-0 text-sm leading-[1.6]"
+              style={{ color: T.ink.dim }}
+            >
+              {ask.context}
+            </p>
+          ) : null}
           {canChoose ? (
             <button
               type="button"
@@ -234,61 +242,43 @@ export function PlaceContributionCard({
           </p>
         ) : null}
         <div
-          className="mt-6 border-t pt-4"
+          className="mt-4 border-t pt-3"
           style={{ borderColor: T.border.line }}
         >
-          <div className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg"
-              style={{ background: TINTS.green!.bg, color: TINTS.green!.fg }}
-            >
-              <Icon icon="mdi:check" width={16} />
-            </span>
-            <div className="min-w-0">
+          <p className="m-0 text-sm leading-[1.5]" style={{ color: T.ink.dim }}>
+            Add a source. Contributions are reviewed and credited to you.
+          </p>
+          <div className="mt-1 flex flex-wrap items-start gap-x-4">
+            <details className="min-w-0">
+              <summary
+                className={`${LINK} w-fit cursor-pointer text-(--t-accent-primary)`}
+              >
+                What do I need?
+              </summary>
               <p
-                className="m-0 text-sm leading-[1.6]"
+                className="mt-1 mb-3 max-w-[60ch] text-sm leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
-                Add what you know with a source. A reviewer checks it, and
-                accepted contributions are credited to you.
-                {signedIn ? (
-                  <>
-                    {" "}
-                    Follow progress in{" "}
-                    <GlobalLink
-                      href="/contribute/submissions"
-                      className="inline-flex min-h-[44px] items-center rounded-sm underline underline-offset-3 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
-                      style={{ color: T.accent.primary }}
-                    >
-                      Your submissions
-                    </GlobalLink>
-                    .
-                  </>
-                ) : null}
+                {requirement}
               </p>
-              <details className="mt-2">
-                <summary
-                  className={`${LINK} w-fit cursor-pointer text-(--t-accent-primary)`}
-                >
-                  What do I need?
-                </summary>
-                <p
-                  className="mt-1 mb-0 max-w-[60ch] text-sm leading-[1.6]"
-                  style={{ color: T.ink.dim }}
-                >
-                  {requirement}
-                </p>
-              </details>
-            </div>
+            </details>
+            {signedIn ? (
+              <GlobalLink
+                href="/contribute/submissions"
+                className={LINK}
+                style={{ color: T.accent.primary }}
+              >
+                Your submissions
+              </GlobalLink>
+            ) : null}
           </div>
         </div>
       </div>
       {alternatives.length ? (
         <nav
           aria-labelledby={`${id}-alternatives`}
-          className="flex min-w-0 flex-col rounded-[20px] border p-5 sm:p-6"
-          style={{ background: T.bg.surface, borderColor: T.border.line }}
+          className="flex min-w-0 flex-col border-t pt-4"
+          style={{ borderColor: T.border.line }}
         >
           <h3 id={`${id}-alternatives`} className="type-small-heading m-0 mb-3">
             {baseAsk.kind === "gap"
@@ -300,77 +290,51 @@ export function PlaceContributionCard({
             {alternatives.map((key) => {
               const copy = GAP_TASKS[key]!
               const total = totals.find((row) => row.key === key)
-              const tint = TINTS[copy.tint]!
 
               return (
                 <li key={key}>
                   <GlobalLink
                     href={gapLibrariesHref(place, key)}
-                    className="group -mx-2 flex min-h-[44px] items-center gap-3 rounded-xl px-2 py-4 no-underline hover:bg-(--t-bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                    aria-label={`${copy.title}: ${total ? `${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"} ${copy.need}` : `Libraries in ${name} ${copy.need}`}`}
+                    className="-mx-2 block min-h-11 rounded-xl px-2 py-3 no-underline hover:bg-(--t-bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                   >
+                    <span className="block text-sm leading-[1.4] font-semibold text-(--t-accent-primary) underline underline-offset-3">
+                      {copy.title}
+                    </span>
                     <span
-                      aria-hidden="true"
-                      className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                      style={{ background: tint.bg, color: tint.fg }}
+                      className="mt-1 block text-sm leading-[1.5]"
+                      style={{ color: T.ink.dim }}
                     >
-                      <Icon icon={copy.icon} width={22} />
+                      {total
+                        ? `${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"}`
+                        : "Choose a library"}
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span
-                        className="block text-base leading-[1.4] font-semibold"
-                        style={{ color: T.ink.base }}
-                      >
-                        {copy.title}
-                      </span>
-                      <span
-                        className="mt-1 block text-sm leading-[1.5]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {copy.benefit}
-                      </span>
-                      <span
-                        className="mt-1 block text-sm leading-[1.5]"
-                        style={{ color: T.ink.dim }}
-                      >
-                        {total
-                          ? `Choose from ${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"} ${copy.need}`
-                          : `Choose from libraries in ${name} ${copy.need}`}
-                      </span>
-                    </span>
-                    <Icon
-                      icon="mdi:arrow-right"
-                      width={20}
-                      aria-hidden="true"
-                      className="shrink-0 text-(--t-accent-primary)"
-                    />
                   </GlobalLink>
                 </li>
               )
             })}
           </ul>
           <p
-            className="mt-auto mb-0 border-t pt-4 text-sm leading-[1.7]"
+            className="mt-3 mb-0 border-t pt-2 text-sm leading-[1.5]"
             style={{ borderColor: T.border.line, color: T.ink.dim }}
           >
-            You don’t need to be a librarian.{" "}
             <GlobalLink
               href="/plans"
               className={LINK}
               style={{ color: T.accent.primary }}
             >
-              Regular contributors can earn Pro free.
+              How to earn Pro free
             </GlobalLink>
           </p>
         </nav>
       ) : (
         <p className="m-0 text-sm leading-[1.7]" style={{ color: T.ink.dim }}>
-          You don’t need to be a librarian.{" "}
           <GlobalLink
             href="/plans"
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            Regular contributors can earn Pro free.
+            How to earn Pro free
           </GlobalLink>
         </p>
       )}

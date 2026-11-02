@@ -1,7 +1,14 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react"
 
 import { DiscussionComposerDrawer } from "@/components/discussions/DiscussionComposerDrawer"
 import { DiscussionThreadSkeleton } from "@/components/discussions/DiscussionSkeleton"
@@ -72,7 +79,7 @@ function AttachedDiscussionPanel({
   const sectionRef = useRef<HTMLElement>(null)
   const pendingActivation = useRef<string | null>(null)
   const currentScope = useRef(scope)
-  useEffect(() => {
+  useLayoutEffect(() => {
     currentScope.current = scope
     pendingActivation.current = null
 
@@ -81,7 +88,8 @@ function AttachedDiscussionPanel({
       pendingActivation.current = null
     }
   }, [scope])
-  useEffect(() => {
+  // Match the external click handler to the committed loading/error UI before input.
+  useLayoutEffect(() => {
     if (!articleCard || variant === "suggestion") return
     const panel = sectionRef.current?.closest("#article-discussion")
     if (!panel) return

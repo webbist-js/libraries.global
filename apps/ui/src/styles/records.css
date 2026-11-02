@@ -407,14 +407,10 @@ a.record-metric:hover {
   border-top: 1px solid var(--t-border-line);
 }
 .dashboard-record-aside .place-contribution-card > nav {
-  padding: 16px;
+  padding: 16px 0 0;
 }
 .dashboard-record-aside :is(button, a) {
   max-width: 100%;
-}
-.dashboard-record-aside .place-contribution-card > div > p {
-  margin-top: 12px;
-  margin-bottom: 16px;
 }
 .dashboard-record-page h1[tabindex="-1"]:focus {
   outline: none;

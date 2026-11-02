@@ -114,7 +114,9 @@ describe("place contribution invitation", () => {
       />
     )
     expect(
-      screen.getByText("Choose from libraries in Europe without a photo")
+      screen.getByRole("link", {
+        name: "Share a photo: Libraries in Europe without a photo",
+      })
     ).toBeTruthy()
     expect(
       screen
