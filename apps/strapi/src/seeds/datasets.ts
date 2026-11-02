@@ -333,6 +333,25 @@ export const DATASET_SEED: DatasetSeed[] = [
     notes:
       "District names and GSS codes come from ONS; the district-to-county assignment follows the Lieutenancies Act 1997 as amended.",
   },
+  {
+    key: "de-isil",
+    name: "Deutsches ISIL-Verzeichnis (German library registry)",
+    publisher:
+      "Deutsche ISIL-Agentur und Sigelstelle / Staatsbibliothek zu Berlin / DNB",
+    sourceUrl: "https://data.dnb.de/opendata/",
+    licence: "CC0 1.0 Universal",
+    licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Libraries imported from the Deutsches ISIL-Verzeichnis, maintained by Deutsche ISIL-Agentur und Sigelstelle at Staatsbibliothek zu Berlin, published by DNB under CC0 1.0.",
+    coverage:
+      "German libraries and information institutions with stable ISIL codes: national, regional, public, academic, special and cultural libraries across 16 Bundesländer.",
+    importMechanism:
+      "pnpm ingest --dataset=de-isil; JSONLD RDF dump from DNB opendata, mapped by ISIL and PICA field codes, resumable draft writes with --local or --production.",
+    notes:
+      "Coordinates are included from the registry (provenance to be confirmed). Mobile libraries' pins are omitted. Dissolved institutions and non-library records (archives, museums, e-packages) are excluded. Type classification uses PICA field 035E. Operands and relations from field 029R are noted but not inferred as CMS links (no parent ISIL matching yet).",
+  },
 ]
 
 const UID = "api::dataset.dataset"

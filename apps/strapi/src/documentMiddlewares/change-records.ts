@@ -253,8 +253,22 @@ async function captureBefore(
   const before = await load(readStatus)
   const draftBefore = readStatus === "draft" ? before : await load("draft")
   let publishedBefore: Doc | null = null
-  if (action === "unpublish") publishedBefore = before
-  else if (action === "delete") publishedBefore = await load("published")
+  switch (action) {
+    case "unpublish":
+      publishedBefore = before
+      break
+
+    case "delete":
+      publishedBefore = await load("published")
+      break
+
+    case "publish":
+      {
+        publishedBefore = await load("published")
+        // No default
+      }
+      break
+  }
 
   return { locale, before, draftBefore, publishedBefore }
 }
@@ -346,6 +360,14 @@ async function recordArticle(args: RecordArgs & { uid: string }) {
   const { strapi, action, attrs, documentId, after, snap, actor } = args
   if ((action === "delete" || action === "unpublish") && !snap.before) return
   if ((action === "create" || action === "update") && !after) return
+
+  // For publish actions: only record if this is the first time being published
+  // (i.e., publishedBefore exists but didn't have a publishedAt yet)
+  if (action === "publish") {
+    const isFirstPublish = !snap.publishedBefore?.publishedAt
+    if (!isFirstPublish) return
+  }
+
   const kind =
     action === "update" && !snap.draftBefore
       ? "translated"

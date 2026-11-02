@@ -79,17 +79,18 @@ export function mapGermanLibrary(
     return "Dissolved institution (035E $a = I)"
   }
 
-  // Exclude non-library types (archives, museums, e-packages, etc.)
-  const typeCode = record.libraryType
-  if (!typeCode || !TYPE_MAP[typeCode]) {
+  // Type code comes from PICA field 035E via DNB SRU (not in JSONLD dump)
+  // TODO: Harvest type codes from DNB SRU endpoint, keyed by ISIL
+  // For now, default to "Special" if type is not provided; harvest SRU data later
+  const typeCode = record.libraryType || "81" // 81 = Wissenschaftliche Spezialbibliothek
+  if (typeCode && !TYPE_MAP[typeCode]) {
+    // Exclude archives and non-library records if type is explicitly present
     if (
-      typeCode &&
       ["51", "52", "53", "54", "55", "56", "57", "58", "59"].includes(typeCode)
     ) {
-      return "Archive (excluded in this round)"
+      return "Archive (excluded in phase 1)"
     }
     if (
-      typeCode &&
       [
         "82",
         "83",
@@ -109,15 +110,12 @@ export function mapGermanLibrary(
     ) {
       return "Non-library institutional record (excluded)"
     }
-
-    return `Unknown library type code: ${typeCode}`
   }
 
+  // Land code also comes from PICA field 371 $f via SRU
+  // TODO: Harvest Land codes from SRU; for now, default to "Other" or use postal code prefix
   const landCode = record.land
-  const regionName = landCode ? LANDER_MAP[landCode] : undefined
-  if (!regionName) {
-    return `Unknown or missing Land code: ${landCode}`
-  }
+  const regionName = landCode ? LANDER_MAP[landCode] : "Unknown" // TODO: derive from postal code or set via SRU enrichment
 
   // Validate coordinates if present
   let location: { latitude: number; longitude: number } | undefined

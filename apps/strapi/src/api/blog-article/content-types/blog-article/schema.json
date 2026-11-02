@@ -294,6 +294,14 @@
           "localized": true
         }
       }
+    },
+    "publishedAt": {
+      "type": "datetime",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
     }
   }
 }
