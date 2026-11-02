@@ -23,7 +23,7 @@ describe("managed Journal sources", () => {
       />
     )
     expect(screen.getByRole("region", { name: "Sources" })).toBeTruthy()
-    const link = screen.getByRole("link", { name: "Annual report ↗" })
+    const link = screen.getByRole("link", { name: /Annual report\s↗/ })
     expect(link.getAttribute("href")).toBe("https://example.org/report")
     expect(link.getAttribute("rel")).toContain("noopener")
     expect(screen.getByText("Printed catalogue")).toBeTruthy()
