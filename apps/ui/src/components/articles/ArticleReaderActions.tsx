@@ -3,15 +3,29 @@
 import { Icon } from "@iconify/react"
 import { isSupportedLocale } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { useState, type MouseEvent } from "react"
 
 import { ProfileFollowButton } from "@/app/[locale]/profile/[username]/_components/ProfileFollowButton"
 import { SelectField } from "@/components/ds/SelectField"
 import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { articleReaderPath } from "@/lib/article-content-language"
+import { requestArticleDiscussion } from "@/lib/discussion-composer"
 import { languageName } from "@/lib/locale-fallback"
 import { Link } from "@/lib/navigation"
 import { useJournalOwnership } from "@/lib/use-journal-ownership"
+
+function handleDiscuss(event: MouseEvent<HTMLAnchorElement>) {
+  if (
+    !event.defaultPrevented &&
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    requestArticleDiscussion()
+  )
+    event.preventDefault()
+}
 
 export function ArticleReaderActions({
   kind,
@@ -198,6 +212,7 @@ export function ArticleReaderActions({
       )}
       <a
         href="#article-discussion"
+        onClick={handleDiscuss}
         className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-(--t-border-line) px-3 py-2 font-semibold transition-colors hover:bg-(--t-bg-muted)"
       >
         <Icon aria-hidden="true" icon="mdi:message-outline" width={14} />

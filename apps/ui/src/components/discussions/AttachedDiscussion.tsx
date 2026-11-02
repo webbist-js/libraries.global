@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 
 import { DiscussionComposerDrawer } from "@/components/discussions/DiscussionComposerDrawer"
 import { DiscussionThreadSkeleton } from "@/components/discussions/DiscussionSkeleton"
+import { ARTICLE_DISCUSSION_EVENT } from "@/lib/discussion-composer"
 
 import {
   discussionErrorKey,
@@ -68,10 +69,45 @@ function AttachedDiscussionPanel({
   const [composing, setComposing] = useState(false)
   const [loadedScope, setLoadedScope] = useState("")
   const scope = `${target.uid}:${target.documentId}:${target.locale ?? language}:${subjectSlug}:${actor.scope}`
+  const sectionRef = useRef<HTMLElement>(null)
+  const pendingActivation = useRef<string | null>(null)
   const currentScope = useRef(scope)
   useEffect(() => {
     currentScope.current = scope
+    pendingActivation.current = null
+
+    return () => {
+      currentScope.current = ""
+      pendingActivation.current = null
+    }
   }, [scope])
+  useEffect(() => {
+    if (!articleCard || variant === "suggestion") return
+    const panel = sectionRef.current?.closest("#article-discussion")
+    if (!panel) return
+    const activate = (event: Event) => {
+      if (!actor.ready || loadedScope !== scope) {
+        event.preventDefault()
+        pendingActivation.current = scope
+      } else if (!thread && subject && !error) {
+        event.preventDefault()
+        setComposing(true)
+      }
+    }
+    panel.addEventListener(ARTICLE_DISCUSSION_EVENT, activate)
+
+    return () => panel.removeEventListener(ARTICLE_DISCUSSION_EVENT, activate)
+  }, [
+    articleCard,
+    variant,
+    actor.ready,
+    loadedScope,
+    scope,
+    thread,
+    subject,
+    error,
+  ])
+
   const load = useCallback(async () => {
     const query = new URLSearchParams({
       targetUid: target.uid,
@@ -97,20 +133,27 @@ function AttachedDiscussionPanel({
         .catch(() => []),
     ])
     if (currentScope.current !== scope) return
-    setThread(
+    const nextThread =
       threads.data[0] ??
-        own.data.find((record) => record.state !== "removed") ??
-        null
-    )
+      own.data.find((record) => record.state !== "removed") ??
+      null
+    const nextSubject =
+      subjects.data.find((item) => item.slug === subjectSlug) ?? null
+    setThread(nextThread)
     setLanguages(
       languageChoices.filter(
         (item) => typeof item.code === "string" && typeof item.name === "string"
       )
     )
-    setSubject(subjects.data.find((item) => item.slug === subjectSlug) ?? null)
+    setSubject(nextSubject)
     setError("")
     setRetryable(false)
     setLoadedScope(scope)
+    if (pendingActivation.current === scope) {
+      pendingActivation.current = null
+      if (!nextThread && nextSubject) setComposing(true)
+      else window.location.hash = "article-discussion"
+    }
   }, [
     target.uid,
     target.documentId,
@@ -128,6 +171,10 @@ function AttachedDiscussionPanel({
       setError(t(errorKey))
       setRetryable(errorKey === "error")
       setLoadedScope(scope)
+      if (pendingActivation.current === scope) {
+        pendingActivation.current = null
+        window.location.hash = "article-discussion"
+      }
     },
     [scope, t]
   )
@@ -138,6 +185,7 @@ function AttachedDiscussionPanel({
 
   return (
     <section
+      ref={sectionRef}
       id={variant === "suggestion" ? undefined : "discussion"}
       aria-label={heading}
       className={
