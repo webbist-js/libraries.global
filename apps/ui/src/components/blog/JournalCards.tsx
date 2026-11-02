@@ -331,7 +331,7 @@ export function JournalArticleCard({
           sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
         />
       ) : null}
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-5 [&>.entries-added]:mb-4">
         <SectionLabel section={article.section} />
         <EntriesAdded
           value={article.entriesAdded}
