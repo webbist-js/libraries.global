@@ -131,12 +131,6 @@ export function MembershipDashboard({
     >
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.85fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />
-
-          <IncludedToolsPanel view={view} copy={copy} />
-
-          <RecognitionPanel view={view} copy={copy} recognition={recognition} />
-
           {team ? (
             <TeamMembershipPanel
               team={team}
@@ -144,6 +138,12 @@ export function MembershipDashboard({
               copy={copy}
             />
           ) : null}
+
+          <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />
+
+          <IncludedToolsPanel view={view} copy={copy} />
+
+          <RecognitionPanel view={view} copy={copy} recognition={recognition} />
           {personalBilling ? (
             <PersonalBillingPanel billing={billing} billingOnly />
           ) : !team ? (

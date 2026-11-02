@@ -214,7 +214,7 @@ export function Drawer({
           data-drawer-panel={side}
           data-drawer-edge={edgeAligned || undefined}
           className={cn(
-            "fixed z-[81] flex flex-col overflow-hidden overscroll-contain",
+            "fixed z-[81] flex flex-col overscroll-contain",
             panelClass,
             className
           )}
@@ -254,7 +254,7 @@ export function Drawer({
                   {children}
                 </div>
               ) : (
-                children
+                <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
               )}
             </>
           )}
