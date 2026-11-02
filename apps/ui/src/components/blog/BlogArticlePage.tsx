@@ -251,7 +251,6 @@ export function BlogArticlePage({
               <MetadataList rows={metaRows} />
             </div>
           ) : null}
-          <JournalSources id="article-sources" sources={article.sources} />
           <ArticleContext article={article} kind="journal" locale={locale} />
           <JournalSaveButton documentId={article.documentId} />
         </div>
@@ -272,7 +271,7 @@ export function BlogArticlePage({
         >
           {" "}
           <div className="min-w-0">
-            <div className="rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-10 lg:p-12">
+            <div className="journal-article-card rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-10 lg:p-12">
               <header>
                 {article.category?.name ? (
                   <p className="mt-4 mb-2 text-xs font-semibold text-(--t-accent-primary)">
@@ -403,36 +402,42 @@ export function BlogArticlePage({
                 </figure>
               ) : null}
 
-              {/* Prose — white section card on paper */}
-              <article
-                id={`analytics-journal-${article.documentId}`}
-                className="mt-7 max-w-[68ch]"
-              >
-                <ArticleEngagement
-                  bodyId={`analytics-journal-${article.documentId}`}
-                  contentId={article.documentId}
-                  contentType="journal"
-                  path={
-                    new URL(
-                      absoluteUrl(
-                        `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
-                        locale
-                      )
-                    ).pathname
-                  }
-                />
-                {/* Heading margins are in rem: the spacing scale is em-based,
+              {/* Prose and citations share the white reading area. */}
+              <div className="journal-reading-layout">
+                <article
+                  id={`analytics-journal-${article.documentId}`}
+                  className="max-w-[68ch] min-w-0"
+                >
+                  <ArticleEngagement
+                    bodyId={`analytics-journal-${article.documentId}`}
+                    contentId={article.documentId}
+                    contentType="journal"
+                    path={
+                      new URL(
+                        absoluteUrl(
+                          `/journal/${article.section?.slug ?? "general"}/${article.slug}`,
+                          locale
+                        )
+                      ).pathname
+                    }
+                  />
+                  {/* Heading margins are in rem: the spacing scale is em-based,
                   so mt-* on a 28px heading would scale with it. */}
-                <div className="article-prose article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3:first-child]:mt-0">
-                  {article.body?.length ? (
-                    <ArticleBodyBlocks blocks={article.body} />
-                  ) : (
-                    <p className="rounded-2xl bg-(--t-bg-void) p-5 text-(--t-ink-dim)">
-                      {tArticle("noContent")}
-                    </p>
-                  )}
-                </div>
-              </article>
+                  <div className="article-prose article-drop-cap [&_h2]:mt-[2.25rem] [&_h2]:mb-[0.75rem] [&_h2:first-child]:mt-0 [&_h3]:mt-[1.75rem] [&_h3]:mb-[0.5rem] [&_h3:first-child]:mt-0">
+                    {article.body?.length ? (
+                      <ArticleBodyBlocks blocks={article.body} />
+                    ) : (
+                      <p className="rounded-2xl bg-(--t-bg-void) p-5 text-(--t-ink-dim)">
+                        {tArticle("noContent")}
+                      </p>
+                    )}
+                  </div>
+                </article>
+                <JournalSources
+                  id="article-sources"
+                  sources={article.sources}
+                />
+              </div>
 
               {/* Author bio */}
               {authorName ? (
