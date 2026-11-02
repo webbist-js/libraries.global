@@ -423,3 +423,79 @@ it.each(["reader", "guest", "editor"])(
     expect(screen.queryByRole("link", { name: "Moderation" })).toBeNull()
   }
 )
+
+it.each([false, true])(
+  "measures the content toolbar for sticky rails, including mobile section navigation (%s)",
+  (sections) => {
+    let toolbarHeight = 61
+    let combinedHeight = 0
+    const observed = new Map<Element, ResizeObserverCallback>()
+    const bounds = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        return {
+          height: this.classList.contains("record-toolbar")
+            ? toolbarHeight
+            : this.classList.contains("dashboard-record-toolbar")
+              ? combinedHeight
+              : 0,
+        } as DOMRect
+      })
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private callback: ResizeObserverCallback) {}
+        observe(element: Element) {
+          observed.set(element, this.callback)
+        }
+
+        disconnect() {}
+      }
+    )
+    const view = render(
+      <DashboardPage
+        title="New drive"
+        toolbar={<div className="record-toolbar">Page controls</div>}
+        mobileSections={
+          sections ? [{ href: "#details", label: "Details" }] : undefined
+        }
+      >
+        <aside>Drive preview</aside>
+      </DashboardPage>
+    )
+    const page = view.container.querySelector<HTMLElement>(".dashboard-page")!
+    const toolbar = page.querySelector(".record-toolbar")!
+    try {
+      expect(
+        page.style.getPropertyValue("--dashboard-record-header-height")
+      ).toBe("61px")
+      toolbarHeight = 98
+      act(() => observed.get(toolbar)!([], {} as ResizeObserver))
+      expect(
+        page.style.getPropertyValue("--dashboard-record-header-height")
+      ).toBe("98px")
+      if (sections) {
+        combinedHeight = 148
+        act(() =>
+          observed.get(page.querySelector(".dashboard-record-toolbar")!)!(
+            [],
+            {} as ResizeObserver
+          )
+        )
+        expect(
+          page.style.getPropertyValue("--dashboard-record-header-height")
+        ).toBe("148px")
+      }
+      view.rerender(
+        <DashboardPage title="Page without a toolbar">
+          <aside>Preview</aside>
+        </DashboardPage>
+      )
+      expect(
+        page.style.getPropertyValue("--dashboard-record-header-height")
+      ).toBe("0px")
+    } finally {
+      bounds.mockRestore()
+    }
+  }
+)

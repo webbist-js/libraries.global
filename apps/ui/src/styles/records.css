@@ -345,8 +345,8 @@ a.record-metric:hover {
   .dashboard-record-aside {
     grid-template-columns: minmax(0, 1fr);
     position: sticky;
-    top: 80px;
-    max-height: calc(100dvh - 104px);
+    top: var(--sticky-content-top);
+    max-height: var(--sticky-content-max-height);
     overflow-y: auto;
     scrollbar-gutter: stable;
   }

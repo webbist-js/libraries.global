@@ -471,6 +471,13 @@ body[data-dashboard-active]
   color: var(--t-accent-primary);
 }
 .dashboard-page-body {
+  /* Sticky rails share this scrollport with the page toolbar, not the outer rail. */
+  --sticky-header-height: var(--dashboard-record-header-height, 56px);
+  --sticky-navigation-height: 0px;
+  --sticky-content-top: calc(var(--sticky-header-height) + 24px);
+  --sticky-content-max-height: calc(
+    100dvh - var(--sticky-header-height) - 48px
+  );
   isolation: isolate;
   grid-area: content;
   min-height: 0;
