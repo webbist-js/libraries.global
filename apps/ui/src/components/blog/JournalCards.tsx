@@ -317,6 +317,8 @@ export function JournalArticleCard({
   readonly locale: Locale
 }) {
   const t = useTranslations("editorial")
+  const entriesAdded =
+    article.section?.slug === "data" ? article.entriesAdded : null
 
   return (
     <ArticleLink
@@ -334,7 +336,7 @@ export function JournalArticleCard({
           sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
         >
           <EntriesAdded
-            value={article.entriesAdded}
+            value={entriesAdded}
             origin={article.publicationOrigin}
             variant="pill"
             className="absolute top-3 left-3 max-w-[calc(100%-1.5rem)]"
@@ -345,7 +347,7 @@ export function JournalArticleCard({
         <SectionLabel section={article.section} />
         {!article.heroImage?.url ? (
           <EntriesAdded
-            value={article.entriesAdded}
+            value={entriesAdded}
             origin={article.publicationOrigin}
             variant="pill"
             className="mb-3 self-start"

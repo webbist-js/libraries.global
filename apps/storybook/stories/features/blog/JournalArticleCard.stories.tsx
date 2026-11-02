@@ -1,7 +1,7 @@
 import { JournalArticleCard } from "@/components/blog/JournalCards"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
-import { journalArticle } from "../../fixtures/public/articles"
+import { articleSection, journalArticle } from "../../fixtures/public/articles"
 import {
   publicServerFixtures,
   publicResponses,
@@ -28,6 +28,7 @@ export const DataImport: Story = {
       ...journalArticle,
       publicationOrigin: "index",
       entriesAdded: 3222,
+      section: { ...articleSection, slug: "data", name: "Data" },
     },
   },
 }
@@ -38,6 +39,7 @@ export const DataImportWithoutImage: Story = {
       ...journalArticle,
       publicationOrigin: "index",
       entriesAdded: 3222,
+      section: { ...articleSection, slug: "data", name: "Data" },
       heroImage: null,
     },
   },
