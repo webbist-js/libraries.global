@@ -15,6 +15,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
 import { primaryCtaSm } from "@/components/ui/action-styles"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
   compositionLanguage,
@@ -487,14 +488,16 @@ export function DiscussionComposer({
             {pictureToggle}
             <div className="ml-auto flex flex-wrap items-center gap-2">
               {onCancel && (
-                <button
+                <Button
                   type="button"
+                  variant="surface"
+                  size="pill-sm"
                   disabled={busy || uploading}
                   onClick={onCancel}
-                  className="hidden min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold min-[360px]:inline-flex"
+                  className="hidden cursor-pointer border-(--t-border-hi) min-[360px]:inline-flex"
                 >
                   {t("cancel")}
-                </button>
+                </Button>
               )}
               {submitButton}
             </div>

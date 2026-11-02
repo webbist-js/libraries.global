@@ -24,11 +24,7 @@ export function JournalSources({
   if (!rows.length) return null
 
   return (
-    <section
-      id={id}
-      className="journal-sources record-support-card"
-      aria-labelledby={heading}
-    >
+    <section id={id} className="journal-sources" aria-labelledby={heading}>
       <h2 id={heading} className="type-small-heading m-0">
         {t("title")}
       </h2>
@@ -57,7 +53,8 @@ export function JournalSources({
               <div>
                 {href ? (
                   <a href={href} target="_blank" rel="noopener noreferrer">
-                    {source.title} ↗
+                    {source.title}
+                    {"\u00A0↗"}
                   </a>
                 ) : (
                   <strong>{source.title}</strong>
