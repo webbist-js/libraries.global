@@ -102,6 +102,11 @@ describe("place contribution invitation", () => {
     expect(screen.getByText(/1,284 libraries in Bavaria/)).toBeTruthy()
     expect(screen.queryByText("Add opening hours")).toBeNull()
     expect(screen.queryByText("Share a photo")).toBeNull()
+    expect(
+      screen.getByRole("link", {
+        name: "Answer an accessibility question 902 libraries with an open accessibility question",
+      })
+    ).toBeTruthy()
     expect(aggregateContributionGaps(gaps)[0]?.missing).toBe(1284)
   })
 
@@ -114,7 +119,9 @@ describe("place contribution invitation", () => {
       />
     )
     expect(
-      screen.getByText("Choose from libraries in Europe without a photo")
+      screen.getByRole("link", {
+        name: "Share a photo Choose a library in Europe without a photo",
+      })
     ).toBeTruthy()
     expect(
       screen

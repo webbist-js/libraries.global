@@ -98,10 +98,12 @@ function ArticleThumb({
   article,
   className,
   sizes,
+  children,
 }: {
   readonly article: JournalCardData
   readonly className?: string
   readonly sizes: string
+  readonly children?: ReactNode
 }) {
   const visual = sectionVisual(article.section)
   const imgUrl = article.heroImage?.url
@@ -130,6 +132,7 @@ function ArticleThumb({
           width={22}
         />
       )}
+      {children}
       {article.place ? (
         <span
           className={cn(
@@ -314,6 +317,8 @@ export function JournalArticleCard({
   readonly locale: Locale
 }) {
   const t = useTranslations("editorial")
+  const entriesAdded =
+    article.section?.slug === "data" ? article.entriesAdded : null
 
   return (
     <ArticleLink
@@ -329,14 +334,25 @@ export function JournalArticleCard({
           article={article}
           className="m-2 aspect-[16/10]"
           sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw"
-        />
+        >
+          <EntriesAdded
+            value={entriesAdded}
+            origin={article.publicationOrigin}
+            variant="pill"
+            className="absolute top-3 left-3 max-w-[calc(100%-1.5rem)]"
+          />
+        </ArticleThumb>
       ) : null}
       <div className="flex flex-1 flex-col p-5">
         <SectionLabel section={article.section} />
-        <EntriesAdded
-          value={article.entriesAdded}
-          origin={article.publicationOrigin}
-        />
+        {!article.heroImage?.url ? (
+          <EntriesAdded
+            value={entriesAdded}
+            origin={article.publicationOrigin}
+            variant="pill"
+            className="mb-3 self-start"
+          />
+        ) : null}
         <h3
           className="type-h3 m-0 transition-colors group-hover:text-(--t-accent-primary)"
           style={{

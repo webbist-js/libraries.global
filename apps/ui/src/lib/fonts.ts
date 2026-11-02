@@ -1,8 +1,11 @@
-import { Figtree, JetBrains_Mono, Newsreader } from "next/font/google"
+import { JetBrains_Mono, Newsreader } from "next/font/google"
+import localFont from "next/font/local"
 
-export const fontFigtree = Figtree({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Keep Figtree's extensionless Google Fonts URLs out of the build-time loader.
+export const fontFigtree = localFont({
+  src: "../../public/fonts/figtree/Figtree-Variable.ttf",
+  weight: "400 700",
+  style: "normal",
   variable: "--font-figtree",
   display: "swap",
 })

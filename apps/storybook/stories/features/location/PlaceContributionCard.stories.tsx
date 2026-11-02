@@ -20,3 +20,25 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+export const NarrowSidebar: Story = {
+  decorators: [
+    (Story) => (
+      <aside className="dashboard-record-aside" style={{ width: 288 }}>
+        <Story />
+      </aside>
+    ),
+  ],
+  args: {
+    gaps: [
+      { key: "photo", label: "Photos", missing: 14940, eligible: 14940 },
+      { key: "hours", label: "Opening hours", missing: 14940, eligible: 14940 },
+      {
+        key: "accessibility",
+        label: "Accessibility",
+        missing: 14940,
+        eligible: 14940,
+      },
+    ],
+  },
+}
