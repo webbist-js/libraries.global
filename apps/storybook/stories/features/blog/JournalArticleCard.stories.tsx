@@ -21,3 +21,24 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+export const DataImport: Story = {
+  args: {
+    article: {
+      ...journalArticle,
+      publicationOrigin: "index",
+      entriesAdded: 3222,
+    },
+  },
+}
+
+export const DataImportWithoutImage: Story = {
+  args: {
+    article: {
+      ...journalArticle,
+      publicationOrigin: "index",
+      entriesAdded: 3222,
+      heroImage: null,
+    },
+  },
+}

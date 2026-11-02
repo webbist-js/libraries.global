@@ -322,6 +322,16 @@
 .entries-added strong {
   font: var(--type-feature);
 }
+.entries-added--pill {
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+.entries-added--pill strong {
+  font: inherit;
+  font-weight: 700;
+}
 .journal-data-drops {
   margin-top: 28px;
 }
