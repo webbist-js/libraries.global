@@ -471,6 +471,13 @@ body[data-dashboard-active]
   color: var(--t-accent-primary);
 }
 .dashboard-page-body {
+  /* Sticky rails share this scrollport with the page toolbar, not the outer rail. */
+  --sticky-header-height: var(--dashboard-record-header-height, 56px);
+  --sticky-navigation-height: 0px;
+  --sticky-content-top: calc(var(--sticky-header-height) + 24px);
+  --sticky-content-max-height: calc(
+    100dvh - var(--sticky-header-height) - 48px
+  );
   isolation: isolate;
   grid-area: content;
   min-height: 0;
@@ -1154,6 +1161,16 @@ body:not([data-dashboard-aware]):has([data-dashboard-shell])
   font: var(--type-small-heading);
 }
 
+/* Apply edge-tab transforms only where needed. Production CSS optimization
+   can discard rotate/translate resets beside transform:none. */
+body:not([data-dashboard-active]) [data-feedback-trigger] {
+  translate: 0 -50%;
+}
+body:not([data-dashboard-active]) [data-feedback-trigger] span {
+  writing-mode: vertical-rl;
+  rotate: 180deg;
+}
+
 /* Pages without a content toolbar keep feedback in the masthead area. */
 body[data-dashboard-active] [data-feedback-trigger] {
   top: 8px;
@@ -1166,13 +1183,9 @@ body[data-dashboard-active] [data-feedback-trigger] {
   border-left-width: 1px;
   border-radius: 999px;
   padding: 8px 14px;
-  translate: none;
-  transform: none;
 }
 body[data-dashboard-active] [data-feedback-trigger] span {
   writing-mode: horizontal-tb;
-  rotate: none;
-  transform: none;
 }
 body:has([data-feedback-inline]) [data-feedback-trigger] {
   display: none;

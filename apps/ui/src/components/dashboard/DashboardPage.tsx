@@ -185,21 +185,25 @@ export function DashboardPage({
   React.useEffect(() => {
     const header = recordHeader.current
     const page = root.current
-    if (!header || !page || typeof ResizeObserver === "undefined") return
+    if (!page || typeof ResizeObserver === "undefined") return
+    const toolbarNode = page.querySelector<HTMLElement>(
+      ".dashboard-page-body .record-toolbar"
+    )
     const measure = () =>
       page.style.setProperty(
         "--dashboard-record-header-height",
-        `${Math.ceil(header.getBoundingClientRect().height)}px`
+        `${Math.ceil(Math.max(header?.getBoundingClientRect().height ?? 0, toolbarNode?.getBoundingClientRect().height ?? 0))}px`
       )
     const observer = new ResizeObserver(measure)
-    observer.observe(header)
+    if (header) observer.observe(header)
+    if (toolbarNode) observer.observe(toolbarNode)
     measure()
 
     return () => {
       observer.disconnect()
       page.style.removeProperty("--dashboard-record-header-height")
     }
-  }, [path, hasMobileSections, root])
+  }, [path, hasMobileSections, root, toolbar])
   const t = useTranslations("dashboard")
   const overlay = useOptionalDashboardOverlay()
   const pendingAnchor = React.useRef<string | null>(null)

@@ -345,8 +345,8 @@ a.record-metric:hover {
   .dashboard-record-aside {
     grid-template-columns: minmax(0, 1fr);
     position: sticky;
-    top: 80px;
-    max-height: calc(100dvh - 104px);
+    top: var(--sticky-content-top);
+    max-height: var(--sticky-content-max-height);
     overflow-y: auto;
     scrollbar-gutter: stable;
   }
@@ -407,14 +407,10 @@ a.record-metric:hover {
   border-top: 1px solid var(--t-border-line);
 }
 .dashboard-record-aside .place-contribution-card > nav {
-  padding: 16px;
+  padding: 16px 0 0;
 }
 .dashboard-record-aside :is(button, a) {
   max-width: 100%;
-}
-.dashboard-record-aside .place-contribution-card > div > p {
-  margin-top: 12px;
-  margin-bottom: 16px;
 }
 .dashboard-record-page h1[tabindex="-1"]:focus {
   outline: none;

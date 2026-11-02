@@ -30,3 +30,7 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const Missing: Story = { args: { article: null } }
+
+export const WithoutSources: Story = {
+  args: { article: { ...blogArticle, sources: [] } },
+}
