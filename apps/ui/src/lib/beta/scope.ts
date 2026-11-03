@@ -13,15 +13,14 @@ const MACHINE_PATHS = new Set([
   "/api/cron/cms",
   "/api/revalidate",
   "/api/preview",
-  "/api/internal/session/invalidate",
-  "/api/internal/notifications/recipients",
-  "/api/internal/notifications/activity",
+  "/api/internal/auth/before-delete",
   "/api/email/preferences",
 ])
 const AUTH_CALLBACKS = new Set([
   "/api/auth/verify-email",
   "/api/auth/magic-link/verify",
   "/api/auth/callback/google",
+  "/api/auth/callback/discord",
 ])
 const ASSETS = new Set([
   "/favicon.ico",

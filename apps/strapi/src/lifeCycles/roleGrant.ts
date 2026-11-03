@@ -1,10 +1,6 @@
 import type { Core } from "@strapi/strapi"
 
-import {
-  notifySessionInvalidated,
-  ROLE_GRANT,
-  syncDerivedRole,
-} from "../utils/role-grants"
+import { ROLE_GRANT, syncDerivedRole } from "../utils/role-grants"
 
 type Row = { baUserId?: unknown; source?: unknown } | null
 
@@ -22,32 +18,18 @@ const userOf = (row: Row): string | null =>
     ? row.baUserId
     : null
 
-/**
- * After any write to a Role Grant, re-derive the holder's `contributorRole`
- * and ask the Next app to drop its cached session. Admin edits in the
- * Content Manager therefore take effect at once. A failed sync is logged,
- * never thrown: the grant write itself has already happened.
- *
- * `extraUsers` are re-synced too (the previous holder of a grant whose
- * `baUserId` an admin changed). With `quietMigration`, rows created by the
- * boot-time migration are synced without a notification, so a backfill
- * never fires one request per profile at boot.
- */
+/** Re-derive display fields after a grant changes. Authority reads current grants directly. */
 export async function handleRoleGrantEvent(
   strapi: any,
   event: LifecycleEvent,
-  options: { extraUsers?: string[]; quietMigration?: boolean } = {}
+  options: { extraUsers?: string[] } = {}
 ): Promise<void> {
-  const notify = new Map<string, boolean>()
+  const users = new Set<string>(options.extraUsers)
   for (const row of asRows(event?.result)) {
     const id = userOf(row)
-    if (!id) continue
-    const loud = !(options.quietMigration && row?.source === "migration")
-    notify.set(id, (notify.get(id) ?? false) || loud)
+    if (id) users.add(id)
   }
-  for (const id of options.extraUsers ?? []) notify.set(id, true)
-
-  for (const [baUserId, shouldNotify] of notify) {
+  for (const baUserId of users) {
     try {
       await syncDerivedRole(strapi, baUserId)
     } catch (err) {
@@ -56,7 +38,6 @@ export async function handleRoleGrantEvent(
         err
       )
     }
-    if (shouldNotify) notifySessionInvalidated(strapi, baUserId).catch(() => {})
   }
 }
 
@@ -87,8 +68,7 @@ export function roleGrantLifecycles(strapi: any) {
     models: [ROLE_GRANT],
     beforeUpdate: (event: LifecycleEvent) =>
       rememberPreviousHolders(strapi, event),
-    afterCreate: (event: LifecycleEvent) =>
-      handleRoleGrantEvent(strapi, event, { quietMigration: true }),
+    afterCreate: (event: LifecycleEvent) => handleRoleGrantEvent(strapi, event),
     afterUpdate: (event: LifecycleEvent) =>
       handleRoleGrantEvent(strapi, event, {
         extraUsers: (event?.state?.[PREVIOUS_USERS] as string[]) ?? [],

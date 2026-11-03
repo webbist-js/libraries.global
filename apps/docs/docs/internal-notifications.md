@@ -14,16 +14,11 @@ event key prevents repeated collection from creating additional messages.
 Immutable audit rows avoid missing transitions between worker runs. The account
 feed revisits pages after each pass to catch transactions that commit late.
 
-The authentication database records minimal account/session events in the same
-transaction as account/session creation. Apply
-`apps/ui/scripts/internal-notifications-schema.sql` as the application role
-before enabling the feed. Events survive sign-out and cascade away when their
-account is erased. The existing daily auth retention job removes them after
-30 days. A disabled feed refuses requests.
+Strapi bootstrap installs minimal account/session event triggers on the plugin tables. Events commit with account/session creation, survive sign-out and cascade away on account erasure. The CMS collector reads them locally; there is no Next.js activity or recipient feed. Auth retention removes events after 30 days.
 
 ## Configuration
 
-Use the same explicit ISO activation date in the UI and CMS:
+Configure the activity feed and its explicit ISO activation date in the CMS:
 
 ```dotenv
 INTERNAL_NOTIFICATIONS_ENABLED=true
@@ -76,7 +71,7 @@ its retention policy to suit the operational purpose.
 With `INTERNAL_FEEDBACK_ENABLED=true` in the UI, validated feedback forms persist
 `product_feedback` events in the existing internal notification table before
 returning success. UI and CMS must share the application database, and internal
-notifications must be enabled. No new schema is needed. The existing CMS worker
+notifications must be enabled with the matching activation date in both UI and CMS. These UI settings serve the feedback queue only. No new schema is needed. The existing CMS worker
 then delivers these events to `SLACK_FEEDBACK_WEBHOOK_URL`, a separate private
 channel webhook held only by the CMS. Feedback never falls back to the activity
 channel when its destination is missing. Both settings are disabled or empty by

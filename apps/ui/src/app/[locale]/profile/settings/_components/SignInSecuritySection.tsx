@@ -28,7 +28,7 @@ const PROVIDER_META: Record<string, { label: string; icon: string }> = {
   credential: { label: "Email & password", icon: "mdi:email-lock-outline" },
   "magic-link": { label: "Magic link", icon: "mdi:email-fast-outline" },
   google: { label: "Google", icon: "mdi:google" },
-  github: { label: "GitHub", icon: "mdi:github" },
+  discord: { label: "Discord", icon: "mdi:discord" },
 }
 
 function providerMeta(providerId: string) {

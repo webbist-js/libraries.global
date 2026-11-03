@@ -5,7 +5,6 @@ import type { Core } from "@strapi/strapi"
 
 import { loadNetwork, memberIds } from "./network-catalogue"
 import { teamTransaction, requireNoOtherTeam } from "./teams"
-import { notifySessionInvalidated } from "../../../../utils/role-grants"
 import { TEAM_MEMBER_UID, TEAM_UID } from "../../../../utils/team-access"
 import { AccessError, isDocumentId } from "../utils/admin"
 
@@ -312,7 +311,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
           capacityBlocked,
         })
 
-        // The caller invalidates returned IDs after commit. Other instances use the existing 60-second TTL.
+        // Subsequent sessions read the committed membership directly.
         // Verification, covered Libraries and member roles are never payment fields.
         return { userIds, capacityBlocked }
       })
@@ -374,7 +373,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => {
             billingArchived: true,
           },
         })
-        await notifySessionInvalidated(strapi, input.baUserId)
 
         return { ok: true }
       })

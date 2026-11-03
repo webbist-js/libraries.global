@@ -84,6 +84,14 @@ describe("beta routing", () => {
     expect(betaPublicRequest("/api/cron/other", "GET")).toBe(false)
     expect(betaPublicRequest("/api/auth/sign-up/email", "POST")).toBe(false)
     expect(betaPublicRequest("/api/auth/callback/google", "GET")).toBe(true)
+    expect(betaPublicRequest("/api/auth/callback/discord", "GET")).toBe(true)
+    expect(betaPublicRequest("/api/auth/callback/discord", "POST")).toBe(false)
+    expect(betaPublicRequest("/api/internal/auth/before-delete", "POST")).toBe(
+      true
+    )
+    expect(
+      betaPublicRequest("/api/internal/notifications/activity", "GET")
+    ).toBe(false)
   })
   it("strips forged layout flags", () => {
     expect(

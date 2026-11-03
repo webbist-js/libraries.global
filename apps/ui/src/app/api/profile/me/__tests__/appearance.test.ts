@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: mocks.session } } }))
 vi.mock("@/lib/own-profile-server", () => ({ readOwnProfile: mocks.profile }))
-vi.mock("@/lib/session-profile", () => ({
-  invalidateSessionProfile: mocks.invalidate,
-}))
 const { GET, PATCH } = await import("../appearance/route")
 const request = (body: unknown, origin = "http://localhost:3000") =>
   new Request("http://localhost:3000/api/profile/me/appearance", {
@@ -56,7 +53,6 @@ describe("private appearance preference", () => {
         appearancePreference: preference,
       })
     }
-    expect(mocks.invalidate).toHaveBeenCalledWith("alice")
   })
   it.each([null, "auto", "Dark", {}, true])(
     "rejects invalid preferences: %s",
@@ -92,6 +88,5 @@ describe("private appearance preference", () => {
     expect(
       (await PATCH(request({ actorId: "alice", preference: "dark" }))).status
     ).toBe(503)
-    expect(mocks.invalidate).not.toHaveBeenCalled()
   })
 })

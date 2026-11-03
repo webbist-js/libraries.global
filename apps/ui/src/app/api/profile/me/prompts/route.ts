@@ -6,7 +6,6 @@ import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { readJsonCapped } from "@/lib/bridge-params"
 import { readOwnProfile } from "@/lib/own-profile-server"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
 const SECRET = process.env.STRAPI_BRIDGE_SECRET
@@ -68,7 +67,6 @@ export async function PUT(req: Request) {
   }
   if (!res.ok)
     return NextResponse.json({ error: "Failed to save" }, { status: 500 })
-  invalidateSessionProfile(session.user.id)
 
   return NextResponse.json({ ok: true, dismissedPrompts })
 }

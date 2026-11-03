@@ -1,0 +1,87 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ba_user",
+  "info": {
+    "singularName": "user",
+    "pluralName": "users",
+    "displayName": "Auth user"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": true
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true,
+      "unique": true
+    },
+    "emailVerified": {
+      "type": "boolean",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true,
+      "default": false
+    },
+    "image": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "termsVersion": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "termsAcceptedAt": {
+      "type": "datetime",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    }
+  }
+}

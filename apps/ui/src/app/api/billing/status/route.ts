@@ -3,7 +3,6 @@ import type { PaidMembership } from "@repo/access"
 import { authDbPool } from "@/lib/auth"
 import { BillingError, billingConfig } from "@/lib/billing/config"
 import { billingFailure, billingJson, billingUser } from "@/lib/billing/http"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 
 export const runtime = "nodejs"
 export async function GET(req: Request) {
@@ -34,7 +33,6 @@ export async function GET(req: Request) {
       row.snapshot.paidThrough &&
       Date.parse(row.snapshot.paidThrough) > Date.now()
     const ready = Boolean(paid && row.synced_revision === row.revision)
-    if (ready) invalidateSessionProfile(user.id)
 
     return billingJson({
       state: ready

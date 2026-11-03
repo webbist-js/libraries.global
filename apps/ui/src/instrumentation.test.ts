@@ -4,11 +4,8 @@ const f = vi.hoisted(() => ({ migrate: vi.fn(), pool: {} }))
 vi.mock("@sentry/nextjs", () => ({ captureRequestError: vi.fn() }))
 vi.mock("../sentry.server.config", () => ({}))
 vi.mock("../sentry.edge.config", () => ({}))
-vi.mock("./lib/auth", () => ({
-  auth: { $context: Promise.resolve({}) },
-  authDbPool: f.pool,
-}))
-vi.mock("./lib/auth-migrations", () => ({ migrateAuthSchema: f.migrate }))
+vi.mock("./lib/app-db", () => ({ appDbPool: f.pool }))
+vi.mock("./lib/app-migrations", () => ({ migrateApplicationState: f.migrate }))
 
 import { register } from "./instrumentation"
 
@@ -28,7 +25,7 @@ it.each([
   expect(f.migrate).not.toHaveBeenCalled()
 })
 
-it("waits for authentication schema readiness before completing server startup", async () => {
+it("waits for application state readiness before completing server startup", async () => {
   vi.stubEnv("NEXT_RUNTIME", "nodejs")
   vi.stubEnv("NODE_ENV", "production")
   vi.stubEnv("NEXT_PHASE", "phase-production-server")
@@ -39,16 +36,14 @@ it("waits for authentication schema readiness before completing server startup",
   f.migrate.mockReturnValue(gate)
   const complete = vi.fn()
   const startup = register().then(complete)
-  await vi.waitFor(() =>
-    expect(f.migrate).toHaveBeenCalledWith(f.pool, expect.any(Function))
-  )
+  await vi.waitFor(() => expect(f.migrate).toHaveBeenCalledWith(f.pool))
   expect(complete).not.toHaveBeenCalled()
   finishMigration()
   await startup
   expect(complete).toHaveBeenCalledOnce()
 })
 
-it("rejects server startup when the authentication schema cannot be prepared", async () => {
+it("rejects server startup when the application state cannot be prepared", async () => {
   vi.stubEnv("NEXT_RUNTIME", "nodejs")
   vi.stubEnv("NODE_ENV", "production")
   vi.stubEnv("NEXT_PHASE", "phase-production-server")

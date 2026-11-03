@@ -17,6 +17,7 @@ import {
 } from "@/lib/strapi-api/content/server"
 
 const KIND = {
+  baseline: "mdi:history",
   created: "mdi:plus-circle-outline",
   edited: "mdi:pencil-outline",
   translated: "mdi:translate",

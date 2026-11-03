@@ -15,7 +15,6 @@ const SUBSCRIBER = "api::subscriber.subscriber"
 const POINT_EVENT = "plugin::rewards.point-event"
 const BADGE_AWARD = "plugin::rewards.badge-award"
 const SNAPSHOT = "plugin::rewards.leaderboard-snapshot"
-const UP_USER = "plugin::users-permissions.user"
 const CREDENTIAL = "plugin::events.event-credential"
 const CREDENTIAL_EVENT = "plugin::events.credential-event"
 
@@ -51,7 +50,17 @@ export async function eraseAccount(
   const erasedId = `deleted-${randomUUID()}`
   const profileFileIds: number[] = []
 
-  await strapi.db.transaction(async () => {
+  let cleanup: Promise<unknown> | undefined
+  let deferredCleanup = false
+  await strapi.db.transaction(async ({ onCommit } = {} as any) => {
+    if (onCommit) {
+      deferredCleanup = true
+      onCommit(() => {
+        cleanup = purgeErasedMedia(strapi, erasedId).catch(() => {
+          strapi.log.warn("[account] Media cleanup queued for retention retry")
+        })
+      })
+    }
     await strapi.db
       .query("api::paid-membership.paid-membership")
       .deleteMany({ where: { baUserId } })
@@ -126,6 +135,7 @@ export async function eraseAccount(
         documentId: profile.documentId,
         data: {
           baUserId: erasedId,
+          authUser: null,
           username: `deleted-${profile.contributorNumber ?? profile.id}`,
           firstName: "Deleted",
           lastName: "User",
@@ -301,13 +311,12 @@ export async function eraseAccount(
       await strapi.db.query(SUBSCRIBER).deleteMany({
         where: { email: { $eqi: email } },
       })
-      await strapi.db.query(UP_USER).delete({ where: { email } })
     }
   })
 
   // Storage writes happen only after erasure commits. The anonymous ownership
   // ledger remains available to the retention job if storage removal fails.
-  await purgeErasedMedia(strapi, erasedId)
+  await (deferredCleanup ? cleanup : purgeErasedMedia(strapi, erasedId))
 }
 
 async function eraseNetworkIdentity(

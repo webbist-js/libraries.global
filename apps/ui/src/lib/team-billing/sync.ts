@@ -8,7 +8,6 @@ import type Stripe from "stripe"
 import { BillingError } from "@/lib/billing/config"
 import { withBillingLock } from "@/lib/billing/database"
 import { isManagedCheckout, stripeId } from "@/lib/billing/provider"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 
 import type { TeamBillingAccount, TeamCheckoutAttempt } from "./billing"
 import { teamBillingBridge } from "./bridge"
@@ -175,7 +174,6 @@ export async function syncTeamMembership(pool: Pool, row: MembershipRow) {
     "update team_billing_memberships set synced_revision=greatest(synced_revision,$2),sync_attempts=0,next_sync_at=now() where subscription_id=$1",
     [row.subscription_id, Number(row.revision)]
   )
-  result.userIds.forEach((userId) => invalidateSessionProfile(userId))
 }
 
 async function reconcileOpenCheckout(

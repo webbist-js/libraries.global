@@ -1,9 +1,10 @@
 import "server-only"
 
+import { headers } from "next/headers"
 import { cache } from "react"
 
+import { authUpstreamHeaders } from "@/lib/auth-transport"
 import { avatarSrc } from "@/lib/avatar"
-import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
 import type { UserProfile } from "@/lib/types/profile"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -13,7 +14,7 @@ type SessionUser = { id: string; email: string; name?: string | null }
 
 /**
  * The owner view of the signed-in user's profile, as Strapi's
- * `GET /api/user-profiles/me` returns it: every field the owner may see
+ * `GET /api/account/profile` returns it: every field the owner may see
  * (notification settings included), avatar, languages, follows, claimed
  * libraries and badges. Never carries `baUserId`. `username` is null until
  * onboarding sets it.
@@ -29,17 +30,13 @@ export type OwnProfileLookup =
  * it through React `cache`. Route handlers call straight through.
  */
 const lookupOwnProfile = cache(
-  async (
-    id: string,
-    email: string,
-    name: string
-  ): Promise<OwnProfileLookup> => {
+  async (_id: string): Promise<OwnProfileLookup> => {
     if (!process.env.STRAPI_BRIDGE_SECRET)
       return { ok: false, reason: "unavailable" }
     try {
-      const res = await fetch(`${STRAPI}/api/user-profiles/me`, {
+      const res = await fetch(`${STRAPI}/api/account/profile`, {
         cache: "no-store",
-        headers: bridgeUserHeaders({ id, email, name }),
+        headers: authUpstreamHeaders(await headers()),
         signal: AbortSignal.timeout(5000),
       })
       if (res.status === 404) return { ok: false, reason: "not_found" }
@@ -57,12 +54,12 @@ const lookupOwnProfile = cache(
 
 /**
  * The signed-in user's own profile, read through the bridge-secret
- * `/api/user-profiles/me` route keyed on the Better Auth id from the session.
+ * `/api/account/profile` route, whose Strapi policy derives identity from the cookie.
  * `baUserId` is private, so the public REST filter on it can't be used.
  * Use this when the caller must tell "no profile" from "Strapi is down".
  */
 export function readOwnProfile(user: SessionUser): Promise<OwnProfileLookup> {
-  return lookupOwnProfile(user.id, user.email, user.name ?? "")
+  return lookupOwnProfile(user.id)
 }
 
 /** The signed-in user's own profile, or null when missing or unreachable. */

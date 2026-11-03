@@ -14,6 +14,13 @@ import {
 } from "../events"
 import { purgeBillingMetadata } from "../retention"
 
+vi.mock("@/lib/auth-identities", () => ({
+  verifiedIdentity: async (id: string) => ({
+    id,
+    email: "fixture@example.invalid",
+  }),
+}))
+
 const enabled = process.env.BILLING_DB_TEST === "true"
 const schema = `billing_test_${randomUUID().replaceAll("-", "")}`
 let admin: Pool, pool: Pool
@@ -89,10 +96,6 @@ describe.skipIf(!enabled)("billing database isolation and concurrency", () => {
         "utf8"
       )
     )
-    await pool.query(
-      'create table "user" (id text primary key, "emailVerified" boolean)'
-    )
-    await pool.query('insert into "user" values($1,true)', [buyer.id])
     vi.stubEnv("PRO_ENABLED", "true")
     vi.stubEnv("STRIPE_MANAGED_PAYMENTS_ENABLED", "true")
     vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture")

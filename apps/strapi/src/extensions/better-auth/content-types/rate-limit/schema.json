@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ba_rate_limit",
+  "info": {
+    "singularName": "rate-limit",
+    "pluralName": "rate-limits",
+    "displayName": "Auth rateLimit"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "key": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true,
+      "unique": true
+    },
+    "count": {
+      "type": "integer",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "lastRequest": {
+      "type": "biginteger",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    }
+  }
+}

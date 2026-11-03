@@ -6,7 +6,7 @@ Libraries Global is a pnpm/Turborepo monorepo with a Next.js frontend, a Strapi 
 
 | Workspace                            | Responsibility                                                                        |
 | ------------------------------------ | ------------------------------------------------------------------------------------- |
-| `apps/ui`                            | Public routes, Better Auth, session-aware API routes and browser UI                   |
+| `apps/ui`                            | Public routes, auth transport, session-aware API routes and browser UI                |
 | `apps/strapi`                        | Published content, moderation, library staff authority and private access projections |
 | `apps/sync-worker`                   | Event ingestion and Atlas processing                                                  |
 | `apps/analysis`                      | Private native routing, windowed population integration and bounded file artifacts    |
@@ -21,7 +21,7 @@ PostgreSQL holds CMS and application data. Meilisearch serves derived public sea
 
 Server components fetch published CMS content through `PublicStrapiClient` and feature-specific loaders. Browser requests use bounded Next.js routes; credentials stay on the server. The generic content proxies allow selected published reads only.
 
-Better Auth owns public account sessions. Dedicated Next.js routes resolve the cookie session and construct trusted bridge headers. Strapi verifies the bridge and rechecks current authority for each operation. A paid plan changes tools and quotas; it never grants editorial or staff authority. `PrivateStrapiClient` is a legacy compatibility client and does not obtain a Strapi JWT from a Better Auth session.
+The Strapi Better Auth plugin owns public accounts and sessions. Next.js forwards auth traffic through a private service transport. Dedicated Next.js routes resolve the cookie session and construct trusted bridge headers. Strapi verifies the bridge and rechecks current authority for each operation. A paid plan changes tools and quotas; it never grants editorial or staff authority. `PrivateStrapiClient` is a legacy compatibility client and does not obtain a Strapi JWT from a Better Auth session.
 
 See [Authentication](authentication.md) and [Strapi API client](strapi-api-client.md).
 

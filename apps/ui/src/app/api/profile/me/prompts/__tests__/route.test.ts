@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const getSession = vi.fn()
 const readOwnProfile = vi.fn()
-const invalidateSessionProfile = vi.fn()
 const fetchMock = vi.fn()
 
 vi.mock("next/headers", () => ({
@@ -10,7 +9,6 @@ vi.mock("next/headers", () => ({
 }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 vi.mock("@/lib/own-profile-server", () => ({ readOwnProfile }))
-vi.mock("@/lib/session-profile", () => ({ invalidateSessionProfile }))
 
 vi.stubEnv("STRAPI_URL", "http://strapi.test")
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
@@ -59,7 +57,6 @@ describe("PUT /api/profile/me/prompts", () => {
       baUserId: "u1",
       dismissedPrompts: ["find-contribute"],
     })
-    expect(invalidateSessionProfile).toHaveBeenCalledWith("u1")
   })
 
   it("doesn't repeat a prompt that is already hidden", async () => {

@@ -328,6 +328,7 @@ export default ({ strapi }: { strapi: any }) => ({
         .where("library_document_id", documentId)
         .where("version_status", "published")
         .where("action", "<>", "create")
+        .where("action", "<>", "baseline")
         .where("changed_at", ">=", windowStart(months, now).toISOString())
 
     const [perMonth, perField, perAction, verified] = (await Promise.all([

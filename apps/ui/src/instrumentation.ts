@@ -4,16 +4,16 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants"
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     await import("../sentry.server.config")
-    // Builds and unit imports must not mutate the authentication database.
+    // Builds and unit imports must not mutate the application database.
     // Next awaits register() before serving requests, so schema failure prevents
-    // a partially ready server from accepting sign-ins.
+    // a partially ready server from accepting requests.
     if (
       process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD &&
       process.env.NODE_ENV !== "test"
     ) {
-      const { auth, authDbPool } = await import("./lib/auth")
-      const { migrateAuthSchema } = await import("./lib/auth-migrations")
-      await migrateAuthSchema(authDbPool, () => auth.$context)
+      const { appDbPool } = await import("./lib/app-db")
+      const { migrateApplicationState } = await import("./lib/app-migrations")
+      await migrateApplicationState(appDbPool)
     }
   }
 

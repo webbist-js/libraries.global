@@ -1875,7 +1875,8 @@
     "savedNoMatches": "Žádné uložené články neodpovídají filtrům. Zrušte je nebo zobrazte všechny články.",
     "savedEmpty": "Uložte si článek z jeho postranního panelu a přečtěte si ho později.",
     "upNext": "Další čtení",
-    "nextStory": "Další článek"
+    "nextStory": "Další článek",
+    "baseline": "Výchozí stav obsahu"
   },
   "billing": {
     "secureCheckout": "Bezpečná platba",

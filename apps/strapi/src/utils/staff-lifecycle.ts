@@ -1,5 +1,5 @@
 import { refreshNoticeEffects } from "./library-notices"
-import { notifySessionInvalidated, syncDerivedRole } from "./role-grants"
+import { syncDerivedRole } from "./role-grants"
 import { listStaff, loadStaffClaims } from "./staff"
 import { groupedStaffChanges } from "./staff-notification-scope"
 import { afterStaffCommit, notifyStaffChange } from "./staff-notifications"
@@ -36,7 +36,6 @@ export async function onStaffChanged(
     })
     await syncDerivedRole(strapi, input.baUserId)
   }
-  await notifySessionInvalidated(strapi, input.baUserId)
   await afterStaffCommit(
     strapi,
     `staff search refresh for ${input.libraryDocumentId}`,

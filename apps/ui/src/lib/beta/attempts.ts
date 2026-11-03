@@ -15,7 +15,7 @@ const localLimiter = createRateLimiter({
 })
 const shared = globalThis as typeof globalThis & { _betaPool?: Pool }
 
-/** Use the existing verification table, independent of users and account sessions. */
+/** Use application-owned challenge storage, independent of users and account sessions. */
 export async function betaAttemptLimit(req: Request) {
   if (process.env.NODE_ENV !== "production")
     return localLimiter.check(clientIp(req))
@@ -36,7 +36,7 @@ export async function betaAttemptLimit(req: Request) {
       [key]
     )
     const { rows } = await client.query<{ value: string }>(
-      'select value from "verification" where id = $1 for update',
+      'select value from "app_auth_state" where id = $1 for update',
       [key]
     )
     const previous = rows[0]
@@ -47,7 +47,7 @@ export async function betaAttemptLimit(req: Request) {
         ? { ...previous, count: previous.count + 1 }
         : { count: 1, resetAt: now + WINDOW }
     await client.query(
-      'insert into "verification" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=excluded.value,"expiresAt"=excluded."expiresAt","updatedAt"=now()',
+      'insert into "app_auth_state" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=excluded.value,"expiresAt"=excluded."expiresAt","updatedAt"=now()',
       [key, JSON.stringify(state), new Date(state.resetAt)]
     )
     await client.query("COMMIT")

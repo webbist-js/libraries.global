@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Icon } from "@iconify/react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -15,9 +16,29 @@ interface AuthOAuthButtonsProps {
 }
 
 export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
-  const [loading, setLoading] = useState<"google" | null>(null)
+  const [loading, setLoading] = useState<"google" | "discord" | null>(null)
 
-  const handleOAuth = async (provider: "google") => {
+  const [providers, setProviders] = useState<string[]>([])
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch("/api/auth/providers", { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) return
+        const body = await response.json()
+        if (Array.isArray(body.providers))
+          setProviders(
+            body.providers.filter(
+              (provider: unknown) =>
+                provider === "google" || provider === "discord"
+            )
+          )
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [])
+
+  const handleOAuth = async (provider: "google" | "discord") => {
     setLoading(provider)
     try {
       const result = await authClient.signIn.social({
@@ -38,13 +59,31 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
     }
   }
 
+  if (!providers.length) return null
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      <GoogleButton
-        mode={mode}
-        loading={loading}
-        onClick={() => handleOAuth("google")}
-      />
+      {providers.includes("google") && (
+        <GoogleButton
+          mode={mode}
+          loading={loading}
+          onClick={() => handleOAuth("google")}
+        />
+      )}
+      {providers.includes("discord") && (
+        <AuthSecondaryButton
+          disabled={loading !== null}
+          onClick={() => handleOAuth("discord")}
+          aria-describedby="oauth-terms"
+        >
+          <Icon icon="mdi:discord" width={20} aria-hidden="true" />
+          {loading === "discord"
+            ? "Redirecting…"
+            : mode === "signin"
+              ? "Continue with Discord"
+              : "Sign up with Discord"}
+        </AuthSecondaryButton>
+      )}
       <p
         id="oauth-terms"
         style={{
@@ -53,7 +92,7 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
           color: T.ink.dim,
         }}
       >
-        By continuing with Google, you confirm you&rsquo;re{" "}
+        By continuing with Google or Discord, you confirm you&rsquo;re{" "}
         {MINIMUM_ACCOUNT_AGE} or over and agree to our{" "}
         <GlobalLink
           href="/legal/terms"
@@ -82,7 +121,7 @@ function GoogleButton({
   onClick,
 }: {
   mode: AuthOAuthButtonsProps["mode"]
-  loading: "google" | null
+  loading: "google" | "discord" | null
   onClick: () => void
 }) {
   return (

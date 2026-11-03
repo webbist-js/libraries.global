@@ -34,7 +34,7 @@ Read [Routing](../docs/docs/pages-hierarchy.md), [Content components](../docs/do
 
 Server components use feature loaders in `src/lib/strapi-api/content/`. `PublicStrapiClient` supplies server-side content credentials. Browser calls go through bounded Next.js content/feature routes. Generic proxies permit selected published reads; they are not arbitrary CMS write APIs.
 
-Better Auth owns public accounts and database-backed cookie sessions. Server code uses `getSessionSSR` from `@/lib/auth-server`; client code uses `useHydratedSession` from `@/lib/access-client`. Dedicated Next.js routes validate requests and construct trusted Strapi bridge headers. Strapi checks current grants, library assignments and entitlements independently.
+Strapi hosts Better Auth and its database-backed cookie sessions. Next.js provides the same-origin transport and typed server gateway. Server code uses `getSessionSSR` from `@/lib/auth-server`; client code uses `useHydratedSession` from `@/lib/access-client`. Dedicated Next.js routes validate requests and construct trusted Strapi bridge headers. Strapi checks current grants, library assignments and entitlements independently.
 
 `PrivateStrapiClient` is a legacy client for explicit authentication. It does not obtain a Strapi JWT from a Better Auth session. New account features must use dedicated session-aware routes.
 
