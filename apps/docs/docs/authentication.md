@@ -1,13 +1,10 @@
 # Authentication
 
-Better Auth in `apps/ui` owns public user accounts and cookie sessions. The browser does not receive a Strapi user JWT or the service bridge secret. Strapi admin authentication is separate from public accounts.
+The Strapi Better Auth plugin owns public accounts, credentials, cookie sessions and profile provisioning. Next.js forwards `/api/auth/*` to Strapi with the server bridge credential; the browser keeps the same origin and cookie interface. Strapi admin authentication is separate.
 
-The Node server prepares the Better Auth schema in its awaited instrumentation
-startup hook, before accepting requests. A PostgreSQL advisory transaction lock
-serializes schema inspection and migration across server instances; lock waits
-are bounded at 30 seconds. A migration failure stops startup. Builds and unit
-imports do not run migrations. Google website sign-in is registered only when
-both OAuth credentials are configured.
+Strapi synchronizes the checked-in plugin schemas and installs database invariants at startup. Next.js only prepares its application-owned `app_auth_state` table for beta throttling and mobile confirmation. It never migrates or queries credential tables. Run `pnpm --filter @repo/strapi generate:auth-schema` when changing Better Auth fields/plugins, inspect the private fields and numeric types, then run `pnpm --filter @repo/strapi generate:types`.
+
+Google and Discord appear only when both credentials for that provider are configured in the CMS. Register callbacks at `{APP_PUBLIC_URL}/api/auth/callback/google` and `{APP_PUBLIC_URL}/api/auth/callback/discord`. OAuth signup carries the current terms acceptance; Discord requires a verified email address. Email/password requires verified ownership; magic links are sign-in only. The mobile live console retains its passkey registration and identity-confirmation controls.
 
 ## Request boundary
 
@@ -39,7 +36,27 @@ Selected section entry pages show a contextual invitation before sign-in.
 See [Feature entry pages](feature-entry-pages.md) for the redirect audit, public
 discovery paths and the private actions that retain direct gates.
 
-The current configuration uses database sessions with a 30-day lifetime and a one-day update interval. The Better Auth cookie cache is disabled. Read `apps/ui/src/lib/auth.ts` for current verification, password reset, magic-link, OAuth, passkey and two-factor configuration rather than reproducing those settings elsewhere.
+The current configuration uses database sessions with a 30-day lifetime and a one-day update interval. The Better Auth cookie cache is disabled. Read `apps/strapi/src/auth/config.ts` for verification, password reset, magic-link, OAuth and passkey configuration. Server reads disable session refresh because they cannot forward response cookies; browser auth requests forward every Set-Cookie header.
+
+## Roles and policies
+
+Users & Permissions is removed: the adapter cannot coexist with it. The optional API Permissions companion is not installed. Role Grants remain the sole community-role authority, with queue, locale and expiry scope; staff and Team memberships and paid entitlements are separate. The `global::moderation` policy resolves trusted identity and capabilities once per request. Resource checks, self-review restrictions and transaction-time authority checks still apply.
+
+For an owner-only example, follow `/api/account/profile`: `global::service-auth` restricts the transport, then `global::account-session` resolves the Better Auth cookie and sets the request identity. The controller selects that user’s related profile and removes private identity fields. A forged `X-Ba-User-Id` cannot replace the cookie identity. Next.js uses this route for its own-profile read. Manage grants through the existing CMS access tools, not a duplicate U&P role catalogue.
+
+Generated public content routes use an explicit read-only auth strategy preserving the former public read actions. Core API tokens retain their own strategy. Auth transport and internal identity/password/retention operations require the service secret. The adapter's missing-API-Permissions startup warning refers to its companion strategy; this application supplies its own policies and public-read strategy.
+
+The plugin is pinned and patched: compound predicates must survive adapter conversion, token/counter mutations must be atomic, and internal Strapi fields must not enter Better Auth guards. Regression tests are required before removing the patch or upgrading.
+
+## Transport configuration
+
+Keep `BETTER_AUTH_SECRET`, OAuth credentials and `APPLICATION_DATABASE_URL` in the CMS runtime. Next.js retains its application `DATABASE_URL`, `STRAPI_URL` and shared `STRAPI_BRIDGE_SECRET`. Event feed OAuth uses an independent `EVENT_FEED_OAUTH_SECRET`. No credential belongs in a public environment variable.
+
+The gateway drops caller-supplied identity and service headers. Enable `AUTH_TRUST_PROXY_IP=true` only where a trusted reverse proxy replaces inbound forwarding headers. Otherwise rate limits use the transport peer address, which can group visitors together. Browser bodies are bounded, responses are uncached, and redirects and cookies are preserved. The plugin extension restores JSON `null` for signed-out session reads because Koa otherwise turns it into an empty 204 response. Keep the CMS auth handler inaccessible without the service credential.
+
+## Beta reset
+
+The one-shot reset discards public accounts and profiles, account-owned beta activity and test billing bindings. Catalogue/editorial values, dates, provenance, administrators and service access remain. Historical contributions become explicitly labelled system baselines, excluded from new-edit counts. New users receive new profiles; no matching by email occurs. See [reset procedure](../../../scripts/auth/README.md) and [architecture decision](decisions/strapi-hosted-authentication.md). No destructive reset runs during normal startup.
 
 ## Client caches
 

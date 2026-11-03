@@ -1,10 +1,10 @@
 # Strapi hosts public authentication and scoped access policies
 
-Status: Accepted for implementation (2026-11-03); local acceptance and deployment pending.
+Status: Implemented and locally validated (2026-11-03). Not deployed.
 
 ## Context
 
-Better Auth currently runs in Next.js. Strapi stores public profiles, scoped role grants, library/Team memberships and entitlements. Dedicated Next.js routes resolve cookie sessions and assert identity through a server bridge. Some application jobs also query the authentication tables directly. Users & Permissions contains duplicate public users but does not represent our application roles.
+Before this retrofit, Better Auth ran in Next.js. Strapi stores public profiles, scoped role grants, library/Team memberships and entitlements. Dedicated Next.js routes resolve cookie sessions and assert identity through a server bridge. Some application jobs also query the authentication tables directly. Users & Permissions contains duplicate public users but does not represent our application roles.
 
 We want the repository to demonstrate Strapi-native authentication and authorization. The beta permits a clean public-account reset: users register again, and test billing, profile and contribution activity can be discarded. Catalogue records, editorial content, provenance and service/admin access must survive. Resetting accounts must not remove application functionality.
 
@@ -45,7 +45,7 @@ Reset public accounts, profiles and approved account-owned beta records through 
 | Profile creation partially fails                                 | Idempotent provisioning and uniqueness; deny domain use until the related profile exists and repair without duplicates.                                                                                |
 | Auth hooks become recursive across services                      | Local Strapi session/access/email lookup; explicit deletion coordination with application billing, with idempotent steps and failure states.                                                           |
 | Old verification table contains application state                | Move mobile confirmation/rate-limit records to owned storage before retiring auth tables.                                                                                                              |
-| Activity triggers/FKs retain old auth dependencies               | Replace or remove them explicitly; verify schema dependencies and retention jobs.                                                                                                                      |
+| Activity triggers/FKs retain old auth dependencies               | Replace or remove them explicitly; install user foreign keys for the adapter’s scalar account/session/passkey references and verify deletion cascades and retention.                                   |
 | Schema generation exposes credentials or breaks numeric fields   | Inspect generated schemas, hidden/private fields, owner references and epoch-millisecond types; test the actual adapter against PostgreSQL.                                                            |
 | Account reset removes content through relations                  | Explicit deletion order and manifest, retained-content hashes and media/reference checks; no blanket CASCADE.                                                                                          |
 | History baseline changes publication semantics                   | Preserve publication dates and catalogue values; compare rendered history and subsequent edits.                                                                                                        |
@@ -59,3 +59,13 @@ Local acceptance must cover fresh signup, all login methods, profile settings/ex
 This removes authentication ownership duplication and repeated controller plumbing. Application-specific policy rules remain explicit and testable. The dependency is beta, so its pinned source, patches and adapter behaviour are part of our maintenance responsibility. Production promotion follows the existing release acceptance process after local verification.
 
 Public documentation and commits contain only generic architecture, code, synthetic fixtures and placeholder environment examples. Provider secrets, private operational inventories, real account mappings and recovery evidence stay outside Git.
+
+## Local verification
+
+The local reset passed a transactional rehearsal before application, with retained-table fingerprints unchanged. The durable checkpoint prevents a second reset. Fresh Google and Discord sign-ins returned to profile onboarding through the same-origin callback routes.
+
+The PostgreSQL acceptance runner verifies password signup and email ownership, magic-link replay rejection, password-reset session revocation, profile/export/deletion, immediate scoped-role grant and revocation, anonymous and API-token permission boundaries, and concurrent single-consumer token/counter mutations. A synthetic WebAuthn device verifies registration/login, unsigned counters, origin/replay rejection and mobile identity confirmation; physical device prompts are not part of that automated check. The unit suites passed 2,192 Strapi tests and 3,953 UI tests. Skipped integration suites are not claimed as executed; they require their separately documented environments.
+
+Production promotion remains separate. An application image rollback cannot undo this account reset; recovery needs the matching database snapshot and code. Private recovery and provider credentials are excluded from the public repository.
+
+Strapi server/plugins/admin and Next.js production builds passed, along with both application typechecks, lint checks and the public-file/secret checks. The local provider credentials and development OAuth callback configuration do not constitute production provider setup.

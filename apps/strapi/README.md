@@ -32,7 +32,7 @@ The generated declarations are shared through `@repo/strapi-types`. See [Schema 
 
 The CMS includes local Access, Beta Invites, Content Moderation, Events, Library Staff, Mobile Libraries, Rewards and Topics plugins, plus the portable [Discussions plugin](../../packages/strapi-plugin-discussions/README.md). Read `config/plugins.ts` and each package's scripts for current registration/build behavior; package.json is the dependency/version reference.
 
-Better Auth in Next.js owns public account sessions. Server bridge endpoints verify trusted headers and current CMS authority. Strapi admin authentication and plugin RBAC are separate. Payment projections may grant tools, never community roles or staff authority. See [Authentication](../docs/docs/authentication.md).
+The Strapi Better Auth plugin owns public accounts, sessions and profile provisioning. Server bridge endpoints verify trusted headers and current CMS authority. Strapi admin authentication and plugin RBAC are separate. Payment projections may grant tools, never community roles or staff authority. See [Authentication](../docs/docs/authentication.md).
 
 Runtime loads compiled local plugin output. Build the affected plugin before using its changed server/admin code; `pnpm --filter @repo/strapi build` builds all CMS plugins and the admin. Reuse the existing server and restart only through the task's authorized development workflow.
 
