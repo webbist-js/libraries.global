@@ -10,7 +10,10 @@ import { decideFromRequest } from "./option-suggestion"
 import { claimAffiliationFilter } from "../../../../utils/affiliations"
 import { revokeAuthoritySource } from "../../../../utils/authority-grants"
 import { requireFreshBridgeAuth } from "../../../../utils/fresh-bridge-auth"
-import { decodeHeaderName } from "../../../../utils/header-name"
+import {
+  moderationActor,
+  type ModerationActor,
+} from "../../../../utils/moderation-actor"
 import { removeServiceScopes } from "../../../access/server/services/network-fulfilment"
 import {
   LIST_STATUSES,
@@ -37,7 +40,6 @@ import {
   takeOverLock,
 } from "../utils/review-locks"
 import { contributorReviewer } from "../utils/reviewer"
-import { isValidServiceSecret } from "../utils/service-secret"
 import { reviewRoundView, updateReviewRound } from "../utils/suggestion-rounds"
 
 /**
@@ -64,7 +66,7 @@ const isDateString = (v: unknown): v is string =>
   v.length <= MAX_DATE &&
   !Number.isNaN(Date.parse(v))
 
-type Viewer = { id: string; email: string | null; name: string | null }
+type Viewer = ModerationActor["viewer"]
 
 function clampInt(
   value: unknown,
@@ -86,27 +88,6 @@ function fail(
 ): void {
   ctx.status = status
   ctx.body = { error: { status, message, ...extra } }
-}
-
-const header = (ctx: any, name: string): string | null => {
-  const v = ctx.request?.headers?.[name]
-
-  return typeof v === "string" && v.trim() ? v.trim() : null
-}
-
-/** The bridge-authenticated caller, or null. */
-function viewerOf(ctx: any): Viewer | null {
-  if (!isValidServiceSecret(ctx.request?.headers?.["x-service-secret"]))
-    return null
-  const id = header(ctx, "x-ba-user-id")
-  if (!id) return null
-
-  return {
-    id,
-    email: header(ctx, "x-ba-user-email"),
-    // Percent-encoded by the bridge (headers are Latin-1 only).
-    name: decodeHeaderName(header(ctx, "x-ba-user-name")),
-  }
 }
 
 const NOT_FOUND = "Submission not found."
@@ -196,24 +177,15 @@ export default ({ strapi }: { strapi: any }) => {
     caps: Capabilities
     role: string | null
   } | null> {
-    const viewer = viewerOf(ctx)
-    if (!viewer) {
-      fail(ctx, 401, "Service secret and user required.")
-
-      return null
-    }
-    const { caps, role } = await strapi
-      .plugin("content-moderation")
-      .service("submission-policy")
-      .loadCapabilities(viewer.id)
-    if (!caps?.moderation?.length) {
-      fail(ctx, 403, "You don't moderate any queue.")
+    const result = await moderationActor(strapi, ctx)
+    if (!("actor" in result)) {
+      fail(ctx, result.status, result.message)
 
       return null
     }
     ctx.set?.("Cache-Control", "no-store")
 
-    return { viewer, caps, role: role ?? null }
+    return result.actor
   }
 
   /**
