@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 vi.mock("server-only", () => ({}))
 import { authGateway } from "../auth-gateway"
-import { authUpstreamHeaders, proxyAuthRequest } from "../auth-transport"
+import {
+  authUpstreamHeaders,
+  authUpstreamUrl,
+  proxyAuthRequest,
+} from "../auth-transport"
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -16,6 +20,53 @@ function setup() {
 }
 
 describe("Strapi auth transport", () => {
+  it.each([
+    "/api/auth/%2f%2fexternal.example.test",
+    "/api/auth/%252e%252e/auth-internal/retention",
+    "/api/auth/..%2fauth-internal/retention",
+    "/api/auth/sign-in%5c..%5c..%5cauth-internal/retention",
+    "/api/auth-internal/retention",
+  ])("rejects ambiguous or internal browser paths: %s", async (path) => {
+    setup()
+    const fetcher = vi.fn(async () => Response.json(null))
+    vi.stubGlobal("fetch", fetcher)
+    const response = await proxyAuthRequest(
+      new Request(`https://site.example.test${path}`)
+    )
+    expect(response.status).toBe(404)
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    "https://external.example.test/api/auth/get-session",
+    "//external.example.test/api/auth/get-session",
+    "/api/auth/../../admin/users",
+    "/api/auth/%2e%2e/auth-internal/retention",
+  ])("refuses URL resolution from an untrusted path: %s", (path) => {
+    setup()
+    expect(() => authUpstreamUrl(path)).toThrow("Invalid auth upstream path")
+  })
+
+  it.each(["google", "discord"])(
+    "keeps %s callback parameters on the configured CMS origin",
+    async (provider) => {
+      setup()
+      const fetcher = vi.fn(async () => Response.json(null))
+      vi.stubGlobal("fetch", fetcher)
+      const query =
+        "?code=synthetic%2Bcode&state=synthetic%2Fstate&callbackURL=https%3A%2F%2Fexternal.example.test"
+      await proxyAuthRequest(
+        new Request(
+          `https://site.example.test/api/auth/callback/${provider}${query}`
+        )
+      )
+      const [url] = fetcher.mock.calls[0] as unknown as [URL]
+      expect(url.origin).toBe("http://cms.example.test:1337")
+      expect(url.pathname).toBe(`/api/auth/callback/${provider}`)
+      expect(url.search).toBe(query)
+    }
+  )
+
   it("keeps OAuth redirects and every Set-Cookie header", async () => {
     setup()
     const upstream = new Headers({

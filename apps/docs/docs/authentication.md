@@ -52,7 +52,7 @@ The plugin is pinned and patched: compound predicates must survive adapter conve
 
 Keep `BETTER_AUTH_SECRET`, OAuth credentials and `APPLICATION_DATABASE_URL` in the CMS runtime. Next.js retains its application `DATABASE_URL`, `STRAPI_URL` and shared `STRAPI_BRIDGE_SECRET`. Event feed OAuth uses an independent `EVENT_FEED_OAUTH_SECRET`. No credential belongs in a public environment variable.
 
-The gateway drops caller-supplied identity and service headers. Enable `AUTH_TRUST_PROXY_IP=true` only where a trusted reverse proxy replaces inbound forwarding headers. Otherwise rate limits use the transport peer address, which can group visitors together. Browser bodies are bounded, responses are uncached, and redirects and cookies are preserved. The plugin extension restores JSON `null` for signed-out session reads because Koa otherwise turns it into an empty 204 response. Keep the CMS auth handler inaccessible without the service credential.
+The gateway drops caller-supplied identity and service headers. Enable `AUTH_TRUST_PROXY_IP=true` only where a trusted reverse proxy replaces inbound forwarding headers. Otherwise rate limits use the transport peer address, which can group visitors together. The outbound origin comes only from `STRAPI_URL`; browser paths must contain plain auth route segments, with encoded separators and dot segments rejected before forwarding. OAuth code/state stay in query parameters and cannot select an upstream host. Browser bodies are bounded, responses are uncached, and redirects and cookies are preserved. The plugin extension restores JSON `null` for signed-out session reads because Koa otherwise turns it into an empty 204 response. Keep the CMS auth handler inaccessible without the service credential.
 
 ## Beta reset
 

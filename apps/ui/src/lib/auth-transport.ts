@@ -24,15 +24,32 @@ export function authUpstreamHeaders(source: Headers, json = false): Headers {
   return result
 }
 
+function isAuthPath(path: string): boolean {
+  return /^\/api\/auth(?:-internal)?\/[a-z\d-]+(?:\/[a-z\d-]+)*\/?$/.test(path)
+}
+
 export function authUpstreamUrl(path: string): URL {
-  return new URL(path, process.env.STRAPI_URL ?? "http://127.0.0.1:1337")
+  if (!isAuthPath(path)) throw new Error("Invalid auth upstream path")
+  // Only configuration selects the destination. Never resolve caller input as
+  // a URL: absolute URLs, encoded separators and dot segments are not paths.
+  const url = new URL(process.env.STRAPI_URL ?? "http://127.0.0.1:1337")
+  url.pathname = path
+  url.search = ""
+  url.hash = ""
+
+  return url
 }
 
 export async function proxyAuthRequest(request: Request): Promise<Response> {
   const incoming = new URL(request.url)
-  if (!incoming.pathname.startsWith("/api/auth/"))
+  if (
+    !incoming.pathname.startsWith("/api/auth/") ||
+    !isAuthPath(incoming.pathname)
+  )
     return new Response(null, { status: 404 })
-  const url = authUpstreamUrl(incoming.pathname + incoming.search)
+  const url = authUpstreamUrl(incoming.pathname)
+  // OAuth state/code and callback parameters remain query data, never a host.
+  url.search = incoming.search
   const headers = authUpstreamHeaders(request.headers)
   const contentType = request.headers.get("content-type")
   if (contentType) headers.set("content-type", contentType)
