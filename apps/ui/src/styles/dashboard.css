@@ -219,6 +219,12 @@ body[data-dashboard-active]
   body[data-dashboard-active] [data-drawer-panel="left"] {
     left: var(--dashboard-rail-width);
   }
+  /* A bottom sheet is width-capped below; centre it in the canvas beside the
+     rail instead of leaving it pinned under the rail at the viewport edge. */
+  body[data-dashboard-active] [data-drawer-panel="bottom"] {
+    left: var(--dashboard-rail-width);
+    margin-inline: auto;
+  }
   body[data-dashboard-active]
     [data-drawer-panel]:not(.dashboard-drawer):not(.profile-workspace-drawer) {
     max-width: min(
@@ -232,6 +238,12 @@ body[data-dashboard-active]
     --sticky-content-max-height: calc(100dvh - 48px);
     padding-top: 0;
     padding-left: var(--dashboard-rail-width);
+  }
+  /* Workspace pages pin a 61px record toolbar at the top; clear it too. */
+  .dashboard-shell:has(.record-toolbar) {
+    --sticky-header-height: 61px;
+    --sticky-content-top: calc(61px + 24px);
+    --sticky-content-max-height: calc(100dvh - 61px - 48px);
   }
   .dashboard-navigation {
     inset: 0 auto 0 0;
@@ -264,9 +276,19 @@ body[data-dashboard-active]
     gap: 8px;
   }
   .dashboard-workspace-links {
+    position: relative;
     display: flex;
     padding-top: 12px;
+  }
+  /* A short centred rule, not an edge-to-edge border, sets the group apart. */
+  .dashboard-workspace-links::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 48px;
     border-top: 1px solid rgb(255 255 255 / 16%);
+    translate: -50% 0;
   }
   .dashboard-rail-item {
     width: 80px;

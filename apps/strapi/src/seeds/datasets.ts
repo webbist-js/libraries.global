@@ -336,6 +336,46 @@ export const DATASET_SEED: DatasetSeed[] = [
     notes:
       "District names and GSS codes come from ONS; the district-to-county assignment follows the Lieutenancies Act 1997 as amended.",
   },
+  {
+    key: "de-isil",
+    name: "Deutsches ISIL-Verzeichnis (German library registry)",
+    publisher:
+      "Deutsche ISIL-Agentur und Sigelstelle / Staatsbibliothek zu Berlin / DNB",
+    sourceUrl: "https://data.dnb.de/opendata/",
+    licence: "CC0 1.0 Universal",
+    licenceUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Libraries imported from the Deutsches ISIL-Verzeichnis, maintained by Deutsche ISIL-Agentur und Sigelstelle at Staatsbibliothek zu Berlin, published by DNB under CC0 1.0.",
+    coverage:
+      "German libraries and information institutions with stable ISIL codes: national, regional, public, academic, special and cultural libraries across 16 Bundesländer.",
+    importMechanism:
+      "pnpm ingest --dataset=de-isil; JSONLD RDF dump from DNB opendata, mapped by ISIL and PICA field codes, resumable draft writes with --local or --production.",
+    notes:
+      "Coordinates are included from the registry (provenance to be confirmed). Mobile libraries' pins are omitted. Dissolved institutions and non-library records (archives, museums, e-packages) are excluded. Type classification uses PICA field 035E. Operands and relations from field 029R are noted but not inferred as CMS links (no parent ISIL matching yet).",
+  },
+  {
+    key: "es-mcu-libraries",
+    name: "Directorio de Bibliotecas Españolas (Spanish library directory)",
+    publisher:
+      "Ministerio de Cultura, Subdirección General de Coordinación Bibliotecaria",
+    sourceUrl:
+      "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=descarga",
+    licence: "Not yet confirmed: reuse terms requested from the Ministry",
+    licenceUrl:
+      "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=enlaces&accion=aviso_legal",
+    licenceStatus: "unconfirmed",
+    redistribution: "unconfirmed",
+    attribution:
+      "Source: Directorio de Bibliotecas Españolas, Ministerio de Cultura.",
+    coverage:
+      "Spanish public, university, specialised and cultural libraries across the 17 autonomous communities, the 2 autonomous cities and 50 provinces.",
+    importMechanism:
+      "pnpm ingest --dataset=es-mcu-libraries; JSON export from MCU directory portal, mapped by NIDEN code, resumable draft writes with --local or --production.",
+    notes:
+      "Not imported until the Ministry confirms in writing that the downloads may be republished: the portal’s legal notice permits reproducing texts with attribution and limits other content to private use. Update the licence fields from the reply before any production run. Coordinates included from directory. Mobile libraries' pins omitted. Type mapping covers national, regional, public, university, special, archive, cultural and specific-user-group types.",
+  },
 ]
 
 const UID = "api::dataset.dataset"

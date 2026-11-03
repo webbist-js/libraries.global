@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "saved_views",
+  "info": {
+    "singularName": "saved-view",
+    "pluralName": "saved-views",
+    "displayName": "Saved View",
+    "description": "An account's saved Atlas view or Find search: a name and the page's URL state"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "kind": {
+      "type": "enumeration",
+      "enum": ["view", "search"],
+      "required": true
+    },
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "query": {
+      "type": "text",
+      "maxLength": 2000
+    },
+    "baUserId": {
+      "type": "string",
+      "required": true,
+      "private": true
+    }
+  }
+}

@@ -18,13 +18,18 @@ import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import { PlansAccountStrip } from "@/components/membership/PlansAccountStrip"
-import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
+import {
+  activeTeamOf,
+  sessionTeamsOf,
+  staffLibrariesOf,
+} from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { billingConfig } from "@/lib/billing/config"
 import { hasManagedMembership } from "@/lib/billing/current-membership"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
+import { fetchRoadmap } from "@/lib/roadmap-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 
 // Public pricing has its own canonical URL, separate from private account management.
@@ -64,6 +69,10 @@ export default async function PlansPage({
   const ui = await getUiTranslations({ locale, namespace: "ui" })
   const PROMISES = [m("promiseAds"), m("promiseTrust"), m("promiseData")]
 
+  // Rows for unbuilt features link to their Roadmap item while it's listed.
+  const roadmap = await fetchRoadmap(locale).catch(() => null)
+  const roadmapKeys = roadmap?.features.map((feature) => feature.key) ?? []
+
   const session = await getContributionSession()
   const user = session?.user
   // A signed-in session missing its plan counts as free (missing means deny).
@@ -71,6 +80,7 @@ export default async function PlansPage({
   // Staff of at least one library go to the staff area; anyone else to the
   // claim flow (signed out, the claim page asks them to sign in).
   const isStaff = staffLibrariesOf(user).length > 0
+  const activeTeam = activeTeamOf(user)
   const hasPaidMembership =
     user && billingConfig().configured
       ? await hasManagedMembership(authDbPool, user.id)
@@ -135,6 +145,7 @@ export default async function PlansPage({
               <PlansAccountStrip
                 plan={user.plan ?? "free"}
                 source={user.planSource}
+                team={activeTeam}
               />
             ) : null}
             <section id="free-plans">
@@ -162,7 +173,10 @@ export default async function PlansPage({
               />
             </div>
             <section id="plan-comparison">
-              <PlanCompareTable currentPlan={currentPlan} />
+              <PlanCompareTable
+                currentPlan={currentPlan}
+                roadmapKeys={roadmapKeys}
+              />
             </section>
             <div className="flex flex-col gap-6">
               <ProFreeRoutes />

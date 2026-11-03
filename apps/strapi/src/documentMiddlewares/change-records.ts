@@ -259,7 +259,7 @@ async function captureBefore(
   const before = await load(readStatus)
   const draftBefore = readStatus === "draft" ? before : await load("draft")
   let publishedBefore: Doc | null = null
-  if (action === "unpublish") publishedBefore = before
+  if (action === "unpublish" || action === "publish") publishedBefore = before
   else if (action === "delete") publishedBefore = await load("published")
 
   return { locale, before, draftBefore, publishedBefore }
@@ -338,10 +338,23 @@ async function recordArticle(args: RecordArgs & { uid: string }) {
   const { strapi, action, attrs, documentId, after, snap, actor } = args
   if ((action === "delete" || action === "unpublish") && !snap.before) return
   if ((action === "create" || action === "update") && !after) return
-  const kind =
-    action === "update" && !snap.draftBefore
-      ? "translated"
-      : ARTICLE_KIND_BY_ACTION[action]
+  // Republishing a live version is a public edit, not a second publication;
+  // republishing it unchanged is not an event at all.
+  const republish = action === "publish" && snap.publishedBefore !== null
+  if (
+    republish &&
+    after &&
+    diffVersions(
+      normaliseForDiff(snap.publishedBefore!, attrs),
+      normaliseForDiff(after, attrs),
+      FIELD_GROUPS(attrs)
+    ).length === 0
+  )
+    return
+
+  let kind = ARTICLE_KIND_BY_ACTION[action]
+  if (republish) kind = "edited"
+  else if (action === "update" && !snap.draftBefore) kind = "translated"
   const body = after ? normaliseForDiff(after, attrs).body : undefined
 
   await strapi.documents(ARTICLE_CHANGE).create({

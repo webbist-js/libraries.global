@@ -8,6 +8,7 @@ import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamBilling } from "@/components/staff/TeamBilling"
 import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
+import { TeamNameContext } from "@/components/staff/TeamNameContext"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { authDbPool } from "@/lib/auth"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -67,7 +68,7 @@ export default async function TeamBillingPage({
           { label: "Billing & seats" },
         ]}
         tabs={<StaffAreaTabs active="billing" teamId={chosen.id} />}
-        context={chosen.name}
+        context={<TeamNameContext name={chosen.name} />}
         title="Billing & seats"
         lead="Manage annual payment, seat allowances and renewal for your Team."
       />

@@ -7,13 +7,20 @@ const meta = {
   args: {
     summary: {
       range: 7,
-      sample: true,
+      timeZone: "Europe/London",
+      through: "2026-01-15",
+      incomplete: false,
       kpis: [
-        { key: "views", label: "Record views", value: 1240, changePct: 12 },
+        {
+          key: "views",
+          label: "Record views",
+          value: 1240,
+          previous: 1107,
+          changePct: 12,
+        },
       ],
       viewsPerDay: [{ date: "2026-01-15", value: 240 }],
       referrers: [{ label: "Library index", pct: 60 }],
-      searches: [{ query: "northbridge", count: 12 }],
     },
     rangeHref: (range) => `?range=${range}`,
   },

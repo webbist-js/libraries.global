@@ -7,6 +7,8 @@ import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import { LIVE_LOCALES } from "@/lib/live-locales"
 import {
+  playgroundPlacePath,
+  playgroundPlaces,
   playgroundRequest,
   playgroundRecords,
   PLAYGROUND_MAX_RECORDS,
@@ -33,7 +35,23 @@ const operations = [
     method: "GET",
     path: "/api/v1/libraries/{entityRef}",
   },
+  {
+    id: "places",
+    label: "Browse places",
+    method: "GET",
+    path: "/api/v1/places/{country}/{region}",
+  },
+  {
+    id: "placeLibraries",
+    label: "Libraries in a place",
+    method: "GET",
+    path: "/api/v1/places/{country}/{region}/{area}/libraries",
+  },
 ] as const
+const PLACE_OPERATIONS = new Set<PlaygroundOperation>([
+  "places",
+  "placeLibraries",
+])
 const field =
   "mt-2 block h-12 w-full min-w-0 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) px-4 text-base font-normal text-(--t-ink-base) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
 type Result = {
@@ -41,6 +59,57 @@ type Result = {
   body: unknown
   request: string
   records: ReturnType<typeof playgroundRecords>
+}
+
+type PlaceLevel = "country" | "region" | "area"
+
+/** Which level the returned places are, from the slugs that produced them. */
+function placeLevelOf(country: string, region: string): PlaceLevel {
+  if (region.trim()) return "area"
+
+  return country.trim() ? "region" : "country"
+}
+
+const PLACE_LEVEL_LISTS: Record<PlaceLevel, string> = {
+  country: "countries",
+  region: "the country’s regions",
+  area: "the region’s areas",
+}
+
+/** The country, region and area slugs a returned place stands for. */
+function chosenPlace(
+  slug: string,
+  placeLevel: PlaceLevel,
+  country: string,
+  region: string
+) {
+  if (placeLevel === "country") return { country: slug, region: "", area: "" }
+  if (placeLevel === "region") return { country, region: slug, area: "" }
+
+  return { country, region, area: slug }
+}
+
+/** Why a request cannot be sent yet, or null when it can. */
+function requestProblem(chosen: PlaygroundInput, token: string) {
+  if (!token.trim()) return "Enter your Team API key before running a request."
+  if (chosen.operation === "placeLibraries" && !chosen.country?.trim())
+    return "Enter a country slug, or browse places to choose one."
+
+  return null
+}
+
+/** The JSON body, or a stand-in error when the server did not send JSON. */
+async function responseBody(response: Response): Promise<unknown> {
+  if (response.headers.get("content-type")?.includes("application/json"))
+    return response.json()
+
+  return {
+    error: {
+      code: "non_json_response",
+      message:
+        "The server returned a non-JSON response. Check service availability.",
+    },
+  }
 }
 
 export function ApiPlayground({
@@ -55,6 +124,9 @@ export function ApiPlayground({
   const [entityRef, setEntityRef] = useState("")
   const [limit, setLimit] = useState(10)
   const [locale, setLocale] = useState("en")
+  const [country, setCountry] = useState("")
+  const [region, setRegion] = useState("")
+  const [area, setArea] = useState("")
   const [token, setToken] = useState("")
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
@@ -64,7 +136,21 @@ export function ApiPlayground({
   useEffect(() => () => controller.current?.abort(), [])
   const selected = operations.find((item) => item.id === operation)!
   const records = result?.records ?? playgroundRecords(result?.body)
-  const input: PlaygroundInput = { operation, query, entityRef, limit, locale }
+  const input: PlaygroundInput = {
+    operation,
+    query,
+    entityRef,
+    limit,
+    locale,
+    country,
+    region,
+    area,
+  }
+  const placeOperation = PLACE_OPERATIONS.has(operation)
+  const places = result?.request.includes("/libraries")
+    ? []
+    : playgroundPlaces(result?.body)
+  const placeLevel = placeLevelOf(country, region)
   const clear = () => {
     setResult(null)
     setError("")
@@ -75,8 +161,9 @@ export function ApiPlayground({
     // Keep the returned list available while inspecting individual records.
     if (chosen.operation === "read") setError("")
     else clear()
-    if (!token.trim()) {
-      setError("Enter your Team API key before running a request.")
+    const invalid = requestProblem(chosen, token)
+    if (invalid) {
+      setError(invalid)
 
       return
     }
@@ -99,17 +186,7 @@ export function ApiPlayground({
         redirect: "error",
         signal: abort.signal,
       })
-      const body: unknown = response.headers
-        .get("content-type")
-        ?.includes("application/json")
-        ? await response.json()
-        : {
-            error: {
-              code: "non_json_response",
-              message:
-                "The server returned a non-JSON response. Check service availability.",
-            },
-          }
+      const body = await responseBody(response)
       setResult({
         status: response.status,
         body,
@@ -178,7 +255,7 @@ export function ApiPlayground({
             className="min-w-0 font-mono text-sm break-all sm:text-base"
             translate="no"
           >
-            {selected.path}
+            {placeOperation ? playgroundPlacePath(input) : selected.path}
           </code>
           <span className="ml-auto shrink-0 text-sm text-(--t-ink-dim)">
             v1
@@ -212,64 +289,61 @@ export function ApiPlayground({
               never saved.
             </span>
           </label>
+          {placeOperation ? (
+            <div className="grid gap-5 sm:grid-cols-3">
+              {(
+                [
+                  ["Country", country, setCountry, "united-states"],
+                  ["Region", region, setRegion, "optional"],
+                  ...(operation === "placeLibraries"
+                    ? ([["Area", area, setArea, "optional"]] as const)
+                    : []),
+                ] as const
+              ).map(([label, value, set, placeholder]) => (
+                <label key={label} className="min-w-0 font-semibold">
+                  {label}
+                  <input
+                    name={label.toLowerCase()}
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder={placeholder}
+                    className={field}
+                    value={value}
+                    maxLength={100}
+                    onChange={(event) => {
+                      set(event.target.value.toLowerCase().trim())
+                      clear()
+                    }}
+                  />
+                </label>
+              ))}
+              <p className="m-0 text-sm font-normal text-(--t-ink-dim) sm:col-span-3">
+                Use slugs from “Browse places”. A region needs its country and
+                an area needs its region. Leave them empty to start from every
+                country.
+              </p>
+            </div>
+          ) : null}
           <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_10rem]">
-            {operation === "search" ? (
-              <label className="font-semibold">
-                Search query
-                <input
-                  name="query"
-                  autoComplete="off"
-                  className={field}
-                  value={query}
-                  maxLength={512}
-                  onChange={(event) => {
-                    setQuery(event.target.value)
-                    clear()
-                  }}
-                />
-              </label>
-            ) : operation === "read" ? (
-              <label className="min-w-0 font-semibold">
-                Entity reference
-                <input
-                  id="playground-entity-ref"
-                  name="entityRef"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="Choose a Library from search or list results"
-                  className={field}
-                  value={entityRef}
-                  maxLength={1024}
-                  required
-                  onChange={(event) => {
-                    setEntityRef(event.target.value)
-                    clear()
-                  }}
-                />
-                <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
-                  Run a search or list records, then choose “Read this record”
-                  below. You can also paste a complete entityRef returned by the
-                  API.
-                </span>
-              </label>
-            ) : (
-              <label className="font-semibold">
-                Number of records
-                <input
-                  type="number"
-                  name="limit"
-                  min={1}
-                  max={PLAYGROUND_MAX_RECORDS}
-                  required
-                  className={field}
-                  value={limit}
-                  onChange={(event) => {
-                    setLimit(Number(event.target.value))
-                    clear()
-                  }}
-                />
-              </label>
-            )}
+            <OperationField
+              operation={operation}
+              placeLevel={placeLevel}
+              query={query}
+              entityRef={entityRef}
+              limit={limit}
+              onQuery={(value) => {
+                setQuery(value)
+                clear()
+              }}
+              onEntityRef={(value) => {
+                setEntityRef(value)
+                clear()
+              }}
+              onLimit={(value) => {
+                setLimit(value)
+                clear()
+              }}
+            />
             <label className="font-semibold">
               Locale
               <SelectField
@@ -291,9 +365,96 @@ export function ApiPlayground({
         <RequestSubmit pending={pending} error={error} />
       </form>
       <div
-        className={`grid min-w-0 gap-5 ${records.length ? "xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
+        className={`grid min-w-0 gap-5 ${records.length || places.length ? "xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
       >
         <PlaygroundResponse result={result} pending={pending} />
+        {places.length && operation === "places" ? (
+          <section
+            aria-label="Returned places"
+            className="flex max-h-72 min-w-0 flex-col overflow-hidden rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) xl:max-h-[36rem]"
+          >
+            <div className="border-b border-(--t-border-line) p-5">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="type-small-heading m-0">Returned places</h2>
+                <span className="rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-xs font-semibold tabular-nums">
+                  {places.length}
+                </span>
+              </div>
+              <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
+                Each request you make from here uses your Team’s API allowance.
+              </p>
+            </div>
+            <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
+              {places.map((place) => {
+                const chosen = chosenPlace(
+                  place.slug,
+                  placeLevel,
+                  country,
+                  region
+                )
+
+                return (
+                  <li
+                    key={place.slug}
+                    className="flex min-w-0 flex-wrap items-center gap-2 rounded-2xl px-3 py-2 hover:bg-(--t-bg-surface)"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium [overflow-wrap:anywhere]">
+                        {place.name}
+                      </span>
+                      <span className="block font-mono text-xs text-(--t-ink-dim)">
+                        {place.slug} ·{" "}
+                        {place.libraryCount.toLocaleString("en-GB")}
+                      </span>
+                    </span>
+                    {placeLevel !== "area" ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={pending}
+                        aria-label={`Browse ${place.name}`}
+                        onClick={() => {
+                          setCountry(chosen.country)
+                          setRegion(chosen.region)
+                          setArea("")
+                          void run({
+                            ...input,
+                            operation: "places",
+                            ...chosen,
+                            area: "",
+                          })
+                        }}
+                      >
+                        Browse
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={pending}
+                      aria-label={`List libraries in ${place.name}`}
+                      onClick={() => {
+                        setOperation("placeLibraries")
+                        setCountry(chosen.country)
+                        setRegion(chosen.region)
+                        setArea(chosen.area)
+                        void run({
+                          ...input,
+                          operation: "placeLibraries",
+                          ...chosen,
+                        })
+                      }}
+                    >
+                      Libraries
+                    </Button>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        ) : null}
         {records.length ? (
           <section
             aria-label="Returned libraries"
@@ -362,6 +523,87 @@ export function ApiPlayground({
         ) : null}
       </div>
     </div>
+  )
+}
+
+/** The operation's own parameter: a query, a reference, a limit or a note. */
+function OperationField({
+  operation,
+  placeLevel,
+  query,
+  entityRef,
+  limit,
+  onQuery,
+  onEntityRef,
+  onLimit,
+}: {
+  readonly operation: PlaygroundOperation
+  readonly placeLevel: PlaceLevel
+  readonly query: string
+  readonly entityRef: string
+  readonly limit: number
+  readonly onQuery: (value: string) => void
+  readonly onEntityRef: (value: string) => void
+  readonly onLimit: (value: number) => void
+}) {
+  if (operation === "places")
+    return (
+      <p className="m-0 self-end text-sm text-(--t-ink-dim)">
+        Lists {PLACE_LEVEL_LISTS[placeLevel]} with published libraries, and how
+        many each has.
+      </p>
+    )
+  if (operation === "search")
+    return (
+      <label className="font-semibold">
+        Search query
+        <input
+          name="query"
+          autoComplete="off"
+          className={field}
+          value={query}
+          maxLength={512}
+          onChange={(event) => onQuery(event.target.value)}
+        />
+      </label>
+    )
+  if (operation === "read")
+    return (
+      <label className="min-w-0 font-semibold">
+        Entity reference
+        <input
+          id="playground-entity-ref"
+          name="entityRef"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="Choose a Library from search or list results"
+          className={field}
+          value={entityRef}
+          maxLength={1024}
+          required
+          onChange={(event) => onEntityRef(event.target.value)}
+        />
+        <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
+          Run a search or list records, then choose “Read this record” below.
+          You can also paste a complete entityRef returned by the API.
+        </span>
+      </label>
+    )
+
+  return (
+    <label className="font-semibold">
+      Number of records
+      <input
+        type="number"
+        name="limit"
+        min={1}
+        max={PLAYGROUND_MAX_RECORDS}
+        required
+        className={field}
+        value={limit}
+        onChange={(event) => onLimit(Number(event.target.value))}
+      />
+    </label>
   )
 }
 

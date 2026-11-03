@@ -7,6 +7,7 @@ import { T } from "@/lib/design-tokens"
 
 const TYPE_GRADIENT: Record<string, string> = {
   National: "linear-gradient(135deg, #0a1a2d 0%, #0d0d2e 100%)",
+  Regional: "linear-gradient(135deg, #0a1a2d 0%, #0d0d2e 100%)",
   Public: "linear-gradient(135deg, #0a1f1a 0%, #071428 100%)",
   Academic: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",
   University: "linear-gradient(135deg, #1a1a0d 0%, #0d1a2e 100%)",

@@ -1,6 +1,13 @@
 "use client"
 
-import { Heart, MessagesSquare, Pin, ThumbsUp, Trophy } from "lucide-react"
+import {
+  Heart,
+  MessagesSquare,
+  Pin,
+  Route,
+  ThumbsUp,
+  Trophy,
+} from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
@@ -22,12 +29,14 @@ type CommunityTab =
   | "leaderboard"
   | "suggestions"
   | "discussions"
+  | "roadmap"
   | "supporters"
 const ICONS = {
   noticeboard: Pin,
   leaderboard: Trophy,
   suggestions: ThumbsUp,
   discussions: MessagesSquare,
+  roadmap: Route,
   supporters: Heart,
 }
 
@@ -79,6 +88,13 @@ export function CommunityWorkspace({
       label: t("discussAction"),
       href: "/community/discussions?compose=1",
       help: "/knowledge?section=governance",
+    },
+    roadmap: {
+      title: t("roadmapTitle"),
+      body: t("roadmapBody"),
+      label: t("roadmapAction"),
+      href: "/community/roadmap#suggest-dataset",
+      help: "/plans#plan-comparison",
     },
     supporters: {
       title: t(supporting ? "supportThanks" : "supportTitle"),

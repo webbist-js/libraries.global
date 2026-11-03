@@ -23,7 +23,7 @@ import {
   type AtlasPopulationLevel,
   type AtlasReachMode,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations as useUiTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -39,6 +39,11 @@ import { SelectField } from "@/components/ds/SelectField"
 import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import { useEntitlements } from "@/lib/access-client"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
+import {
+  countryBounds,
+  type AtlasCountriesResponse,
+  type AtlasPlacesResponse,
+} from "@/lib/atlas-countries"
 import { DASHBOARD_SIDEBAR_WIDTH } from "@/lib/dashboard-layout"
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
@@ -61,6 +66,7 @@ import { Icon, type IconName, PANEL_STYLE } from "./atlas-ui"
 import {
   activeFilterCount,
   applyFilters,
+  atlasPlaceScope,
   accessibilityLibraries,
   accessibilitySummary,
   type AccessibilityView,
@@ -95,6 +101,7 @@ import {
   useAtlasContextCatalogue,
   useAtlasContextPoint,
 } from "./AtlasContext"
+import { AtlasCountryPanel } from "./AtlasCountryPanel"
 import { AtlasDataGapNotice } from "./AtlasDataGapNotice"
 import {
   AtlasBanner,
@@ -255,6 +262,42 @@ function setAnalysisUrlParams(
   }
 }
 
+/** A place from the URL, which carries only its slug, given its id and name. */
+function resolvePlace(
+  chosen: AtlasFilters["region"],
+  options: { slug: string; documentId: string; name: string }[]
+): AtlasFilters["region"] {
+  if (!chosen || chosen.id) return chosen
+  const found = options.find((o) => o.slug === chosen.slug)
+
+  return found
+    ? { slug: found.slug, id: found.documentId, name: found.name }
+    : null
+}
+
+/** The filters with a slug-only country resolved; unchanged otherwise. */
+function withResolvedCountry(
+  current: AtlasFilters,
+  countries: AtlasCountriesResponse["countries"]
+): AtlasFilters {
+  const country = resolvePlace(current.country, countries)
+  if (country === current.country) return current
+
+  return { ...current, country }
+}
+
+/** The filters with a slug-only region and area resolved; unchanged otherwise. */
+function withResolvedPlaces(
+  current: AtlasFilters,
+  value: AtlasPlacesResponse
+): AtlasFilters {
+  const region = resolvePlace(current.region, value.regions)
+  const area = region ? resolvePlace(current.area, value.areas) : null
+  if (region === current.region && area === current.area) return current
+
+  return { ...current, region, area }
+}
+
 export function AtlasExplorer({
   contributePrompt,
   feedbackPrompt,
@@ -300,6 +343,63 @@ export function AtlasExplorer({
     zoom: number
   } | null>(null)
   const [filters, setFilters] = useState<AtlasFilters>(EMPTY_FILTERS)
+  const locale = useLocale()
+  // Countries: the boundaries to click and the picker's list (with ids).
+  const [countryData, setCountryData] = useState<AtlasCountriesResponse | null>(
+    null
+  )
+  const [countryPanel, setCountryPanel] = useState<
+    { slug: string } | { boundary: string } | null
+  >(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch(`/api/atlas/countries?locale=${encodeURIComponent(locale)}`, {
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((value: AtlasCountriesResponse | null) => {
+        if (!value || controller.signal.aborted) return
+        setCountryData(value)
+        // A country from the URL carries only its slug until now.
+        setFilters((current) => withResolvedCountry(current, value.countries))
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [locale])
+  // The chosen country's regions and the chosen region's areas.
+  const placesKey = filters.country
+    ? `${filters.country.slug}:${filters.region?.slug ?? ""}`
+    : ""
+  const [placeLists, setPlaceLists] = useState<{
+    key: string
+    value: AtlasPlacesResponse
+  } | null>(null)
+  useEffect(() => {
+    if (!placesKey) return
+    const [country, region] = placesKey.split(":")
+    const controller = new AbortController()
+    fetch(
+      `/api/atlas/places?${new URLSearchParams({
+        country: country!,
+        ...(region ? { region } : {}),
+        locale,
+      })}`,
+      { signal: controller.signal }
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { data?: AtlasPlacesResponse } | null) => {
+        if (!json?.data || controller.signal.aborted) return
+        const value = json.data
+        setPlaceLists({ key: placesKey, value })
+        // A region or area from the URL carries only its slug until now.
+        setFilters((current) => withResolvedPlaces(current, value))
+      })
+      .catch(() => {})
+
+    return () => controller.abort()
+  }, [placesKey, locale])
+  const placeOptions = placeLists?.key === placesKey ? placeLists.value : null
   const [layers, setLayers] = useState<LayerId[]>(["pins"])
   const [accessibility, setAccessibility] = useState<string[]>([])
   const [accessibilityView, setAccessibilityView] =
@@ -355,7 +455,7 @@ export function AtlasExplorer({
   const [accessLevel, setAccessLevel] = useState<AtlasAccessLevel>("auto")
   const [analysisMode, setAnalysisMode] = useState<AnalysisMode | null>(null)
   const [inspectTarget, setInspectTarget] = useState<
-    "library" | "stop" | "mobile" | "density" | "events" | null
+    "library" | "stop" | "country" | "mobile" | "density" | "events" | null
   >(null)
   const [inspectMinimised, setInspectMinimised] = useState(false)
   const [mobileSurface, setMobileSurface] = useState<"explore" | "inspect">(
@@ -1258,6 +1358,89 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
     setLeftPinned(false)
   }
+  const countryOf = (slug: string | null | undefined) =>
+    (slug && countryData?.countries.find((c) => c.slug === slug)) || null
+  const openCountry = useCallback(
+    (slug: string, fit = true) => {
+      const option = countryData?.countries.find((c) => c.slug === slug)
+      if (!option) return
+      setCountryPanel({ slug })
+      setSelectedId(null)
+      setSelectedStop(null)
+      setInspectTarget("country")
+      setInspectMinimised(false)
+      setMobileSurface("inspect")
+      setList(false)
+      const bounds =
+        fit && option.boundary ? countryBounds(option.boundary) : null
+      if (bounds) mapRef.current?.fitBounds(bounds)
+      if (isMobile) setSheet(expandAtlasSheet)
+    },
+    [countryData, isMobile]
+  )
+  // A map click names a boundary; the UK's stands for four countries.
+  const openCountryBoundary = useCallback(
+    (iso3: string) => {
+      const matches =
+        countryData?.countries.filter((c) => c.boundary === iso3) ?? []
+      if (matches.length === 1) openCountry(matches[0]!.slug, false)
+      else if (matches.length > 1) {
+        setCountryPanel({ boundary: iso3 })
+        setSelectedId(null)
+        setInspectTarget("country")
+        setInspectMinimised(false)
+        setMobileSurface("inspect")
+        if (isMobile) setSheet(expandAtlasSheet)
+      }
+    },
+    [countryData, isMobile, openCountry]
+  )
+  const closeCountry = () => {
+    setCountryPanel(null)
+    if (inspectTarget === "country") setInspectTarget(null)
+  }
+  const chooseCountry = (slug: string | null) => {
+    const option = countryOf(slug)
+    setFilters((current) => ({
+      ...current,
+      country: option
+        ? { slug: option.slug, id: option.documentId, name: option.name }
+        : null,
+      region: null,
+      area: null,
+    }))
+    if (option) openCountry(option.slug)
+  }
+  // Region and area narrow the country; the map follows the deepest place.
+  const fitPlace = (next: AtlasFilters) => {
+    const place = atlasPlaceScope(next)
+    if (!place) return
+    if (scalable) void fitResults(place)
+    else mapRef.current?.fitTo(applyFilters(libs, next, now))
+  }
+  const choosePlace = (level: "region" | "area", slug: string | null) => {
+    const options =
+      level === "region" ? placeOptions?.regions : placeOptions?.areas
+    const found = slug ? options?.find((o) => o.slug === slug) : undefined
+    const chosen = found
+      ? { slug: found.slug, id: found.documentId, name: found.name }
+      : null
+    const next: AtlasFilters =
+      level === "region"
+        ? { ...filters, region: chosen, area: null }
+        : { ...filters, area: chosen }
+    setFilters(next)
+    if (chosen) fitPlace(next)
+  }
+  const panelCountry =
+    countryPanel && "slug" in countryPanel ? countryOf(countryPanel.slug) : null
+  const focusedBoundary =
+    (countryPanel
+      ? "slug" in countryPanel
+        ? panelCountry?.boundary
+        : countryPanel.boundary
+      : countryOf(filters.country?.slug)?.boundary) ?? null
+
   const closeLibrary = () => {
     setSelectedId(null)
     setAskReachScope(false)
@@ -1802,6 +1985,12 @@ export function AtlasExplorer({
             openInspectLayer("access")
           }}
           networkSelection={networkSelection.selected}
+          countries={countryData?.countries ?? []}
+          onCountry={chooseCountry}
+          regions={placeOptions?.regions ?? []}
+          areas={placeOptions?.areas ?? []}
+          onRegion={(slug) => choosePlace("region", slug)}
+          onArea={(slug) => choosePlace("area", slug)}
           filters={filters}
           onChange={(next) => {
             pushAnalyticsEvent("atlas_action", {
@@ -2232,6 +2421,7 @@ export function AtlasExplorer({
       analysisDrawers.length ||
       selectedId ||
       selectedStop ||
+      countryPanel ||
       usableLayers.some((id) => ["mobile", "density", "events"].includes(id))
     ) && !list
   const drawerOpen = hasDrawerNavigation && !inspectMinimised
@@ -2286,6 +2476,9 @@ export function AtlasExplorer({
       reachOpacity={reachOpacity}
       populationOpacity={populationOpacity}
       perCapitaOpacity={perCapitaOpacity}
+      countryGeometry={countryData?.geometry ?? null}
+      focusedCountry={focusedBoundary}
+      onCountryOpen={openCountryBoundary}
       selectedCountry={selectedCountry}
       onCountrySelect={(id) => {
         selectCountry(id)
@@ -2692,6 +2885,42 @@ export function AtlasExplorer({
           },
         ]
       : []),
+    ...(countryPanel
+      ? [
+          {
+            id: "country",
+            label: panelCountry?.name ?? "Country",
+            title: panelCountry?.name ?? "Choose a country",
+            detail: panelCountry
+              ? `Country · ${panelCountry.libraries.toLocaleString("en-GB")} libraries`
+              : "Recorded as several countries",
+            content: (
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <AtlasCountryPanel
+                  key={panelCountry?.slug ?? "choices"}
+                  country={panelCountry}
+                  choices={
+                    "boundary" in countryPanel
+                      ? (countryData?.countries.filter(
+                          (c) => c.boundary === countryPanel.boundary
+                        ) ?? [])
+                      : []
+                  }
+                  filtered={
+                    Boolean(panelCountry) &&
+                    filters.country?.slug === panelCountry?.slug
+                  }
+                  onShow={() => chooseCountry(panelCountry?.slug ?? null)}
+                  onClearFilter={() =>
+                    setFilters((current) => ({ ...current, country: null }))
+                  }
+                  onPick={(slug) => openCountry(slug)}
+                />
+              </div>
+            ),
+          },
+        ]
+      : []),
     ...analysisDrawers.map(({ mode, layer }) => ({
       id: mode,
       layer: usableLayers.includes(layer) ? layer : undefined,
@@ -2822,14 +3051,26 @@ export function AtlasExplorer({
         message: `${entry.label} turned off`,
       })
       onToggleLayer(entry.layer)
-    } else if (entry.id === "library") {
-      closeLibrary()
-      if (list) return
-    } else if (entry.id === "stop") setSelectedStop(null)
-    else {
-      setAnalysisMode(null)
-      setInspectTarget(null)
-    }
+    } else
+      switch (entry.id) {
+        case "library":
+          closeLibrary()
+          if (list) return
+
+          break
+
+        case "stop":
+          setSelectedStop(null)
+          break
+
+        case "country":
+          closeCountry()
+          break
+
+        default:
+          setAnalysisMode(null)
+          setInspectTarget(null)
+      }
     if (entry.id === inspectTarget) setInspectTarget(null)
     requestAnimationFrame(() =>
       analysisRoot.current

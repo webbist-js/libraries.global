@@ -130,6 +130,7 @@ export default factories.createCoreController(
               "summary",
               "author",
               "authorTitle",
+              "publicationDate",
               "publishedAt",
             ],
             populate: {
@@ -141,7 +142,7 @@ export default factories.createCoreController(
             status: "published",
             // `id` breaks ties so the three are stable across pages.
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            sort: ["publishedAt:desc", "id:asc"] as any,
+            sort: ["publicationDate:desc", "id:asc"] as any,
             limit: 3,
           })
         ;(article as Record<string, unknown>).relatedArticles = fallback

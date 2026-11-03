@@ -129,7 +129,7 @@ export function toExistingArticle(
     slug: article.slug,
     locale: article.locale ?? locale,
     title: article.title ?? "",
-    publishedAt: article.publishedAt ?? null,
+    publishedAt: article.publicationDate ?? article.publishedAt ?? null,
     updatedAt: article.updatedAt ?? null,
     summary: article.summary ?? "",
     body: Array.isArray(article.body) ? article.body : [],

@@ -3,8 +3,18 @@ import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
+import GlobalLink from "@/components/global/GlobalLink"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
+import { T } from "@/lib/design-tokens"
 
 export function SuggestionRoundControls({
   initial,
@@ -20,6 +30,7 @@ export function SuggestionRoundControls({
   const [message, setMessage] = useState("")
   const [failed, setFailed] = useState(false)
   const [loading, setLoading] = useState(!initial)
+  const [confirming, setConfirming] = useState(false)
   function adopt(value: SuggestionReviewRound) {
     setRound(value)
     setCutoff(value.cutoffAt.slice(0, 16))
@@ -41,8 +52,8 @@ export function SuggestionRoundControls({
 
     return () => controller.abort()
   }, [initial])
-  async function save(action: "schedule" | "close") {
-    if (!round || busy) return
+  async function save(action: "schedule" | "close"): Promise<boolean> {
+    if (!round || busy) return false
     setBusy(true)
     setFailed(false)
     setMessage("")
@@ -66,13 +77,18 @@ export function SuggestionRoundControls({
       if (!res.ok) {
         setFailed(true)
         setMessage(json.error?.message ?? t("roundFailed"))
-      } else {
-        adopt(json.data)
-        setMessage(t("roundSaved"))
+
+        return false
       }
+      adopt(json.data)
+      setMessage(t("roundSaved"))
+
+      return true
     } catch {
       setFailed(true)
       setMessage(t("roundFailed"))
+
+      return false
     } finally {
       setBusy(false)
     }
@@ -133,7 +149,7 @@ export function SuggestionRoundControls({
           </label>
         </fieldset>
       ) : (
-        <ol className="m-0 grid gap-3 pl-5 text-base leading-relaxed">
+        <ol className="m-0 grid pl-5 text-base leading-relaxed">
           {round.shortlist.map((item) => (
             <li key={item.documentId}>
               <a
@@ -147,18 +163,90 @@ export function SuggestionRoundControls({
           ))}
         </ol>
       )}
-      <Button
-        type="button"
-        disabled={busy}
-        onClick={() =>
-          void save(round.state === "voting" ? "schedule" : "close")
-        }
-        variant="primary"
-        size="pill"
-        className="w-full"
-      >
-        {t(round.state === "voting" ? "saveRound" : "completeRound")}
-      </Button>
+      {round.state === "voting" ? (
+        <Button
+          type="button"
+          disabled={busy}
+          onClick={() => void save("schedule")}
+          variant="primary"
+          size="pill"
+          className="w-full"
+        >
+          {t("saveRound")}
+        </Button>
+      ) : (
+        <>
+          <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+            {t("completeLead")}
+          </p>
+          <Button
+            type="button"
+            disabled={busy}
+            aria-haspopup="dialog"
+            onClick={() => setConfirming(true)}
+            variant="primary"
+            size="pill"
+            className="w-full"
+          >
+            {t("completeRound")}
+          </Button>
+          <Dialog open={confirming} onOpenChange={setConfirming}>
+            <DialogContent
+              className="flex max-h-[calc(100dvh-2rem)] flex-col gap-5 overflow-y-auto overscroll-contain rounded-3xl p-6 sm:max-w-xl sm:p-8"
+              closeButtonClassName="grid size-11 place-items-center rounded-full border border-(--t-border-line) bg-(--t-bg-deep) opacity-100 hover:bg-(--t-bg-surface)"
+              style={{ background: T.bg.deep, color: T.ink.base }}
+            >
+              <DialogHeader className="gap-3 text-left">
+                <DialogTitle className="type-h2 m-0 pr-12">
+                  {t("completeTitle")}
+                </DialogTitle>
+                <DialogDescription
+                  className="m-0 text-base leading-relaxed"
+                  style={{ color: T.ink.dim }}
+                >
+                  {t("completeBody")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-2xl bg-(--t-accent-chip) p-4 text-base leading-relaxed">
+                <p className="m-0 font-semibold">{t("completeDriveTitle")}</p>
+                <p className="m-0 mt-1">{t("completeDrive")}</p>
+                <GlobalLink
+                  href="/community/propose?gaps=facilities"
+                  className="mt-2 inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
+                >
+                  {t("planDrive")}
+                </GlobalLink>
+              </div>
+              <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                {t("completeNext")}
+              </p>
+              <div className="flex flex-wrap justify-end gap-2">
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="surface"
+                    size="pill"
+                    disabled={busy}
+                  >
+                    {t("completeCancel")}
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="pill"
+                  disabled={busy}
+                  onClick={async () => {
+                    if (await save("close")) setConfirming(false)
+                  }}
+                >
+                  {t("completeConfirm")}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
       {message && (
         <p
           role={failed ? "alert" : "status"}

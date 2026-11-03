@@ -176,12 +176,12 @@ export function journalSortParam(sort: JournalSort): string[] {
     case "shortest":
       return ["readingTimeMinutes:asc", "id:asc"]
     case "oldest":
-      return ["publishedAt:asc", "id:asc"]
+      return ["publicationDate:asc", "id:asc"]
     case "title":
       return ["title:asc", "id:asc"]
 
     default:
-      return ["publishedAt:desc", "id:desc"]
+      return ["publicationDate:desc", "id:desc"]
   }
 }
 

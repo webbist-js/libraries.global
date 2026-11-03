@@ -198,9 +198,6 @@
     }
   },
   "aboutCoverage": {
-    "pause": "Mettre en pause",
-    "resume": "Reprendre l’animation",
-    "replay": "Rejouer l’animation",
     "eyebrow": "Couverture actuelle",
     "title": "Un inventaire des bibliothèques qui s’enrichit.",
     "description": "Ces chiffres décrivent les fiches publiées dans l’index. La couverture varie selon les pays et reste incomplète.",
@@ -2630,7 +2627,16 @@
     "reviewAt": "Examen du comité (UTC)",
     "capacity": "Places dans la sélection",
     "saveRound": "Enregistrer le calendrier",
-    "completeRound": "Terminer cet examen et ouvrir le cycle suivant",
+    "completeRound": "Terminer la révision",
+    "completeLead": "Une fois que chaque suggestion retenue a reçu une décision, terminez la révision. Le vote s’ouvre alors pour la session suivante.",
+    "completeTitle": "Terminer cette session de révision ?",
+    "completeBody": "Les suggestions acceptées deviennent de nouveaux équipements, services et types de bibliothèque que les contributeurs peuvent ajouter aux fiches. Tant que personne ne le fait, les fiches existantes ne les affichent pas : une nouvelle option démarre vide.",
+    "completeDriveTitle": "Remplir les nouvelles options grâce à une campagne",
+    "completeDrive": "Une campagne invite la communauté à ajouter équipements et services aux bibliothèques qui les proposent, pour que les nouvelles options atteignent vite de vraies fiches.",
+    "planDrive": "Préparer une campagne sur les équipements",
+    "completeNext": "Le vote de la session suivante s’ouvre dès que vous terminez celle-ci.",
+    "completeCancel": "Pas encore",
+    "completeConfirm": "Terminer et ouvrir le vote",
     "roundSaved": "Cycle de révision enregistré.",
     "roundFailed": "Le cycle n’a pas pu être enregistré.",
     "publish": "Approuver la publication",
@@ -2760,6 +2766,15 @@
   },
   "moderationWorkspace": {
     "title": "Examiner les *contributions*",
+    "thanks": "Merci pour votre travail de révision. Chacune de vos décisions garde l’index juste et fiable pour celles et ceux qui s’y fient. Ces guides expliquent quoi vérifier et comment trancher.",
+    "guidesLabel": "Guides de modération",
+    "guides": {
+      "howReview": "Fonctionnement de la révision",
+      "sources": "Sources et conservation des données",
+      "roles": "Rôles et autorisations",
+      "eventFeeds": "Examiner les flux d’événements",
+      "board": "Le comité éditorial"
+    },
     "workspace": "Accès à la révision",
     "scopeHint": "Seuls les éléments relevant de votre périmètre apparaissent ici.",
     "reviewQueues": "Files de révision",
@@ -2909,7 +2924,8 @@
     "manageTeam": "Gérer votre équipe",
     "yourTeam": "Votre équipe",
     "existingTeamLead": "Gérez vos membres, bibliothèques et abonnement annuel dans votre espace d’équipe.",
-    "teamBilling": "Facturation et places"
+    "teamBilling": "Facturation et places",
+    "openYourTeam": "Ouvrir votre équipe"
   },
   "membershipCompare": {
     "lead": "Découvrez les fonctionnalités disponibles aujourd’hui. Celles marquées « Bientôt » sont encore prévues.",
@@ -2922,7 +2938,8 @@
     "showing": "{count} fonctionnalités affichées sur {total}",
     "highlightHint": "Sélectionnez le nom d’une offre pour mettre sa colonne en évidence.",
     "firstPlan": "Première offre",
-    "secondPlan": "Deuxième offre"
+    "secondPlan": "Deuxième offre",
+    "roadmapLink": "Voir sur la feuille de route"
   },
   "membershipStatus": {
     "yourMembership": "Votre adhésion",
@@ -3195,7 +3212,8 @@
           "12": "Exporter les indicateurs calculés",
           "13": "Un flux de calendrier personnel",
           "14": "Portée du service : jusqu’à 50 bibliothèques et une emprise de 20 000 km², une seule durée pour les grandes zones",
-          "15": "Arrêts et lignes de transport"
+          "15": "Vues et recherches enregistrées illimitées",
+          "16": "Arrêts et lignes de transport"
         }
       },
       "team": {
@@ -3206,14 +3224,14 @@
           "0": "Pro pour chaque membre de l’équipe",
           "1": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
           "2": "Choisir qui peut diffuser la position d’une bibliothèque mobile",
-          "3": "Option API avec gestion des clés et suivi de l’utilisation",
-          "5": "Rapports de fréquentation",
-          "6": "Espace partagé d’analyse dans l’Atlas",
-          "7": "Mises à jour groupées depuis un tableur",
-          "8": "Un outil de recherche de bibliothèques intégrable",
+          "3": "Widgets intégrables pour votre site : recherche de bibliothèques, annuaire, graphiques et chiffres clés",
+          "5": "Portée étendue : jusqu’à 100 bibliothèques et une emprise de 40 000 km², une durée par calcul",
+          "6": "Rapports de fréquentation",
+          "7": "Espace partagé d’analyse dans l’Atlas",
+          "8": "Mises à jour groupées depuis un tableur",
           "9": "Des quotas supérieurs pour l’option API",
           "10": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. Le responsable invite les collègues et attribue les bibliothèques ; les droits du personnel sont vérifiés séparément.",
-          "4": "Portée étendue : jusqu’à 100 bibliothèques et une emprise de 40 000 km², une durée par calcul"
+          "4": "Option API : rechercher, lister et parcourir les bibliothèques par pays, région et zone, avec gestion des clés et suivi de l’utilisation"
         }
       }
     },
@@ -3238,7 +3256,7 @@
       "suggest-knowledge-edits-and-pitch-journal-stories": "Suggérer des corrections aux connaissances et proposer des sujets au Journal",
       "apply-for-knowledge-or-journal-editing-roles": "Demander un rôle de rédaction pour les connaissances ou le Journal",
       "claim-your-library-and-use-the-free-staff-tools": "Revendiquer votre bibliothèque et utiliser les outils gratuits du personnel",
-      "3-saved-views-and-3-saved-searches": "3 vues et 3 recherches enregistrées",
+      "3-saved-views-and-3-saved-searches": "Vues et recherches enregistrées",
       "an-opt-in-weekly-digest-of-followed-libraries": "Un récapitulatif hebdomadaire facultatif des bibliothèques suivies",
       "an-optional-supporter-mark-you-can-hide": "Un badge de soutien facultatif, que vous pouvez masquer",
       "optional-credit-on-the-supporters-page": "Une mention facultative sur la page des soutiens",
@@ -3260,7 +3278,7 @@
       "index_export": "Exporter les résultats de recherche avec attribution",
       "team-organiser-assign-staff-to-your-libraries": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
       "choose-who-can-go-live-for-a-mobile-library": "Choisir qui peut diffuser la position d’une bibliothèque mobile",
-      "optional-api-add-on-with-managed-keys-and-usage-reporting": "Option API avec gestion des clés et suivi de l’utilisation",
+      "optional-api-add-on-search-list-and-browse-libraries-by-country-region-and-area-with-managed-keys-and-usage-reporting": "Option API : rechercher, lister et parcourir les bibliothèques par pays, région et zone, avec gestion des clés et suivi de l’utilisation",
       "traffic-reports": "Rapports de fréquentation",
       "a-shared-service-workspace": "Un espace de travail partagé pour le réseau",
       "bulk-updates-from-a-spreadsheet": "Mises à jour groupées depuis un tableur",
@@ -3270,7 +3288,7 @@
       "library_traffic": "Rapports de fréquentation",
       "team_workspace": "Espace partagé d’analyse dans l’Atlas",
       "team_bulkUpload": "Mises à jour groupées depuis un tableur",
-      "team_embed": "Un outil de recherche de bibliothèques intégrable",
+      "team_embed": "Widgets intégrables pour votre site : recherche de bibliothèques, annuaire, graphiques et chiffres clés",
       "api_key": "Des quotas supérieurs pour l’option API",
       "atlas_reachArea": "Portée étendue : emprise maximale (km²), une durée par calcul",
       "atlas_reachLibraries": "Portée du service : nombre maximal de bibliothèques admissibles",
@@ -3279,6 +3297,8 @@
       "population-density-area-averages-and-supported-population-grids": "Densité de population : moyennes par territoire et grilles disponibles"
     },
     "copy": {
+      "unlimited": "Illimité",
+      "eachCount": "{count} de chaque",
       "title": "Offres et *Pro*",
       "metaTitle": "Offres et Pro",
       "lead": "Libraries Global est gratuit. Les adhésions facultatives soutiennent les données ouvertes et ajoutent des outils d’historique, d’export et d’analyse.",
@@ -3339,7 +3359,8 @@
       "start": "Commencer à contribuer",
       "grantTitle": "Attributions pour la presse et les partenaires",
       "grantBody": "Les journalistes, chercheurs de projets partenaires et organismes partenaires peuvent demander une attribution Pro à l’équipe.",
-      "grant": "Demander une attribution"
+      "grant": "Demander une attribution",
+      "roadmapVote": "Votez et discutez sur la feuille de route"
     },
     "faq": {
       "0": {
@@ -4085,7 +4106,11 @@
     },
     "paidThrough": "Payé jusqu’au",
     "teamInactive": "Team inactive",
-    "inactiveTeamBilling": "Cet abonnement Team est inactif. Votre responsable peut consulter la facturation et le renouvellement. Les places Pro et les outils de données Team nécessitent un abonnement actif. Les droits de modification approuvés sont distincts."
+    "inactiveTeamBilling": "Cet abonnement Team est inactif. Votre responsable peut consulter la facturation et le renouvellement. Les places Pro et les outils de données Team nécessitent un abonnement actif. Les droits de modification approuvés sont distincts.",
+    "inTeamTitle": "Vous faites partie d’une Team",
+    "inTeamOrganiser": "Vous êtes responsable de {team}.",
+    "inTeamMember": "Vous avez une place dans {team}.",
+    "manageTeam": "Gérer votre équipe"
   },
   "membershipPreferences": {
     "saved": "Préférence enregistrée",
@@ -4140,7 +4165,8 @@
     "emptyHint": "Essayez un nom de bibliothèque, un lieu ou quelques mots d’un guide. Vous pouvez aussi ajouter une bibliothèque manquante.",
     "keepTyping": "Saisissez au moins deux caractères",
     "addLibrary": "Ajouter une bibliothèque manquante",
-    "shown": "{count, plural, one {# résultat affiché} other {# résultats affichés}}"
+    "shown": "{count, plural, one {# résultat affiché} other {# résultats affichés}}",
+    "roadmap": "Feuille de route"
   },
   "articleSources": {
     "title": "Sources",
@@ -4185,7 +4211,11 @@
     "eventsBody": "Le personnel peut connecter un flux d’événements, vérifiés avant leur publication dans le calendrier.",
     "eventsAction": "Connecter un flux",
     "findTitle": "Vous connaissez une bibliothèque ?",
-    "findBody": "Ajoutez une bibliothèque manquante ou améliorez une fiche. Chaque modification est vérifiée."
+    "findBody": "Ajoutez une bibliothèque manquante ou améliorez une fiche. Chaque modification est vérifiée.",
+    "roadmap": "Feuille de route",
+    "roadmapTitle": "Vous connaissez un jeu de données ouvert ?",
+    "roadmapBody": "Suggérez une source pour votre pays ou votre région. Les modérateurs vérifient sa licence avant de la proposer au vote.",
+    "roadmapAction": "Suggérer un jeu de données"
   },
   "contributionDrawer": {
     "lead": "Tout ce que vous pouvez faire pour améliorer le répertoire, et vos propres tâches.",
@@ -4337,5 +4367,176 @@
       "unverifiedDirectory": "L’exhaustivité de l’annuaire n’a pas été vérifiée pour cette zone. Les nombres et comparaisons portent sur les bibliothèques recensées ; une fiche manquante ne prouve pas l’absence de bibliothèque.",
       "temporaryFailure": "Le service n’a pas pu charger ce résultat. Cet échec de récupération temporaire ne prouve pas l’absence de données pour ce lieu."
     }
+  },
+  "roadmap": {
+    "title": "Feuille de route",
+    "lead": "Ce que nous construisons, ce qui arrive ensuite et les jeux de données en route vers l’index. Votez pour ce qui compte pour vous et dites-nous comment vous l’utiliseriez.",
+    "unavailable": "La feuille de route n’est pas encore publiée",
+    "unavailableLead": "Revenez bientôt ou lancez une conversation dans les discussions.",
+    "featuresHeading": "Fonctionnalités prévues",
+    "filterAreas": "Filtrer par domaine",
+    "allAreas": "Tout",
+    "areas": {
+      "atlas": "Atlas",
+      "watching": "Suivre et comparer",
+      "widgets": "Widgets et intégrations",
+      "teams": "Pour les équipes",
+      "events": "Événements",
+      "data": "Données et API"
+    },
+    "plans": {
+      "free": "Gratuit",
+      "supporter": "Soutien",
+      "pro": "Pro",
+      "team": "Team",
+      "api": "Option API"
+    },
+    "planFilter": "Offre",
+    "anyPlan": "Toutes les offres",
+    "viewLabel": "Affichage",
+    "board": "Tableau",
+    "list": "Liste",
+    "showing": "{count, plural, one {# fonctionnalité affichée.} other {# fonctionnalités affichées.}}",
+    "noMatches": "Aucune fonctionnalité ne correspond à ces filtres.",
+    "stages": {
+      "now": {
+        "label": "En cours",
+        "lead": "En construction"
+      },
+      "next": {
+        "label": "Ensuite",
+        "lead": "Conçu, bientôt lancé"
+      },
+      "later": {
+        "label": "Plus tard",
+        "lead": "Prévu, encore ouvert"
+      }
+    },
+    "emptyStage": "Rien pour l’instant.",
+    "voteFailed": "Votre vote n’a pas été enregistré. Réessayez.",
+    "voteAdded": "Vote ajouté.",
+    "voteRemoved": "Vote retiré.",
+    "signInToVote": "Connectez-vous pour voter pour {title} ({count, plural, one {# vote} other {# votes}})",
+    "addVote": "Voter pour {title} ({count, plural, one {# vote} other {# votes}})",
+    "removeVote": "Retirer votre vote pour {title} ({count, plural, one {# vote} other {# votes}})",
+    "discuss": "Discuter",
+    "discussItem": "Discuter de {title} ({count, plural, =0 {aucun message} one {# message} other {# messages}})",
+    "startDiscussionAbout": "Lancer une discussion sur {title}",
+    "activeToday": "Actif aujourd’hui",
+    "activeYesterday": "Actif hier",
+    "activeDaysAgo": "Actif il y a {count} jours",
+    "discussLead": "Posez une question ou dites-nous comment vous l’utiliseriez.",
+    "dataEyebrow": "Imports de données · Gratuit pour tous",
+    "dataTitle": "En route vers l’index",
+    "statOnTheWay": "Bibliothèques en route",
+    "statAdded": "Bibliothèques ajoutées",
+    "importStepsLabel": "Étapes d’import",
+    "importSteps": {
+      "explore": "Explorer",
+      "validate": "Valider",
+      "licence": "Licence",
+      "ingest": "Importer"
+    },
+    "importStages": {
+      "listed": "Sur notre liste",
+      "exploring": "Exploration de la source",
+      "validating": "Validation des données",
+      "licensing": "Vérification de la licence",
+      "ingesting": "Import en cours",
+      "ingested": "Dans l’index"
+    },
+    "importStep": "{done} étape(s) sur {total} terminée(s) : {stage}",
+    "importFields": "Ce qu’il apporte",
+    "importInSource": "{count, plural, one {bibliothèque dans la source} other {bibliothèques dans la source}}",
+    "importAdded": "{count, plural, one {bibliothèque ajoutée} other {bibliothèques ajoutées}}",
+    "noImports": "Aucun jeu de données n’est en cours d’import.",
+    "onOurList": "Prochainement sur notre liste",
+    "onOurListLead": "Des jeux de données que nous voulons étudier, mais pas encore commencés. Votez pour ceux qui vous seraient utiles.",
+    "communitySuggestions": "Suggestions de la communauté",
+    "suggestPrompt": "Vous connaissez un jeu de données ouvert pour votre pays ou votre région ? Indiquez-nous la source et sa licence.",
+    "suggestDataset": "Suggérer un jeu de données",
+    "signInToSuggest": "Connectez-vous pour suggérer un jeu de données",
+    "suggestTitle": "Suggérer un jeu de données",
+    "suggestSubtitle": "Dites-nous d’où viennent les données.",
+    "suggestReview": "Un modérateur vérifie la source et sa licence avant de la proposer au vote.",
+    "suggestFields": {
+      "place": "Pays ou région",
+      "source": "Jeu de données ou éditeur",
+      "sourceUrl": "Lien vers les données",
+      "licence": "Licence",
+      "notes": "Autre chose à savoir"
+    },
+    "suggestHints": {
+      "place": "Par exemple, Portugal",
+      "source": "Par exemple, le registre national des bibliothèques publiques",
+      "licence": "Par exemple, CC BY 4.0",
+      "notes": "Ce qu’il couvre, sa fréquence de mise à jour, qui contacter"
+    },
+    "optional": "(facultatif)",
+    "suggestSend": "Envoyer la suggestion",
+    "suggestSending": "Envoi…",
+    "suggestThanks": "Merci. Un modérateur vérifiera la source et sa licence, puis la proposera ici au vote.",
+    "suggestTooMany": "Vous avez envoyé plusieurs suggestions cette semaine. Nous les examinerons d’abord.",
+    "suggestInvalid": "Vérifiez les informations : un lien doit commencer par http:// ou https://.",
+    "suggestFailed": "Votre suggestion n’a pas été envoyée. Réessayez.",
+    "close": "Fermer"
+  },
+  "savedViews": {
+    "button": {
+      "view": "Vues enregistrées",
+      "search": "Recherches enregistrées"
+    },
+    "title": {
+      "view": "Vues enregistrées",
+      "search": "Recherches enregistrées"
+    },
+    "lead": {
+      "view": "Gardez cette vue de l’Atlas, avec sa position, ses couches et ses filtres.",
+      "search": "Gardez ces termes et filtres pour relancer la recherche."
+    },
+    "count": "{count} sur {limit} utilisées",
+    "countUnlimited": "{count, plural, one {# enregistrée} other {# enregistrées}}",
+    "signedOut": {
+      "view": "Connectez-vous pour enregistrer des vues de l’Atlas et y revenir. Un compte gratuit en garde 3.",
+      "search": "Connectez-vous pour enregistrer des recherches et les relancer. Un compte gratuit en garde 3."
+    },
+    "signIn": "Se connecter",
+    "nameLabel": {
+      "view": "Nommer cette vue",
+      "search": "Nommer cette recherche"
+    },
+    "namePlaceholder": {
+      "view": "Par exemple, Annexes du Rhône",
+      "search": "Par exemple, Ouvert tard à Lyon"
+    },
+    "saveHint": {
+      "view": "Enregistre la position de la carte, les couches et les filtres actuels.",
+      "search": "Enregistre les termes, filtres et tri actuels."
+    },
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saved": "« {name} » enregistrée.",
+    "saveFailed": "L’enregistrement a échoué. Réessayez.",
+    "limitReached": "Vous avez utilisé les {limit} de votre formule.",
+    "atLimit": {
+      "view": "Vous avez enregistré {limit} vues, le maximum de votre formule. Supprimez-en une pour enregistrer celle-ci, ou passez à l’illimité.",
+      "search": "Vous avez enregistré {limit} recherches, le maximum de votre formule. Supprimez-en une pour enregistrer celle-ci, ou passez à l’illimité."
+    },
+    "seePlans": "Voir les formules",
+    "listTitle": {
+      "view": "Vos vues",
+      "search": "Vos recherches"
+    },
+    "empty": {
+      "view": "Aucune vue enregistrée pour l’instant.",
+      "search": "Aucune recherche enregistrée pour l’instant."
+    },
+    "loading": "Chargement…",
+    "loadFailed": "Vos éléments enregistrés n’ont pas pu être chargés.",
+    "retry": "Réessayer",
+    "savedOn": "Enregistrée le {date}",
+    "delete": "Supprimer {name}",
+    "deleted": "« {name} » supprimée.",
+    "deleteFailed": "La suppression a échoué. Réessayez."
   }
 }

@@ -112,30 +112,36 @@ export function NetworkDirectory({
         <summary className="cursor-pointer font-semibold">
           How to use this directory
         </summary>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2">
+        <p className="mt-3 mb-0 max-w-[72ch] text-(--t-ink-dim)">
+          Explore library services, university systems and consortia. Each page
+          lists its published member libraries and available source information.
+        </p>
+        <dl className="mt-5 mb-0 grid gap-x-10 gap-y-5 border-t border-(--t-border-line) pt-5 sm:grid-cols-2">
           <div>
-            <dt className="font-semibold">Name</dt>
+            <dt className="mb-1 font-semibold">Name</dt>
             <dd className="m-0 text-(--t-ink-dim)">
               Search for all or part of a service, university system or
               consortium name.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">Kind</dt>
+            <dt className="mb-1 font-semibold">Kind</dt>
             <dd className="m-0 text-(--t-ink-dim)">
               Choose a public library service, a university system or a
               consortium connecting institutions.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">Country and region</dt>
+            <dt className="mb-1 font-semibold">Country and region</dt>
             <dd className="m-0 text-(--t-ink-dim)">
               Narrow the directory geographically. Country pages keep their
               country selected; regions appear where available.
             </dd>
           </div>
           <div>
-            <dt className="font-semibold">Find services and clear filters</dt>
+            <dt className="mb-1 font-semibold">
+              Find services and clear filters
+            </dt>
             <dd className="m-0 text-(--t-ink-dim)">
               Apply your chosen filters, or reset them to browse again. Results
               link to member libraries, maps and source information; pagination
@@ -143,10 +149,6 @@ export function NetworkDirectory({
             </dd>
           </div>
         </dl>
-        <p className="mb-0 text-(--t-ink-dim)">
-          Explore library services, university systems and consortia. Each page
-          lists its published member libraries and available source information.
-        </p>
       </details>
       <p role="status">{data.total.toLocaleString()} services and networks</p>
       {!data.networks.length ? (

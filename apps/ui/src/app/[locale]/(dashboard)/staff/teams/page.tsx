@@ -11,6 +11,7 @@ import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
+import { TeamNameContext } from "@/components/staff/TeamNameContext"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -74,7 +75,7 @@ export default async function TeamOrganiserPage({
           { label: t("membersLibraries") },
         ]}
         title={t("membersLibraries")}
-        context={team?.name ?? chosen.name}
+        context={<TeamNameContext name={team?.name ?? chosen.name} />}
         tabs={<StaffAreaTabs active="team" teamId={chosen.id} />}
         lead={teamLead(team, chosen.name, organiser)}
         actions={

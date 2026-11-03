@@ -6,7 +6,8 @@ import { useId, useState } from "react"
 
 import { Badge, EmptyState } from "@/components/ds"
 import { SelectField } from "@/components/ds/SelectField"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { primaryCtaSm, secondaryCtaSm } from "@/components/ui/action-styles"
+import { Button } from "@/components/ui/button"
 import {
   type OptionCatalogue,
   type SuggestionReviewRound,
@@ -24,8 +25,8 @@ import {
 } from "./submissionMeta"
 import { SuggestionRoundControls } from "./SuggestionRoundControls"
 
-const PRIMARY = cn(buttonVariants({ variant: "primary", size: "pill" }))
-const SECONDARY = cn(buttonVariants({ variant: "surface", size: "pill" }))
+const PRIMARY = cn(primaryCtaSm, "min-h-11 cursor-pointer")
+const SECONDARY = cn(secondaryCtaSm, "min-h-11 cursor-pointer")
 const FIELD =
   "min-h-[48px] w-full min-w-0 rounded-[14px] border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-3 text-base font-normal text-(--t-ink-base)"
 
@@ -199,15 +200,13 @@ function SuggestionCard({
   return (
     <li
       id={`moderation-suggestion-${s.documentId}`}
-      className="flex min-w-0 scroll-mt-(--sticky-content-top) flex-col gap-5 rounded-[24px] p-5 sm:p-6"
+      className="@container/suggestion flex h-full min-w-0 scroll-mt-(--sticky-content-top) flex-col gap-4 rounded-[24px] p-5 sm:p-6"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5">
         <h2
-          className="type-h2 m-0 [overflow-wrap:anywhere]"
-          style={{
-            color: T.ink.base,
-          }}
+          className="m-0 [overflow-wrap:anywhere]"
+          style={{ color: T.ink.base, font: "var(--type-h3)" }}
         >
           {s.name}
         </h2>
@@ -235,12 +234,12 @@ function SuggestionCard({
       {s.description ? (
         <p
           className="m-0 text-base leading-relaxed [overflow-wrap:anywhere]"
-          style={{ color: T.ink.base }}
+          style={{ color: T.ink.dim }}
         >
           {s.description}
         </p>
       ) : null}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-(--t-ink-dim)">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-xl bg-(--t-bg-surface) px-4 py-2.5 text-sm text-(--t-ink-dim)">
         <span>
           <strong className="font-semibold text-(--t-ink-base)">
             {s.votes}
@@ -266,11 +265,11 @@ function SuggestionCard({
         </p>
       ) : null}
       <fieldset
-        className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0"
+        className="m-0 flex min-w-0 flex-1 flex-col gap-4 border-0 p-0"
         disabled={busy}
       >
         <legend className="sr-only">{`Decide on ${s.name}`}</legend>
-        <div className="grid gap-4 rounded-2xl bg-(--t-bg-surface) p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="grid gap-4 rounded-2xl border border-(--t-border-line) p-4 @xl/suggestion:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={nameId}
@@ -340,7 +339,7 @@ function SuggestionCard({
             <p className="mt-1 mb-4 text-sm leading-relaxed text-(--t-ink-dim)">
               {t("featureDetailsHint")}
             </p>
-            <div className="grid min-w-0 gap-4 pb-3 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-4 pb-3 @xl/suggestion:grid-cols-2">
               {(["summary", "description", "icon", "category"] as const).map(
                 (key) => (
                   <label
@@ -401,7 +400,7 @@ function SuggestionCard({
                   </label>
                 )
               )}
-              <label className="grid min-w-0 gap-2 text-sm font-semibold sm:col-span-2">
+              <label className="grid min-w-0 gap-2 text-sm font-semibold @xl/suggestion:col-span-2">
                 {t("existingFeature")}
                 <SelectField
                   label={t("existingFeature")}
@@ -429,7 +428,7 @@ function SuggestionCard({
             {error}
           </p>
         ) : null}
-        <div className="flex flex-wrap items-center gap-3 border-t border-(--t-border-line) pt-5">
+        <div className="mt-auto flex flex-wrap items-center gap-2 border-t border-(--t-border-line) pt-4">
           {s.publicationStatus === "pending" ? (
             <>
               <button
@@ -531,7 +530,7 @@ function SuggestionCard({
           ) : (
             <button
               type="button"
-              className={`${SECONDARY} sm:ml-auto`}
+              className={`${SECONDARY} ml-auto`}
               style={{ color: T.accent.danger }}
               onClick={() => setConfirmingRemove(true)}
             >
@@ -589,7 +588,7 @@ export function OptionSuggestionsBoard({
 
   return (
     <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
+      <div className="@container/suggestions flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-1">
         <a
           href="#suggestion-review-schedule"
           className="inline-flex min-h-[44px] items-center gap-2 self-start text-base font-semibold text-(--t-accent-primary) underline underline-offset-4 lg:hidden"
@@ -677,7 +676,7 @@ export function OptionSuggestionsBoard({
             />
           </div>
         ) : (
-          <ul className="m-0 flex list-none flex-col gap-4 p-0">
+          <ul className="m-0 grid list-none items-stretch gap-4 p-0 @4xl/suggestions:grid-cols-2">
             {shown.map((s) => (
               <SuggestionCard
                 key={s.documentId}

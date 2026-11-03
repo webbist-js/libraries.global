@@ -28,6 +28,7 @@ import { EditorialDrawerMount } from "@/components/editorial/EditorialDrawerMoun
 import { ErrorBoundary } from "@/components/elementary/ErrorBoundary"
 import StrapiPreviewListener from "@/components/elementary/StrapiPreviewListener"
 import { TailwindIndicator } from "@/components/elementary/TailwindIndicator"
+import { ViewTransitionGuard } from "@/components/elementary/ViewTransitionGuard"
 import { EventModal } from "@/components/events/EventModal"
 import { EventModalProvider } from "@/components/events/EventModalContext"
 import { buildFooterNavigation } from "@/components/global/footer-navigation"
@@ -144,6 +145,7 @@ export default async function RootLayout({
             fontJetBrainsMono.variable
           )}
         >
+          <ViewTransitionGuard />
           <SkipToContent>{tUi("skip_to_main_content")}</SkipToContent>
           <TrackingScripts nonce={nonce} locale={locale} />
           <ServerProviders>
@@ -179,6 +181,7 @@ export default async function RootLayout({
         {!liveConsole && <TrackingScripts nonce={nonce} locale={locale} />}
         <ServerProviders>
           <ContactModalProvider aliases={contactAliases}>
+            <ViewTransitionGuard />
             {!liveConsole && <StrapiPreviewListener />}
             <ClientProviders nonce={nonce} liveConsole={liveConsole}>
               <EventModalProvider>

@@ -9,6 +9,7 @@ import { AtlasFeedbackButton } from "@/components/atlas/AtlasFeedbackButton"
 import { DashboardRouteTransition } from "@/components/dashboard/DashboardRouteTransition"
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
+import { SavedViewsButton } from "@/components/saved/SavedViewsButton"
 import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
@@ -50,7 +51,10 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
         <h1 className="type-h1 sr-only">
           Atlas: map of the world&apos;s libraries
         </h1>
-        <RecordToolbar items={[{ label: ui("atlas") }]} />
+        <RecordToolbar
+          items={[{ label: ui("atlas") }]}
+          actions={<SavedViewsButton kind="view" />}
+        />
         <div className="relative min-h-0 flex-1">
           <AtlasExplorer
             feedbackPrompt={<AtlasFeedbackButton />}

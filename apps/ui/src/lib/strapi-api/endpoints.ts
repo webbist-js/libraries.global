@@ -21,4 +21,5 @@ export const API_ENDPOINTS: Partial<Record<UID.ContentType, string>> = {
   "api::library-type.library-type": "/library-types",
   "api::service.service": "/services",
   "api::drive.drive": "/drives",
+  "api::roadmap.roadmap": "/roadmap",
 } as const

@@ -1,0 +1,64 @@
+{
+  "collectionName": "components_roadmap_data_imports",
+  "info": {
+    "displayName": "Roadmap data import",
+    "icon": "database",
+    "description": "An open dataset we are looking at or bringing into the index: on our list, then explore, validate, licence and ingest. Keep its key identical in every language: votes and discussion attach to it."
+  },
+  "options": {},
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "place": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "regions": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "code": {
+      "type": "string",
+      "required": true,
+      "maxLength": 3,
+      "regex": "^[A-Z]{2,3}$"
+    },
+    "source": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "fields": {
+      "type": "component",
+      "repeatable": true,
+      "component": "utilities.text",
+      "max": 6
+    },
+    "libraries": {
+      "type": "integer",
+      "min": 0
+    },
+    "stage": {
+      "type": "enumeration",
+      "enum": [
+        "listed",
+        "exploring",
+        "validating",
+        "licensing",
+        "ingesting",
+        "ingested"
+      ],
+      "required": true,
+      "default": "listed"
+    },
+    "stageNote": {
+      "type": "string",
+      "maxLength": 120
+    }
+  }
+}

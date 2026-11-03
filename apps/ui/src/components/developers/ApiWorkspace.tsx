@@ -7,6 +7,7 @@ import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { WorkspaceNavigation } from "@/components/dashboard/WorkspaceNavigation"
 import { Container } from "@/components/elementary/Container"
+import { TeamNameContext } from "@/components/staff/TeamNameContext"
 
 export const API_SECTIONS = {
   overview: {
@@ -124,7 +125,7 @@ export function ApiWorkspace({
             title={
               team && section === "overview" ? "API overview" : current.title
             }
-            context={teamName}
+            context={teamName ? <TeamNameContext name={teamName} /> : undefined}
             density={section === "playground" ? "task" : "page"}
             lead={
               team && section === "overview"

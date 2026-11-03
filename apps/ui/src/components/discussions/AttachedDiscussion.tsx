@@ -36,6 +36,7 @@ type AttachedDiscussionProps = {
     | "practice"
     | "general"
     | "suggestions"
+    | "roadmap"
   title: string
   language: string
   variant?: "default" | "suggestion"

@@ -16,6 +16,7 @@ import { useTranslations as useUiTranslations } from "next-intl"
 import { forwardRef, useEffect, useImperativeHandle, useRef } from "react"
 
 import type { AtlasContextRelease } from "@/lib/atlas-context"
+import type { AtlasCountryGeometry } from "@/lib/atlas-countries"
 import { T } from "@/lib/design-tokens"
 import {
   bindMapAppearance,
@@ -27,7 +28,9 @@ import type { PublicMobileTimetable } from "@/lib/mobile/types"
 import type { MobileStopHit } from "@/lib/mobile-stop-search"
 
 import { AtlasContextRenderer } from "./atlas-context-renderer"
+import { AtlasCountryRenderer } from "./atlas-country-renderer"
 import type { AtlasGeneration } from "./atlas-data-client"
+import { browserStartView } from "./atlas-default-view"
 import { AtlasLibraryDensityRenderer } from "./atlas-library-density-renderer"
 import {
   addPinImages,
@@ -92,6 +95,11 @@ interface AtlasMapProps {
   perCapitaOpacity?: number
   selectedCountry?: string | null
   onCountrySelect?: (iso3: string) => void
+  /** Country boundaries: clickable at low zoom when onCountryOpen is set. */
+  countryGeometry?: AtlasCountryGeometry | null
+  /** The boundary (iso3) of the country open in the drawer. */
+  focusedCountry?: string | null
+  onCountryOpen?: (iso3: string) => void
   onPerCapitaGeometryError?: () => void
   generation?: AtlasGeneration | null
   onGeometryError?: () => void
@@ -194,6 +202,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     const meMarker = useRef<Marker | null>(null)
     const scalableRenderer = useRef<AtlasScalableRenderer | null>(null)
     const perCapitaRenderer = useRef<AtlasPerCapitaRenderer | null>(null)
+    const countryRenderer = useRef<AtlasCountryRenderer | null>(null)
     const densityRenderer = useRef<AtlasLibraryDensityRenderer | null>(null)
     const reachRenderer = useRef<AtlasReachRenderer | null>(null)
     const contextRenderer = useRef<AtlasContextRenderer | null>(null)
@@ -324,14 +333,16 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         }
         if (!alive || !containerRef.current) return
         libRef.current = maplibregl
-        const v = latest.current.initialView
+        const v =
+          latest.current.initialView ??
+          browserStartView(containerRef.current.clientWidth)
         let map: MapLibreMap
         try {
           map = new maplibregl.Map({
             container: containerRef.current,
             style: BASEMAP,
-            center: v ? [v.lng, v.lat] : [10, 30],
-            zoom: v ? v.zoom : 1.6,
+            center: [v.lng, v.lat],
+            zoom: v.zoom,
             attributionControl: {
               compact: true,
               customAttribution: BASEMAP_ATTRIBUTION,
@@ -778,6 +789,16 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
               ),
             })[0]
             if (!hit && inspectBackground(e.point, e.lngLat)) return
+            // At world and continent zoom an empty spot opens its country.
+            if (
+              !hit &&
+              openCountryAt(
+                e.point,
+                countryRenderer.current,
+                latest.current.onCountryOpen
+              )
+            )
+              return
             latest.current.onSelect(hit ? (hit.properties.id as string) : null)
           })
           for (const l of [
@@ -794,6 +815,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
             )
             map.on("mouseleave", l, () => (map.getCanvas().style.cursor = ""))
           }
+          bindCountryHover(map, selectable, countryRenderer, latest)
 
           const report = () => {
             const b = map.getBounds()
@@ -818,6 +840,7 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           syncLayers()
           syncMarkers()
           syncPerCapita()
+          syncCountries()
           syncContext()
           syncReach()
           syncDensity()
@@ -837,6 +860,8 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
         scalableRenderer.current = null
         perCapitaRenderer.current?.destroy()
         perCapitaRenderer.current = null
+        countryRenderer.current?.destroy()
+        countryRenderer.current = null
         densityRenderer.current?.destroy()
         densityRenderer.current = null
         reachRenderer.current?.destroy()
@@ -894,6 +919,19 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           (latest.current.layers.includes("population") &&
             latest.current.populationDensity)
         )
+      )
+    }
+    function syncCountries() {
+      const map = mapRef.current
+      if (!map || !readyRef.current) return
+      const geometry = latest.current.onCountryOpen
+        ? (latest.current.countryGeometry ?? null)
+        : null
+      if (!geometry && !countryRenderer.current) return
+      countryRenderer.current ??= new AtlasCountryRenderer(map)
+      countryRenderer.current.update(
+        geometry,
+        latest.current.focusedCountry ?? null
       )
     }
     function syncPerCapita() {
@@ -1180,6 +1218,11 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
           : null
       )
     }, [props.densitySelection, props.layers])
+    useEffect(syncCountries, [
+      props.countryGeometry,
+      props.focusedCountry,
+      props.onCountryOpen,
+    ])
     useEffect(syncPerCapita, [
       props.perCapita,
       props.populationDensity,
@@ -1237,6 +1280,41 @@ export const AtlasMap = forwardRef<AtlasMapHandle, AtlasMapProps>(
     )
   }
 )
+
+/** Opens the country under an empty spot, when countries are clickable. */
+function openCountryAt(
+  point: MapLibre.PointLike,
+  renderer: AtlasCountryRenderer | null,
+  onCountryOpen: AtlasMapProps["onCountryOpen"]
+): boolean {
+  const country = onCountryOpen ? renderer?.countryAt(point) : null
+  if (!country) return false
+  onCountryOpen!(country)
+
+  return true
+}
+
+/** Hovering an empty spot highlights the country a click would open. */
+function bindCountryHover(
+  map: MapLibreMap,
+  selectable: string[],
+  renderer: { readonly current: AtlasCountryRenderer | null },
+  latest: { readonly current: Pick<AtlasMapProps, "onCountryOpen"> }
+) {
+  map.on("mousemove", (e) => {
+    if (!latest.current.onCountryOpen || !renderer.current) return
+    const libraryUnder = map.queryRenderedFeatures(e.point, {
+      layers: selectable.filter(
+        (l) =>
+          map.getLayer(l) && map.getLayoutProperty(l, "visibility") !== "none"
+      ),
+    }).length
+    const country = libraryUnder ? null : renderer.current.countryAt(e.point)
+    renderer.current.hover(country)
+    if (!libraryUnder) map.getCanvas().style.cursor = country ? "pointer" : ""
+  })
+  map.on("mouseout", () => renderer.current?.hover(null))
+}
 
 function reducedMotion(): boolean {
   return (

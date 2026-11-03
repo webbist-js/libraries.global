@@ -414,6 +414,7 @@ const CONTINENT_FOCUS: Readonly<Record<string, number>> = {
   "north-america": 3,
   "south-america": 4,
   oceania: 5,
+  antarctica: 6,
 }
 
 const CONTINENT_POSITION: Readonly<Record<string, { x: number; y: number }>> = {
@@ -423,6 +424,7 @@ const CONTINENT_POSITION: Readonly<Record<string, { x: number; y: number }>> = {
   "north-america": { x: 23.1, y: 27.2 },
   "south-america": { x: 33.3, y: 58.3 },
   oceania: { x: 89.4, y: 65.6 },
+  antarctica: { x: 50, y: 90 },
 }
 
 export function CoverageExplorer({

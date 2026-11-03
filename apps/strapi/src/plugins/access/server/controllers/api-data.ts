@@ -1,5 +1,11 @@
 import { isLibraryEntityRef, libraryTypeName } from "@repo/shared-data"
 
+import {
+  areasWithLibraries,
+  countriesWithLibraries,
+  isPlaceSlug,
+  regionsWithLibraries,
+} from "../../../../utils/place-catalogue"
 import { isValidServiceSecret } from "../../../../utils/service-secret"
 import { teamIsActive } from "../../../../utils/team-access"
 import { AccessError, isDocumentId } from "../utils/admin"
@@ -112,13 +118,32 @@ export default ({ strapi }: { strapi: any }) => {
       const after = ctx.query.after
       if (after && (typeof after !== "string" || !isDocumentId(after)))
         throw new AccessError(400, "invalid_cursor")
+      // A region is only unique within its country, and an area within its
+      // region, so each level requires the one above it.
+      const { country, region, area } = ctx.query as Record<string, unknown>
+      for (const value of [country, region, area])
+        if (value !== undefined && !isPlaceSlug(value))
+          throw new AccessError(400, "invalid_place")
+      if ((region && !country) || (area && !region))
+        throw new AccessError(400, "invalid_place")
       const filters = {
         ...(detail
           ? { entityRef: { $eq: entityRef } }
           : after
             ? { documentId: { $gt: after } }
             : {}),
-        ...(ctx.query.country ? { country: { slug: ctx.query.country } } : {}),
+        ...(country ? { country: { slug: { $eq: country } } } : {}),
+        ...(region
+          ? {
+              region: {
+                slug: { $eq: region },
+                country: { slug: { $eq: country } },
+              },
+            }
+          : {}),
+        ...(area
+          ? { area: { slug: { $eq: area }, region: { slug: { $eq: region } } } }
+          : {}),
       }
       const rows = await strapi.documents("api::library.library").findMany({
         status: "published",
@@ -131,6 +156,7 @@ export default ({ strapi }: { strapi: any }) => {
           libraryType: { fields: ["name"] },
           country: { fields: ["name", "slug", "iso2"] },
           region: { fields: ["name", "slug"] },
+          area: { fields: ["name", "slug"] },
           sourceRecords: true,
         },
       })
@@ -166,6 +192,7 @@ export default ({ strapi }: { strapi: any }) => {
           ? pick(row.country, ["name", "slug", "iso2"])
           : null,
         region: row.region ? pick(row.region, ["name", "slug"]) : null,
+        area: row.area ? pick(row.area, ["name", "slug"]) : null,
         sourceRecords: (row.sourceRecords ?? []).map((source: any) => ({
           ...pick(source, SOURCE_FIELDS),
           datasetCredit: credits.get(source.dataset) ?? null,
@@ -181,6 +208,56 @@ export default ({ strapi }: { strapi: any }) => {
           attribution:
             "Libraries Global contributors. Imported details retain their source licence; see sourceRecords.",
         },
+      }
+    }),
+    /**
+     * GET /api/places[?country=[&region=]]: countries with published
+     * libraries, a country's regions, or a region's areas, with counts.
+     */
+    places: wrap(async (ctx) => {
+      const locale =
+        typeof ctx.query.locale === "string" ? ctx.query.locale : "en"
+      if (!["en", "cs", "fr"].includes(locale))
+        throw new AccessError(400, "invalid_locale")
+      const { country, region } = ctx.query as Record<string, unknown>
+      for (const value of [country, region])
+        if (value !== undefined && !isPlaceSlug(value))
+          throw new AccessError(400, "invalid_place")
+      if (region && !country) throw new AccessError(400, "invalid_place")
+      const options = { locale }
+      const meta = { locale }
+      if (!country) {
+        const countries = await countriesWithLibraries(strapi, options)
+
+        return {
+          data: countries.map(({ documentId: _id, ...row }) => row),
+          meta: { ...meta, level: "country" },
+        }
+      }
+      if (!region) {
+        const found = await regionsWithLibraries(
+          strapi,
+          country as string,
+          options
+        )
+        if (!found) throw new AccessError(404, "not_found")
+
+        return {
+          data: found.regions.map(({ documentId: _id, ...row }) => row),
+          meta: { ...meta, level: "region", country },
+        }
+      }
+      const found = await areasWithLibraries(
+        strapi,
+        country as string,
+        region as string,
+        options
+      )
+      if (!found) throw new AccessError(404, "not_found")
+
+      return {
+        data: found.areas.map(({ documentId: _id, ...row }) => row),
+        meta: { ...meta, level: "area", country, region },
       }
     }),
   }

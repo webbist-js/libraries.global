@@ -38,9 +38,9 @@
 }
 
 .ck-content pre {
-  background: var(--t-bg-muted);
-  border: 1px solid var(--t-border-hi);
-  border-radius: 2px;
+  background: var(--t-bg-code);
+  border: 1px solid var(--t-border-line);
+  border-radius: 12px;
   color: var(--t-ink-base);
   direction: ltr;
   font-style: normal;

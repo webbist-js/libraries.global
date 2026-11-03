@@ -536,26 +536,18 @@ export function SiteSearchMount() {
             </section>
           ) : null}
           {loading ? (
-            <div role="status" className="space-y-5 p-5">
-              <p className="m-0 flex items-center gap-2 text-sm text-(--t-ink-dim)">
-                <LoaderCircle
-                  size={18}
-                  className="motion-safe:animate-spin"
-                  aria-hidden
-                />
-                {t("loading")}
-              </p>
-              <div aria-hidden="true" className="space-y-4">
-                {[0, 1, 2].map((row) => (
-                  <div key={row} className="flex gap-3">
-                    <Skeleton className="size-9 shrink-0 rounded-lg" />
-                    <div className="grid flex-1 gap-2">
-                      <Skeleton className="h-4 w-2/3" />
-                      <Skeleton className="h-3 w-4/5" />
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div role="status" className="site-search-skeleton">
+              <span className="sr-only">{t("loading")}</span>
+              <Skeleton aria-hidden className="site-search-skeleton-label" />
+              {[0, 1, 2].map((row) => (
+                <div key={row} aria-hidden className="site-search-skeleton-row">
+                  <Skeleton className="site-search-skeleton-icon" />
+                  <span>
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-3 w-4/5" />
+                  </span>
+                </div>
+              ))}
             </div>
           ) : null}
           {error ? (
@@ -606,7 +598,14 @@ export function SiteSearchMount() {
         </div>
         <footer className="site-search-footer">
           <span>{t("keyboardHelp")}</span>
-          <span aria-live="polite">
+          <span aria-live="polite" className="site-search-footer-status">
+            {loading ? (
+              <LoaderCircle
+                size={14}
+                className="motion-safe:animate-spin"
+                aria-hidden
+              />
+            ) : null}
             {loading ? t("loading") : t("shown", { count: items.length })}
           </span>
         </footer>

@@ -19,11 +19,12 @@ import {
   type AtlasGeneration,
 } from "./atlas-data-client"
 import { atlasBuildingFilters, atlasViewportCamera } from "./atlas-query-input"
-import type {
-  AtlasFilters,
-  AtlasLibrary,
-  LayerId,
-  AccessibilityView,
+import {
+  atlasPlaceScope,
+  type AtlasFilters,
+  type AtlasLibrary,
+  type LayerId,
+  type AccessibilityView,
 } from "./atlas.logic"
 import type { AtlasView } from "./AtlasMap"
 import type { Place } from "./AtlasSearchTab"
@@ -74,7 +75,11 @@ export function useAtlasRequest<T extends AtlasQueryResponse>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, refresh])
 
-  return state.key === key ? state : { key }
+  // While a changed request loads, keep showing the last answer: dropping
+  // it made every filter group fall back to empty and remount mid-drag.
+  return state.key === key
+    ? state
+    : { key, value: state.value, error: undefined, stale: true as const }
 }
 
 export function useAtlasData(
@@ -95,6 +100,8 @@ export function useAtlasData(
     [facilityAfter, setFacilityAfter] = useState<string | undefined>()
   const world = useMemo<AtlasScope>(
     () => ({
+      // A chosen country, region or area limits every query and the tiles.
+      ...(atlasPlaceScope(filters) ? { place: atlasPlaceScope(filters)! } : {}),
       filters: atlasBuildingFilters(filters),
       accessibility: {
         enabled: layers.includes("access"),

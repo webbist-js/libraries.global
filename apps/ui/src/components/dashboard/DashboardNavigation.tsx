@@ -177,26 +177,33 @@ export function DashboardNavigation({
       item
     )
   }
-  const workspaceDestinations = destinationsForViewer.filter((link) =>
-    ["staff", "moderation"].includes(link.icon)
-  )
-  const drawerOnlyDestinations = destinationsForViewer.filter(
-    (link) => link.icon === "api"
-  )
+  // Tools sit in their own rail group under the destinations: Staff,
+  // Moderation, then the API.
+  const WORKSPACE_ORDER = ["api", "staff", "moderation"]
+  const workspaceDestinations = destinationsForViewer
+    .filter((link) => WORKSPACE_ORDER.includes(link.icon))
+    .sort(
+      (a, b) =>
+        WORKSPACE_ORDER.indexOf(a.icon) - WORKSPACE_ORDER.indexOf(b.icon)
+    )
   const destinations = (rail: boolean) => (
     <nav
       aria-label={t("main")}
       className={rail ? "dashboard-destinations" : "flex flex-col gap-1"}
     >
-      {destinationsForViewer
-        .filter(
-          (link) =>
-            link.icon !== "api" &&
-            (rail
-              ? !["staff", "moderation"].includes(link.icon)
-              : !["/map", "/community", "/journal"].includes(link.href))
-        )
-        .map((link) => destinationLink(link, rail))}
+      {(rail
+        ? destinationsForViewer.filter(
+            (link) => !WORKSPACE_ORDER.includes(link.icon)
+          )
+        : [
+            ...destinationsForViewer.filter(
+              (link) =>
+                !WORKSPACE_ORDER.includes(link.icon) &&
+                !["/map", "/community", "/journal"].includes(link.href)
+            ),
+            ...workspaceDestinations,
+          ]
+      ).map((link) => destinationLink(link, rail))}
     </nav>
   )
   const contribute = (
@@ -335,7 +342,6 @@ export function DashboardNavigation({
             {destinations(false)}
           </div>
           <nav aria-label={t("help")} className="flex flex-col gap-1">
-            {drawerOnlyDestinations.map((link) => destinationLink(link, false))}
             {[
               ["/events", t("events")],
               ["/about", t("about_the_project")],

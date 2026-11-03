@@ -1,0 +1,107 @@
+{
+  "kind": "singleType",
+  "collectionName": "roadmaps",
+  "info": {
+    "singularName": "roadmap",
+    "pluralName": "roadmaps",
+    "displayName": "Roadmap",
+    "description": "The community roadmap: product features by stage and datasets coming into the index"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "lead": {
+      "type": "text",
+      "maxLength": 600,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "features": {
+      "type": "component",
+      "repeatable": true,
+      "component": "roadmap.feature",
+      "max": 60,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "dataTitle": {
+      "type": "string",
+      "maxLength": 120,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "dataLead": {
+      "type": "text",
+      "maxLength": 600,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "dataImports": {
+      "type": "component",
+      "repeatable": true,
+      "component": "roadmap.data-import",
+      "max": 40,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "suggestPrompt": {
+      "type": "string",
+      "maxLength": 200,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "footnote": {
+      "type": "text",
+      "maxLength": 600,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

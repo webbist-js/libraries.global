@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import { useId, useState } from "react"
 
+import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import { useMembershipContent } from "@/lib/localized-plans"
 import type { PlanCard } from "@/lib/plans"
@@ -76,6 +77,16 @@ export function PlanRoadmap({ plan }: { readonly plan: PlanCard }) {
             {includeLabel(item)}
           </li>
         ))}
+        <li className="pt-1.5">
+          <GlobalLink
+            href="/community/roadmap"
+            className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
+            style={{ color: T.accent.primary }}
+          >
+            {m("copy.roadmapVote")}
+            <Icon aria-hidden="true" icon="mdi:arrow-right" width={15} />
+          </GlobalLink>
+        </li>
       </ul>
     </div>
   )

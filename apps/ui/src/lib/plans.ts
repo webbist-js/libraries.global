@@ -115,7 +115,11 @@ export const PRO_FEATURE_COPY: Record<
     label: "Bulk updates from a spreadsheet",
     status: "soon",
   },
-  "team.embed": { label: "An embeddable library finder", status: "soon" },
+  "team.embed": {
+    label:
+      "Embeddable widgets for your website: a library finder, directory, charts and stats",
+    status: "live",
+  },
   "api.key": { label: "Higher allowances for the API add-on", status: "soon" },
 }
 
@@ -140,6 +144,15 @@ export function featuresOf(plan: DigitalPlanKey): Feature[] {
 }
 
 const feature = (text: string): PlanInclude => ({ text, kind: "feature" })
+
+/** Saved views (and, equally, saved searches) a plan keeps. */
+export function savedViewLimitOf(plan: "free" | "supporter" | "pro" | "team") {
+  return resolveEntitlements({
+    signedIn: true,
+    now: new Date(0),
+    grants: plan === "free" ? [] : [{ plan, expiresAt: null }],
+  }).limits.savedViews
+}
 
 export function exportLimitOf(plan: "supporter" | "pro" | "team") {
   return resolveEntitlements({
@@ -193,11 +206,16 @@ const TEAM_FEATURES = featureItems(TEAM_ONLY)
  * what's on the roadmap.
  */
 const TEAM_TRAFFIC = soon(PRO_FEATURE_COPY["library.traffic"].label)
+const TEAM_LIVE = TEAM_FEATURES.filter((i) => i.kind === "feature")
+const ORGANISER = PRO_FEATURE_COPY["library.team"].label
 const TEAM_INCLUDES: PlanInclude[] = [
   feature("Pro for every seat"),
-  ...TEAM_FEATURES.filter((i) => i.kind === "feature"),
+  ...TEAM_LIVE.filter((i) => i.text === ORGANISER),
   feature("Choose who can go live for a mobile library"),
-  feature("Optional API add-on with managed keys and usage reporting"),
+  ...TEAM_LIVE.filter((i) => i.text !== ORGANISER),
+  feature(
+    "Optional API add-on: search, list and browse libraries by country, region and area, with managed keys and usage reporting"
+  ),
   feature(
     "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation"
   ),
@@ -244,7 +262,7 @@ export const PLANS: readonly PlanCard[] = [
       feature("Suggest Knowledge edits and pitch Journal stories"),
       feature("Apply for Knowledge or Journal editing roles"),
       feature("Claim your library and use the free staff tools"),
-      soon("3 saved views and 3 saved searches"),
+      feature("3 saved views and 3 saved searches"),
       feature("An opt-in weekly digest of followed libraries"),
       feature(
         "Population density: area averages and supported population grids"
@@ -290,6 +308,7 @@ export const PLANS: readonly PlanCard[] = [
       feature(
         "Service Reach: up to 50 libraries and a 20,000 km² envelope, one travel time for larger areas"
       ),
+      feature("Unlimited saved views and searches"),
       soon("Transit stops and lines"),
     ],
     cta: { kind: "soon", label: "Coming soon" },

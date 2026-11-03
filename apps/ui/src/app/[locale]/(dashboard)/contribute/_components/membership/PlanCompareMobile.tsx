@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { PlanCompareCell } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareCell"
+import { PlanRowLabel } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanRoadmapLink"
 import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import {
@@ -184,7 +185,10 @@ export function PlanCompareMobile({
                           className="border-t border-(--t-divider) px-3 py-3 text-left leading-[1.5] font-normal"
                           scope="row"
                         >
-                          {row.label}
+                          <PlanRowLabel
+                            label={row.label}
+                            roadmapKey={row.roadmapKey}
+                          />
                         </th>
                         {columns.map((key) => (
                           <td

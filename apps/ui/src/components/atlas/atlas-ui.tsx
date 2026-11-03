@@ -4,6 +4,7 @@
 
 import { useTranslations as useUiTranslations } from "next-intl"
 import type React from "react"
+import { useState } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
@@ -451,9 +452,26 @@ export function YearRange({
   readonly min: number
   readonly max: number
   readonly value: [number, number]
+  /** Called once a drag or key press ends, not on every step. */
   readonly onChange: (v: [number, number]) => void
 }) {
   const tUi = useUiTranslations("ui")
+  // The range being dragged; null shows the committed value. Committing on
+  // every step queried the Atlas per pixel and redrew the filters under the
+  // pointer.
+  const [draft, setDraft] = useState<[number, number] | null>(null)
+  const shown = draft ?? value
+  const commit = () => {
+    if (!draft) return
+    if (draft[0] !== value[0] || draft[1] !== value[1]) onChange(draft)
+    setDraft(null)
+  }
+  const commitProps = {
+    onPointerUp: commit,
+    onKeyUp: commit,
+    onBlur: commit,
+    onTouchEnd: commit,
+  }
 
   const pct = (v: number) => ((v - min) / Math.max(1, max - min)) * 100
   const thumb =
@@ -470,8 +488,8 @@ export function YearRange({
         aria-hidden="true"
         className="absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full"
         style={{
-          left: `${pct(value[0])}%`,
-          width: `${pct(value[1]) - pct(value[0])}%`,
+          left: `${pct(shown[0])}%`,
+          width: `${pct(shown[1]) - pct(shown[0])}%`,
           background: T.action.primary,
         }}
       />
@@ -480,10 +498,11 @@ export function YearRange({
         aria-label={tUi("founded_from")}
         min={min}
         max={max}
-        value={value[0]}
+        value={shown[0]}
         onChange={(e) =>
-          onChange([Math.min(Number(e.target.value), value[1]), value[1]])
+          setDraft([Math.min(Number(e.target.value), shown[1]), shown[1]])
         }
+        {...commitProps}
         className={thumb}
       />
       <input
@@ -491,10 +510,11 @@ export function YearRange({
         aria-label={tUi("founded_until")}
         min={min}
         max={max}
-        value={value[1]}
+        value={shown[1]}
         onChange={(e) =>
-          onChange([value[0], Math.max(Number(e.target.value), value[0])])
+          setDraft([shown[0], Math.max(Number(e.target.value), shown[0])])
         }
+        {...commitProps}
         className={thumb}
       />
     </div>
