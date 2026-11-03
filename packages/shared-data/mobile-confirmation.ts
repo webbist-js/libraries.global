@@ -41,7 +41,7 @@ export async function withConfirmation<T>(
       [recordId(userId)]
     )
     const { rows } = await client.query<{ value: string }>(
-      'select value from "verification" where id = $1 for update',
+      'select value from "app_auth_state" where id = $1 for update',
       [recordId(userId)]
     )
     let state = rows[0] ? (JSON.parse(rows[0].value) as RecordState) : empty()
@@ -52,7 +52,7 @@ export async function withConfirmation<T>(
       state = empty()
     const result = await work(state)
     await client.query(
-      'insert into "verification" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=excluded.value,"expiresAt"=excluded."expiresAt","updatedAt"=now()',
+      'insert into "app_auth_state" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=excluded.value,"expiresAt"=excluded."expiresAt","updatedAt"=now()',
       [
         recordId(userId),
         JSON.stringify(state),

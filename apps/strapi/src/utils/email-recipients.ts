@@ -1,46 +1,25 @@
-/** Better Auth is the authority for the current, verified account address. */
+/** Better Auth in Strapi owns the current verified account address. */
 export async function verifiedEmailMap(
   strapi: any,
   ids: string[]
 ): Promise<Map<string, string>> {
   const result = new Map<string, string>()
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  if (!secret || !ids.length) return result
-  const base =
-    process.env.APP_INTERNAL_URL ||
-    process.env.APP_PUBLIC_URL ||
-    "https://libraries.global"
-  try {
-    const unique = [...new Set(ids)]
-    for (let i = 0; i < unique.length; i += 100) {
-      const response = await fetch(
-        `${base.replace(/\/$/, "")}/api/internal/notifications/recipients`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Service-Secret": secret,
-          },
-          body: JSON.stringify({ ids: unique.slice(i, i + 100) }),
-          signal: AbortSignal.timeout(10000),
-        }
+  const valid = [...new Set(ids)].filter((id) => /^[1-9]\d{0,9}$/.test(id))
+  for (let offset = 0; offset < valid.length; offset += 100) {
+    const rows = await strapi.db.query("plugin::better-auth.user").findMany({
+      where: {
+        id: { $in: valid.slice(offset, offset + 100).map(Number) },
+        emailVerified: true,
+      },
+      select: ["id", "email"],
+    })
+    for (const row of rows)
+      if (
+        valid.includes(String(row.id)) &&
+        typeof row.email === "string" &&
+        !row.email.toLowerCase().endsWith(".invalid")
       )
-      if (!response.ok)
-        throw new Error(`Recipient lookup returned ${response.status}`)
-      const { data } = (await response.json()) as {
-        data: { id: string; email: string }[]
-      }
-      for (const row of data)
-        if (
-          unique.includes(row.id) &&
-          typeof row.email === "string" &&
-          !row.email.toLowerCase().endsWith(".invalid")
-        )
-          result.set(row.id, row.email)
-    }
-  } catch {
-    strapi.log.warn("[email] Verified recipient lookup unavailable")
-    throw new Error("Verified recipient lookup unavailable")
+        result.set(String(row.id), row.email)
   }
 
   return result

@@ -1875,7 +1875,8 @@
     "savedNoMatches": "Aucun article enregistré ne correspond aux filtres. Effacez-les ou consultez tous les articles.",
     "savedEmpty": "Enregistrez un article depuis sa barre latérale pour le lire plus tard.",
     "upNext": "À lire ensuite",
-    "nextStory": "Article suivant"
+    "nextStory": "Article suivant",
+    "baseline": "État initial du contenu"
   },
   "billing": {
     "secureCheckout": "Paiement sécurisé",

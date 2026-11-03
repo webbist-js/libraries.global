@@ -1,3 +1,4 @@
+import { passkey } from "@better-auth/passkey"
 import { strapiAdapter } from "@strapi-community/plugin-better-auth"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -146,4 +147,21 @@ describe("atomic Better Auth fallbacks", () => {
     })
     expect(row?.lastRequest).toBe(lastRequest)
   })
+})
+
+it("preserves unsigned 32-bit WebAuthn counters returned as PostgreSQL int8", async () => {
+  vi.stubGlobal("strapi", {
+    documents: () => ({
+      findFirst: async () => ({ id: 1, userId: 2, counter: "4294967295" }),
+    }),
+  })
+  const adapter = strapiAdapter()({
+    advanced: { database: { generateId: "serial" } },
+    plugins: [passkey()],
+  })
+  const row = await adapter.findOne<{ counter: number }>({
+    model: "passkey",
+    where: [{ field: "id", value: "1" }],
+  })
+  expect(row?.counter).toBe(4294967295)
 })

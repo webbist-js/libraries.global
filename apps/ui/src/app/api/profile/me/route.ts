@@ -5,13 +5,12 @@ import { z } from "zod"
 
 import { isAppearancePreference } from "@/lib/appearance"
 import { auth, authDbPool } from "@/lib/auth"
+import { proxyAuthRequest } from "@/lib/auth-transport"
 import { BillingError } from "@/lib/billing/config"
 import { stopBillingBeforeDeletion } from "@/lib/billing/deletion"
-import { deleteStrapiProfile } from "@/lib/delete-profile"
 import { sessionIsFresh, reauthenticationResponse } from "@/lib/fresh-auth"
 import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 import { readTypedJson } from "@/lib/typed-json"
 
 const STRAPI = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
@@ -128,7 +127,6 @@ export async function PUT(req: Request) {
       { error: "Failed to update profile" },
       { status: 500 }
     )
-  invalidateSessionProfile(session.user.id)
   const json = await res.json()
 
   return NextResponse.json(json)
@@ -208,7 +206,6 @@ export async function PATCH(req: Request) {
       { error: "Failed to update profile" },
       { status: 500 }
     )
-  invalidateSessionProfile(session.user.id)
 
   return NextResponse.json({ ok: true })
 }
@@ -248,39 +245,24 @@ export async function DELETE(req: Request) {
       { status: 503 }
     )
   }
-  const removed = await deleteStrapiProfile({
-    baUserId: session.user.id,
-    email: session.user.email,
-  })
-  if (!removed.ok)
-    return NextResponse.json(
-      {
-        error:
-          removed.reason === "unconfigured"
-            ? "Bridge not configured"
-            : "Failed to remove profile data",
+  const result = await proxyAuthRequest(
+    new Request(new URL("/api/auth/delete-user", req.url), {
+      method: "POST",
+      headers: {
+        ...Object.fromEntries(req.headers),
+        "content-type": "application/json",
       },
-      { status: 500 }
-    )
-
-  // Delete the sign-in record directly (sessions, linked accounts, user).
-  // The public deleteUser endpoint can refuse an older session, and the
-  // privacy notice promises sign-in details are deleted, so a failure here
-  // must reach the user rather than be swallowed.
-  try {
-    const context = await auth.$context
-    await context.internalAdapter.deleteUser(session.user.id)
-  } catch (err) {
-    console.error("[deleteUser] sign-in record not deleted:", err)
-
+      body: JSON.stringify({}),
+    })
+  )
+  if (!result.ok)
     return NextResponse.json(
-      {
-        error:
-          "Your profile was removed, but we couldn't finish deleting your sign-in details. Please email legal@libraries.global and we'll complete it.",
-      },
-      { status: 500 }
+      { error: "We couldn't finish deleting your account. Please try again." },
+      { status: result.status }
     )
-  }
+  const response = NextResponse.json({ ok: true })
+  for (const cookie of result.headers.getSetCookie())
+    response.headers.append("set-cookie", cookie)
 
-  return NextResponse.json({ ok: true })
+  return response
 }

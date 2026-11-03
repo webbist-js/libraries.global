@@ -7,15 +7,13 @@ import {
 } from "@repo/shared-data"
 import freeEmailDomains from "free-email-domains"
 
-import { sessionProfile } from "../../../auth/session-profile"
 import { ownedUploadIds } from "../../../plugins/content-moderation/server/utils/uploads"
 import {
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../utils/affiliations"
-import { eraseAccount } from "../../../utils/erase-account"
 import { isValidServiceSecret } from "../../../utils/service-secret"
-import { isValidUsername, nextContributorNumber } from "../../../utils/username"
+import { isValidUsername } from "../../../utils/username"
 
 /**
  * Mailboxes anyone can register: the `free-email-domains` list (14k+
@@ -81,67 +79,6 @@ function followTargetOf(input: {
 }
 
 export default {
-  async syncUser(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    const { email, name, provider, baUserId } = ctx.request.body as {
-      email?: string
-      name?: string
-      provider?: string
-      baUserId?: string
-    }
-    if (!email || !provider)
-      return ctx.badRequest("Missing required fields: email, provider")
-
-    let user = await strapi
-      .query("plugin::users-permissions.user")
-      .findOne({ where: { email } })
-    if (!user) {
-      const authenticatedRole = await strapi
-        .query("plugin::users-permissions.role")
-        .findOne({ where: { type: "authenticated" } })
-      if (!authenticatedRole)
-        return ctx.internalServerError('"authenticated" role not found')
-      user = await strapi.query("plugin::users-permissions.user").create({
-        data: {
-          email,
-          username: email,
-          provider,
-          confirmed: true,
-          blocked: false,
-          role: authenticatedRole.id,
-        },
-      })
-    }
-
-    if (baUserId) {
-      const existing = await strapi
-        .query("api::user-profile.user-profile")
-        .findOne({ where: { baUserId } })
-      if (!existing) {
-        const nameParts = (name ?? "").trim().split(/\s+/)
-        const firstName = nameParts[0] ?? ""
-        const lastName = nameParts.slice(1).join(" ") || ""
-        // username is intentionally left null — set during onboarding
-        await strapi.documents("api::user-profile.user-profile").create({
-          data: {
-            baUserId,
-            firstName,
-            lastName,
-            contributorNumber: await nextContributorNumber(strapi),
-          } as any,
-        })
-      }
-    }
-
-    // Better Auth owns the session; the bridge never mints a Strapi JWT.
-    return ctx.send({
-      user: { id: user.id, email: user.email, username: user.username },
-    })
-  },
-
   async upsertProfile(ctx: any) {
     if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
@@ -372,22 +309,6 @@ export default {
     )
 
     return ctx.send({ following })
-  },
-
-  async deleteProfile(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    const { baUserId, email } = ctx.request.body as {
-      baUserId?: string
-      email?: string
-    }
-    if (!baUserId) return ctx.badRequest("Missing baUserId")
-
-    await eraseAccount(strapi, { baUserId, email })
-
-    return ctx.send({ ok: true })
   },
 
   async createAffiliation(ctx: any) {
@@ -731,18 +652,5 @@ export default {
     )
 
     return ctx.send({ following })
-  },
-
-  async sessionProfile(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    // A repeated ?baUserId= arrives as an array; only one non-empty id is valid.
-    const { baUserId } = ctx.query as { baUserId?: unknown }
-    if (typeof baUserId !== "string" || baUserId.length === 0)
-      return ctx.badRequest("Missing baUserId")
-
-    return ctx.send(await sessionProfile(strapi, baUserId))
   },
 }

@@ -7,11 +7,7 @@ const mocks = vi.hoisted(() => ({
 }))
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: mocks.session } } }))
-vi.mock("@/lib/delete-profile", () => ({ deleteStrapiProfile: vi.fn() }))
 vi.mock("@/lib/own-profile-server", () => ({ readOwnProfile: vi.fn() }))
-vi.mock("@/lib/session-profile", () => ({
-  invalidateSessionProfile: mocks.invalidate,
-}))
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "local-test-secret")
 vi.stubEnv("STRAPI_URL", "http://cms.test")
 const { PATCH, PUT } = await import("../route")
@@ -94,7 +90,6 @@ describe("profile preference proxy", () => {
       supporterListed: false,
       supporterBadgeVisible: true,
     })
-    expect(mocks.invalidate).toHaveBeenCalledWith("owner")
   })
   it("denies unauthenticated and cross-site writes without touching Strapi", async () => {
     expect(

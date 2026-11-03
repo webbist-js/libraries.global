@@ -7,13 +7,17 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 
 const f = vi.hoisted(() => ({ bridge: vi.fn(), invalidate: vi.fn() }))
 vi.mock("../bridge", () => ({ teamBillingBridge: f.bridge }))
-vi.mock("@/lib/session-profile", () => ({
-  invalidateSessionProfile: f.invalidate,
-}))
 
 import type { ManagedCheckoutParams } from "../../billing/provider"
 import { createSelfServiceTeam, teamCheckout } from "../billing"
 import { refreshTeamSubscription, reconcileTeamBilling } from "../sync"
+
+vi.mock("@/lib/auth-identities", () => ({
+  verifiedIdentity: async (id: string) => ({
+    id,
+    email: "fixture@example.invalid",
+  }),
+}))
 
 const enabled = process.env.BILLING_DB_TEST === "true"
 const schema = `team_billing_test_${randomUUID().replaceAll("-", "")}`
@@ -162,10 +166,6 @@ describe.skipIf(!enabled)(
             "utf8"
           )
         )
-      await pool.query(
-        'create table "user" (id text primary key, "emailVerified" boolean)'
-      )
-      await pool.query('insert into "user" values($1,true)', [buyer.id])
       vi.stubEnv("BILLING_ENV", "sandbox")
       vi.stubEnv("TEAM_BILLING_ENABLED", "true")
       vi.stubEnv("STRIPE_MANAGED_PAYMENTS_ENABLED", "true")
@@ -206,7 +206,6 @@ describe.skipIf(!enabled)(
       expect(
         f.bridge.mock.calls.filter(([action]) => action === "create")
       ).toHaveLength(1)
-      await pool.query('insert into "user" values($1,true)', ["other"])
       await expect(
         createSelfServiceTeam(pool, { ...buyer, id: "other" }, input)
       ).rejects.toThrow("team_signup_conflict")
@@ -289,7 +288,6 @@ describe.skipIf(!enabled)(
         (await pool.query("select revision from team_billing_memberships"))
           .rows[0].revision
       ).toBe(version)
-      expect(f.invalidate).toHaveBeenCalledWith(buyer.id)
     })
     it("refetches subscription state inside the account lock before projecting", async () => {
       retrieveSubscription.mockResolvedValueOnce({

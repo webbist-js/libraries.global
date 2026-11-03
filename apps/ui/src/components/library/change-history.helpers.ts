@@ -258,6 +258,13 @@ export function batchRow(
 ): { title: string; icon: string; tone: RowTone; count: string | null } {
   const keys = b.fields.map((f) => f.field)
   const n = keys.length
+  if (b.action === "baseline")
+    return {
+      title: "Content baseline",
+      icon: LIB_ICONS.download,
+      tone: "import",
+      count: null,
+    }
   if (b.source === "import")
     return {
       title:

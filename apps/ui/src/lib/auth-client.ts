@@ -6,7 +6,7 @@ import {
 } from "better-auth/client/plugins"
 import { createAuthClient } from "better-auth/react"
 
-import type { auth } from "./auth"
+import type { AuthContract } from "./auth-contract"
 
 export const authClient = createAuthClient({
   // Each app host calls its own endpoints, including when an older build URL is set.
@@ -17,8 +17,8 @@ export const authClient = createAuthClient({
   plugins: [
     passkeyClient(),
     magicLinkClient(),
-    customSessionClient<typeof auth>(),
+    customSessionClient<AuthContract>(),
     // Types the terms-acceptance fields that sign-up sends.
-    inferAdditionalFields<typeof auth>(),
+    inferAdditionalFields<AuthContract>(),
   ],
 })

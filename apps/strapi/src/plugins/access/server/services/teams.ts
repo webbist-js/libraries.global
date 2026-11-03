@@ -15,7 +15,6 @@ import {
   authorityLibrariesForSource,
   revokeAuthoritySource,
 } from "../../../../utils/authority-grants"
-import { notifySessionInvalidated } from "../../../../utils/role-grants"
 import { AFFILIATION_UID, resolveStaff } from "../../../../utils/staff"
 import {
   loadTeamMemberships,
@@ -1258,7 +1257,6 @@ export default ({ strapi }: { strapi: any }) => {
             libraries: { set: next.map((l) => ({ documentId: l.documentId })) },
           },
         })
-        await notifySessionInvalidated(strapi, actor.baUserId)
 
         return view(await teamOf(teamId), {
           baUserId: actor.baUserId,
@@ -1596,7 +1594,6 @@ export default ({ strapi }: { strapi: any }) => {
           return { member, team, applied }
         }
       )
-      await notifySessionInvalidated(strapi, user.id)
       const [summary] = await this.listMine(user.id, teamId)
 
       return (
@@ -1639,9 +1636,6 @@ export default ({ strapi }: { strapi: any }) => {
 
         return grantAccess(team, member, libraryDocumentId, staffRole, actor)
       })
-      const member = await memberOf(teamId, memberId)
-      if (member.baUserId)
-        await notifySessionInvalidated(strapi, member.baUserId)
       const fresh = await view(await teamOf(teamId), {
         baUserId: actor.kind === "user" ? actor.baUserId : null,
         role: actor.kind === "admin" ? "admin" : "organiser",
@@ -1661,7 +1655,7 @@ export default ({ strapi }: { strapi: any }) => {
     ): Promise<void> {
       if (!isDocumentId(libraryDocumentId))
         throw new AccessError(400, "invalid_library")
-      const member = await teamTransaction(strapi, teamId, async () => {
+      await teamTransaction(strapi, teamId, async () => {
         await teamOf(teamId)
         if (actor.kind === "user")
           await this.requireOrganiser(teamId, actor.baUserId)
@@ -1670,8 +1664,6 @@ export default ({ strapi }: { strapi: any }) => {
 
         return member
       })
-      if (member.baUserId)
-        await notifySessionInvalidated(strapi, member.baUserId)
     },
 
     /**
@@ -1684,7 +1676,7 @@ export default ({ strapi }: { strapi: any }) => {
       body: { teamRole?: unknown; assignments?: unknown },
       actor: Actor
     ): Promise<TeamMemberView> {
-      const member = await teamTransaction(strapi, teamId, async () => {
+      await teamTransaction(strapi, teamId, async () => {
         const team = await teamOf(teamId)
         if (actor.kind === "user")
           await this.requireOrganiser(teamId, actor.baUserId)
@@ -1765,8 +1757,6 @@ export default ({ strapi }: { strapi: any }) => {
 
         return member
       })
-      if (member.baUserId)
-        await notifySessionInvalidated(strapi, member.baUserId)
       const fresh = await view(await teamOf(teamId), {
         baUserId: actor.kind === "user" ? actor.baUserId : null,
         role: actor.kind === "admin" ? "admin" : "organiser",
@@ -1786,7 +1776,7 @@ export default ({ strapi }: { strapi: any }) => {
       memberId: string,
       actor: Actor
     ): Promise<void> {
-      const member = await teamTransaction(strapi, teamId, async () => {
+      await teamTransaction(strapi, teamId, async () => {
         await teamOf(teamId)
         if (actor.kind === "user") {
           const me = await this.requireOrganiser(teamId, actor.baUserId)
@@ -1814,8 +1804,6 @@ export default ({ strapi }: { strapi: any }) => {
 
         return member
       })
-      if (member.baUserId)
-        await notifySessionInvalidated(strapi, member.baUserId)
     },
 
     /**

@@ -5,6 +5,15 @@ export default {
   routes: [
     {
       method: "GET",
+      path: "/account/profile",
+      handler: "user-profile.findMe",
+      config: {
+        auth: false,
+        policies: ["global::service-auth", "global::account-session"],
+      },
+    },
+    {
+      method: "GET",
       path: "/user-profiles/check-username",
       handler: "user-profile.checkUsername",
       config: { auth: false, policies: [] },

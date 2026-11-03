@@ -1,5 +1,5 @@
 diff --git a/dist/adapter/index.js b/dist/adapter/index.js
-index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..e04f7137682c646ee235515b3ca9da9fa35d2292 100644
+index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..c933fb1ebb095e78186bf6f29d401f065010d35b 100644
 --- a/dist/adapter/index.js
 +++ b/dist/adapter/index.js
 @@ -71,7 +71,7 @@ const transformFilters = (where, model, getFieldName) => {
@@ -11,7 +11,7 @@ index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..e04f7137682c646ee235515b3ca9da9f
      }
      if (orConditions.length > 0) {
        filters2.$or = orConditions;
-@@ -143,7 +143,17 @@ function coerceDateValues(value) {
+@@ -143,7 +143,19 @@ function coerceDateValues(value) {
    return coerced;
  }
  function transformOutput(record) {
@@ -21,16 +21,18 @@ index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..e04f7137682c646ee235515b3ca9da9f
 +  const { documentId, publishedAt, createdBy, updatedBy, locale, localizations, ...fields } = record;
 +  const output = coerceDateValues(fields);
 +  // PostgreSQL returns int8 as text; Better Auth's rate limiter needs arithmetic.
-+  if (output && typeof output.lastRequest === "string" && /^\d+$/.test(output.lastRequest)) {
-+    const value = Number(output.lastRequest);
-+    if (!Number.isSafeInteger(value)) throw new Error("Invalid rate-limit timestamp");
-+    output.lastRequest = value;
++  for (const field of ["lastRequest", "counter"]) {
++    if (output && typeof output[field] === "string" && /^\d+$/.test(output[field])) {
++      const value = Number(output[field]);
++      if (!Number.isSafeInteger(value)) throw new Error("Invalid auth integer");
++      output[field] = value;
++    }
 +  }
 +  return output;
  }
  const strapi$1 = { "name": "better-auth" };
  const packageJson = {
-@@ -501,19 +511,10 @@ const strapiAdapter = (config) => {
+@@ -501,19 +513,10 @@ const strapiAdapter = (config) => {
            debugLog("updateMany", { model, where, update });
            const uid = getModelUid(model);
            const filters = transformFilters(where, model, getFieldName);
@@ -54,7 +56,7 @@ index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..e04f7137682c646ee235515b3ca9da9f
          },
          /**
           * Delete a single record
-@@ -540,18 +541,8 @@ const strapiAdapter = (config) => {
+@@ -540,18 +543,8 @@ const strapiAdapter = (config) => {
            debugLog("deleteMany", { model, where });
            const uid = getModelUid(model);
            const filters = transformFilters(where, model, getFieldName);

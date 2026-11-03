@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest"
 import peopleService from "../../src/plugins/access/server/services/people"
 import plansService from "../../src/plugins/access/server/services/plans"
 import { loadEntitlementInputs } from "../../src/utils/entitlement-inputs"
-import { migrateContributorRolesToGrants } from "../../src/utils/role-grants"
 import { nextContributorNumber } from "../../src/utils/username"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
@@ -140,27 +139,6 @@ describe("admin contribution identity reads", () => {
     )
     expect(JSON.stringify(await plans.listVerifications())).not.toContain(
       "privateProbe"
-    )
-  })
-
-  it("backfills roles with a trusted identity query while keeping writes on Document Service", async () => {
-    const { strapi } = fixture()
-    strapi.store = () => ({ get: async () => null, set: async () => {} })
-    await expect(migrateContributorRolesToGrants(strapi)).resolves.toEqual({
-      migrated: 0,
-    })
-    const profileRead =
-      strapi.db.query.mock.results[
-        strapi.db.query.mock.calls.findIndex(
-          ([uid]: [string]) => uid === PROFILE
-        )
-      ].value
-    expect(profileRead.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        select: ["baUserId", "contributorRole", "isVerifiedLibrarian"],
-        offset: 0,
-        limit: 200,
-      })
     )
   })
 

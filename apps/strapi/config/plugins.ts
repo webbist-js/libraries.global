@@ -28,8 +28,7 @@ export default ({ env }) => {
   }
 
   return {
-    // Keep the candidate adapter inactive until the clean-reset cutover is ready.
-    "better-auth": { enabled: false },
+    "better-auth": { enabled: true },
     discussions: {
       enabled: true,
       config: discussionsHostConfig,
@@ -325,14 +324,6 @@ export default ({ env }) => {
 
     seo: {
       enabled: true,
-    },
-
-    "users-permissions": {
-      config: {
-        jwt: {
-          expiresIn: "30d",
-        },
-      },
     },
 
     sentry: {

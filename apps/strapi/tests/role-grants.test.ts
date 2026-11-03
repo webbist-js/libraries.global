@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import {
@@ -8,8 +8,6 @@ import {
 import {
   activeGrants,
   createGrant,
-  migrateContributorRolesToGrants,
-  notifySessionInvalidated,
   resyncExpiredRoleGrants,
   ROLE_GRANT,
   syncDerivedRole,
@@ -18,22 +16,6 @@ import {
 const PROFILE = "api::user-profile.user-profile"
 const PAST = "2020-01-01T00:00:00.000Z"
 const FUTURE = "2099-01-01T00:00:00.000Z"
-
-/** A core-store stand-in: `strapi.store({ type, name }).get/set({ key })`. */
-function withStore(strapi: any) {
-  const values = new Map<string, unknown>()
-  strapi.store = vi.fn(({ type, name }: { type: string; name: string }) => ({
-    get: vi.fn(
-      async ({ key }: { key: string }) =>
-        values.get(`${type}:${name}:${key}`) ?? null
-    ),
-    set: vi.fn(async ({ key, value }: { key: string; value: unknown }) => {
-      values.set(`${type}:${name}:${key}`, value)
-    }),
-  }))
-
-  return values
-}
 
 const grant = (
   documentId: string,
@@ -240,171 +222,10 @@ describe("syncDerivedRole", () => {
   })
 })
 
-describe("migrateContributorRolesToGrants", () => {
-  it("creates one grant per non-reader profile and runs once", async () => {
-    const { strapi, store } = makeFakeStrapi({
-      [PROFILE]: [
-        { documentId: "p1", id: 1, baUserId: "u1", contributorRole: "reader" },
-        {
-          documentId: "p2",
-          id: 2,
-          baUserId: "u2",
-          contributorRole: "wiki_editor",
-        },
-        { documentId: "p3", id: 3, baUserId: "u3", contributorRole: null },
-        {
-          documentId: "p4",
-          id: 4,
-          baUserId: "u4",
-          contributorRole: "editorial_board",
-        },
-      ],
-    })
-    withStore(strapi)
-
-    expect(await migrateContributorRolesToGrants(strapi)).toEqual({
-      migrated: 2,
-    })
-    expect(
-      store[ROLE_GRANT].map((g) => [g.baUserId, g.role, g.source])
-    ).toEqual([
-      ["u2", "wiki_editor", "migration"],
-      ["u4", "editorial_board", "migration"],
-    ])
-    expect(store[ROLE_GRANT][0]).toMatchObject({
-      queue: "all",
-      scopeLocale: null,
-      reason: "Backfilled from user-profile.contributorRole",
-    })
-
-    expect(await migrateContributorRolesToGrants(strapi)).toEqual({
-      migrated: 0,
-    })
-    expect(store[ROLE_GRANT]).toHaveLength(2)
-  })
-
-  it("keeps a verified librarian's flag when their role is higher", async () => {
-    const { strapi, store } = makeFakeStrapi({
-      [PROFILE]: [
-        {
-          documentId: "p1",
-          id: 1,
-          baUserId: "u1",
-          contributorRole: "wiki_editor",
-          isVerifiedLibrarian: true,
-        },
-      ],
-    })
-    withStore(strapi)
-    await migrateContributorRolesToGrants(strapi)
-
-    expect(store[ROLE_GRANT].map((g) => g.role).sort()).toEqual([
-      "verified_librarian",
-      "wiki_editor",
-    ])
-  })
-
-  it("pages through profiles 200 at a time by id", async () => {
-    const { strapi, store } = makeFakeStrapi({
-      [PROFILE]: Array.from({ length: 450 }, (_, i) => ({
-        documentId: `p${i}`,
-        id: i + 1,
-        baUserId: `u${i}`,
-        contributorRole: "contributor",
-      })),
-    })
-    withStore(strapi)
-
-    expect(await migrateContributorRolesToGrants(strapi)).toEqual({
-      migrated: 450,
-    })
-    expect(store[ROLE_GRANT]).toHaveLength(450)
-    const i = strapi.db.query.mock.calls.findIndex(
-      ([u]: [string]) => u === PROFILE
-    )
-    const { findMany } = strapi.db.query.mock.results[i].value
-    expect(findMany.mock.calls[0][0]).toMatchObject({
-      offset: 0,
-      limit: 200,
-      orderBy: { id: "asc" },
-    })
-  })
-})
-
-describe("notifySessionInvalidated", () => {
-  const env = { ...process.env }
-  beforeEach(() => {
-    process.env.APP_PUBLIC_URL = "https://app.example"
-    process.env.STRAPI_BRIDGE_SECRET = "s3cret"
-  })
-  afterEach(() => {
-    process.env = { ...env }
-    vi.unstubAllGlobals()
-  })
-
-  it("posts the baUserId with the bridge secret", async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
-    vi.stubGlobal("fetch", fetchMock)
-    const { strapi } = makeFakeStrapi()
-
-    await notifySessionInvalidated(strapi, "u1")
-
-    expect(fetchMock).toHaveBeenCalledTimes(1)
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, any]
-    expect(url).toBe("https://app.example/api/internal/session/invalidate")
-    expect(init.method).toBe("POST")
-    expect(init.headers).toMatchObject({
-      "Content-Type": "application/json",
-      "X-Service-Secret": "s3cret",
-    })
-    expect(JSON.parse(init.body)).toEqual({ baUserId: "u1" })
-    expect(init.signal).toBeInstanceOf(AbortSignal)
-  })
-
-  it("swallows a rejected fetch and logs it", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => {
-        throw new Error("down")
-      })
-    )
-    const { strapi } = makeFakeStrapi()
-
-    await expect(notifySessionInvalidated(strapi, "u1")).resolves.toBe(
-      undefined
-    )
-    expect(strapi.log.warn).toHaveBeenCalled()
-  })
-
-  it("logs a non-2xx response without throwing", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () => new Response(null, { status: 500 }))
-    )
-    const { strapi } = makeFakeStrapi()
-
-    await notifySessionInvalidated(strapi, "u1")
-    expect(strapi.log.warn).toHaveBeenCalled()
-  })
-
-  it.each(["APP_PUBLIC_URL", "STRAPI_BRIDGE_SECRET"])(
-    "is skipped when %s is unset",
-    async (name) => {
-      delete process.env[name]
-      const fetchMock = vi.fn()
-      vi.stubGlobal("fetch", fetchMock)
-      const { strapi } = makeFakeStrapi()
-
-      await notifySessionInvalidated(strapi, "u1")
-      expect(fetchMock).not.toHaveBeenCalled()
-    }
-  )
-})
-
 describe("role-grant lifecycle", () => {
   afterEach(() => vi.unstubAllGlobals())
 
-  it("re-derives the role and notifies the app for the row's user", async () => {
+  it("re-derives the role from current grants", async () => {
     process.env.APP_PUBLIC_URL = "https://app.example"
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
     const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
@@ -420,7 +241,7 @@ describe("role-grant lifecycle", () => {
     await new Promise((r) => setTimeout(r, 0))
 
     expect(store[PROFILE][0].contributorRole).toBe("journal_editor")
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it("handles an array result (deleteMany) once per distinct user", async () => {
@@ -454,34 +275,6 @@ describe("role-grant lifecycle", () => {
     })
     await handleRoleGrantEvent(strapi, { result: { baUserId: "u1" } })
     expect(strapi.log.error).toHaveBeenCalled()
-  })
-
-  it("does not notify the app for a grant created by the migration", async () => {
-    process.env.APP_PUBLIC_URL = "https://app.example"
-    process.env.STRAPI_BRIDGE_SECRET = "s3cret"
-    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }))
-    vi.stubGlobal("fetch", fetchMock)
-    const { strapi, store } = makeFakeStrapi({
-      [PROFILE]: [
-        { documentId: "p1", baUserId: "u1", contributorRole: "reader" },
-      ],
-      [ROLE_GRANT]: [grant("g1", "wiki_editor", { source: "migration" })],
-    })
-
-    await roleGrantLifecycles(strapi).afterCreate({
-      result: store[ROLE_GRANT][0],
-    })
-    await new Promise((r) => setTimeout(r, 0))
-
-    expect(store[PROFILE][0].contributorRole).toBe("wiki_editor")
-    expect(fetchMock).not.toHaveBeenCalled()
-
-    // An admin editing that grant later is still pushed to the app.
-    await roleGrantLifecycles(strapi).afterUpdate({
-      result: store[ROLE_GRANT][0],
-    })
-    await new Promise((r) => setTimeout(r, 0))
-    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it("re-syncs the previous holder when an update moves a grant to another user", async () => {

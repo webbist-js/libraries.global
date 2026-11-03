@@ -306,7 +306,8 @@ function AddPassword({ email }: { email: string }) {
           />
           <AuthNote>
             Setting a password signs you out on every device, so you&rsquo;ll
-            sign in again afterwards, with Google or the new password.
+            sign in again afterwards, with your social account or the new
+            password.
           </AuthNote>
           <AuthPrimaryLink href={SETTINGS_HREF}>
             {tUi("back_to_settings")}{" "}
@@ -324,7 +325,7 @@ function AddPassword({ email }: { email: string }) {
         italic="password."
         subtitle={
           <>
-            You sign in with Google, so there&rsquo;s no password to change.
+            You use a social sign-in, so there&rsquo;s no password to change.
             We&rsquo;ll email {to} a link to set one, and you can then sign in
             either way.
           </>

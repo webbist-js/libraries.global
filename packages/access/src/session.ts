@@ -49,7 +49,7 @@ export type SessionGrant = {
   expiresAt: string | null
 }
 export type SessionVerification = { expiresAt: string | null }
-/** A Team the user is an active member of, as the bridge reports it. */
+/** A Team the user is an active member of, as the local session projection reports it. */
 export type SessionProfileTeam = {
   id: string
   name: string
@@ -85,7 +85,7 @@ export type SessionProfile = {
 }
 
 export type SessionAccess = {
-  /** False when the bridge failed; gates on `username === null` must check this. */
+  /** False when the profile is unavailable; gates on `username === null` must check this. */
   profileLoaded: boolean
   contributorRole: ContributorRole
   username: string | null
@@ -109,8 +109,8 @@ export type SessionAccess = {
 }
 
 /**
- * Turns the bridge profile into the session's access fields. A missing
- * profile (bridge down) yields a reader with no capabilities: the UI hides
+ * Turns the profile into the session's access fields. A missing
+ * profile yields a reader with no capabilities: the UI hides
  * actions and route pre-checks deny, while Strapi stays the real gate.
  * Capabilities come from the role grants only; `contributorRole` is the
  * derived label, carried for display.

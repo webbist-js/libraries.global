@@ -10,10 +10,14 @@ const ID = /^[a-z0-9]{20,32}$/
 
 /** Explicit opt-in: the mobile app must be a child of the account domain. */
 export function mobileAppConfig() {
-  return mobileAuthConfig(
+  const mobileUrl =
     typeof window === "undefined"
       ? process.env.MOBILE_APP_URL
-      : getEnvVar("MOBILE_APP_URL"),
+      : getEnvVar("MOBILE_APP_URL")
+  if (!mobileUrl) return null
+
+  return mobileAuthConfig(
+    mobileUrl,
     typeof window === "undefined"
       ? process.env.APP_PUBLIC_URL
       : getEnvVar("APP_PUBLIC_URL", true)

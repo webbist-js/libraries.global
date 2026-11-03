@@ -6,7 +6,6 @@ import type { PaidMembership } from "@repo/access"
 import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
-import { invalidateSessionProfile } from "@/lib/session-profile"
 import {
   refreshApiSubscription,
   reconcileApiBilling,
@@ -282,7 +281,6 @@ export async function syncMembership(pool: Pool, row: MembershipRow) {
     "update billing_memberships set synced_revision=greatest(synced_revision,$2),sync_attempts=0,next_sync_at=now() where subscription_id=$1",
     [row.subscription_id, Number(row.revision)]
   )
-  invalidateSessionProfile(row.user_id)
 }
 
 async function syncPendingMemberships(
