@@ -141,6 +141,7 @@ export interface LibraryCreateData {
   name: string
   libraryType: string
   operationalStatus?: string
+  operatorName?: string
   operatorType?: string
   slug?: string
   timezone?: string

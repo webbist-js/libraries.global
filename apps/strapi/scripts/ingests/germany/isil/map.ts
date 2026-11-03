@@ -4,6 +4,10 @@
  */
 
 import type { DirectoryLibrary } from "../../_shared/directory"
+import {
+  directorySlug,
+  directoryUrl as cleanUrl,
+} from "../../_shared/directory-fields"
 
 export interface GermanLibrary {
   isil: string
@@ -19,6 +23,7 @@ export interface GermanLibrary {
   latitude?: number
   longitude?: number
   land?: string
+  areaName?: string
   placeCode?: string
   libraryType?: string
   operatorType?: string
@@ -90,46 +95,41 @@ export function mapGermanLibrary(
   }
 
   // Type code comes from PICA field 035E via DNB SRU (not in JSONLD dump)
-  // Not yet harvested: type codes would come from the DNB SRU endpoint, keyed
-  // by ISIL. Until then, default to "Special" when no type is provided.
-  const typeCode = record.libraryType || "81" // 81 = Wissenschaftliche Spezialbibliothek
-  if (
-    typeCode &&
-    !TYPE_MAP[typeCode] && // Exclude non-library records if type is explicitly present
-    [
-      "82",
-      "83",
-      "84",
-      "85",
-      "86",
-      "87",
-      "88",
-      "89",
-      "91",
-      "94",
-      "95",
-      "96",
-      "97",
-      "98",
-    ].includes(typeCode)
-  ) {
-    return "Non-library institutional record (excluded)"
-  }
+  const typeCode = record.libraryType ?? ""
+  if (!TYPE_MAP[typeCode])
+    return `Unsupported or missing registry type: ${typeCode}`
 
   // Land code also comes from PICA field 371 $f via SRU
-  // Not yet harvested: Land codes would come from SRU. Until then, default to
-  // "Other" or use the postal code prefix.
-  const landCode = record.land
-  const regionName = landCode ? LANDER_MAP[landCode] : "Unknown" // Later: derive from postal code or SRU enrichment
+  const names: Record<string, string> = {
+    "Baden-Württemberg": "BW",
+    Bayern: "BY",
+    Berlin: "BE",
+    Brandenburg: "BB",
+    Bremen: "HB",
+    Hamburg: "HH",
+    Hessen: "HE",
+    "Mecklenburg-Vorpommern": "MV",
+    Niedersachsen: "NI",
+    "Nordrhein-Westfalen": "NW",
+    "Rheinland-Pfalz": "RP",
+    Saarland: "SL",
+    Sachsen: "SN",
+    "Sachsen-Anhalt": "ST",
+    "Schleswig-Holstein": "SH",
+    Thüringen: "TH",
+  }
+  const land = record.land?.normalize("NFC").trim() ?? ""
+  const regionName = LANDER_MAP[names[land] ?? land]
+  if (!regionName) return `Unresolved registry region: ${land}`
 
   // Validate coordinates if present
-  let location: { latitude: number; longitude: number } | undefined
+  let location: { lat: number; lng: number } | undefined
   if (record.latitude !== undefined && record.longitude !== undefined) {
     const lat = Number(record.latitude)
     const lon = Number(record.longitude)
     // Germany bounds roughly: 47-55N, 6-15E
     if (lat >= 47 && lat <= 55 && lon >= 6 && lon <= 15) {
-      location = { latitude: lat, longitude: lon }
+      location = { lat, lng: lon }
     } else {
       // Warn but don't exclude
       console.warn(`[${record.isil}] Coordinates out of bounds: ${lat},${lon}`)
@@ -137,21 +137,9 @@ export function mapGermanLibrary(
   }
 
   // Build name, handling shortName variants
-  const name = record.name
-  if (!name) {
-    return "Missing official name (foaf:name / 029A)"
-  }
-
-  const alternates: string[] = []
-  if (record.shortName && record.shortName !== name) {
-    alternates.push(record.shortName)
-  }
-  if (record.alternateNames) {
-    alternates.push(
-      ...record.alternateNames.filter(
-        (n) => n && n !== name && !alternates.includes(n)
-      )
-    )
+  const name = record.name?.normalize("NFC").trim().replaceAll(/\s+/g, " ")
+  if (!name || name.length > 255) {
+    return "Missing or oversized official name (029A)"
   }
 
   // Validate postcodes are 5-digit
@@ -172,21 +160,27 @@ export function mapGermanLibrary(
   const isMobile = typeCode === "39"
 
   return {
+    recordId: record.isil,
+    warnings:
+      record.placeCode && !record.areaName
+        ? [
+            `Registry place code: ${record.placeCode}; district relation pending crosswalk`,
+          ]
+        : [],
     countryCode: "DE",
+    regionAliases: [land],
     regionName,
-    areaName: undefined, // Kreis matching would happen in geography phase
+    areaName: record.areaName,
     data: {
-      sourceRecordId: record.isil,
-      sourceRecordUrl: `https://ld.zdb-services.de/resource/organisations/${record.isil}`,
+      slug: directorySlug(name, record.isil, 200),
+      sourceUrl: `https://ld.zdb-services.de/resource/organisations/${record.isil}`,
       name,
       shortName:
         record.shortName && record.shortName !== name
           ? record.shortName
           : undefined,
-      alternateNames: alternates.length > 0 ? alternates : undefined,
       libraryType: TYPE_MAP[typeCode],
       operatorType: record.operatorType,
-      operatorName: record.operatorName,
       operationalStatus: "unknown",
       location: isMobile ? undefined : location,
       streetAddress: record.streetAddress,
@@ -204,21 +198,5 @@ export function mapGermanLibrary(
  * Clean and validate URLs for directory.
  */
 function directoryUrl(url: string): string | undefined {
-  if (!url) return undefined
-
-  try {
-    const u = new URL(url)
-    // Only HTTP(S)
-    if (!["http:", "https:"].includes(u.protocol)) {
-      return undefined
-    }
-    // No @ signs in authority (basic XSS check)
-    if (u.hostname.includes("@")) {
-      return undefined
-    }
-
-    return u.toString()
-  } catch {
-    return undefined
-  }
+  return cleanUrl(url)
 }
