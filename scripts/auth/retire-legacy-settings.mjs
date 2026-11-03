@@ -54,6 +54,11 @@ try {
     true,
     "Legacy identity tables must be retired first"
   )
+  // Its triggers disappeared with the retired Next.js identity tables. A
+  // remaining dependency must fail explicitly rather than cascading away.
+  await client.query(
+    "DROP FUNCTION IF EXISTS public.record_internal_auth_activity() RESTRICT"
+  )
   const result = await client.query(
     "DELETE FROM strapi_core_store_settings WHERE key=ANY($1::text[])",
     [keys]
