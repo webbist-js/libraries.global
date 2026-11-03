@@ -24,6 +24,7 @@ import {
 import { Container } from "@/components/elementary/Container"
 import { MobilePlaceStops } from "@/components/mobile/MobilePlaceStops"
 import { NearbyMobileLibraries } from "@/components/mobile/NearbyMobileLibraries"
+import { SavedViewsButton } from "@/components/saved/SavedViewsButton"
 import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import {
   captureAnalyticsEvent,
@@ -309,6 +310,7 @@ export function FindLibraryPage({
             { label: tUi("home"), href: "/" },
             { label: tUi("find_libraries") },
           ]}
+          actions={<SavedViewsButton kind="search" />}
         />
       }
       navigationHidden={filterSidebar.collapsed}

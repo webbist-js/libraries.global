@@ -166,6 +166,7 @@ describe("PRO_FEATURE_COPY", () => {
       "atlas.export",
       "library.history",
       "library.team",
+      "team.embed",
     ])
   })
 })

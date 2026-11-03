@@ -439,6 +439,13 @@
 .home-feature-list li {
   border-bottom: 1px solid var(--t-border-line);
 }
+.home-feature-list li:last-child {
+  border-bottom: 0;
+}
+.home-feature-list li:last-child .home-feature-row {
+  min-height: 0;
+  padding-bottom: 0;
+}
 .home-feature-row {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;

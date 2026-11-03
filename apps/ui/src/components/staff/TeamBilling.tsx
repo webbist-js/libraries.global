@@ -576,7 +576,7 @@ export function TeamBilling({
           }
         >
           <TeamSeatUsage used={data.used} total={data.seats} />
-          <p className="text-base leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 mt-4 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
             Members and pending invitations each use one seat, including your
             Organiser seat.
           </p>
@@ -601,7 +601,7 @@ export function TeamBilling({
             />
           }
         >
-          <p className="mt-0 text-base leading-relaxed text-(--t-ink-dim)">
+          <p className="m-0 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
             Optional API access is billed separately at{" "}
             {money(pricing.teamApi.month)} a month. Manage its subscription
             separately if your Team ends.

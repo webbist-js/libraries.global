@@ -234,7 +234,7 @@ it("offers Team management to a Pro subscriber who already belongs to a Team", (
       ]}
     />
   )
-  fireEvent.click(screen.getByRole("button", { name: "Continue with Teams" }))
+  fireEvent.click(screen.getByRole("button", { name: "Open your Team" }))
   expect(
     screen.getByRole("link", { name: "Manage your Team" }).getAttribute("href")
   ).toBe("/staff/teams")

@@ -10,5 +10,6 @@
   "apps/ui/src/components/providers/TrackingScripts.tsx#default": "Application telemetry/script bootstrap. It has no independent UI; third-party scripts must not execute in the isolated catalogue.",
   "apps/ui/src/components/providers/TrackingScripts.tsx#TrackingScriptWrapper": "Third-party script installer; no visual output. Its script execution is outside a component-library preview.",
   "apps/ui/src/components/seo/JsonLd.tsx#JsonLd": "Escaped application/ld+json metadata script only. It has no visual UI; serialization is covered by the existing dedicated tests.",
-  "apps/ui/src/components/widgets/WidgetAutoHeight.tsx#WidgetAutoHeight": "Embed resize/postMessage effect only; returns null. Its cross-origin parent protocol is an integration concern rather than a visual story."
+  "apps/ui/src/components/widgets/WidgetAutoHeight.tsx#WidgetAutoHeight": "Embed resize/postMessage effect only; returns null. Its cross-origin parent protocol is an integration concern rather than a visual story.",
+  "apps/ui/src/components/elementary/ViewTransitionGuard.tsx#ViewTransitionGuard": "Nonvisual document transition guard; returns null. Hidden-document behavior is covered by the view-transition-guard unit tests."
 }

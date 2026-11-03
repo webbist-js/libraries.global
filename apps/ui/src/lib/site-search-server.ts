@@ -253,6 +253,11 @@ export async function searchSite(
     ["leaderboard", "/community/leaderboard", "points ranking contributors"],
     ["suggestions", "/community/suggestions", "vote checklist"],
     ["discussions", "/community/discussions", "forum conversations"],
+    [
+      "roadmap",
+      "/community/roadmap",
+      "roadmap coming soon planned features datasets imports vote",
+    ],
     ["supporters", "/community/supporters", "support membership"],
     ["events", "/events", "calendar what's on"],
     ["plans", "/plans", "pricing pro team"],

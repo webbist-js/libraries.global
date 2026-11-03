@@ -428,6 +428,16 @@ export function ApiGuidePanel() {
       path: "/api/v1/libraries/{entityRef}?locale=en",
       detail: "Read one library’s full record",
     },
+    {
+      method: "GET",
+      path: "/api/v1/places/{country}/{region}",
+      detail: "Browse countries, then their regions and areas, with counts",
+    },
+    {
+      method: "GET",
+      path: "/api/v1/places/{country}/{region}/{area}/libraries",
+      detail: "List the libraries in a country, region or area",
+    },
   ]
   const example = [
     "# Search libraries",

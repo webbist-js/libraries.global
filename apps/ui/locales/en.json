@@ -198,9 +198,6 @@
     }
   },
   "aboutCoverage": {
-    "pause": "Pause animation",
-    "resume": "Resume animation",
-    "replay": "Replay animation",
     "eyebrow": "Current coverage",
     "title": "A growing record of libraries.",
     "description": "These figures describe published records in the index. Coverage varies between countries and remains incomplete.",
@@ -2630,7 +2627,16 @@
     "reviewAt": "Board review (UTC)",
     "capacity": "Shortlist places",
     "saveRound": "Save schedule",
-    "completeRound": "Complete this review and open the next round",
+    "completeRound": "Complete review",
+    "completeLead": "Once every shortlisted suggestion has a decision, complete the review. Voting then opens for the next round.",
+    "completeTitle": "Complete this review round?",
+    "completeBody": "Accepted suggestions become new facilities, services and library types that contributors can add to library records. Until someone does, existing records won’t show them, so a new option starts out empty.",
+    "completeDriveTitle": "Fill the new options with a drive",
+    "completeDrive": "A drive asks the community to add facilities and services to the libraries that offer them, so new options reach real records quickly.",
+    "planDrive": "Plan a facilities drive",
+    "completeNext": "Voting for the next round opens as soon as you complete this one.",
+    "completeCancel": "Not yet",
+    "completeConfirm": "Complete and open voting",
     "roundSaved": "Review round saved.",
     "roundFailed": "The review round could not be saved.",
     "publish": "Approve publication",
@@ -2760,6 +2766,15 @@
   },
   "moderationWorkspace": {
     "title": "Review *contributions*",
+    "thanks": "Thank you for reviewing. Every decision you make keeps the index accurate and fair for the people who rely on it. These guides cover what to check and how to decide.",
+    "guidesLabel": "Moderator guides",
+    "guides": {
+      "howReview": "How review works",
+      "sources": "Sources and data retention",
+      "roles": "Roles and permissions",
+      "eventFeeds": "Reviewing event feeds",
+      "board": "The editorial board"
+    },
     "workspace": "Review access",
     "scopeHint": "Only work in your review scope appears here.",
     "reviewQueues": "Review queues",
@@ -2909,7 +2924,8 @@
     "manageTeam": "Manage your Team",
     "yourTeam": "Your Team",
     "existingTeamLead": "Manage your members, libraries and annual membership from your Team workspace.",
-    "teamBilling": "Billing and seats"
+    "teamBilling": "Billing and seats",
+    "openYourTeam": "Open your Team"
   },
   "membershipCompare": {
     "lead": "See what’s available today. Features marked “Soon” are still on the roadmap.",
@@ -2922,7 +2938,8 @@
     "showing": "Showing {count} of {total} features",
     "highlightHint": "Select a plan heading to highlight its column.",
     "firstPlan": "First plan",
-    "secondPlan": "Second plan"
+    "secondPlan": "Second plan",
+    "roadmapLink": "On the roadmap"
   },
   "membershipStatus": {
     "yourMembership": "Your membership",
@@ -3195,7 +3212,8 @@
           "12": "Export derived metrics",
           "13": "A personal calendar feed",
           "14": "Service Reach: up to 50 libraries and a 20,000 km² envelope, one travel time for larger areas",
-          "15": "Transit stops and lines"
+          "15": "Unlimited saved views and searches",
+          "16": "Transit stops and lines"
         }
       },
       "team": {
@@ -3206,14 +3224,14 @@
           "0": "Pro for every seat",
           "1": "Team organiser: assign staff to your libraries",
           "2": "Choose who can go live for a mobile library",
-          "3": "Optional API add-on with managed keys and usage reporting",
-          "5": "Traffic reports",
-          "6": "Shared Atlas analysis workspace",
-          "7": "Bulk updates from a spreadsheet",
-          "8": "An embeddable library finder",
+          "3": "Embeddable widgets for your website: a library finder, directory, charts and stats",
+          "5": "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation",
+          "6": "Traffic reports",
+          "7": "Shared Atlas analysis workspace",
+          "8": "Bulk updates from a spreadsheet",
           "9": "Higher allowances for the API add-on",
           "10": "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately.",
-          "4": "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation"
+          "4": "Optional API add-on: search, list and browse libraries by country, region and area, with managed keys and usage reporting"
         }
       }
     },
@@ -3238,7 +3256,7 @@
       "suggest-knowledge-edits-and-pitch-journal-stories": "Suggest Knowledge edits and pitch Journal stories",
       "apply-for-knowledge-or-journal-editing-roles": "Apply for Knowledge or Journal editing roles",
       "claim-your-library-and-use-the-free-staff-tools": "Claim your library and use the free staff tools",
-      "3-saved-views-and-3-saved-searches": "3 saved views and 3 saved searches",
+      "3-saved-views-and-3-saved-searches": "Saved views and searches",
       "an-opt-in-weekly-digest-of-followed-libraries": "An opt-in weekly digest of followed libraries",
       "an-optional-supporter-mark-you-can-hide": "An optional Supporter mark you can hide",
       "optional-credit-on-the-supporters-page": "Optional credit on the supporters page",
@@ -3260,7 +3278,7 @@
       "index_export": "Export search results with attribution",
       "team-organiser-assign-staff-to-your-libraries": "Team organiser: assign staff to your libraries",
       "choose-who-can-go-live-for-a-mobile-library": "Choose who can go live for a mobile library",
-      "optional-api-add-on-with-managed-keys-and-usage-reporting": "Optional API add-on with managed keys and usage reporting",
+      "optional-api-add-on-search-list-and-browse-libraries-by-country-region-and-area-with-managed-keys-and-usage-reporting": "Optional API add-on: search, list and browse libraries by country, region and area, with managed keys and usage reporting",
       "traffic-reports": "Traffic reports",
       "a-shared-service-workspace": "A shared service workspace",
       "bulk-updates-from-a-spreadsheet": "Bulk updates from a spreadsheet",
@@ -3270,7 +3288,7 @@
       "library_traffic": "Traffic reports",
       "team_workspace": "Shared Atlas analysis workspace",
       "team_bulkUpload": "Bulk updates from a spreadsheet",
-      "team_embed": "An embeddable library finder",
+      "team_embed": "Embeddable widgets for your website: a library finder, directory, charts and stats",
       "api_key": "Higher allowances for the API add-on",
       "atlas_reachArea": "Larger service Reach: maximum envelope (km²), one time per calculation",
       "atlas_reachLibraries": "Service Reach: maximum eligible libraries",
@@ -3279,6 +3297,8 @@
       "population-density-area-averages-and-supported-population-grids": "Population density: area averages and supported population grids"
     },
     "copy": {
+      "unlimited": "Unlimited",
+      "eachCount": "{count} each",
       "title": "Plans and *Pro*",
       "metaTitle": "Plans and Pro",
       "lead": "Libraries Global is free to use. Optional memberships support open library data and add history, export and analysis tools.",
@@ -3339,7 +3359,8 @@
       "start": "Start contributing",
       "grantTitle": "Grants for press and partners",
       "grantBody": "Journalists, researchers on partner projects and partner organisations can ask the team for a Pro grant.",
-      "grant": "Ask for a grant"
+      "grant": "Ask for a grant",
+      "roadmapVote": "Vote and discuss on the roadmap"
     },
     "faq": {
       "0": {
@@ -4085,7 +4106,11 @@
     },
     "paidThrough": "Paid through",
     "teamInactive": "Inactive Team",
-    "inactiveTeamBilling": "This Team membership is inactive. Your Organiser can review its billing and renewal status. Pro seats and Team data tools require active membership. Approved library editing permissions are separate."
+    "inactiveTeamBilling": "This Team membership is inactive. Your Organiser can review its billing and renewal status. Pro seats and Team data tools require active membership. Approved library editing permissions are separate.",
+    "inTeamTitle": "You’re in a Team",
+    "inTeamOrganiser": "You’re the Organiser of {team}.",
+    "inTeamMember": "You have a seat in {team}.",
+    "manageTeam": "Manage your Team"
   },
   "membershipPreferences": {
     "saved": "Supporter preference saved",
@@ -4140,7 +4165,8 @@
     "emptyHint": "Try a library name, place or a few words from a guide. You can also add a missing library.",
     "keepTyping": "Type at least two characters",
     "addLibrary": "Add a missing library",
-    "shown": "{count, plural, one {# match shown} other {# matches shown}}"
+    "shown": "{count, plural, one {# match shown} other {# matches shown}}",
+    "roadmap": "Roadmap"
   },
   "articleSources": {
     "title": "Sources",
@@ -4185,7 +4211,11 @@
     "eventsBody": "Library staff can connect an event feed. Events are checked before they appear in the calendar.",
     "eventsAction": "Connect an event feed",
     "findTitle": "Know a library?",
-    "findBody": "Add a missing library or improve a record. Reviewers check every change; regular contributors can earn Pro."
+    "findBody": "Add a missing library or improve a record. Reviewers check every change; regular contributors can earn Pro.",
+    "roadmap": "Roadmap",
+    "roadmapTitle": "Know an open dataset?",
+    "roadmapBody": "Suggest a source for your country or region. Moderators check its licence before it’s listed for votes.",
+    "roadmapAction": "Suggest a dataset"
   },
   "contributionDrawer": {
     "lead": "Everything you can do to improve the index, and the work that is yours.",
@@ -4337,5 +4367,176 @@
       "unverifiedDirectory": "The library directory has not been verified as complete for this area. Counts and comparisons describe recorded libraries; missing records do not prove that an area has no library.",
       "temporaryFailure": "The data service could not load this result. This is a temporary retrieval failure, not evidence that the location has no data."
     }
+  },
+  "roadmap": {
+    "title": "Roadmap",
+    "lead": "What we’re building, what comes next and the datasets on their way into the index. Vote for what matters to you and tell us how you’d use it.",
+    "unavailable": "The roadmap isn’t published yet",
+    "unavailableLead": "Check back soon, or start a conversation in Discussions.",
+    "featuresHeading": "Features on the roadmap",
+    "filterAreas": "Filter by area",
+    "allAreas": "All",
+    "areas": {
+      "atlas": "Atlas",
+      "watching": "Watching & comparing",
+      "widgets": "Widgets & embeds",
+      "teams": "For teams",
+      "events": "Events",
+      "data": "Data & API"
+    },
+    "plans": {
+      "free": "Free",
+      "supporter": "Supporter",
+      "pro": "Pro",
+      "team": "Team",
+      "api": "API add-on"
+    },
+    "planFilter": "Plan",
+    "anyPlan": "Any plan",
+    "viewLabel": "View",
+    "board": "Board",
+    "list": "List",
+    "showing": "{count, plural, one {# feature shown.} other {# features shown.}}",
+    "noMatches": "No features match these filters.",
+    "stages": {
+      "now": {
+        "label": "Now",
+        "lead": "Being built"
+      },
+      "next": {
+        "label": "Next",
+        "lead": "Designed, starting soon"
+      },
+      "later": {
+        "label": "Later",
+        "lead": "On the list, open to change"
+      }
+    },
+    "emptyStage": "Nothing here yet.",
+    "voteFailed": "Your vote didn’t save. Try again.",
+    "voteAdded": "Vote added.",
+    "voteRemoved": "Vote removed.",
+    "signInToVote": "Sign in to vote for {title} ({count, plural, one {# vote} other {# votes}})",
+    "addVote": "Vote for {title} ({count, plural, one {# vote} other {# votes}})",
+    "removeVote": "Remove your vote for {title} ({count, plural, one {# vote} other {# votes}})",
+    "discuss": "Discuss",
+    "discussItem": "Discuss {title} ({count, plural, =0 {no posts yet} one {# post} other {# posts}})",
+    "startDiscussionAbout": "Start a discussion about {title}",
+    "activeToday": "Active today",
+    "activeYesterday": "Active yesterday",
+    "activeDaysAgo": "Active {count} days ago",
+    "discussLead": "Ask a question, or tell us how you’d use it.",
+    "dataEyebrow": "Data imports · Free for everyone",
+    "dataTitle": "Coming into the index",
+    "statOnTheWay": "Libraries on the way",
+    "statAdded": "Libraries added",
+    "importStepsLabel": "Import steps",
+    "importSteps": {
+      "explore": "Explore",
+      "validate": "Validate",
+      "licence": "Licence",
+      "ingest": "Ingest"
+    },
+    "importStages": {
+      "listed": "On our list",
+      "exploring": "Exploring the source",
+      "validating": "Validating the data",
+      "licensing": "Checking the licence",
+      "ingesting": "Ingesting",
+      "ingested": "In the index"
+    },
+    "importStep": "{done} of {total} steps done: {stage}",
+    "importFields": "What it adds",
+    "importInSource": "{count, plural, one {library in the source} other {libraries in the source}}",
+    "importAdded": "{count, plural, one {library added} other {libraries added}}",
+    "noImports": "No datasets are being imported right now.",
+    "onOurList": "Next on our list",
+    "onOurListLead": "Datasets we want to look at but haven’t started yet. Vote for the ones you’d use.",
+    "communitySuggestions": "Suggested by the community",
+    "suggestPrompt": "Know an open dataset for your country or region? Tell us the source and its licence.",
+    "suggestDataset": "Suggest a dataset",
+    "signInToSuggest": "Sign in to suggest a dataset",
+    "suggestTitle": "Suggest a dataset",
+    "suggestSubtitle": "Tell us where the data comes from.",
+    "suggestReview": "A moderator checks the source and its licence before it’s listed for votes.",
+    "suggestFields": {
+      "place": "Country or region",
+      "source": "Dataset or publisher",
+      "sourceUrl": "Link to the data",
+      "licence": "Licence",
+      "notes": "Anything else we should know"
+    },
+    "suggestHints": {
+      "place": "For example, Portugal",
+      "source": "For example, the national register of public libraries",
+      "licence": "For example, CC BY 4.0",
+      "notes": "What it covers, how often it’s updated, who to ask"
+    },
+    "optional": "(optional)",
+    "suggestSend": "Send suggestion",
+    "suggestSending": "Sending…",
+    "suggestThanks": "Thank you. A moderator will check the source and its licence, then list it here for votes.",
+    "suggestTooMany": "You’ve sent several suggestions this week. We’ll review those first.",
+    "suggestInvalid": "Check the details: a link needs to start with http:// or https://.",
+    "suggestFailed": "Your suggestion didn’t send. Try again.",
+    "close": "Close"
+  },
+  "savedViews": {
+    "button": {
+      "view": "Saved views",
+      "search": "Saved searches"
+    },
+    "title": {
+      "view": "Saved views",
+      "search": "Saved searches"
+    },
+    "lead": {
+      "view": "Keep this Atlas view, with its map position, layers and filters.",
+      "search": "Keep these search terms and filters to run again."
+    },
+    "count": "{count} of {limit} used",
+    "countUnlimited": "{count, plural, one {# saved} other {# saved}}",
+    "signedOut": {
+      "view": "Sign in to save Atlas views and come back to them. A free account keeps 3.",
+      "search": "Sign in to save searches and run them again. A free account keeps 3."
+    },
+    "signIn": "Sign in",
+    "nameLabel": {
+      "view": "Name this view",
+      "search": "Name this search"
+    },
+    "namePlaceholder": {
+      "view": "For example, Branches in West Yorkshire",
+      "search": "For example, Open late in Leeds"
+    },
+    "saveHint": {
+      "view": "Saves the map position, layers and filters you have now.",
+      "search": "Saves the search terms, filters and sort you have now."
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved “{name}”.",
+    "saveFailed": "That didn’t save. Try again.",
+    "limitReached": "You’ve used all {limit} on your plan.",
+    "atLimit": {
+      "view": "You’ve saved {limit} views, the most your plan keeps. Delete one to save this view, or upgrade for unlimited.",
+      "search": "You’ve saved {limit} searches, the most your plan keeps. Delete one to save this search, or upgrade for unlimited."
+    },
+    "seePlans": "See plans",
+    "listTitle": {
+      "view": "Your views",
+      "search": "Your searches"
+    },
+    "empty": {
+      "view": "No saved views yet.",
+      "search": "No saved searches yet."
+    },
+    "loading": "Loading…",
+    "loadFailed": "Your saved items didn’t load.",
+    "retry": "Try again",
+    "savedOn": "Saved {date}",
+    "delete": "Delete {name}",
+    "deleted": "Deleted “{name}”.",
+    "deleteFailed": "That didn’t delete. Try again."
   }
 }

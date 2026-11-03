@@ -28,9 +28,17 @@ curl 'https://libraries.global/api/v1/libraries?locale=en&limit=50' \
   -H "Authorization: Bearer $LIBRARIES_API_KEY"
 ```
 
-Search accepts `q`, `locale`, `limit`, `offset`, `country`, `region`, `libraryType`, `operationalStatus` and `near: { lat, lng, radius }` (metres). The gateway queries only the public Library index and returns documented attributes. Raw Meilisearch filters, multi-search, settings and administrative operations are unavailable.
+Search accepts `q`, `locale`, `limit`, `offset`, `country`, `region`, `area`, `libraryType`, `operationalStatus` and `near: { lat, lng, radius }` (metres). A region requires its country and an area its region. The gateway queries only the public Library index and returns documented attributes. Raw Meilisearch filters, multi-search, settings and administrative operations are unavailable.
 
-`GET /api/v1/libraries` accepts `locale`, `limit`, `after` and `country`. Follow `meta.nextCursor` by passing it as `after`; treat that cursor as opaque. `GET /api/v1/libraries/{entityRef}` returns one published record by its exact entity reference. Take `entityRef` from search or list results and encode it as a single URL path segment (`encodeURIComponent(entityRef)` in JavaScript). For example, `europe:united-kingdom:scotland:national-library-of-scotland` becomes `/api/v1/libraries/europe%3Aunited-kingdom%3Ascotland%3Anational-library-of-scotland`. The detail endpoint does not accept Strapi document IDs. Unknown references return 404. Only live content locales are accepted; English is currently live. Both routes use explicit published-field projections. Source records include the Dataset's licence, redistribution and attribution metadata; preserve these credits. The add-on supplies a managed integration service over public facts, which remain available through existing public site routes.
+`GET /api/v1/libraries` accepts `locale`, `limit`, `after`, `country`, `region` and `area` (each place needing the one above it). Follow `meta.nextCursor` by passing it as `after`; treat that cursor as opaque. `GET /api/v1/libraries/{entityRef}` returns one published record by its exact entity reference. Take `entityRef` from search or list results and encode it as a single URL path segment (`encodeURIComponent(entityRef)` in JavaScript). For example, `europe:united-kingdom:scotland:national-library-of-scotland` becomes `/api/v1/libraries/europe%3Aunited-kingdom%3Ascotland%3Anational-library-of-scotland`. The detail endpoint does not accept Strapi document IDs. Unknown references return 404. Only live content locales are accepted; English is currently live. Both routes use explicit published-field projections. Source records include the Dataset's licence, redistribution and attribution metadata; preserve these credits. The add-on supplies a managed integration service over public facts, which remain available through existing public site routes.
+
+Places browse the index by geography, with the same `libraries:read` scope, metering and errors:
+
+- `GET /api/v1/places` lists countries with published Libraries: name, slug, ISO codes, continent and library count.
+- `GET /api/v1/places/{country}` lists that country's regions, and `GET /api/v1/places/{country}/{region}` that region's areas, each with a library count. Only places with at least one published Library are listed.
+- `GET /api/v1/places/{country}/libraries`, `…/{country}/{region}/libraries` and `…/{country}/{region}/{area}/libraries` return the same records and cursor pagination as the list route for that place. They accept `locale`, `limit` and `after`; place query parameters are rejected because the path names the place.
+
+Region slugs are unique within their country and area slugs within their region, so place paths always nest. A trailing `libraries` segment selects the list. Unknown places return 404. Usage is recorded as `places.list` and `places.libraries`.
 
 Successful responses, including cache hits, count towards the monthly allowance. Bytes are the UTF-8 JSON payload produced before compression, not the hosting provider's egress figure or proof that a client received every byte. Separate media and CDN downloads are excluded. Failed responses release their reservation but still affect request rate. Responses cannot be shared-cached across keys.
 
@@ -69,7 +77,7 @@ Docs do not require an account; private controls require a server-verified Team
 membership. Existing beta and staging gates still apply.
 
 The playground requires an active Team and API add-on. Users enter an existing
-Team API key, kept only in page memory. Requests call the three `/api/v1` routes
+Team API key, kept only in page memory. Requests call the `/api/v1` routes
 directly and use their existing authentication, scopes, Team rate/concurrency
 limits, quota reservations and accounting. Successful requests and response
 bytes count toward the key’s Team allowance, including “Read this record” actions.
@@ -81,6 +89,10 @@ it only acknowledges that visit. “Don’t show this again” saves the private
 `api-playground-usage` prompt preference to their profile. Active Team members
 can re-enable it under Settings → Notifications → Prompts; other accounts do
 not see that switch. The inline allowance notice remains visible either way.
+
+“Browse places” starts from every country and drills down to regions and areas;
+“Libraries in a place” lists a country's, region's or area's records, which keep
+their “Read this record” actions. Each step is an ordinary metered request.
 
 All playground traffic uses the authenticated versioned API. There is no
 alternate unmetered preview endpoint or geographic restriction. Search and list

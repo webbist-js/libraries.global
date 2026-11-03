@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "roadmap_suggestions",
+  "info": {
+    "singularName": "roadmap-suggestion",
+    "pluralName": "roadmap-suggestions",
+    "displayName": "Roadmap Dataset Suggestion",
+    "description": "An open dataset suggested by the community. New suggestions are drafts; publish one to list it on the roadmap for votes."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "place": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "source": {
+      "type": "string",
+      "required": true,
+      "maxLength": 200
+    },
+    "sourceUrl": {
+      "type": "string",
+      "maxLength": 2048,
+      "regex": "^https?://"
+    },
+    "licence": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "notes": {
+      "type": "text",
+      "maxLength": 1000,
+      "private": true
+    },
+    "submittedBy": {
+      "type": "string",
+      "maxLength": 128,
+      "private": true
+    },
+    "submitterName": {
+      "type": "string",
+      "maxLength": 120,
+      "private": true
+    }
+  }
+}

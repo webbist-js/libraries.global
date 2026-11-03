@@ -95,7 +95,19 @@ export function ModerationSubmissionList({
                 </time>
               </td>
               <td className={cell}>
-                <StatusBadge status={row.status} />
+                <div className="flex flex-col items-start gap-1.5">
+                  <StatusBadge status={row.status} />
+                  {row.lock ? (
+                    <Badge
+                      color={row.lock.mine ? "aurora" : "warn"}
+                      label={
+                        row.lock.mine
+                          ? "You’re reviewing"
+                          : `In review · ${row.lock.holderName ?? "another moderator"}`
+                      }
+                    />
+                  ) : null}
+                </div>
               </td>
             </tr>
           ))}

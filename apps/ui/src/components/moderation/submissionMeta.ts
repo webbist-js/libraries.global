@@ -50,6 +50,8 @@ export type ModerationRow = {
   createdAt: string
   reviewedAt: string | null
   drive: DriveTag | null
+  /** Who holds the Review Lock, when someone does (ADR-0008). */
+  lock?: { holderName: string | null; mine: boolean; expiresAt: string }
 }
 
 export type ArticleVersion = {

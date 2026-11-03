@@ -179,6 +179,19 @@ export default [
     handler: "moderation.staffList",
     config: { auth: false, policies: [] },
   },
+  // Review Locks (ADR-0008); "next" before the id route.
+  {
+    method: "POST",
+    path: "/moderation/locks/next",
+    handler: "moderation.nextLock",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "POST",
+    path: "/moderation/locks/:documentId",
+    handler: "moderation.lock",
+    config: { auth: false, policies: [] },
+  },
   {
     method: "GET",
     path: "/moderation/submissions",

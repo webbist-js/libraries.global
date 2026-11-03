@@ -22,7 +22,7 @@ The site is in closed beta. Discovery files and public pages follow the site's b
 
 ## API description
 
-- [OpenAPI description](https://libraries.global/openapi.json): Request and response schemas for POST /api/v1/search/libraries, GET /api/v1/libraries and GET /api/v1/libraries/{entityRef}; bearer authentication, pagination, limits and errors.
+- [OpenAPI description](https://libraries.global/openapi.json): Request and response schemas for POST /api/v1/search/libraries, GET /api/v1/libraries, GET /api/v1/libraries/{entityRef}, and GET /api/v1/places with its country, region, area and libraries paths; bearer authentication, pagination, limits and errors.
 
 ## Knowledge articles
 

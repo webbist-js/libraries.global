@@ -401,20 +401,13 @@
 .about-coverage-rows .text-right {
   font-variant-numeric: tabular-nums;
 }
-/* motion-site · profile: editorial · archetype: full-height coverage chapter · patterns: native-proximity-snap·sequential-country-build·shared-counter-clock · critique: P5 T4 C5 R5 A5 V5 */
-.about-coverage-scroll-root {
-  scroll-snap-type: y proximity;
-  scroll-padding-top: var(--coverage-snap-top, 0px);
-}
+/* motion-site · profile: editorial · archetype: coverage chapter in page flow · patterns: sequential-country-build·shared-counter-clock */
 .about-coverage-chapter {
   container: coverage-chapter / inline-size;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: var(--about-stage-height, 100svh);
   gap: 24px;
   padding-block: clamp(24px, 3svh, 40px);
-  scroll-snap-align: start;
 }
 .about-coverage-chapter .coverage-table > div:first-child {
   margin-bottom: 24px;
@@ -462,11 +455,6 @@
 .about-coverage-chapter-footer .about-text-link {
   margin-top: 4px;
 }
-.about-coverage-playback {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 @container coverage-chapter (min-width: 860px) {
   .about-coverage-chapter .coverage-continent-row {
     grid-template-columns: minmax(160px, 0.8fr) minmax(0, 2fr) auto;
@@ -477,9 +465,6 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .about-coverage-scroll-root {
-    scroll-snap-type: none;
-  }
   .coverage-continent-name,
   .coverage-continent-total {
     transition: none;

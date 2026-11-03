@@ -217,7 +217,13 @@ export function TeamPlan({
           }}
           type="button"
         >
-          <span>{expanded ? t("backToPlans") : t("continueTeam")}</span>
+          <span>
+            {expanded
+              ? t("backToPlans")
+              : existing
+                ? t("openYourTeam")
+                : t("continueTeam")}
+          </span>
           <Icon
             aria-hidden
             className={styles.continueIcon}

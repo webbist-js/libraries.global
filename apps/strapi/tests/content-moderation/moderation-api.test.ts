@@ -1578,3 +1578,75 @@ describe("Role Application scope", () => {
     })
   })
 })
+
+const LOCK = "plugin::content-moderation.review-lock"
+const lockableCorrection = () =>
+  sub({ submissionType: "correction", draftData: null, fields: { a: 1 } })
+const lockOn = (documentId: string, over: Record<string, unknown> = {}) => ({
+  subjectKind: "submission",
+  subjectId: documentId,
+  holderId: "ba:someone-else",
+  holderName: "Sam",
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+  ...over,
+})
+const approvalOf = (documentId: string) =>
+  ctxFor({
+    viewer: INDEX_MOD,
+    params: { documentId },
+    body: { status: "approved" },
+  })
+
+describe("Review Locks (ADR-0008)", () => {
+  it("refuses a decision while another moderator holds a live lock", async () => {
+    const row = lockableCorrection()
+    const { controller, store } = setup([row], {
+      [LOCK]: [lockOn(row.documentId)],
+    })
+    const ctx = approvalOf(row.documentId)
+    await controller.updateStatus(ctx)
+    expect(ctx.status).toBe(423)
+    expect(ctx.body.error).toMatchObject({ name: "locked", holderName: "Sam" })
+    expect(store[SUB]![0].status).toBe("pending")
+    expect(store[EVENT] ?? []).toHaveLength(0)
+  })
+
+  it("ignores an expired lock", async () => {
+    const row = lockableCorrection()
+    const { controller } = setup([row], {
+      [LOCK]: [
+        lockOn(row.documentId, { expiresAt: "2026-01-01T00:00:00.000Z" }),
+      ],
+    })
+    const ctx = approvalOf(row.documentId)
+    await controller.updateStatus(ctx)
+    expect(ctx.status).toBe(200)
+  })
+
+  it("releases the decider's own lock", async () => {
+    const row = lockableCorrection()
+    const { controller, store } = setup([row], {
+      [LOCK]: [
+        lockOn(row.documentId, {
+          holderId: `ba:${INDEX_MOD}`,
+          holderName: "Me",
+        }),
+      ],
+    })
+    const ctx = approvalOf(row.documentId)
+    await controller.updateStatus(ctx)
+    expect(ctx.status).toBe(200)
+    expect(store[LOCK]).toHaveLength(0)
+  })
+
+  it("marks who is reviewing each queue row", async () => {
+    const row = lockableCorrection()
+    const { controller } = setup([row], { [LOCK]: [lockOn(row.documentId)] })
+    const ctx = ctxFor({ viewer: INDEX_MOD })
+    await controller.list(ctx)
+    expect(ctx.body.data[0].lock).toMatchObject({
+      holderName: "Sam",
+      mine: false,
+    })
+  })
+})

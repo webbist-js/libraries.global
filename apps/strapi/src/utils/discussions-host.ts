@@ -11,6 +11,11 @@ import { publicArticleProfile } from "./article-attribution"
 import { isBoardMember } from "./board"
 import { awardDiscussionContribution } from "./discussion-rewards"
 import { publicAuthorRoleBadges } from "./public-author-badges"
+import {
+  resolveRoadmapKey,
+  ROADMAP_ITEM_TARGET,
+  roadmapItemAnchor,
+} from "./roadmap"
 import { activeGrants } from "./role-grants"
 import { loadStaffClaims } from "./staff"
 import { isValidServiceSecret } from "../plugins/content-moderation/server/utils/service-secret"
@@ -289,6 +294,17 @@ export const discussionsHostConfig: Partial<DiscussionConfig> & {
         url: `/community/suggestions?suggestion=${encodeURIComponent(target.documentId)}#suggestion-${encodeURIComponent(target.documentId)}`,
       }
     },
+    [ROADMAP_ITEM_TARGET]: async (target, { strapi }) => {
+      const item = await resolveRoadmapKey(
+        strapi,
+        target.documentId,
+        target.locale
+      )
+
+      return item
+        ? { title: item.title, url: roadmapItemAnchor(item.key) }
+        : null
+    },
     "api::blog-article.blog-article": articleTarget,
     "api::wiki-article.wiki-article": articleTarget,
     "api::library.library": async (target, { strapi }) => {
@@ -370,6 +386,11 @@ export async function seedDiscussionSubjects(strapi: any) {
       "Share professional experience and ideas.",
     ],
     ["journal", "Journal", "Discuss library stories and reporting."],
+    [
+      "roadmap",
+      "Roadmap",
+      "Discuss planned features and datasets coming into the index.",
+    ],
     [
       "knowledge",
       "Knowledge",

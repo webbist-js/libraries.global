@@ -9,13 +9,16 @@ import { useId, useMemo, useState } from "react"
 
 import { FilterGroup } from "@/components/ds/FilterPanel"
 import { SearchField } from "@/components/ds/SearchField"
-import { SegmentedControl } from "@/components/ds/SegmentedControl"
 import { SelectField } from "@/components/ds/SelectField"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import type {
+  AtlasCountryOption,
+  AtlasPlaceOption,
+} from "@/lib/atlas-countries"
 import { T } from "@/lib/design-tokens"
 
 import { Chip, Icon, YearRange } from "./atlas-ui"
@@ -75,7 +78,22 @@ export function AtlasFiltersTab({
   onFacilitySearch,
   onAccessibility,
   onMoreFacilities,
+  countries = [],
+  onCountry,
+  regions = [],
+  areas = [],
+  onRegion,
+  onArea,
 }: {
+  /** The chosen country's regions with libraries, then the region's areas. */
+  readonly regions?: readonly AtlasPlaceOption[]
+  readonly areas?: readonly AtlasPlaceOption[]
+  readonly onRegion?: (slug: string | null) => void
+  readonly onArea?: (slug: string | null) => void
+  /** Countries with libraries, for the Country picker. */
+  readonly countries?: readonly AtlasCountryOption[]
+  /** Picks (and opens) a country, or clears the country with null. */
+  readonly onCountry?: (slug: string | null) => void
   readonly networkSelection?: AtlasNetworkSelection | null
   readonly filters: AtlasFilters
   readonly onChange: (f: AtlasFilters) => void
@@ -210,6 +228,68 @@ export function AtlasFiltersTab({
             : tNetwork("filterHint")}
         </p>
       </div>
+      {onCountry && countries.length ? (
+        <Group
+          legend="Place"
+          activeCount={
+            (filters.country ? 1 : 0) +
+            (filters.region ? 1 : 0) +
+            (filters.area ? 1 : 0)
+          }
+        >
+          <SelectField
+            label="Country"
+            value={filters.country?.slug ?? ""}
+            onValueChange={(slug) => onCountry(slug || null)}
+            options={[
+              { value: "", label: "Every country" },
+              ...countries
+                .filter(
+                  (country) =>
+                    country.libraries > 0 ||
+                    country.slug === filters.country?.slug
+                )
+                .map((country) => ({
+                  value: country.slug,
+                  label: `${country.name} · ${country.libraries.toLocaleString("en-GB")}`,
+                })),
+            ]}
+          />
+          {filters.country && onRegion && regions.length ? (
+            <SelectField
+              label="Region"
+              value={filters.region?.slug ?? ""}
+              onValueChange={(slug) => onRegion(slug || null)}
+              options={[
+                { value: "", label: "Every region" },
+                ...regions.map((region) => ({
+                  value: region.slug,
+                  label: `${region.name} · ${region.libraryCount.toLocaleString("en-GB")}`,
+                })),
+              ]}
+            />
+          ) : null}
+          {filters.region && onArea && areas.length ? (
+            <SelectField
+              label="Area"
+              value={filters.area?.slug ?? ""}
+              onValueChange={(slug) => onArea(slug || null)}
+              options={[
+                { value: "", label: "Every area" },
+                ...areas.map((area) => ({
+                  value: area.slug,
+                  label: `${area.name} · ${area.libraryCount.toLocaleString("en-GB")}`,
+                })),
+              ]}
+            />
+          ) : null}
+          <p className="m-0 text-xs leading-relaxed text-(--t-ink-dim)">
+            {filters.country
+              ? "Narrow to a region, then an area. Each list shows only places with libraries."
+              : "Limits the map and list to one country and opens its breakdown. At world zoom you can also click a country on the map."}
+          </p>
+        </Group>
+      ) : null}
       <Group legend={t("service")} activeCount={filters.networks?.length ?? 0}>
         <AtlasNetworkPicker
           compact
@@ -274,12 +354,12 @@ export function AtlasFiltersTab({
           </Popover>
         }
       >
-        <SegmentedControl
-          layout="equal"
-          size="sm"
+        <SelectField
           label={tUi("opening")}
           value={filters.opening}
-          onChange={(opening) => set({ opening })}
+          onValueChange={(opening) =>
+            set({ opening: opening as typeof filters.opening })
+          }
           options={[
             { value: "any", label: tUi("any_time") },
             { value: "now", label: tUi("open_now") },

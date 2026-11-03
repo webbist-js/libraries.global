@@ -11,6 +11,7 @@ import {
   ATLAS_PER_CAPITA_LABEL,
   featuresOf,
   exportLimitOf,
+  savedViewLimitOf,
   type PlanCardKey,
   type PlanPrice,
   PLANS,
@@ -25,6 +26,10 @@ export type CompareRow = {
   cells: Record<PlanCardKey, CompareCell>
   cellLabelIsExport?: boolean
   cellLabels?: Partial<Record<PlanCardKey, string>>
+  /** cellLabels are saved-view allowances ("3" or "unlimited"), worded per locale. */
+  cellLabelIsSavedViews?: boolean
+  /** The Roadmap item tracking a row that isn't built yet. */
+  roadmapKey?: string
 }
 
 export type CompareGroup = { id: string; title: string; rows: CompareRow[] }
@@ -47,6 +52,25 @@ export function compareGroupSummary(group: CompareGroup): string {
 export const COMPARE_PLANS: readonly PlanCardKey[] = PLANS.map((p) => p.key)
 
 const SOON_SUFFIX = " (coming soon)"
+
+/**
+ * Roadmap item keys (CMS `roadmap.feature.key`) for features not built
+ * yet. The plans page links a row only when the published Roadmap still
+ * has that item, so an editor removing one never leaves a dead link.
+ */
+export const ROADMAP_KEY_FOR_FEATURE: Partial<Record<Feature, string>> = {
+  "library.traffic": "traffic-reports",
+  "index.export": "export-attribution",
+  "index.alerts": "search-alerts",
+  "index.compare": "compare-libraries",
+  "library.watch": "watch-library",
+  "library.notes": "private-notes",
+  "data.benchmark": "benchmark-services",
+  "events.personalFeed": "calendar-feed",
+  "team.workspace": "shared-workspace",
+  "team.bulkUpload": "bulk-updates",
+  "api.key": "api-allowances",
+}
 
 /** Includes that only point at another column, not features of their own. */
 const IS_POINTER = /^(Everything in |Pro for every seat)/
@@ -141,6 +165,10 @@ function includeRows(): { group: string; row: CompareRow }[] {
         )
           return []
 
+        // The saved-views line states Free's allowance; the row shows each plan's.
+        if (label === SAVED_VIEWS_INCLUDE)
+          return [{ group, row: savedViewsRow(plan.key) }]
+
         return [
           {
             group,
@@ -155,6 +183,29 @@ function includeRows(): { group: string; row: CompareRow }[] {
   })
 }
 
+const SAVED_VIEWS_INCLUDE = "3 saved views and 3 saved searches"
+
+function savedViewsLabel(plan: "free" | "supporter" | "pro" | "team") {
+  const limit = savedViewLimitOf(plan)
+
+  return limit >= 1000 ? "unlimited" : String(limit)
+}
+
+function savedViewsRow(from: PlanCardKey): CompareRow {
+  return {
+    id: slug(SAVED_VIEWS_INCLUDE),
+    label: "Saved views and searches",
+    cells: cellsFrom(from, "yes"),
+    cellLabelIsSavedViews: true,
+    cellLabels: {
+      free: savedViewsLabel("free"),
+      supporter: savedViewsLabel("supporter"),
+      pro: savedViewsLabel("pro"),
+      team: savedViewsLabel("team"),
+    },
+  }
+}
+
 function featureRow(feature: Feature): CompareRow {
   const copy = PRO_FEATURE_COPY[feature]
   const status: CompareCell = copy.status === "live" ? "yes" : "soon"
@@ -162,9 +213,13 @@ function featureRow(feature: Feature): CompareRow {
   const supporter = featuresOf("supporter").includes(feature)
   const team = featuresOf("team").includes(feature)
 
+  const roadmapKey =
+    copy.status === "soon" ? ROADMAP_KEY_FOR_FEATURE[feature] : undefined
+
   return {
     id: feature,
     label: copy.label,
+    ...(roadmapKey ? { roadmapKey } : {}),
     cells: {
       public: "no",
       free: "no",

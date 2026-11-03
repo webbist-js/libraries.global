@@ -100,12 +100,12 @@ export function BlogArticlePage({
   const readingTime = estimateReadingTime(article.body)
   const wordCount = countWords(article.body)
   const publishedDate = formatDate(
-    article.publishedAt ?? article.updatedAt,
+    article.publicationDate ?? article.publishedAt ?? article.updatedAt,
     "long",
     locale
   )
   const shortDate = formatDate(
-    article.publishedAt ?? article.updatedAt,
+    article.publicationDate ?? article.publishedAt ?? article.updatedAt,
     "short",
     locale
   )

@@ -89,8 +89,14 @@ describe("journalHref", () => {
 
 describe("journalSortParam", () => {
   it("breaks ties by id", () => {
-    expect(journalSortParam("newest")).toEqual(["publishedAt:desc", "id:desc"])
-    expect(journalSortParam("oldest")).toEqual(["publishedAt:asc", "id:asc"])
+    expect(journalSortParam("newest")).toEqual([
+      "publicationDate:desc",
+      "id:desc",
+    ])
+    expect(journalSortParam("oldest")).toEqual([
+      "publicationDate:asc",
+      "id:asc",
+    ])
     expect(journalSortParam("title")).toEqual(["title:asc", "id:asc"])
   })
 })

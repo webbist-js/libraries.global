@@ -8,6 +8,7 @@ import {
   compareRowsById,
   compareGroups,
   type CompareRow,
+  ROADMAP_KEY_FOR_FEATURE,
   shortPrice,
   splitPrice,
   yearlySavingMonths,
@@ -162,5 +163,23 @@ describe("splitPrice", () => {
   it("is null for text it can't read", () => {
     expect(splitPrice(undefined)).toBeNull()
     expect(splitPrice("Free")).toBeNull()
+  })
+})
+
+describe("roadmap links", () => {
+  const rows = compareGroups().flatMap((g) => g.rows)
+
+  it("points only unbuilt features at a roadmap item", () => {
+    for (const row of rows.filter((r) => r.roadmapKey))
+      expect(Object.values(row.cells)).not.toContain("yes")
+    expect(rows.find((r) => r.id === "index.compare")?.roadmapKey).toBe(
+      "compare-libraries"
+    )
+    expect(rows.find((r) => r.id === "team.embed")?.roadmapKey).toBeUndefined()
+  })
+
+  it("maps every key to a valid roadmap item key", () => {
+    for (const key of Object.values(ROADMAP_KEY_FOR_FEATURE))
+      expect(key).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
   })
 })

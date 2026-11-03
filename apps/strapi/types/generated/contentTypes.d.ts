@@ -1178,6 +1178,12 @@ export interface ApiBlogArticleBlogArticle extends Struct.CollectionTypeSchema {
       "oneToMany",
       "api::blog-article.blog-article"
     >
+    publicationDate: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
     publicationOrigin: Schema.Attribute.Enumeration<["index", "community"]> &
       Schema.Attribute.SetPluginOptions<{
         i18n: {
@@ -4188,6 +4194,239 @@ export interface ApiRegionRegion extends Struct.CollectionTypeSchema {
   }
 }
 
+export interface ApiRoadmapSuggestionRoadmapSuggestion
+  extends Struct.CollectionTypeSchema {
+  collectionName: "roadmap_suggestions"
+  info: {
+    description: "An open dataset suggested by the community. New suggestions are drafts; publish one to list it on the roadmap for votes."
+    displayName: "Roadmap Dataset Suggestion"
+    pluralName: "roadmap-suggestions"
+    singularName: "roadmap-suggestion"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    licence: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200
+      }>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::roadmap-suggestion.roadmap-suggestion"
+    > &
+      Schema.Attribute.Private
+    notes: Schema.Attribute.Text &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 1000
+      }>
+    place: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    source: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200
+      }>
+    sourceUrl: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2048
+      }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
+    submittedBy: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 128
+      }>
+    submitterName: Schema.Attribute.String &
+      Schema.Attribute.Private &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiRoadmapVoteRoadmapVote extends Struct.CollectionTypeSchema {
+  collectionName: "roadmap_votes"
+  info: {
+    description: "One account's vote for a roadmap item or dataset suggestion"
+    displayName: "Roadmap Vote"
+    pluralName: "roadmap-votes"
+    singularName: "roadmap-vote"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    itemKey: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80
+      }>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::roadmap-vote.roadmap-vote"
+    > &
+      Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface ApiRoadmapRoadmap extends Struct.SingleTypeSchema {
+  collectionName: "roadmaps"
+  info: {
+    description: "The community roadmap: product features by stage and datasets coming into the index"
+    displayName: "Roadmap"
+    pluralName: "roadmaps"
+    singularName: "roadmap"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  pluginOptions: {
+    i18n: {
+      localized: true
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    dataImports: Schema.Attribute.Component<"roadmap.data-import", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 40
+        },
+        number
+      >
+    dataLead: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 600
+      }>
+    dataTitle: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    features: Schema.Attribute.Component<"roadmap.feature", true> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 60
+        },
+        number
+      >
+    footnote: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 600
+      }>
+    lead: Schema.Attribute.Text &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 600
+      }>
+    locale: Schema.Attribute.String
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::roadmap.roadmap"
+    >
+    publishedAt: Schema.Attribute.DateTime
+    seo: Schema.Attribute.Component<"shared.seo", false> &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
+    suggestPrompt: Schema.Attribute.String &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200
+      }>
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
+        }
+      }> &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
 export interface ApiRoleGrantRoleGrant extends Struct.CollectionTypeSchema {
   collectionName: "role_grants"
   info: {
@@ -4280,6 +4519,56 @@ export interface ApiSavedEventSavedEvent extends Struct.CollectionTypeSchema {
       "manyToOne",
       "plugin::users-permissions.user"
     >
+  }
+}
+
+export interface ApiSavedViewSavedView extends Struct.CollectionTypeSchema {
+  collectionName: "saved_views"
+  info: {
+    description: "An account's saved Atlas view or Find search: a name and the page's URL state"
+    displayName: "Saved View"
+    pluralName: "saved-views"
+    singularName: "saved-view"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    baUserId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    kind: Schema.Attribute.Enumeration<["view", "search"]> &
+      Schema.Attribute.Required
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::saved-view.saved-view"
+    > &
+      Schema.Attribute.Private
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 80
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    query: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 2000
+      }>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
   }
 }
 
@@ -4810,6 +5099,12 @@ export interface ApiWikiArticleWikiArticle extends Struct.CollectionTypeSchema {
       Schema.Attribute.SetPluginOptions<{
         i18n: {
           localized: false
+        }
+      }>
+    publicationDate: Schema.Attribute.DateTime &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true
         }
       }>
     publishedAt: Schema.Attribute.DateTime
@@ -5824,6 +6119,63 @@ export interface PluginContentModerationReviewEvent
     toStatus: Schema.Attribute.Enumeration<
       ["draft", "pending", "approved", "rejected", "needs_info"]
     >
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+  }
+}
+
+export interface PluginContentModerationReviewLock
+  extends Struct.CollectionTypeSchema {
+  collectionName: "cm_review_locks"
+  info: {
+    description: "A Moderator's short lease on an item under review (ADR-0008)"
+    displayName: "Review Lock"
+    pluralName: "review-locks"
+    singularName: "review-lock"
+  }
+  options: {
+    draftAndPublish: false
+  }
+  pluginOptions: {
+    "content-manager": {
+      visible: false
+    }
+    "content-type-builder": {
+      visible: false
+    }
+  }
+  attributes: {
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required
+    holderId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.Private
+    holderName: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "plugin::content-moderation.review-lock"
+    > &
+      Schema.Attribute.Private
+    previousHolderId: Schema.Attribute.String & Schema.Attribute.Private
+    publishedAt: Schema.Attribute.DateTime
+    subjectId: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 64
+      }>
+    subjectKind: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 40
+      }>
+    takenOverAt: Schema.Attribute.DateTime
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -8210,8 +8562,12 @@ declare module "@strapi/strapi" {
       "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion
+      "api::roadmap-suggestion.roadmap-suggestion": ApiRoadmapSuggestionRoadmapSuggestion
+      "api::roadmap-vote.roadmap-vote": ApiRoadmapVoteRoadmapVote
+      "api::roadmap.roadmap": ApiRoadmapRoadmap
       "api::role-grant.role-grant": ApiRoleGrantRoleGrant
       "api::saved-event.saved-event": ApiSavedEventSavedEvent
+      "api::saved-view.saved-view": ApiSavedViewSavedView
       "api::service.service": ApiServiceService
       "api::site-config.site-config": ApiSiteConfigSiteConfig
       "api::subscriber.subscriber": ApiSubscriberSubscriber
@@ -8234,6 +8590,7 @@ declare module "@strapi/strapi" {
       "plugin::content-moderation.option-suggestion": PluginContentModerationOptionSuggestion
       "plugin::content-moderation.option-vote": PluginContentModerationOptionVote
       "plugin::content-moderation.review-event": PluginContentModerationReviewEvent
+      "plugin::content-moderation.review-lock": PluginContentModerationReviewLock
       "plugin::content-moderation.submission": PluginContentModerationSubmission
       "plugin::content-moderation.submission-upload": PluginContentModerationSubmissionUpload
       "plugin::content-moderation.suggestion-round": PluginContentModerationSuggestionRound
