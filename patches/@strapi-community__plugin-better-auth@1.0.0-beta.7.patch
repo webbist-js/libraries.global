@@ -1,0 +1,13 @@
+diff --git a/dist/adapter/index.js b/dist/adapter/index.js
+index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..e551631970c576a203b8cb4197dae3a72ef95dd0 100644
+--- a/dist/adapter/index.js
++++ b/dist/adapter/index.js
+@@ -71,7 +71,7 @@ const transformFilters = (where, model, getFieldName) => {
+       }
+     }
+     if (andConditions.length > 0) {
+-      Object.assign(filters2, ...andConditions);
++      filters2.$and = andConditions;
+     }
+     if (orConditions.length > 0) {
+       filters2.$or = orConditions;

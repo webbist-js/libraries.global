@@ -28,6 +28,8 @@ export default ({ env }) => {
   }
 
   return {
+    // Keep the candidate adapter inactive until the clean-reset cutover is ready.
+    "better-auth": { enabled: false },
     discussions: {
       enabled: true,
       config: discussionsHostConfig,
