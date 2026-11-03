@@ -4,6 +4,16 @@ import routes from "../src/plugins/content-moderation/server/routes/content-api"
 import moderation from "../src/policies/moderation"
 import serviceAuth from "../src/policies/service-auth"
 
+const request = () => ({
+  state: {},
+  request: {
+    headers: {
+      "x-service-secret": "synthetic-policy-test",
+      "x-ba-user-id": "1",
+    },
+  },
+})
+
 afterEach(() => vi.unstubAllEnvs())
 
 it("rejects missing service credentials even if a caller supplies an actor", () => {
@@ -23,15 +33,6 @@ it("loads scopes once per request and observes revocation on the next request", 
     })
     .mockResolvedValueOnce({ caps: { moderation: [] }, role: "reader" })
   const strapi = { plugin: () => ({ service: () => ({ loadCapabilities }) }) }
-  const request = () => ({
-    state: {},
-    request: {
-      headers: {
-        "x-service-secret": "synthetic-policy-test",
-        "x-ba-user-id": "1",
-      },
-    },
-  })
   const first = request()
   await expect(moderation(first, {}, { strapi })).resolves.toBe(true)
   await expect(moderation(first, {}, { strapi })).resolves.toBe(true)

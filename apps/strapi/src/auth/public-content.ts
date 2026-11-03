@@ -1,4 +1,7 @@
+import type { Core } from "@strapi/strapi"
 import { errors } from "@strapi/utils"
+
+import type { AuthRequestContext as Context } from "./request-context"
 
 /** Reviewed public catalogue actions previously assigned to the Public role. */
 export const PUBLIC_CONTENT_ACTIONS = [
@@ -27,10 +30,10 @@ export const PUBLIC_CONTENT_ACTIONS = [
 ]
 
 /** Native Strapi abilities retain relation sanitization without Users & Permissions. */
-export function publicContentStrategy(strapi: any) {
+export function publicContentStrategy(strapi: Core.Strapi) {
   return {
     name: "public-content",
-    async authenticate(ctx: any) {
+    async authenticate(ctx: Context) {
       // A bad/restricted bearer token must never fall back to anonymous access.
       if (
         ctx.request?.headers?.authorization ||
@@ -46,7 +49,10 @@ export function publicContentStrategy(strapi: any) {
         ),
       }
     },
-    verify(auth: any, config: { scope?: string | string[] }) {
+    verify(
+      auth: { ability?: { can: (scope: string) => boolean } },
+      config: { scope?: string | string[] }
+    ) {
       const scopes =
         typeof config.scope === "string" ? [config.scope] : config.scope
       if (

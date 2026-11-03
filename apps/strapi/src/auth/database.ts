@@ -1,5 +1,7 @@
+import type { Core } from "@strapi/strapi"
+
 /** PostgreSQL invariants not represented by the adapter's generated field schema. */
-export async function ensureAuthDatabase(strapi: any) {
+export async function ensureAuthDatabase(strapi: Core.Strapi) {
   await strapi.db.connection.transaction(async (trx) => {
     await trx.raw("SET LOCAL lock_timeout = '5s'")
     // The adapter uses scalar user IDs, so its schema generator does not create FKs.

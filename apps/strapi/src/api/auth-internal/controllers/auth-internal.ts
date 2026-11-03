@@ -1,7 +1,9 @@
 import { fromNodeHeaders } from "better-auth/node"
 
+import type { AuthRequestContext as Context } from "../../../auth/request-context"
+
 export default {
-  async providers(ctx: any) {
+  async providers(ctx: Context) {
     const auth = strapi.plugin("better-auth").service("auth-service").getAuth()
     ctx.body = {
       providers: Object.keys(auth.options.socialProviders ?? {}).filter(
@@ -9,7 +11,7 @@ export default {
       ),
     }
   },
-  async verifyPassword(ctx: any) {
+  async verifyPassword(ctx: Context) {
     const password = ctx.request.body?.password
     if (typeof password !== "string" || !password || password.length > 1024)
       return ctx.badRequest("Invalid password")
@@ -24,7 +26,7 @@ export default {
       return ctx.unauthorized("Confirmation failed")
     }
   },
-  async verifiedIdentities(ctx: any) {
+  async verifiedIdentities(ctx: Context) {
     const ids = ctx.request.body?.ids
     if (
       !Array.isArray(ids) ||
@@ -33,7 +35,7 @@ export default {
     )
       return ctx.badRequest("Invalid identities")
     const rows = ids.length
-      ? await strapi.db.query("plugin::better-auth.user" as any).findMany({
+      ? await strapi.db.query("plugin::better-auth.user").findMany({
           where: { id: { $in: ids.map(Number) }, emailVerified: true },
           select: ["id", "email"],
         })
@@ -43,16 +45,16 @@ export default {
     }
     ctx.set("Cache-Control", "private, no-store")
   },
-  async retention(ctx: any) {
+  async retention(ctx: Context) {
     const now = new Date()
     const sessions = await strapi.db
-      .query("plugin::better-auth.session" as any)
+      .query("plugin::better-auth.session")
       .deleteMany({ where: { expiresAt: { $lt: now } } })
     const verifications = await strapi.db
-      .query("plugin::better-auth.verification" as any)
+      .query("plugin::better-auth.verification")
       .deleteMany({ where: { expiresAt: { $lt: now } } })
     const rateLimits = await strapi.db
-      .query("plugin::better-auth.rate-limit" as any)
+      .query("plugin::better-auth.rate-limit")
       .deleteMany({
         where: { lastRequest: { $lt: now.getTime() - 30 * 86400000 } },
       })

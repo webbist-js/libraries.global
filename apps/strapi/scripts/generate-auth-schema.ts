@@ -4,6 +4,9 @@ import path from "node:path"
 
 import { getAuthTables } from "better-auth/db"
 
+const kebab = (name: string) =>
+  name.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
 async function main() {
   // Configuration-only placeholders. No network connection is made.
   process.env.BETTER_AUTH_SECRET ??=
@@ -12,12 +15,10 @@ async function main() {
     "postgres://localhost/schema_generation_only"
   const { auth } = await import("../src/auth/config")
   const tables = getAuthTables(auth.options)
-  const kebab = (name: string) =>
-    name.replaceAll(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
   for (const [model, table] of Object.entries(tables)) {
     if (table.disableMigrations) continue
     const singularName = kebab(model)
-    const attributes: Record<string, any> = {}
+    const attributes: Record<string, unknown> = {}
     for (const [key, field] of Object.entries(table.fields)) {
       if (["id", "createdAt", "updatedAt"].includes(key)) continue
       const name = field.fieldName ?? key

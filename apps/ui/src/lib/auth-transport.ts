@@ -40,20 +40,9 @@ export function authUpstreamUrl(path: string): URL {
   return url
 }
 
-export async function proxyAuthRequest(request: Request): Promise<Response> {
-  const incoming = new URL(request.url)
-  if (
-    !incoming.pathname.startsWith("/api/auth/") ||
-    !isAuthPath(incoming.pathname)
-  )
-    return new Response(null, { status: 404 })
-  const url = authUpstreamUrl(incoming.pathname)
-  // OAuth state/code and callback parameters remain query data, never a host.
-  url.search = incoming.search
-  const headers = authUpstreamHeaders(request.headers)
-  const contentType = request.headers.get("content-type")
-  if (contentType) headers.set("content-type", contentType)
-  let body: ArrayBuffer | undefined
+async function readAuthBody(
+  request: Request
+): Promise<ArrayBuffer | Response | undefined> {
   if (!["GET", "HEAD"].includes(request.method) && request.body) {
     const reader = request.body.getReader()
     const chunks: Uint8Array[] = []
@@ -75,8 +64,26 @@ export async function proxyAuthRequest(request: Request): Promise<Response> {
       bytes.set(chunk, offset)
       offset += chunk.length
     }
-    body = bytes.buffer
+
+    return bytes.buffer
   }
+}
+
+export async function proxyAuthRequest(request: Request): Promise<Response> {
+  const incoming = new URL(request.url)
+  if (
+    !incoming.pathname.startsWith("/api/auth/") ||
+    !isAuthPath(incoming.pathname)
+  )
+    return new Response(null, { status: 404 })
+  const url = authUpstreamUrl(incoming.pathname)
+  // OAuth state/code and callback parameters remain query data, never a host.
+  url.search = incoming.search
+  const headers = authUpstreamHeaders(request.headers)
+  const contentType = request.headers.get("content-type")
+  if (contentType) headers.set("content-type", contentType)
+  const body = await readAuthBody(request)
+  if (body instanceof Response) return body
   const upstream = await fetch(url, {
     method: request.method,
     headers,

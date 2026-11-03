@@ -175,6 +175,7 @@ describe("Strapi auth transport", () => {
     await expect(
       authGateway.api.verifyPassword({
         headers: new Headers(),
+        // eslint-disable-next-line sonarjs/no-hardcoded-passwords -- Disposable request fixture; never used as a credential.
         body: { password: "synthetic" },
       })
     ).rejects.toThrow("Authentication request failed (403)")

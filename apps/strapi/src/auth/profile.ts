@@ -1,10 +1,12 @@
+import type { Core } from "@strapi/strapi"
+
 import { nextContributorNumber } from "../utils/username"
 
 const PROFILE = "api::user-profile.user-profile"
 
 /** Retry-safe provisioning: a partial signup is repaired before any session. */
 export async function ensureProfile(
-  strapi: any,
+  strapi: Core.Strapi,
   user: { id: string; name?: string }
 ) {
   return strapi.db.transaction(async ({ trx }) => {

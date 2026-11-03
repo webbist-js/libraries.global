@@ -1,7 +1,9 @@
 import type { Capabilities } from "@repo/access"
+import type { Core } from "@strapi/strapi"
 
 import { decodeHeaderName } from "./header-name"
 import { bridgeBaUserId } from "./service-secret"
+import type { AuthRequestContext as Context } from "../auth/request-context"
 
 export type ModerationActor = {
   viewer: { id: string; email: string | null; name: string | null }
@@ -11,8 +13,8 @@ export type ModerationActor = {
 
 /** One request-local projection. Resource scope and transaction guards remain in services. */
 export async function moderationActor(
-  strapi: any,
-  ctx: any
+  strapi: Core.Strapi,
+  ctx: Context
 ): Promise<
   { actor: ModerationActor } | { status: 401 | 403; message: string }
 > {

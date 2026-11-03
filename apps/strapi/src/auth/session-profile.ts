@@ -1,5 +1,6 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import { libraryTypeName, isDismissiblePrompt } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
 import { claimAffiliationFilter } from "../utils/affiliations"
 import { loadPlanRows } from "../utils/entitlement-inputs"
@@ -7,7 +8,14 @@ import { internalNotifications } from "../utils/internal-notifications/service"
 import { activeGrants } from "../utils/role-grants"
 import { loadStaffClaims } from "../utils/staff"
 
-export async function sessionProfile(strapi: any, baUserId: string) {
+type StaffLibrary = {
+  documentId: string
+  name?: string
+  slug?: string
+  libraryType?: { name?: string }
+}
+
+export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
   const [[profile], affiliations, planRows, roleGrants] = await Promise.all([
     strapi.documents("api::user-profile.user-profile").findMany({
       filters: { baUserId: { $eq: baUserId } },
@@ -35,7 +43,7 @@ export async function sessionProfile(strapi: any, baUserId: string) {
       }[]
     >,
     strapi.documents("api::library-affiliation.library-affiliation").findMany({
-      filters: claimAffiliationFilter(baUserId) as any,
+      filters: claimAffiliationFilter(baUserId),
       populate: { library: { fields: ["documentId"] } },
       limit: SESSION_PROFILE_MAX_CLAIMS,
     }) as Promise<{ library?: { documentId?: string } }[]>,
@@ -81,7 +89,7 @@ export async function sessionProfile(strapi: any, baUserId: string) {
 
   // Staff memberships, then one query for their libraries' names.
   const staffClaims = await loadStaffClaims(strapi, baUserId)
-  const staffLibraries = new Map<string, any>(
+  const staffLibraries = new Map<string, StaffLibrary>(
     staffClaims.length
       ? (
           (await strapi.documents("api::library.library").findMany({
@@ -94,7 +102,7 @@ export async function sessionProfile(strapi: any, baUserId: string) {
             status: "published",
             fields: ["documentId", "name", "slug"],
             limit: staffClaims.length,
-          })) as any[]
+          })) as StaffLibrary[]
         ).map((library) => [library.documentId, library])
       : []
   )

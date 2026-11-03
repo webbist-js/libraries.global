@@ -1,16 +1,22 @@
 import { isIP } from "node:net"
 
+import type { AuthRequestContext as Context } from "../../auth/request-context"
 import serviceAuth from "../../policies/service-auth"
 
 /** The same-origin Next transport is the only public auth entry point. */
-export default (plugin: any) => {
+type AuthController = { handleAuthRequest: (ctx: Context) => Promise<void> }
+type AuthPlugin = {
+  controllers: Record<string, (...args: unknown[]) => AuthController>
+}
+
+export default (plugin: AuthPlugin) => {
   const factory = plugin.controllers["auth-controller"]
   plugin.controllers["auth-controller"] = (...args: unknown[]) => {
     const controller = factory(...args)
 
     return {
       ...controller,
-      async handleAuthRequest(ctx: any) {
+      async handleAuthRequest(ctx: Context) {
         if (!serviceAuth(ctx))
           return ctx.unauthorized("Invalid authentication transport")
         const supplied = ctx.request.headers["x-auth-client-ip"]
