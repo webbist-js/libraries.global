@@ -147,9 +147,7 @@ it("retains personal subscription history alongside a Team seat", () => {
   }
   show()
   expect(screen.getByRole("region", { name: "Personal billing" })).toBeTruthy()
-  expect(
-    screen.getByRole("region", { name: "Your Team membership" })
-  ).toBeTruthy()
+  expect(screen.getByRole("region", { name: "You’re in a Team" })).toBeTruthy()
 })
 it("uses settled free access when a previously paid entitlement has ended", () => {
   controller.summary = {

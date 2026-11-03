@@ -198,9 +198,6 @@
     }
   },
   "aboutCoverage": {
-    "pause": "Pozastavit animaci",
-    "resume": "Pokračovat v animaci",
-    "replay": "Přehrát animaci znovu",
     "eyebrow": "Současné pokrytí",
     "title": "Rostoucí přehled knihoven.",
     "description": "Tato čísla popisují zveřejněné záznamy v indexu. Pokrytí se mezi zeměmi liší a zůstává neúplné.",
@@ -2630,7 +2627,16 @@
     "reviewAt": "Posouzení radou (UTC)",
     "capacity": "Počet míst ve výběru",
     "saveRound": "Uložit plán",
-    "completeRound": "Dokončit posouzení a otevřít další kolo",
+    "completeRound": "Dokončit kontrolu",
+    "completeLead": "Až bude mít každý návrh z užšího výběru rozhodnutí, dokončete kontrolu. Poté se otevře hlasování v dalším kole.",
+    "completeTitle": "Dokončit toto kolo kontroly?",
+    "completeBody": "Přijaté návrhy se stanou novým vybavením, službami a typy knihoven, které mohou přispěvatelé přidávat do záznamů. Dokud to nikdo neudělá, stávající záznamy je nezobrazí, takže nová možnost začíná prázdná.",
+    "completeDriveTitle": "Naplňte nové možnosti pomocí kampaně",
+    "completeDrive": "Kampaň požádá komunitu, aby přidala vybavení a služby knihovnám, které je nabízejí, takže se nové možnosti rychle dostanou do skutečných záznamů.",
+    "planDrive": "Naplánovat kampaň k vybavení",
+    "completeNext": "Hlasování v dalším kole se otevře hned po dokončení tohoto.",
+    "completeCancel": "Zatím ne",
+    "completeConfirm": "Dokončit a otevřít hlasování",
     "roundSaved": "Kolo posuzování uloženo.",
     "roundFailed": "Kolo se nepodařilo uložit.",
     "publish": "Schválit zveřejnění",
@@ -2760,6 +2766,15 @@
   },
   "moderationWorkspace": {
     "title": "Posoudit *příspěvky*",
+    "thanks": "Děkujeme, že kontrolujete. Každé vaše rozhodnutí udržuje index přesný a spravedlivý pro všechny, kdo se na něj spoléhají. Tyto návody popisují, co ověřit a jak rozhodnout.",
+    "guidesLabel": "Návody pro moderátory",
+    "guides": {
+      "howReview": "Jak funguje kontrola",
+      "sources": "Zdroje a uchovávání dat",
+      "roles": "Role a oprávnění",
+      "eventFeeds": "Kontrola zdrojů událostí",
+      "board": "Redakční rada"
+    },
     "workspace": "Oprávnění ke kontrole",
     "scopeHint": "Zobrazuje se pouze práce v rozsahu vašich oprávnění.",
     "reviewQueues": "Fronty ke kontrole",
@@ -2909,7 +2924,8 @@
     "manageTeam": "Spravovat tým",
     "yourTeam": "Váš tým",
     "existingTeamLead": "Spravujte členy, knihovny a roční členství v týmovém prostoru.",
-    "teamBilling": "Fakturace a místa"
+    "teamBilling": "Fakturace a místa",
+    "openYourTeam": "Otevřít váš tým"
   },
   "membershipCompare": {
     "lead": "Podívejte se, co je dostupné dnes. Funkce označené „Brzy“ se teprve připravují.",
@@ -2922,7 +2938,8 @@
     "showing": "Zobrazeno {count} z {total} funkcí",
     "highlightHint": "Výběrem názvu tarifu zvýrazníte jeho sloupec.",
     "firstPlan": "První tarif",
-    "secondPlan": "Druhý tarif"
+    "secondPlan": "Druhý tarif",
+    "roadmapLink": "V plánu vývoje"
   },
   "membershipStatus": {
     "yourMembership": "Vaše členství",
@@ -3195,7 +3212,8 @@
           "12": "Export odvozených ukazatelů",
           "13": "Osobní kalendářový kanál",
           "14": "Dosah sítě: až 50 knihoven a obálka 20 000 km², u větších oblastí pouze jeden čas",
-          "15": "Zastávky a linky veřejné dopravy"
+          "15": "Neomezená uložená zobrazení a hledání",
+          "16": "Zastávky a linky veřejné dopravy"
         }
       },
       "team": {
@@ -3206,14 +3224,14 @@
           "0": "Pro pro každé místo v týmu",
           "1": "Správce týmu: přiřazování pracovníků ke knihovnám",
           "2": "Volba, kdo může spustit živou polohu pojízdné knihovny",
-          "3": "Volitelný doplněk API se správou klíčů a přehledem využití",
-          "5": "Přehledy návštěvnosti",
-          "6": "Sdílený analytický prostor Atlasu",
-          "7": "Hromadné aktualizace z tabulky",
-          "8": "Vložitelný vyhledávač knihoven",
+          "3": "Vkládací widgety pro váš web: vyhledávač knihoven, adresář, grafy a statistiky",
+          "5": "Rozšířený dosah: až 100 knihoven a obálka 40 000 km², jeden čas na výpočet",
+          "6": "Přehledy návštěvnosti",
+          "7": "Sdílený analytický prostor Atlasu",
+          "8": "Hromadné aktualizace z tabulky",
           "9": "Vyšší limity doplňku API",
           "10": "Vytvořte tým online, vyberte místa a plaťte ročně přes Stripe. Správce pozve kolegy a přiřadí knihovny; oprávnění pracovníků se ověřují samostatně.",
-          "4": "Rozšířený dosah: až 100 knihoven a obálka 40 000 km², jeden čas na výpočet"
+          "4": "Volitelný doplněk API: vyhledávání, výpis a procházení knihoven podle země, regionu a oblasti, se správou klíčů a přehledem využití"
         }
       }
     },
@@ -3238,7 +3256,7 @@
       "suggest-knowledge-edits-and-pitch-journal-stories": "Návrhy úprav znalostní báze a témat pro časopis",
       "apply-for-knowledge-or-journal-editing-roles": "Žádost o redaktorskou roli ve znalostní bázi nebo časopisu",
       "claim-your-library-and-use-the-free-staff-tools": "Přihlášení ke správě knihovny a bezplatné nástroje pro pracovníky",
-      "3-saved-views-and-3-saved-searches": "3 uložené pohledy a 3 uložená vyhledávání",
+      "3-saved-views-and-3-saved-searches": "Uložená zobrazení a hledání",
       "an-opt-in-weekly-digest-of-followed-libraries": "Volitelný týdenní přehled sledovaných knihoven",
       "an-optional-supporter-mark-you-can-hide": "Volitelný odznak podporovatele, který lze skrýt",
       "optional-credit-on-the-supporters-page": "Volitelné uvedení na stránce podporovatelů",
@@ -3260,7 +3278,7 @@
       "index_export": "Export výsledků vyhledávání s uvedením zdrojů",
       "team-organiser-assign-staff-to-your-libraries": "Správce týmu: přiřazování pracovníků ke knihovnám",
       "choose-who-can-go-live-for-a-mobile-library": "Volba, kdo může spustit živou polohu pojízdné knihovny",
-      "optional-api-add-on-with-managed-keys-and-usage-reporting": "Volitelný doplněk API se správou klíčů a přehledem využití",
+      "optional-api-add-on-search-list-and-browse-libraries-by-country-region-and-area-with-managed-keys-and-usage-reporting": "Volitelný doplněk API: vyhledávání, výpis a procházení knihoven podle země, regionu a oblasti, se správou klíčů a přehledem využití",
       "traffic-reports": "Přehledy návštěvnosti",
       "a-shared-service-workspace": "Sdílený pracovní prostor služby",
       "bulk-updates-from-a-spreadsheet": "Hromadné aktualizace z tabulky",
@@ -3270,7 +3288,7 @@
       "library_traffic": "Přehledy návštěvnosti",
       "team_workspace": "Sdílený analytický prostor Atlasu",
       "team_bulkUpload": "Hromadné aktualizace z tabulky",
-      "team_embed": "Vložitelný vyhledávač knihoven",
+      "team_embed": "Vkládací widgety pro váš web: vyhledávač knihoven, adresář, grafy a statistiky",
       "api_key": "Vyšší limity doplňku API",
       "atlas_reachArea": "Rozšířený dosah: maximální obálka (km²), jeden čas na výpočet",
       "atlas_reachLibraries": "Dosah sítě: maximální počet způsobilých knihoven",
@@ -3279,6 +3297,8 @@
       "population-density-area-averages-and-supported-population-grids": "Hustota obyvatelstva: průměry za oblasti a dostupné populační rastry"
     },
     "copy": {
+      "unlimited": "Neomezeně",
+      "eachCount": "{count} od každého",
       "title": "Tarify a *Pro*",
       "metaTitle": "Tarify a Pro",
       "lead": "Libraries Global je zdarma. Volitelné členství podporuje otevřená data a přidává historii, export a analytické nástroje.",
@@ -3339,7 +3359,8 @@
       "start": "Začít přispívat",
       "grantTitle": "Pro pro novináře a partnery",
       "grantBody": "Novináři, výzkumníci partnerských projektů a partnerské organizace mohou požádat tým o udělení Pro.",
-      "grant": "Požádat o udělení Pro"
+      "grant": "Požádat o udělení Pro",
+      "roadmapVote": "Hlasujte a diskutujte v plánu vývoje"
     },
     "faq": {
       "0": {
@@ -4085,7 +4106,11 @@
     },
     "paidThrough": "Zaplaceno do",
     "teamInactive": "Neaktivní Team",
-    "inactiveTeamBilling": "Toto členství Team je neaktivní. Organizátor může zkontrolovat fakturaci a obnovení. Místa Pro a datové nástroje Team vyžadují aktivní členství. Schválená práva k úpravám knihoven jsou samostatná."
+    "inactiveTeamBilling": "Toto členství Team je neaktivní. Organizátor může zkontrolovat fakturaci a obnovení. Místa Pro a datové nástroje Team vyžadují aktivní členství. Schválená práva k úpravám knihoven jsou samostatná.",
+    "inTeamTitle": "Jste členem Team",
+    "inTeamOrganiser": "Jste organizátorem týmu {team}.",
+    "inTeamMember": "Máte místo v týmu {team}.",
+    "manageTeam": "Spravovat tým"
   },
   "membershipPreferences": {
     "saved": "Nastavení poděkování uloženo",
@@ -4140,7 +4165,8 @@
     "emptyHint": "Zkuste název knihovny, místo nebo slova z průvodce. Můžete také přidat chybějící knihovnu.",
     "keepTyping": "Zadejte alespoň dva znaky",
     "addLibrary": "Přidat chybějící knihovnu",
-    "shown": "{count, plural, one {Zobrazen # výsledek} few {Zobrazeny # výsledky} other {Zobrazeno # výsledků}}"
+    "shown": "{count, plural, one {Zobrazen # výsledek} few {Zobrazeny # výsledky} other {Zobrazeno # výsledků}}",
+    "roadmap": "Plán vývoje"
   },
   "articleSources": {
     "title": "Zdroje",
@@ -4185,7 +4211,11 @@
     "eventsBody": "Zaměstnanci knihoven mohou připojit zdroj akcí. Před zveřejněním v kalendáři proběhne kontrola.",
     "eventsAction": "Připojit zdroj akcí",
     "findTitle": "Znáte knihovnu?",
-    "findBody": "Přidejte chybějící knihovnu nebo vylepšete záznam. Každá změna projde kontrolou."
+    "findBody": "Přidejte chybějící knihovnu nebo vylepšete záznam. Každá změna projde kontrolou.",
+    "roadmap": "Plán vývoje",
+    "roadmapTitle": "Znáte otevřenou datovou sadu?",
+    "roadmapBody": "Navrhněte zdroj pro svou zemi nebo region. Moderátoři ověří jeho licenci, než ho zařadí k hlasování.",
+    "roadmapAction": "Navrhnout datovou sadu"
   },
   "contributionDrawer": {
     "lead": "Vše, čím můžete vylepšit rejstřík, a vaše vlastní úkoly.",
@@ -4337,5 +4367,176 @@
       "unverifiedDirectory": "Úplnost adresáře knihoven pro tuto oblast nebyla ověřena. Počty a srovnání popisují evidované knihovny; chybějící záznam neprokazuje, že v oblasti knihovna není.",
       "temporaryFailure": "Datová služba nemohla načíst výsledek. Jde o dočasné selhání načítání, nikoli důkaz, že pro místo neexistují data."
     }
+  },
+  "roadmap": {
+    "title": "Plán vývoje",
+    "lead": "Co stavíme, co přijde dál a datové sady, které míří do indexu. Hlasujte pro to, na čem vám záleží, a napište nám, jak byste to využili.",
+    "unavailable": "Plán vývoje zatím není zveřejněn",
+    "unavailableLead": "Vraťte se brzy nebo začněte konverzaci v diskusích.",
+    "featuresHeading": "Plánované funkce",
+    "filterAreas": "Filtrovat podle oblasti",
+    "allAreas": "Vše",
+    "areas": {
+      "atlas": "Atlas",
+      "watching": "Sledování a porovnání",
+      "widgets": "Widgety a vložení",
+      "teams": "Pro týmy",
+      "events": "Akce",
+      "data": "Data a API"
+    },
+    "plans": {
+      "free": "Zdarma",
+      "supporter": "Podporovatel",
+      "pro": "Pro",
+      "team": "Team",
+      "api": "Doplněk API"
+    },
+    "planFilter": "Tarif",
+    "anyPlan": "Jakýkoli tarif",
+    "viewLabel": "Zobrazení",
+    "board": "Nástěnka",
+    "list": "Seznam",
+    "showing": "{count, plural, one {Zobrazena # funkce.} few {Zobrazeny # funkce.} other {Zobrazeno # funkcí.}}",
+    "noMatches": "Těmto filtrům neodpovídá žádná funkce.",
+    "stages": {
+      "now": {
+        "label": "Teď",
+        "lead": "Ve výstavbě"
+      },
+      "next": {
+        "label": "Brzy",
+        "lead": "Navrženo, brzy začneme"
+      },
+      "later": {
+        "label": "Později",
+        "lead": "V plánu, ještě otevřené"
+      }
+    },
+    "emptyStage": "Zatím nic.",
+    "voteFailed": "Hlas se neuložil. Zkuste to znovu.",
+    "voteAdded": "Hlas přidán.",
+    "voteRemoved": "Hlas odebrán.",
+    "signInToVote": "Přihlaste se a hlasujte pro {title} ({count, plural, one {# hlas} few {# hlasy} other {# hlasů}})",
+    "addVote": "Hlasovat pro {title} ({count, plural, one {# hlas} few {# hlasy} other {# hlasů}})",
+    "removeVote": "Odebrat hlas pro {title} ({count, plural, one {# hlas} few {# hlasy} other {# hlasů}})",
+    "discuss": "Diskutovat",
+    "discussItem": "Diskutovat o {title} ({count, plural, =0 {zatím bez příspěvků} one {# příspěvek} few {# příspěvky} other {# příspěvků}})",
+    "startDiscussionAbout": "Založit diskusi o {title}",
+    "activeToday": "Aktivní dnes",
+    "activeYesterday": "Aktivní včera",
+    "activeDaysAgo": "Aktivní před {count} dny",
+    "discussLead": "Zeptejte se nebo nám napište, jak byste to využili.",
+    "dataEyebrow": "Import dat · Zdarma pro všechny",
+    "dataTitle": "Míří do indexu",
+    "statOnTheWay": "Knihovny na cestě",
+    "statAdded": "Přidané knihovny",
+    "importStepsLabel": "Kroky importu",
+    "importSteps": {
+      "explore": "Průzkum",
+      "validate": "Ověření",
+      "licence": "Licence",
+      "ingest": "Import"
+    },
+    "importStages": {
+      "listed": "Na našem seznamu",
+      "exploring": "Zkoumáme zdroj",
+      "validating": "Ověřujeme data",
+      "licensing": "Prověřujeme licenci",
+      "ingesting": "Probíhá import",
+      "ingested": "V indexu"
+    },
+    "importStep": "Hotovo {done} z {total} kroků: {stage}",
+    "importFields": "Co přidává",
+    "importInSource": "{count, plural, one {knihovna ve zdroji} few {knihovny ve zdroji} other {knihoven ve zdroji}}",
+    "importAdded": "{count, plural, one {přidaná knihovna} few {přidané knihovny} other {přidaných knihoven}}",
+    "noImports": "Právě se neimportují žádné datové sady.",
+    "onOurList": "Další na našem seznamu",
+    "onOurListLead": "Datové sady, na které se chceme podívat, ale zatím jsme nezačali. Hlasujte pro ty, které byste využili.",
+    "communitySuggestions": "Návrhy komunity",
+    "suggestPrompt": "Znáte otevřenou datovou sadu pro svou zemi nebo region? Pošlete nám zdroj a jeho licenci.",
+    "suggestDataset": "Navrhnout datovou sadu",
+    "signInToSuggest": "Přihlaste se a navrhněte datovou sadu",
+    "suggestTitle": "Navrhnout datovou sadu",
+    "suggestSubtitle": "Napište nám, odkud data pocházejí.",
+    "suggestReview": "Moderátor ověří zdroj a jeho licenci, než sadu zařadí k hlasování.",
+    "suggestFields": {
+      "place": "Země nebo region",
+      "source": "Datová sada nebo vydavatel",
+      "sourceUrl": "Odkaz na data",
+      "licence": "Licence",
+      "notes": "Co bychom ještě měli vědět"
+    },
+    "suggestHints": {
+      "place": "Například Portugalsko",
+      "source": "Například národní registr veřejných knihoven",
+      "licence": "Například CC BY 4.0",
+      "notes": "Co pokrývá, jak často se aktualizuje, koho se zeptat"
+    },
+    "optional": "(nepovinné)",
+    "suggestSend": "Odeslat návrh",
+    "suggestSending": "Odesílání…",
+    "suggestThanks": "Děkujeme. Moderátor ověří zdroj a jeho licenci a pak ho zde zařadí k hlasování.",
+    "suggestTooMany": "Tento týden jste poslali několik návrhů. Nejdřív je projdeme.",
+    "suggestInvalid": "Zkontrolujte údaje: odkaz musí začínat http:// nebo https://.",
+    "suggestFailed": "Návrh se neodeslal. Zkuste to znovu.",
+    "close": "Zavřít"
+  },
+  "savedViews": {
+    "button": {
+      "view": "Uložená zobrazení",
+      "search": "Uložená hledání"
+    },
+    "title": {
+      "view": "Uložená zobrazení",
+      "search": "Uložená hledání"
+    },
+    "lead": {
+      "view": "Uložte si toto zobrazení Atlasu i s polohou mapy, vrstvami a filtry.",
+      "search": "Uložte si tyto výrazy a filtry pro opakované hledání."
+    },
+    "count": "Využito {count} z {limit}",
+    "countUnlimited": "{count, plural, one {# uložené} few {# uložená} other {# uložených}}",
+    "signedOut": {
+      "view": "Přihlaste se a ukládejte si zobrazení Atlasu, ke kterým se můžete vrátit. Bezplatný účet jich uchová 3.",
+      "search": "Přihlaste se a ukládejte si hledání, která můžete spustit znovu. Bezplatný účet jich uchová 3."
+    },
+    "signIn": "Přihlásit se",
+    "nameLabel": {
+      "view": "Pojmenujte toto zobrazení",
+      "search": "Pojmenujte toto hledání"
+    },
+    "namePlaceholder": {
+      "view": "Například Pobočky v Jihomoravském kraji",
+      "search": "Například Otevřeno dlouho v Brně"
+    },
+    "saveHint": {
+      "view": "Uloží aktuální polohu mapy, vrstvy a filtry.",
+      "search": "Uloží aktuální výrazy, filtry a řazení."
+    },
+    "save": "Uložit",
+    "saving": "Ukládání…",
+    "saved": "Uloženo „{name}“.",
+    "saveFailed": "Uložení se nezdařilo. Zkuste to znovu.",
+    "limitReached": "Využili jste všech {limit} ve svém tarifu.",
+    "atLimit": {
+      "view": "Máte uloženo {limit} zobrazení, což je maximum vašeho tarifu. Jedno smažte, nebo přejděte na neomezený tarif.",
+      "search": "Máte uloženo {limit} hledání, což je maximum vašeho tarifu. Jedno smažte, nebo přejděte na neomezený tarif."
+    },
+    "seePlans": "Zobrazit tarify",
+    "listTitle": {
+      "view": "Vaše zobrazení",
+      "search": "Vaše hledání"
+    },
+    "empty": {
+      "view": "Zatím žádná uložená zobrazení.",
+      "search": "Zatím žádná uložená hledání."
+    },
+    "loading": "Načítání…",
+    "loadFailed": "Uložené položky se nenačetly.",
+    "retry": "Zkusit znovu",
+    "savedOn": "Uloženo {date}",
+    "delete": "Smazat {name}",
+    "deleted": "Smazáno „{name}“.",
+    "deleteFailed": "Smazání se nezdařilo. Zkuste to znovu."
   }
 }

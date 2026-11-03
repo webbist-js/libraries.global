@@ -138,9 +138,21 @@ There is deliberately no `purchase` or `refund` emission. Those need a settled i
 
 `library_action` and `generate_lead` are the configured GA4 key events. Use measured sessions with a library detail view as the denominator for library action rate, scoped to the same dates, stream and consented population. Read search success/error counts separately and distinguish lead acceptance from verification. Public-discovery dimensions are `page_type`, `interaction_source`, `action_type`, `content_type`, `search_type`, `result_bucket`, `submission_type`, `content_locale`, `destination`, `target_locale`, `layer_name`, `view_mode`, `format`, `selection_mode` and `search_scope`. Workspace dimensions add `workspace_area`, `workspace_section`, `workspace_surface` and `action_outcome`.
 
-Do not register public library/content IDs as ordinary custom dimensions across the whole catalogue: high cardinality can collapse reports into `(other)`. Team traffic remains a separate server-side reporting task with authorised library scope and completeness checks; this PR does not expose property-wide GA access or implement that dashboard.
+Do not register public library/content IDs as ordinary custom dimensions across the whole catalogue: high cardinality can collapse reports into `(other)`. Team traffic reads are described below; they never expose property-wide GA access.
 
 Before production activation, verify a consent-refused visit sends no tag or event, grant emits one sanitized page view, withdrawal blocks further collection, clears analytics cookies and unloads Google code, and navigation into private routes suppresses events. Verify explicit events once in GA DebugView/Realtime using a consented test visit after normal release promotion. No production test traffic is sent by the automated source tests.
+
+## Team traffic reports
+
+A Team-covered library's Staff **Traffic** tab (`/staff/<slug>/traffic`) reads GA4 aggregates through the Data API, server-side only (`src/lib/staff/ga4-data-api.ts`, `traffic-report.ts`, `traffic-source.ts`).
+
+- **Access first.** The page checks Library Staff access and the library-scoped `library.traffic` entitlement before any report call; uncovered libraries never reach Google. Cached reports sit behind the same check.
+- **Scope.** The server resolves the library's own published path (`/<continent>/<country>/<region>/<slug>`) and its locale-prefixed copies, then filters every query with an exact `pagePath` list plus `hostName = libraries.global`. There is no pattern filter over the shared route, and the caller can't supply a filter.
+- **Figures.** Page views (`screenPageViews`), visitors (the period's unique `totalUsers`, never summed across days or locales), directions and catalogue clicks (`library_action` by `customEvent:action_type`), views per day and views by `sessionDefaultChannelGroup`. Periods are 7/30/90 complete days ending yesterday in the property's time zone, compared against the equal period before. The four reports go in one `batchRunReports` call.
+- **Honesty.** Zero traffic shows as zeros. Missing configuration, an unpublished page, quota exhaustion and provider failures each show their own message, never numbers. Thresholding, sampling or an `(other)` row flag the report as a minimum. The page says only consenting visitors are counted. "Searches that found you" needs Search Console and isn't shown.
+- **Limits.** Reports are cached in memory for 30 minutes per property, library, range and path (up to 500 entries), with 10-second timeouts. A library that moved region loses the views recorded under its old path. Exact-path filtering is the agreed first adapter; durable reporting at full catalogue scale needs a raw-event source such as the BigQuery export.
+
+Configure with `GA4_PROPERTY_ID` (`558992450`) and either `GA4_CREDENTIALS_JSON` (a service-account key, raw or base64) or `GA4_CREDENTIALS_FILE`. Grant the service account **Viewer** on the property only. An `authorized_user` ADC file also works for local checks. Without configuration the tab says reporting isn't connected. The Team plan copy (`PRO_FEATURE_COPY["library.traffic"]`) stays "soon" until a production report has been accepted against DebugView.
 
 ## Beta release sequence
 

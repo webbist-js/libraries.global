@@ -73,6 +73,16 @@ const lib = () => ({
   completeness: 10,
 })
 
+const publishWiki = (
+  seed: Record<string, unknown>,
+  strapiOf: ReturnType<typeof setup>
+) =>
+  strapiOf.run(WIKI, "publish", { documentId: "w1" }, () =>
+    strapiOf.strapi
+      .documents(WIKI)
+      .update({ documentId: "w1", status: "published", data: seed })
+  )
+
 describe("change-records middleware", () => {
   const savedFlag = process.env.CHANGE_RECORDS_ENABLED
   afterEach(() => {
@@ -660,6 +670,59 @@ describe("change-records middleware", () => {
     expect(rows(ARTICLE_CHANGE)).toEqual([
       expect.objectContaining({ kind: "edited", contentLocale: "en" }),
     ])
+  })
+
+  const wikiRow = { documentId: "w1", locale: "en", slug: "hello" }
+
+  it("records an article's first publication as published", async () => {
+    const harness = setup({
+      [WIKI]: [{ ...wikiRow, title: "Hello", publishedAt: null }],
+    })
+    await publishWiki({}, harness)
+    expect(harness.rows(ARTICLE_CHANGE)).toEqual([
+      expect.objectContaining({
+        kind: "published",
+        versionStatus: "published",
+      }),
+    ])
+  })
+
+  it("records republishing a live article with changes as edited", async () => {
+    const harness = setup({
+      [WIKI]: [
+        {
+          ...wikiRow,
+          title: "Hello again",
+          __published: {
+            ...wikiRow,
+            title: "Hello",
+            publishedAt: "2026-11-01",
+          },
+        },
+      ],
+    })
+    await publishWiki({}, harness)
+    expect(harness.rows(ARTICLE_CHANGE)).toEqual([
+      expect.objectContaining({ kind: "edited", versionStatus: "published" }),
+    ])
+  })
+
+  it("records nothing for republishing a live article unchanged", async () => {
+    const harness = setup({
+      [WIKI]: [
+        {
+          ...wikiRow,
+          title: "Hello",
+          __published: {
+            ...wikiRow,
+            title: "Hello",
+            publishedAt: "2026-11-01",
+          },
+        },
+      ],
+    })
+    await publishWiki({}, harness)
+    expect(harness.rows(ARTICLE_CHANGE)).toHaveLength(0)
   })
 
   it("passes untracked uids and actions through with zero extra calls", async () => {

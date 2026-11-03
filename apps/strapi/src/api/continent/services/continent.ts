@@ -9,6 +9,7 @@ const HOMEPAGE_CONTINENT_ORDER = [
   "north-america",
   "south-america",
   "oceania",
+  "antarctica",
   // Legacy / alternate slugs still map correctly via the lookup
   "americas",
   "na",

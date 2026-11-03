@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ds/Breadcrumb"
@@ -16,6 +16,7 @@ export function RecordToolbar({
   citeHref,
   share = false,
   shareContent,
+  actions,
 }: {
   readonly items?: BreadcrumbItem[]
   readonly labels?: Record<string, string>
@@ -25,6 +26,8 @@ export function RecordToolbar({
     contentType: "journal" | "knowledge"
     contentId: string
   }
+  /** Page-specific controls, placed before the shared ones. */
+  readonly actions?: ReactNode
 }) {
   const t = useTranslations("dashboard")
   const ui = useTranslations("ui")
@@ -42,6 +45,7 @@ export function RecordToolbar({
     >
       <Breadcrumb items={items} labels={labels} />
       <div className="record-toolbar-actions">
+        {actions}
         <BetaFeedback label={ui("feedback")} inline />
         <SiteSearchTrigger />
         {share ? (

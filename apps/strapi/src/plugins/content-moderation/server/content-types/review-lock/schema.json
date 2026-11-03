@@ -1,0 +1,53 @@
+{
+  "kind": "collectionType",
+  "collectionName": "cm_review_locks",
+  "info": {
+    "singularName": "review-lock",
+    "pluralName": "review-locks",
+    "displayName": "Review Lock",
+    "description": "A Moderator's short lease on an item under review (ADR-0008)"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "subjectKind": {
+      "type": "string",
+      "required": true,
+      "maxLength": 40
+    },
+    "subjectId": {
+      "type": "string",
+      "required": true,
+      "maxLength": 64
+    },
+    "holderId": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "holderName": {
+      "type": "string",
+      "maxLength": 120
+    },
+    "expiresAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "previousHolderId": {
+      "type": "string",
+      "private": true
+    },
+    "takenOverAt": {
+      "type": "datetime"
+    }
+  }
+}

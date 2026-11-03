@@ -142,7 +142,8 @@ export function publicArticleBrowseItem(
   return {
     documentId,
     locale,
-    publishedAt,
+    // The public date; Strapi's publishedAt moves on every republish.
+    publishedAt: string(article.publicationDate) ?? publishedAt,
     slug,
     title: string(article.title) ?? slug,
     summary: string(article.summary),
@@ -185,6 +186,7 @@ export const ARTICLE_BROWSE_FIELDS = [
   "summary",
   "author",
   "featured",
+  "publicationDate",
   "publishedAt",
   "updatedAt",
   "readingTimeMinutes",

@@ -14,7 +14,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
-import { primaryCtaSm } from "@/components/ui/action-styles"
+import { primaryCtaSm, secondaryCtaSm } from "@/components/ui/action-styles"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -188,7 +188,7 @@ export function DiscussionComposer({
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold"
+            className={cn(secondaryCtaSm, "min-h-11 cursor-pointer")}
           >
             {t("cancel")}
           </button>
@@ -204,7 +204,7 @@ export function DiscussionComposer({
           <button
             type="button"
             onClick={onCancel}
-            className="min-h-11 rounded-full border border-(--t-border-hi) px-4 text-sm font-semibold"
+            className={cn(secondaryCtaSm, "min-h-11 cursor-pointer")}
           >
             {t("cancel")}
           </button>

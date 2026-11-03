@@ -184,3 +184,38 @@ it("clears stale responses and warns that a timed-out request might still consum
     expect.stringContaining("may still count toward your Team’s allowance")
   )
 })
+
+it("browses places and lists a place's libraries through the metered API", async () => {
+  const fetch = vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json({
+        data: [{ name: "England", slug: "england", libraryCount: 2964 }],
+        meta: { level: "country" },
+      })
+    )
+    .mockResolvedValueOnce(
+      Response.json({
+        data: [{ name: "Norfolk", slug: "norfolk", libraryCount: 47 }],
+        meta: { level: "region" },
+      })
+    )
+    .mockResolvedValueOnce(Response.json({ data: [record], meta: {} }))
+  vi.stubGlobal("fetch", fetch)
+  mount()
+  fireEvent.click(screen.getByRole("button", { name: "Browse places" }))
+  fireEvent.click(screen.getByRole("button", { name: "Run request" }))
+  fireEvent.click(await screen.findByRole("button", { name: "Browse England" }))
+  fireEvent.click(
+    await screen.findByRole("button", { name: "List libraries in Norfolk" })
+  )
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3))
+  expect(fetch.mock.calls.map((call) => call[0])).toEqual([
+    "/api/v1/places?locale=en",
+    "/api/v1/places/england?locale=en",
+    "/api/v1/places/england/norfolk/libraries?locale=en&limit=10",
+  ])
+  expect(
+    await screen.findByRole("button", { name: /Read this record/ })
+  ).toBeTruthy()
+})

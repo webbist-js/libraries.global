@@ -99,7 +99,7 @@ export function ArticleBodyBlocks({
             return (
               <div
                 key={block.id}
-                className="overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep)"
+                className="overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-code)"
               >
                 {block.filename || block.language ? (
                   <div className="flex items-center gap-3 border-b border-(--t-border-line) px-5 py-3">
@@ -109,7 +109,7 @@ export function ArticleBodyBlocks({
                       </span>
                     ) : null}
                     {block.language && block.language !== "plaintext" ? (
-                      <span className="ml-auto rounded-full border border-(--t-border-line) bg-(--t-bg-surface) px-2 py-0.5 text-xs font-medium tracking-wide text-(--t-ink-faint) uppercase">
+                      <span className="ml-auto rounded-full border border-(--t-border-line) px-2 py-0.5 text-xs font-medium tracking-wide text-(--t-ink-low) uppercase">
                         {block.language}
                       </span>
                     ) : null}
@@ -117,7 +117,7 @@ export function ArticleBodyBlocks({
                 ) : null}
                 <pre
                   tabIndex={0}
-                  className="overflow-x-auto p-5 font-mono text-sm leading-6 text-(--t-ink-dim) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
+                  className="overflow-x-auto p-5 font-mono text-sm leading-6 text-(--t-ink-base) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
                 >
                   <code>{block.code}</code>
                 </pre>

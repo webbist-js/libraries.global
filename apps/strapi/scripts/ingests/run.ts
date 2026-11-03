@@ -11,7 +11,7 @@ async function run() {
   const args = parseArgs()
   if (flag(args, "help") || !args.dataset) {
     console.log(
-      "pnpm ingest --dataset=it-census2023|it-iccu|ie-fingal-libraries|ie-roscommon-libraries|ie-galway-libraries|ie-south-dublin-libraries|kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|mx-sic-rnbp|ca-statcan-odcaf|imls-pls|libraryon|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Ireland/Italy CMS checks and writes require --local or --production. Wikidata: --country=SE|NO|DK. Finland: --year=2025. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
+      "pnpm ingest --dataset=it-census2023|it-iccu|ie-fingal-libraries|ie-roscommon-libraries|ie-galway-libraries|ie-south-dublin-libraries|kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|mx-sic-rnbp|ca-statcan-odcaf|imls-pls|libraryon|de-isil|es-mcu-libraries|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Ireland/Italy CMS checks and writes require --local or --production. Wikidata: --country=SE|NO|DK. Finland: --year=2025. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
     )
 
     return
@@ -81,6 +81,18 @@ async function run() {
   if (args.dataset === "libraryon" && args.legacy !== "true") {
     const { runEnglandLibraryOn } = await import("./england/libraryon/ingest")
     await runEnglandLibraryOn(args)
+
+    return
+  }
+  if (args.dataset === "de-isil") {
+    const { runGermany } = await import("./germany/isil/ingest")
+    await runGermany(args)
+
+    return
+  }
+  if (args.dataset === "es-mcu-libraries") {
+    const { runSpain } = await import("./spain/mcu-directory/ingest")
+    await runSpain(args)
 
     return
   }

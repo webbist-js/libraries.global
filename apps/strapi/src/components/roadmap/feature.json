@@ -1,0 +1,67 @@
+{
+  "collectionName": "components_roadmap_features",
+  "info": {
+    "displayName": "Roadmap feature",
+    "icon": "rocket",
+    "description": "A product feature on the roadmap. Keep its key identical in every language: votes and discussion attach to it."
+  },
+  "options": {},
+  "attributes": {
+    "key": {
+      "type": "string",
+      "required": true,
+      "maxLength": 60,
+      "regex": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "text",
+      "required": true,
+      "maxLength": 400
+    },
+    "stage": {
+      "type": "enumeration",
+      "enum": [
+        "now",
+        "next",
+        "later"
+      ],
+      "required": true,
+      "default": "later"
+    },
+    "area": {
+      "type": "enumeration",
+      "enum": [
+        "atlas",
+        "watching",
+        "widgets",
+        "teams",
+        "events",
+        "data"
+      ],
+      "required": true
+    },
+    "plans": {
+      "type": "component",
+      "repeatable": true,
+      "component": "roadmap.plan",
+      "max": 4
+    },
+    "noteKind": {
+      "type": "enumeration",
+      "enum": [
+        "target",
+        "testing",
+        "depends"
+      ]
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 120
+    }
+  }
+}

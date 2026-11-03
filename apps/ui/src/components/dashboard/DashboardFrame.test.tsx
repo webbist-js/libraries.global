@@ -204,7 +204,12 @@ afterEach(() => {
 
 it("restores an opener that was not focused by pointer activation", async () => {
   mount()
-  expect(screen.queryByRole("link", { name: "api" })).toBeNull()
+  // The API sits in the rail's tools group beside Staff and Moderation.
+  expect(
+    screen
+      .getByRole("link", { name: "api" })
+      .closest(".dashboard-workspace-links")
+  ).toBeTruthy()
   const trigger = screen.getByRole("button", {
     name: "Navigation",
   })
@@ -348,7 +353,7 @@ it("shows the Staff masthead destination only for hydrated staff or Team members
     within(workspaces as HTMLElement)
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"))
-  ).toEqual(["/staff", "/moderation"])
+  ).toEqual(["/developers", "/staff", "/moderation"])
   expect(staff.getAttribute("aria-current")).toBe("page")
   fireEvent.click(screen.getByRole("button", { name: "Navigation" }))
   const dialog = await screen.findByRole("dialog", { name: "Navigation" })

@@ -184,6 +184,10 @@ _Avoid_: promotion, role request
 One Submission State transition: from, to, reviewer, note and when. Append-only; together they are the review thread on a Submission.
 _Avoid_: comment, history (alone — too generic)
 
+**Review Lock**:
+A two-minute lease a Moderator holds on a Submission while its review page is open, renewed while the page is visible and released by a decision or by leaving. Others see who holds it and can't decide or edit the Submission until it expires or they take it over (ADR-0008). Advisory for reading, enforced for writes; the decision's compare-and-set remains the final guard.
+_Avoid_: claim (a Library Claim is something else), assignment
+
 **Change Record**:
 One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values require the Supporter-or-higher `library.history` Entitlement.
 _Avoid_: revision, audit log entry

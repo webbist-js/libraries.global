@@ -26,6 +26,7 @@ import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ModerationAccessUnavailable } from "./_components/ModerationAccessUnavailable"
 import { ModerationHero } from "./_components/ModerationHero"
+import { ModerationThanks } from "./_components/ModerationThanks"
 import {
   coversEverything,
   queuesOf,
@@ -214,7 +215,9 @@ export default async function ModerationQueuePage({
             ? discussions("moderationLead")
             : `You review ${describeScopes(scopes, localeNames)}. Your own submissions never appear here.`
         }
-      />
+      >
+        <ModerationThanks />
+      </ModerationHero>
       <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 text-base [--spacing:0.25rem] sm:px-8">
         <EditorialToolbar
           label={t("workspace")}

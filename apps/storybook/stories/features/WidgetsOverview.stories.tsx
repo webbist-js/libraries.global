@@ -52,9 +52,9 @@ type Story = StoryObj<typeof meta>
 export const DraftAndPublished: Story = {}
 export const SourceGuidance: Story = {
   play: async ({ canvas, userEvent }) => {
-    await userEvent.click(canvas.getByText("Change default source"))
+    await userEvent.click(canvas.getByRole("button", { name: /^Change$/ }))
     await expect(
-      canvas.getByText(/Management access is reviewed separately/)
+      canvas.getByText(/Management access to a service is reviewed separately/)
     ).toBeVisible()
     await expect(
       canvas.getAllByRole("link", { name: "Edit widget" })
@@ -90,7 +90,7 @@ export const InactiveTeam: Story = {
       canvas.queryByRole("button", { name: "Create widget" })
     ).not.toBeInTheDocument()
     await expect(
-      canvas.queryByText("Change default source")
+      canvas.queryByRole("button", { name: /^Change$/ })
     ).not.toBeInTheDocument()
   },
 }
@@ -103,7 +103,7 @@ export const Member: Story = {
   },
   play: async ({ canvas }) => {
     await expect(
-      canvas.queryByText("Change default source")
+      canvas.queryByRole("button", { name: /^Change$/ })
     ).not.toBeInTheDocument()
     await expect(
       canvas.getAllByRole("link", { name: "Edit widget" })

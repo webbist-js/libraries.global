@@ -232,6 +232,9 @@
   font-size: var(--type-caption-size);
   text-decoration: none;
 }
+.contribute-submission:last-child {
+  border-bottom: 0;
+}
 .contribute-submission strong,
 .contribute-submission small {
   display: block;
@@ -273,7 +276,10 @@
   font-size: var(--type-caption-size);
 }
 .contribute-review-steps li > span {
+  min-width: 1ch;
+  flex-shrink: 0;
   color: var(--t-ink-low);
+  font-variant-numeric: tabular-nums;
 }
 .contribute-review-steps strong,
 .contribute-review-steps small {

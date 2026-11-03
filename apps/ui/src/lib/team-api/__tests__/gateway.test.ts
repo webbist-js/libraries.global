@@ -3,7 +3,7 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest"
 
 import { BillingError } from "@/lib/billing/config"
 
-import { apiLibraries, apiSearch, serveTeamApi } from "../gateway"
+import { apiLibraries, apiPlaces, apiSearch, serveTeamApi } from "../gateway"
 
 const { find, reserve, finish, active } = vi.hoisted(() => ({
   find: vi.fn(),
@@ -20,6 +20,10 @@ vi.mock("../team", () => ({ checkApiTeamActive: active }))
 const secret = `lg_api_${"a".repeat(43)}`
 const request = () =>
   new Request("https://libraries.global/api/v1/libraries", {
+    headers: { Authorization: `Bearer ${secret}` },
+  })
+const at = (path: string) =>
+  new Request(`https://libraries.global${path}`, {
     headers: { Authorization: `Bearer ${secret}` },
   })
 beforeEach(() => {
@@ -266,4 +270,61 @@ it("denies removed organisers before reserving quota or delivering data and reti
     "team",
     "organiser",
   ])
+})
+
+describe("place endpoints", () => {
+  beforeEach(() => {
+    vi.stubEnv("STRAPI_BRIDGE_SECRET", "bridge")
+    vi.stubEnv("STRAPI_URL", "http://cms.internal")
+  })
+
+  it("lists a region's libraries through the private bridge, nested in its country", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(
+        Response.json({ data: [], meta: { nextCursor: null } })
+      )
+    vi.stubGlobal("fetch", fetch)
+    await apiLibraries(
+      at("/api/v1/places/england/norfolk/libraries?limit=2"),
+      1000,
+      undefined,
+      { country: "england", region: "norfolk" }
+    )
+    const url = new URL(fetch.mock.calls[0]![0] as string)
+    expect(url.pathname).toBe("/api/access/api/libraries")
+    expect(url.searchParams.get("country")).toBe("england")
+    expect(url.searchParams.get("region")).toBe("norfolk")
+    expect(url.searchParams.get("limit")).toBe("2")
+  })
+
+  it("refuses a region without its country and place filters on place paths", async () => {
+    vi.stubGlobal("fetch", vi.fn())
+    await expect(
+      apiLibraries(at("/api/v1/libraries?region=norfolk"), 1000)
+    ).rejects.toMatchObject({ code: "invalid_place", status: 400 })
+    await expect(
+      apiLibraries(
+        at("/api/v1/places/england/libraries?country=wales"),
+        1000,
+        undefined,
+        {
+          country: "england",
+        }
+      )
+    ).rejects.toMatchObject({ code: "invalid_query", status: 400 })
+    await expect(
+      apiPlaces(at("/api/v1/places?limit=5"), 1000, {})
+    ).rejects.toMatchObject({ code: "invalid_query", status: 400 })
+  })
+
+  it("asks the bridge for a country's regions", async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ data: [] }))
+    vi.stubGlobal("fetch", fetch)
+    await apiPlaces(at("/api/v1/places/england"), 1000, { country: "england" })
+    const url = new URL(fetch.mock.calls[0]![0] as string)
+    expect(url.pathname).toBe("/api/access/api/places")
+    expect(url.searchParams.get("country")).toBe("england")
+    expect(url.searchParams.has("region")).toBe(false)
+  })
 })

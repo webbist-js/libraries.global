@@ -171,6 +171,7 @@ const STATIC_ROUTES: {
     changeFrequency: "weekly",
     priority: 0.4,
   },
+  { path: "community/roadmap", changeFrequency: "weekly", priority: 0.4 },
   { path: "contribute", changeFrequency: "monthly", priority: 0.5 },
   {
     path: "plans",

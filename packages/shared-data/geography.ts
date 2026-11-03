@@ -7,10 +7,14 @@ export const CONTINENTS: Continent[] = [
   { slug: "north-america", name: "North America" },
   { slug: "south-america", name: "South America" },
   { slug: "oceania", name: "Oceania" },
+  // No countries: ISO 3166-1 lists Antarctica itself (AQ). Its research
+  // stations' libraries sit under that one country.
+  { slug: "antarctica", name: "Antarctica" },
 ]
 
 /** ISO alpha-2 codes that belong to each continent slug */
 export const CONTINENT_COUNTRIES: Record<string, string[]> = {
+  antarctica: ["AQ"],
   africa: [
     "DZ",
     "AO",

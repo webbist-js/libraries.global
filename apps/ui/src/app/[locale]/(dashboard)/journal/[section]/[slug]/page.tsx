@@ -71,7 +71,7 @@ export async function generateMetadata({
         data.heroImage?.url
     ),
     imageAlt: data.heroImage?.alternativeText ?? data.title,
-    publishedTime: data.publishedAt,
+    publishedTime: data.publicationDate ?? data.publishedAt,
     modifiedTime: data.updatedAt,
     authors: data.author ? [data.author] : undefined,
     // A default-locale stand-in for a missing translation isn't indexed.
@@ -118,7 +118,7 @@ export default async function BlogArticleRoute(props: {
             url,
             imageUrl: formatStrapiMediaUrl(article.heroImage?.url),
             authorName: article.author,
-            publishedAt: article.publishedAt,
+            publishedAt: article.publicationDate ?? article.publishedAt,
             updatedAt: article.updatedAt,
             sectionName: article.section?.name,
           }),

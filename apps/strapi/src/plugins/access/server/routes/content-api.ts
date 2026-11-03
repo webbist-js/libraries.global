@@ -209,6 +209,12 @@ export default [
     handler: "api-data.libraries",
     config: { auth: false },
   },
+  {
+    method: "GET",
+    path: "/api/places",
+    handler: "api-data.places",
+    config: { auth: false },
+  },
   route("GET", "/teams/mine", "mine"),
   route("GET", "/team-libraries", "libraries"),
   route("GET", "/teams/join/:token", "preview"),

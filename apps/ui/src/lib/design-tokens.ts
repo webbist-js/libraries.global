@@ -126,11 +126,13 @@ export type FocusTintKey = keyof typeof FOCUS_TINT
 export function tintForLibraryType(libraryType?: string | null) {
   switch (libraryType) {
     case "National":
+    case "Regional":
     case "Parliamentary":
     case "State":
       return TYPE_TINT.national
     case "Public":
     case "Municipal":
+    case "Specific User Groups":
     case "Mobile":
       return TYPE_TINT.public
     case "Academic":
