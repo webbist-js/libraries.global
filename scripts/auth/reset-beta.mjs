@@ -104,7 +104,10 @@ async function main() {
     ])
     const targets = tables.filter(
       (table) =>
-        erased.has(table) || table in clearedColumns || special.has(table)
+        erased.has(table) ||
+        table in clearedColumns ||
+        special.has(table) ||
+        table === "strapi_audit_logs_user_lnk"
     )
     if (mutation)
       await db.query(
@@ -141,6 +144,23 @@ async function main() {
         (id) =>
           `%${id.replaceAll("%", String.raw`\%`).replaceAll("_", String.raw`\_`)}%`
       )
+    // Audit links to removed public-identity audit rows cascade away. Preserve
+    // and fingerprint every other administrator link, rather than exempting the
+    // whole link table from retained-data verification.
+    const retainedRows = (table) =>
+      table === "strapi_audit_logs_user_lnk" && patterns.length
+        ? ` WHERE NOT EXISTS (SELECT 1 FROM strapi_audit_logs a WHERE a.id=t.audit_log_id AND to_jsonb(a)::text LIKE ANY($1::text[]))`
+        : ""
+    const retainedParameters = (table) =>
+      retainedRows(table) ? [patterns] : []
+    const retainedAuditLinks = tables.includes("strapi_audit_logs_user_lnk")
+      ? (
+          await db.query(
+            `SELECT count(*)::text AS count, md5(coalesce(string_agg(md5(to_jsonb(t)::text),'' ORDER BY md5(to_jsonb(t)::text)),'')) AS hash FROM strapi_audit_logs_user_lnk t${retainedRows("strapi_audit_logs_user_lnk")}`,
+            retainedParameters("strapi_audit_logs_user_lnk")
+          )
+        ).rows[0]
+      : null
     const identityReferences = {}
     if (patterns.length)
       for (const table of tables) {
@@ -280,7 +300,11 @@ async function main() {
           `SELECT count(*)::text AS count, md5(coalesce(string_agg(md5((${expression})::text),'' ORDER BY md5((${expression})::text)),'')) AS hash FROM ${quote(table)} t`
         )
       ).rows[0]
-      if (hash(current) !== hash(fingerprints[table]))
+      const expected =
+        table === "strapi_audit_logs_user_lnk"
+          ? retainedAuditLinks
+          : fingerprints[table]
+      if (hash(current) !== hash(expected))
         throw new Error(`Retained data changed: ${table}; reset rolled back`)
     }
     if (patterns.length)
