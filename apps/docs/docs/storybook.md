@@ -54,7 +54,7 @@ The locale toolbar uses the real English, Czech and French message files. Compon
 
 ## Runtime boundaries and fixtures
 
-Storybook uses its own minimal Next config. It does not import the application config, Sentry setup, application environment validation, server providers, analytics or notification pollers. Vite's environment-file loading is disabled. Do not supply production credentials when building or running it. The shared-data package and its browser-safe `mobile-auth` subpath are explicitly prebundled because their linked build output is CommonJS; this uses the real shared configuration validator, not a mock.
+Storybook uses its own minimal Next config. It does not import the application config, Sentry setup, application environment validation, server providers, analytics or notification pollers. Vite's environment-file loading is disabled. Do not supply production credentials when building or running it. The shared-data package and its browser-safe `mobile-auth` and `auth-policy` subpaths are explicitly prebundled because their linked build output is CommonJS; this uses the real shared configuration validator, not a mock.
 
 The preview replaces data and runtime boundaries, while importing production UI components unchanged. `AccountAwareLink`, session-aware headers, drawers, editors and feature containers are the real implementations.
 
