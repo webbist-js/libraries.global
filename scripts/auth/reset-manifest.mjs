@@ -106,6 +106,7 @@ export const clearedColumns = {
 
 /** Retired identity storage; drop together with reviewed relation tables, never CASCADE. */
 export const retiredTables = new Set([
+  "internal_activity_events",
   "saved_events_user_lnk",
   "user",
   "account",
