@@ -68,7 +68,11 @@ describe("country import source contracts", () => {
     })
     const mobile = mapGermanLibrary({ ...german, libraryType: "39" })
     expect(mobile).toMatchObject({
-      data: { libraryType: "Mobile", location: undefined },
+      data: {
+        libraryType: "Mobile",
+        location: undefined,
+        timezone: "Europe/Berlin",
+      },
     })
     expect(typeof mapGermanLibrary({ ...german, dissolved: true })).toBe(
       "string"

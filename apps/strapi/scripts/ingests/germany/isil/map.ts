@@ -183,6 +183,7 @@ export function mapGermanLibrary(
       operatorType: record.operatorType,
       operationalStatus: "unknown",
       location: isMobile ? undefined : location,
+      timezone: isMobile ? "Europe/Berlin" : undefined,
       streetAddress: record.streetAddress,
       city: record.city,
       postalCode:
