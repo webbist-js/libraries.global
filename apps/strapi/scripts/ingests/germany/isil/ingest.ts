@@ -43,6 +43,10 @@ export async function runGermany(args: IngestArgs) {
     )
       throw new Error("SRU source checksum mismatch")
   }
+  // Explicit operator holds preserve ambiguous legacy identities without editing source facts.
+  const held = new Set((args["hold-records"] ?? "").split(",").filter(Boolean))
+  if ([...held].some((id) => !records.some((record) => record.isil === id)))
+    throw new Error("A held ISIL is absent from the source snapshot")
   const ids = new Set<string>()
   const libraries = []
   const skipped = []
@@ -50,6 +54,15 @@ export async function runGermany(args: IngestArgs) {
     if (!record.isil || ids.has(record.isil))
       throw new Error("Missing or duplicate complete ISIL")
     ids.add(record.isil)
+    if (held.has(record.isil)) {
+      skipped.push({
+        recordId: record.isil,
+        name: record.name,
+        reason:
+          "Operator hold: existing library identity needs editorial reconciliation",
+      })
+      continue
+    }
     const mapped = mapGermanLibrary(record)
     if (typeof mapped === "string")
       skipped.push({ recordId: record.isil, name: record.name, reason: mapped })
