@@ -71,7 +71,7 @@
     "lint-staged": "15.2.7",
     "prettier": "3.8.1",
     "semantic-release": "24.2.0",
-    "turbo": "2.7.6",
+    "turbo": "2.9.14",
     "typescript": "5.9.3"
   },
   "packageManager": "pnpm@10.28.1",
