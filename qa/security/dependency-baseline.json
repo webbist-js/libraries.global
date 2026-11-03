@@ -1,5 +1,5 @@
 {
-  "reviewedOn": "2026-10-31",
+  "reviewedOn": "2026-11-03",
   "scope": "High/critical findings in deployed application workspaces and shared packages. These exact upstream paths are temporary exceptions, not a clean audit. Documentation build findings are reported separately. The third-party editor and sanitizer receive scoped patched versions.",
   "findings": [
     {
@@ -40,6 +40,22 @@
       "version": "4.4.3",
       "path": "apps__strapi>@strapi/plugin-sentry>@strapi/admin>zod",
       "reason": "Official CMS-pinned administrator parser. CMS transport remains private, administrator access is restricted, and public application bridges cap request bodies. Update official Strapi packages together.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5",
+      "module": "zod",
+      "version": "3.25.76",
+      "path": "apps__strapi>@strapi-community/plugin-better-auth>@strapi/types>koa-body>zod",
+      "reason": "Additional peer-dependency path to the same official Strapi-pinned parser already reviewed above. The plugin server bundle has no runtime import of @strapi/types; CMS transport remains private and the authenticated public auth proxy caps bodies at 64 KiB. This does not fix the upstream oversized-collection advisory. Update official Strapi packages together.",
+      "reviewBy": "2026-11-14"
+    },
+    {
+      "advisory": "GHSA-mrhx-c7xc-m3w5",
+      "module": "zod",
+      "version": "4.4.3",
+      "path": "apps__strapi>@strapi-community/plugin-better-auth>@strapi/types>zod",
+      "reason": "Additional peer-dependency path to the same official Strapi-pinned parser already reviewed above. The plugin server bundle has no runtime import of @strapi/types; CMS transport remains private and the authenticated public auth proxy caps bodies at 64 KiB. This does not fix the upstream oversized-collection advisory. Update official Strapi packages together.",
       "reviewBy": "2026-11-14"
     }
   ]

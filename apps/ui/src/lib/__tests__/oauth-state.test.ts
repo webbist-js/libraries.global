@@ -5,7 +5,8 @@ vi.mock("server-only", () => ({}))
 import { signState, verifyState } from "../oauth-state"
 
 beforeEach(() => {
-  process.env.BETTER_AUTH_SECRET = "test-secret-at-least-32-characters-long"
+  process.env.EVENT_FEED_OAUTH_SECRET =
+    "test-secret-at-least-32-characters-long"
 })
 
 const payload = () => ({

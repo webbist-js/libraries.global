@@ -1,0 +1,118 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ba_passkey",
+  "info": {
+    "singularName": "passkey",
+    "pluralName": "passkeys",
+    "displayName": "Auth passkey"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "name": {
+      "type": "string",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "publicKey": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "userId": {
+      "type": "integer",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "credentialID": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "counter": {
+      "type": "biginteger",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "deviceType": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "backedUp": {
+      "type": "boolean",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "transports": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "aaguid": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    }
+  }
+}

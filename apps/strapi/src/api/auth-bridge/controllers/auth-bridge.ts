@@ -1,4 +1,3 @@
-import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import {
   libraryTypeName,
   isDismissiblePrompt,
@@ -10,17 +9,11 @@ import freeEmailDomains from "free-email-domains"
 
 import { ownedUploadIds } from "../../../plugins/content-moderation/server/utils/uploads"
 import {
-  claimAffiliationFilter,
   grantVerifiedLibrarian,
   upsertAffiliation,
 } from "../../../utils/affiliations"
-import { loadPlanRows } from "../../../utils/entitlement-inputs"
-import { eraseAccount } from "../../../utils/erase-account"
-import { internalNotifications } from "../../../utils/internal-notifications/service"
-import { activeGrants } from "../../../utils/role-grants"
 import { isValidServiceSecret } from "../../../utils/service-secret"
-import { loadStaffClaims } from "../../../utils/staff"
-import { isValidUsername, nextContributorNumber } from "../../../utils/username"
+import { isValidUsername } from "../../../utils/username"
 
 /**
  * Mailboxes anyone can register: the `free-email-domains` list (14k+
@@ -86,67 +79,6 @@ function followTargetOf(input: {
 }
 
 export default {
-  async syncUser(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    const { email, name, provider, baUserId } = ctx.request.body as {
-      email?: string
-      name?: string
-      provider?: string
-      baUserId?: string
-    }
-    if (!email || !provider)
-      return ctx.badRequest("Missing required fields: email, provider")
-
-    let user = await strapi
-      .query("plugin::users-permissions.user")
-      .findOne({ where: { email } })
-    if (!user) {
-      const authenticatedRole = await strapi
-        .query("plugin::users-permissions.role")
-        .findOne({ where: { type: "authenticated" } })
-      if (!authenticatedRole)
-        return ctx.internalServerError('"authenticated" role not found')
-      user = await strapi.query("plugin::users-permissions.user").create({
-        data: {
-          email,
-          username: email,
-          provider,
-          confirmed: true,
-          blocked: false,
-          role: authenticatedRole.id,
-        },
-      })
-    }
-
-    if (baUserId) {
-      const existing = await strapi
-        .query("api::user-profile.user-profile")
-        .findOne({ where: { baUserId } })
-      if (!existing) {
-        const nameParts = (name ?? "").trim().split(/\s+/)
-        const firstName = nameParts[0] ?? ""
-        const lastName = nameParts.slice(1).join(" ") || ""
-        // username is intentionally left null — set during onboarding
-        await strapi.documents("api::user-profile.user-profile").create({
-          data: {
-            baUserId,
-            firstName,
-            lastName,
-            contributorNumber: await nextContributorNumber(strapi),
-          } as any,
-        })
-      }
-    }
-
-    // Better Auth owns the session; the bridge never mints a Strapi JWT.
-    return ctx.send({
-      user: { id: user.id, email: user.email, username: user.username },
-    })
-  },
-
   async upsertProfile(ctx: any) {
     if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
       return ctx.unauthorized("Invalid or missing service secret")
@@ -377,22 +309,6 @@ export default {
     )
 
     return ctx.send({ following })
-  },
-
-  async deleteProfile(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    const { baUserId, email } = ctx.request.body as {
-      baUserId?: string
-      email?: string
-    }
-    if (!baUserId) return ctx.badRequest("Missing baUserId")
-
-    await eraseAccount(strapi, { baUserId, email })
-
-    return ctx.send({ ok: true })
   },
 
   async createAffiliation(ctx: any) {
@@ -736,162 +652,5 @@ export default {
     )
 
     return ctx.send({ following })
-  },
-
-  async sessionProfile(ctx: any) {
-    if (!isValidServiceSecret(ctx.request.header["x-service-secret"])) {
-      return ctx.unauthorized("Invalid or missing service secret")
-    }
-
-    // A repeated ?baUserId= arrives as an array; only one non-empty id is valid.
-    const { baUserId } = ctx.query as { baUserId?: unknown }
-    if (typeof baUserId !== "string" || baUserId.length === 0)
-      return ctx.badRequest("Missing baUserId")
-
-    const [[profile], affiliations, planRows, roleGrants] = await Promise.all([
-      strapi.documents("api::user-profile.user-profile").findMany({
-        filters: { baUserId: { $eq: baUserId } },
-        fields: [
-          "contributorRole",
-          "username",
-          "tier",
-          "earnedProUntil",
-          "points",
-          "dismissedPrompts",
-          "country",
-        ],
-        populate: { languages: { fields: ["code", "proficiency"] } },
-        limit: 1,
-      }) as Promise<
-        {
-          contributorRole?: string
-          username?: string
-          tier?: string
-          earnedProUntil?: string | null
-          points?: number
-          dismissedPrompts?: unknown
-          country?: string | null
-          languages?: { code: string; proficiency: string }[]
-        }[]
-      >,
-      strapi
-        .documents("api::library-affiliation.library-affiliation")
-        .findMany({
-          filters: claimAffiliationFilter(baUserId) as any,
-          populate: { library: { fields: ["documentId"] } },
-          limit: SESSION_PROFILE_MAX_CLAIMS,
-        }) as Promise<{ library?: { documentId?: string } }[]>,
-      // Unexpired plan grants and Pro verifications (shared with the
-      // Strapi-side entitlement checks, utils/entitlement-inputs).
-      loadPlanRows(strapi, baUserId),
-      // Unexpired Role Grants, at most MAX_ACTIVE_GRANTS. `grants` above
-      // are plan grants; the two never mix.
-      activeGrants(strapi, baUserId),
-    ])
-
-    if (profile && process.env.INTERNAL_NOTIFICATIONS_ENABLED === "true") {
-      try {
-        await internalNotifications(strapi).active(baUserId)
-      } catch {
-        strapi.log.warn(
-          "[internal-notifications] Could not record beta activity"
-        )
-      }
-    }
-
-    // Teams (R2-B): active memberships, with each Team's libraries, so the
-    // session resolves Pro (source `team`) and `teamLibraryIds` itself.
-    const teams: {
-      id: string
-      name: string
-      slug: string
-      role: "organiser" | "member"
-      libraryCount: number
-      libraryDocumentIds: string[]
-      expiresAt: string | null
-      status: "active" | "lapsed"
-      organiserName: string | null
-      selfService?: boolean
-    }[] =
-      (await strapi
-        .plugin("access")
-        ?.service("teams")
-        ?.listMine(baUserId)
-        .catch((err: unknown) => {
-          strapi.log.warn("[auth-bridge] teams lookup failed", err)
-
-          return []
-        })) ?? []
-
-    // Staff memberships, then one query for their libraries' names.
-    const staffClaims = await loadStaffClaims(strapi, baUserId)
-    const staffLibraries = new Map<string, any>(
-      staffClaims.length
-        ? (
-            (await strapi.documents("api::library.library").findMany({
-              populate: { libraryType: { fields: ["name"] } },
-              filters: {
-                documentId: {
-                  $in: staffClaims.map((claim) => claim.libraryDocumentId),
-                },
-              },
-              status: "published",
-              fields: ["documentId", "name", "slug"],
-              limit: staffClaims.length,
-            })) as any[]
-          ).map((library) => [library.documentId, library])
-        : []
-    )
-
-    return ctx.send({
-      contributorRole: profile?.contributorRole ?? "reader",
-      staff: staffClaims.flatMap((claim) => {
-        const library = staffLibraries.get(claim.libraryDocumentId)
-
-        return library
-          ? [
-              {
-                ...claim,
-                name: library.name ?? "Library",
-                slug: library.slug ?? "",
-                libraryType: libraryTypeName(library.libraryType) ?? "",
-              },
-            ]
-          : []
-      }),
-      username: profile?.username ?? null,
-      country: profile?.country ?? null,
-      languages: (profile?.languages ?? []).map(({ code, proficiency }) => ({
-        code,
-        proficiency,
-      })),
-      tier: profile?.tier ?? null,
-      claims: affiliations
-        .map((a) => a.library?.documentId)
-        .filter((id): id is string => !!id),
-      grants: planRows.grants,
-      ...(planRows.paidMembership
-        ? { paidMembership: planRows.paidMembership }
-        : {}),
-      roleGrants,
-      verifications: planRows.verifications,
-      teams: teams.map((t) => ({
-        id: t.id,
-        name: t.name,
-        slug: t.slug,
-        role: t.role,
-        libraryCount: t.libraryCount,
-        ...(t.selfService ? { selfService: true } : {}),
-        libraryDocumentIds: t.libraryDocumentIds,
-        expiresAt: t.expiresAt,
-        status: t.status,
-        organiserName: t.organiserName,
-      })),
-      earnedProUntil: profile?.earnedProUntil ?? null,
-      rewardsPoints: profile?.points ?? 0,
-      dismissedPrompts: Array.isArray(profile?.dismissedPrompts)
-        ? profile.dismissedPrompts.filter(isDismissiblePrompt)
-        : [],
-    })
   },
 }

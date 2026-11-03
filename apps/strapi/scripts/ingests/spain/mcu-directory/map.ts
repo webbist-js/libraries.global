@@ -1,19 +1,27 @@
-/**
- * Spanish library mapping from Ministerio de Cultura directory.
- * Source: Directorio de Bibliotecas Españolas, CC BY 4.0 (pending confirmation)
- */
-
+/** Spanish ministry directory. Publisher licence remains unconfirmed. */
 import type { DirectoryLibrary } from "../../_shared/directory"
+import {
+  directoryPoint,
+  directorySlug,
+  directoryText,
+  directoryUrl,
+} from "../../_shared/directory-fields"
 
 export interface SpanishLibrary {
   NIDEN: string
   Nombre: string
   "Nombre CA"?: string
+  País?: string
   CodCA: string
+  CA?: string
   CodProvincia: string
+  Provincia?: string
   Municipio: string
-  Longitud: number
-  Latitud: number
+  Entidad_Menor?: string
+  Dirección?: string
+  Distrito_Postal?: string
+  Longitud: unknown
+  Latitud: unknown
   Tipología: string
   Tipo_Biblioteca?: string
   Gestión?: string
@@ -21,16 +29,13 @@ export interface SpanishLibrary {
   Teléfono?: string
   Página_web?: string
   Acceso_catálogo?: string
-  Año_Fundación?: string
-  País?: string
+  Año_Fundación?: unknown
 }
-
-// Type mapping for Spanish library types
 const TYPE_MAP: Record<string, string> = {
   Públicas: "Public",
   Universitaria: "University",
-  Nacional: "National",
-  "Centrales de comunidades autónomas": "Regional",
+  "Biblioteca Nacional de España": "National",
+  "Centrales de Comunidades Autónomas": "Regional",
   "De la Administración": "Special",
   "De Archivos": "Archive",
   "De museos y conjuntos arqueológicos": "Cultural",
@@ -39,136 +44,141 @@ const TYPE_MAP: Record<string, string> = {
   "De instituciones religiosas": "Special",
   "Bibliotecas para grupos específicos de usuarios (no especializadas)":
     "Specific User Groups",
+  "De la Administración Corporativa": "Special",
+  "De centros sanitarios": "Special",
+  "De fundaciones": "Special",
+  "De asociaciones": "Special",
+  "Enseñanzas artísticas y deportivas": "Academic",
+  "Centros Universitarios de la Defensa": "University",
+  "De empresas o firmas comerciales": "Special",
 }
-
-// Spanish autonomous communities (INE codes)
-const COMMUNITIES_MAP: Record<string, string> = {
-  "01": "Andalucía",
-  "02": "Aragón",
+const REGIONS: Record<string, string> = {
+  "01": "Andalusia",
+  "02": "Aragon",
   "03": "Asturias",
-  "04": "Balears, Illes",
-  "05": "Canarias",
+  "04": "Balearic Islands",
+  "05": "Canary Islands",
   "06": "Cantabria",
-  "07": "Castilla y León",
-  "08": "Castilla-La Mancha",
-  "09": "Cataluña",
-  "10": "Comunitat Valenciana",
+  "07": "Castille and León",
+  "08": "Castille-La Mancha",
+  "09": "Catalonia",
+  "10": "Valencia",
   "11": "Extremadura",
   "12": "Galicia",
   "13": "Madrid",
   "14": "Murcia",
-  "15": "Navarra",
-  "16": "País Vasco",
-  "17": "Rioja, La",
+  "15": "Navarre",
+  "16": "Basque Country",
+  "17": "La Rioja",
   "18": "Ceuta",
   "19": "Melilla",
 }
+const CMS_REGION_ALIASES: Record<string, string[]> = {
+  "03": ["Principadode Asturias"],
+  "04": ["Islas Baleares"],
+  "05": ["Islas Canarias"],
+  "07": ["Castillay León"],
+  "13": ["Comunidadde Madrid"],
+  "14": ["Regiónde Murcia"],
+  "15": ["Comunidad Foralde Navarra"],
+  "10": ["Comunidad Valenciana"],
+  "18": ["Ceutay Melilla"],
+  "19": ["Ceutay Melilla"],
+}
 
-/**
- * Map Spanish library record to directory library.
- * Returns string if record should be skipped, otherwise DirectoryLibrary.
- */
 export function mapSpanishLibrary(
   record: SpanishLibrary
 ): DirectoryLibrary | string {
-  // Validate required NIDEN
-  if (!record.NIDEN) {
-    return "Missing NIDEN (source record ID)"
-  }
-
-  if (!record.Nombre || record.Nombre.length > 255) {
-    return "Missing or oversized name"
-  }
-
-  // Map community and province
-  const regionName = COMMUNITIES_MAP[record.CodCA]
-  if (!regionName) {
-    return `Unknown community code: ${record.CodCA}`
-  }
-
-  // Validate coordinates (Spain bounds roughly: 36-44N, -10-5E)
-  let location: { latitude: number; longitude: number } | undefined
-  const lon = Number(record.Longitud)
-  const lat = Number(record.Latitud)
-
-  if (!Number.isNaN(lon) && !Number.isNaN(lat)) {
-    // Check bounds
-    if (lat >= 36 && lat <= 44 && lon >= -10 && lon <= 5) {
-      location = { latitude: lat, longitude: lon }
-    } else {
-      console.warn(
-        `[${record.NIDEN}] Coordinates out of Spain bounds: ${lat},${lon}`
-      )
-    }
-  }
-
-  // Type mapping
-  const typeStr = record.Tipología || "Otras bibliotecas especializadas"
-  const libraryType = TYPE_MAP[typeStr] || "Other"
-
-  // URL validation
-  const website = record["Página_web"]
-    ? directoryUrl(record["Página_web"])
-    : undefined
-  const catalogueUrl = record["Acceso_catálogo"]
-    ? directoryUrl(record["Acceso_catálogo"])
-    : undefined
+  const id = directoryText(record.NIDEN),
+    name = directoryText(record.Nombre)
+  if (!id || !/^[\w-]+$/.test(id)) return "Missing or invalid NIDEN"
+  if (!name || name.length > 255) return "Missing or oversized official name"
+  if (record.País !== "España")
+    return "Library abroad: host-country geography requires separate review"
+  const regionName = REGIONS[record.CodCA]
+  if (!regionName) return `Unknown autonomous community ${record.CodCA}`
+  const mobile = /bibliob[uú]s|m[oó]vil/i.test(record.Tipo_Biblioteca ?? "")
+  let libraryType = mobile ? "Mobile" : TYPE_MAP[record.Tipología]
+  if (!libraryType) return `Unmapped library type: ${record.Tipología}`
+  const manager = directoryText(record.Gestión) ?? ""
+  if (libraryType === "Special" && /cortes|parlament/i.test(manager))
+    libraryType = "Parliamentary"
+  const point =
+    directoryPoint(record.Latitud, record.Longitud, [35, 44.2, -10, 5]) ??
+    directoryPoint(record.Latitud, record.Longitud, [27.5, 29.5, -18.5, -13])
+  const warnings: string[] = []
+  if (!point) warnings.push("Missing or out-of-bounds publisher coordinates")
+  if (record.Titularidad && record.Titularidad !== record.Gestión)
+    warnings.push("Owner differs from managing body")
+  const postcode = directoryText(record.Distrito_Postal)
+  if (
+    postcode &&
+    (!/^\d{5}$/.test(postcode) || !postcode.startsWith(record.CodProvincia))
+  )
+    warnings.push("Postcode differs from province code")
+  const year = directoryText(record.Año_Fundación)
 
   return {
+    recordId: id,
     countryCode: "ES",
     regionName,
-    areaName: undefined, // Province matching deferred to geography phase
+    regionAliases: [
+      ...(record.CA ? [record.CA] : []),
+      ...(CMS_REGION_ALIASES[record.CodCA] ?? []),
+    ],
+    areaName: directoryText(record.Provincia),
+    areaAliases:
+      record.CodProvincia === "15"
+        ? ["Provincia da Coruña"]
+        : (record.Provincia ?? "")
+            .split("/")
+            .flatMap((name) => [
+              `Provincia de ${name}`,
+              `Província de ${name}`,
+              `Province of ${name}`,
+            ]),
+    warnings,
     data: {
-      sourceRecordId: record.NIDEN,
-      sourceRecordUrl: `https://directoriobibliotecas.mcu.es/`,
-      name: record.Nombre,
-      alternateNames:
-        record["Nombre CA"] && record["Nombre CA"] !== record.Nombre
-          ? [record["Nombre CA"]]
-          : undefined,
+      name,
+      slug: directorySlug(name, `es-mcu-${id}`, 200),
       libraryType,
-      operatorType: record.Gestión ? operatorType(record.Gestión) : undefined,
-      operatorName: record.Gestión,
       operationalStatus: "unknown",
-      location: record["Tipo_Biblioteca"]?.includes("Bibliobús")
-        ? undefined
-        : location,
-      streetAddress: record.Municipio,
-      city: record.Municipio,
-      phone: record.Teléfono,
-      website,
-      catalogueUrl,
-      foundedYear: record["Año_Fundación"]
-        ? Number.parseInt(record["Año_Fundación"])
+      sourceUrl:
+        "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=descarga",
+      streetAddress: directoryText(record.Dirección),
+      city: directoryText(record.Municipio),
+      district: directoryText(record.Entidad_Menor),
+      postalCode: postcode && /^\d{5}$/.test(postcode) ? postcode : undefined,
+      location: mobile ? undefined : point,
+      timezone: mobile
+        ? record.CodCA === "05"
+          ? "Atlantic/Canary"
+          : "Europe/Madrid"
         : undefined,
+      phone: directoryText(record.Teléfono),
+      website: directoryUrl(record.Página_web),
+      catalogueUrl: directoryUrl(record.Acceso_catálogo),
+      foundedYear:
+        year &&
+        /^\d{4}$/.test(year) &&
+        Number(year) <= new Date().getUTCFullYear()
+          ? year
+          : undefined,
+      operatorType: operatorType(manager),
+      operatorName: manager || undefined,
     },
   }
 }
-
-function operatorType(gestión: string): string | undefined {
-  if (!gestión) return undefined
-  gestión = gestión.toLowerCase()
-  if (gestión.includes("ayuntamiento")) return "Municipality"
-  if (gestión.includes("diputación") || gestión.includes("cabildo"))
+function operatorType(manager: string): string | undefined {
+  if (/ayuntamiento/i.test(manager)) return "Municipality"
+  if (/diputaci[oó]n|cabildo|consell|comunidad|consejer[ií]a/i.test(manager))
     return "Regional Government"
-  if (gestión.includes("ministerio") || gestión.includes("central"))
+  if (/ministerio|instituto cervantes|aecid/i.test(manager))
     return "National Government"
-  if (gestión.includes("universidad")) return "University"
-  if (gestión.includes("religios")) return "Religious Institution"
-  if (gestión.includes("fundación")) return "Private Foundation"
+  if (/universidad/i.test(manager)) return "University"
+  if (/religios|iglesia|di[oó]cesis/i.test(manager))
+    return "Religious Institution"
+  if (/fundaci[oó]n/i.test(manager)) return "Private Foundation"
 
   return undefined
-}
-
-function directoryUrl(url: string): string | undefined {
-  if (!url) return undefined
-  try {
-    const u = new URL(url.startsWith("http") ? url : `https://${url}`)
-    if (!["http:", "https:"].includes(u.protocol)) return undefined
-    if (u.hostname.includes("@")) return undefined
-
-    return u.toString()
-  } catch {
-    return undefined
-  }
 }

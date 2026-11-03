@@ -1,0 +1,79 @@
+diff --git a/dist/adapter/index.js b/dist/adapter/index.js
+index 95acdfa38c38cb2fe436db03c73debe8f0fab1e6..c933fb1ebb095e78186bf6f29d401f065010d35b 100644
+--- a/dist/adapter/index.js
++++ b/dist/adapter/index.js
+@@ -71,7 +71,7 @@ const transformFilters = (where, model, getFieldName) => {
+       }
+     }
+     if (andConditions.length > 0) {
+-      Object.assign(filters2, ...andConditions);
++      filters2.$and = andConditions;
+     }
+     if (orConditions.length > 0) {
+       filters2.$or = orConditions;
+@@ -143,7 +143,19 @@ function coerceDateValues(value) {
+   return coerced;
+ }
+ function transformOutput(record) {
+-  return coerceDateValues(record);
++  if (!record) return record;
++  // Better Auth atomic guards must contain only fields in its schema.
++  const { documentId, publishedAt, createdBy, updatedBy, locale, localizations, ...fields } = record;
++  const output = coerceDateValues(fields);
++  // PostgreSQL returns int8 as text; Better Auth's rate limiter needs arithmetic.
++  for (const field of ["lastRequest", "counter"]) {
++    if (output && typeof output[field] === "string" && /^\d+$/.test(output[field])) {
++      const value = Number(output[field]);
++      if (!Number.isSafeInteger(value)) throw new Error("Invalid auth integer");
++      output[field] = value;
++    }
++  }
++  return output;
+ }
+ const strapi$1 = { "name": "better-auth" };
+ const packageJson = {
+@@ -501,19 +513,10 @@ const strapiAdapter = (config) => {
+           debugLog("updateMany", { model, where, update });
+           const uid = getModelUid(model);
+           const filters = transformFilters(where, model, getFieldName);
+-          const records = await strapi.documents(uid).findMany({
+-            filters
+-          });
+-          if (!records || records.length === 0) {
+-            return 0;
+-          }
+-          for (const record of records) {
+-            await strapi.documents(uid).update({
+-              documentId: record.documentId,
+-              data: update
+-            });
+-          }
+-          return records.length;
++          // Auth models have neither drafts nor relations. Keep predicates in the
++          // mutation so Better Auth's optimistic atomic fallbacks remain atomic.
++          const result = await strapi.db.query(uid).updateMany({ where: filters, data: update });
++          return result.count;
+         },
+         /**
+          * Delete a single record
+@@ -540,18 +543,8 @@ const strapiAdapter = (config) => {
+           debugLog("deleteMany", { model, where });
+           const uid = getModelUid(model);
+           const filters = transformFilters(where, model, getFieldName);
+-          const records = await strapi.documents(uid).findMany({
+-            filters
+-          });
+-          if (!records || records.length === 0) {
+-            return 0;
+-          }
+-          for (const record of records) {
+-            await strapi.documents(uid).delete({
+-              documentId: record.documentId
+-            });
+-          }
+-          return records.length;
++          const result = await strapi.db.query(uid).deleteMany({ where: filters });
++          return result.count;
+         },
+         /**
+          * Find a single record

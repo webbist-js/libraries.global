@@ -23,9 +23,6 @@ vi.mock("@/lib/billing/provider", async (original) => ({
     billingPortal: { sessions: { create: f.portal } },
   }),
 }))
-vi.mock("@/lib/session-profile", () => ({
-  invalidateSessionProfile: f.invalidate,
-}))
 import { POST as portal } from "./portal/route"
 import { GET as status } from "./status/route"
 import { GET as summary } from "./summary/route"
@@ -75,7 +72,6 @@ describe("owned billing reads and provider management", () => {
       state: "sync_pending",
       membership: null,
     })
-    expect(f.invalidate).not.toHaveBeenCalled()
     f.query
       .mockResolvedValueOnce({ rows: [{ state: "complete" }] })
       .mockResolvedValueOnce({
@@ -84,7 +80,6 @@ describe("owned billing reads and provider management", () => {
     expect(await (await status(request)).json()).toMatchObject({
       state: "ready",
     })
-    expect(f.invalidate).toHaveBeenCalledWith("owner")
   })
   it("refuses portal access when an account belongs to a different environment", async () => {
     f.query.mockResolvedValueOnce({

@@ -21,7 +21,7 @@ This is a pnpm workspace run with Turborepo.
 | Path                                                                     | What it is                                                                                                                                                                     |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `apps/storybook`                                                         | Storybook component and pattern library. [Setup and deployment notes](./apps/docs/docs/storybook.md)                                                                           |
-| `apps/ui`                                                                | Next.js 16 site (App Router, React 19, Tailwind CSS v4, next-intl). Better Auth runs here too. [README](./apps/ui/README.md)                                                   |
+| `apps/ui`                                                                | Next.js 16 site (App Router, React 19, Tailwind CSS v4, next-intl). Same-origin transport for Strapi-hosted Better Auth. [README](./apps/ui/README.md)                         |
 | `apps/strapi`                                                            | Strapi 5 CMS on Postgres, with content, access, staff, event and moderation plugins. [README](./apps/strapi/README.md)                                                         |
 | `apps/sync-worker`                                                       | Node service that pulls library events from Eventbrite, Spydus, Solus, Aspen, iCal feeds, TicketSource and WeGotTickets, matches them to libraries and writes them to Postgres |
 | `apps/docs`                                                              | Current developer documentation for architecture, authentication, content models and workspace commands                                                                        |
@@ -36,7 +36,7 @@ This is a pnpm workspace run with Turborepo.
 ## How the pieces fit
 
 - Next.js server components fetch content from the Strapi REST API with a read-only token. Client components receive props or call bounded Next.js routes; credentials stay on the server.
-- Better Auth runs in the Next.js app and keeps its tables in the same Postgres database as Strapi. When a user signs up, Next.js creates the matching Strapi user through the `auth-bridge` API, signed with `STRAPI_BRIDGE_SECRET`.
+- The Strapi Better Auth plugin owns public accounts and sessions and provisions their related profiles locally. Next.js forwards `/api/auth/*` through a secret-authenticated transport; domain routes retain scoped Strapi policies.
 - Strapi indexes published content into Meilisearch. Browsers use the gated Next.js `/api/search` proxy; the private search host and search-only credential are server inputs.
 - The sync worker reads provider credentials from Postgres, decrypts them with `@repo/events-crypto`, and upserts events on a cron schedule. Strapi calls it to test credentials (`WORKER_URL`, `WORKER_SECRET`).
 
@@ -85,15 +85,17 @@ The example files don't list everything the apps read yet. On top of what's in t
 
 **`apps/strapi/.env`**
 
-| Variable                                                       | Value                                                                                    |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`, `JWT_SECRET` | `openssl rand -base64 16` each                                                           |
-| `DATABASE_*`                                                   | Anything; the compose file uses them to create the database on port 5433                 |
-| `MEILISEARCH_HOST`                                             | `http://localhost:7701` (the config falls back to port 7700)                             |
-| `MEILISEARCH_ADMIN_API_KEY`, `MEILISEARCH_MASTER_KEY`          | The master key is fine locally                                                           |
-| `STRAPI_BRIDGE_SECRET`                                         | `openssl rand -hex 32`; must match the UI                                                |
-| `STRAPI_API_TOKEN`                                             | A full-access Strapi API token, for the seed and ingest scripts (create it after step 4) |
-| `EVENTS_CREDENTIAL_KEY`                                        | Needed to store event provider credentials; must match the sync worker                   |
+| Variable                                              | Value                                                                                    |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `APP_KEYS`, `API_TOKEN_SALT`, `ADMIN_JWT_SECRET`      | `openssl rand -base64 16` each                                                           |
+| `DATABASE_*`                                          | Anything; the compose file uses them to create the database on port 5433                 |
+| `MEILISEARCH_HOST`                                    | `http://localhost:7701` (the config falls back to port 7700)                             |
+| `MEILISEARCH_ADMIN_API_KEY`, `MEILISEARCH_MASTER_KEY` | The master key is fine locally                                                           |
+| `STRAPI_BRIDGE_SECRET`                                | `openssl rand -hex 32`; must match the UI                                                |
+| `STRAPI_API_TOKEN`                                    | A full-access Strapi API token, for the seed and ingest scripts (create it after step 4) |
+| `EVENTS_CREDENTIAL_KEY`                               | Needed to store event provider credentials; must match the sync worker                   |
+
+The CMS also requires `BETTER_AUTH_SECRET` (`openssl rand -hex 32`), `APP_PUBLIC_URL` (`http://localhost:3000`) and `APPLICATION_DATABASE_URL` pointing at the same development database. Optional Google and Discord OAuth credentials belong in the CMS; see [Authentication](apps/docs/docs/authentication.md) for callbacks.
 
 **`apps/ui/.env.local`**
 
@@ -103,13 +105,11 @@ The example files don't list everything the apps read yet. On top of what's in t
 | `STRAPI_REST_READONLY_API_KEY`                        | A read-only Strapi API token (create it after step 4)                     |
 | `STRAPI_REST_CUSTOM_API_KEY`, `STRAPI_UPLOAD_API_KEY` | Custom tokens; the upload one needs only `upload.create`                  |
 | `DATABASE_URL`                                        | The Strapi database: `postgres://<user>:<password>@localhost:5433/<name>` |
-| `BETTER_AUTH_SECRET`                                  | `openssl rand -hex 32`                                                    |
 | `STRAPI_BRIDGE_SECRET`                                | Same value as in Strapi                                                   |
 | `APP_PUBLIC_URL`                                      | `http://localhost:3000`                                                   |
 | `MEILISEARCH_HOST`, `MEILISEARCH_SEARCH_API_KEY`      | `http://localhost:7701` and the search key                                |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`            | Optional; Google sign-in                                                  |
 
-Without a configured transport, development logs email to the console; production refuses delivery. Generic SMTP is selected through `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS`. Brevo is the selected deployed provider; Mailgun/Mailtrap remain alternative configurations.
+Authentication email uses the CMS email provider; configure a local capture/sandbox transport for tests. Generic SMTP is selected through `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS`. Brevo is the selected deployed provider; Mailgun/Mailtrap remain alternative configurations.
 
 ### 4. Run Strapi
 
@@ -127,7 +127,7 @@ pnpm dev:ui
 
 The site runs on [localhost:3000](http://localhost:3000). `pnpm dev` starts every app at once, including the sync worker, which needs its own `.env` filled in.
 
-Better Auth keeps its data in the `user`, `session`, `account`, `verification` and `rateLimit` tables. If they don't exist in your database yet, create them with the [Better Auth CLI](https://www.better-auth.com/docs/concepts/cli).
+Strapi synchronizes the checked-in `ba_*` authentication schemas at startup. Next.js prepares only its application-owned state. Do not run the Better Auth SQL CLI against this adapter; see [Authentication](apps/docs/docs/authentication.md).
 
 ### 6. Load data and the search index
 

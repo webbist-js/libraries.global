@@ -363,9 +363,9 @@ async function loadFollows(baUserId: string | null | undefined): Promise<{
  * Fields kept out of the owner's own view (`findMe`). The owner sees their
  * notification settings and contributor number; the Better Auth id is the
  * key the caller already holds, and earnedProUntil is plan bookkeeping that
- * only the session-profile bridge reads.
+ * only the local session projection reads.
  */
-const OWNER_HIDDEN_FIELDS = ["baUserId", "earnedProUntil"] as const
+const OWNER_HIDDEN_FIELDS = ["baUserId", "authUser", "earnedProUntil"] as const
 
 /**
  * The Better Auth id the bridge vouches for: `X-Ba-User-Id`, trusted only
@@ -543,7 +543,7 @@ export default factories.createCoreController(
     async findMe(ctx: any) {
       if (!isValidServiceSecret(ctx.request.headers["x-service-secret"]))
         return ctx.unauthorized("Invalid or missing service secret")
-      const baUserId = bridgeBaUserId(ctx)
+      const baUserId = ctx.state?.accountUser?.id ?? bridgeBaUserId(ctx)
       if (!baUserId) return ctx.badRequest("Missing X-Ba-User-Id")
 
       const profile = await strapi.documents(PROFILE).findFirst({

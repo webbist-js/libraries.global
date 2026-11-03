@@ -1,0 +1,125 @@
+{
+  "kind": "collectionType",
+  "collectionName": "ba_account",
+  "info": {
+    "singularName": "account",
+    "pluralName": "accounts",
+    "displayName": "Auth account"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "accountId": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "providerId": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "userId": {
+      "type": "integer",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      },
+      "required": true
+    },
+    "accessToken": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "refreshToken": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "idToken": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "accessTokenExpiresAt": {
+      "type": "datetime",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "refreshTokenExpiresAt": {
+      "type": "datetime",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "scope": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    },
+    "password": {
+      "type": "text",
+      "private": true,
+      "configurable": false,
+      "pluginOptions": {
+        "better-auth": {
+          "managed": true
+        }
+      }
+    }
+  }
+}

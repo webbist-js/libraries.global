@@ -1,5 +1,8 @@
 import type { Core } from "@strapi/strapi"
 
+import { closeApplicationPool } from "./auth/application-db"
+import { ensureAuthDatabase } from "./auth/database"
+import { publicContentStrategy } from "./auth/public-content"
 import { LOCATION_PICKER_FIELD_NAME } from "./customFields/locationPicker/shared"
 import { MOBILE_TIMETABLE_FIELD_NAME } from "./customFields/mobileTimetable/shared"
 import { OPENING_TIMES_FIELD_NAME } from "./customFields/openingTimes/shared"
@@ -41,7 +44,6 @@ import {
   registerLibraryTypeValidation,
 } from "./utils/library-type-catalogue"
 import { ensurePublicSearchKey } from "./utils/meilisearch-search-key"
-import { migrateContributorRolesToGrants } from "./utils/role-grants"
 
 const SEED_TOPICS = [
   "Rare Books",
@@ -96,6 +98,7 @@ export default {
    * This gives you an opportunity to extend code.
    */
   register({ strapi }: { strapi: Core.Strapi }) {
+    strapi.get("auth").register("content-api", publicContentStrategy(strapi))
     strapi.customFields.register({
       name: LOCATION_PICKER_FIELD_NAME,
       type: "json",
@@ -171,18 +174,7 @@ export default {
     // (the lifecycle keeps it current from here on).
     await backfillLibraryCompleteness(strapi)
 
-    // One-off: back-fill Role Grants from the legacy contributorRole enum
-    // (core-store guarded). A failure is logged and never blocks boot.
-    try {
-      await migrateContributorRolesToGrants(strapi)
-    } catch (err) {
-      strapi.log.error("[role-grants] Contributor role migration failed:", err)
-    }
-
-    // Accounts are owned by Better Auth; Strapi users are created only via the
-    // auth-bridge. Keep users-permissions self-registration off everywhere so
-    // nobody can mint a Strapi JWT by POSTing to /api/auth/local/register.
-    await disableUsersPermissionsRegistration(strapi)
+    await ensureAuthDatabase(strapi)
 
     // The browser's search key must cover every public index, mobile-stop
     // included. Off the boot path: Meilisearch being down never blocks Strapi.
@@ -192,18 +184,6 @@ export default {
   },
   async destroy({ strapi }: { strapi: Core.Strapi }) {
     await stopArticlePrivacyWorker(strapi)
+    await closeApplicationPool()
   },
-}
-
-async function disableUsersPermissionsRegistration(strapi: Core.Strapi) {
-  const store = strapi.store({
-    type: "plugin",
-    name: "users-permissions",
-    key: "advanced",
-  })
-  const advanced = ((await store.get()) ?? {}) as Record<string, unknown>
-  if (advanced.allow_register !== false) {
-    await store.set({ value: { ...advanced, allow_register: false } })
-    strapi.log.info("[security] Disabled users-permissions self-registration")
-  }
 }

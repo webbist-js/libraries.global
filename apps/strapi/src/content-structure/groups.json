@@ -164,7 +164,7 @@
               "type": "contentType"
             },
             {
-              "uid": "plugin::users-permissions.user",
+              "uid": "plugin::better-auth.user",
               "type": "contentType"
             },
             {

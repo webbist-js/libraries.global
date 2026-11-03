@@ -17,7 +17,7 @@ vi.mock("@/lib/auth", () => ({ auth: { api: { getSession } } }))
 
 vi.stubEnv("STRAPI_URL", "http://strapi.test")
 vi.stubEnv("STRAPI_BRIDGE_SECRET", "s3cret")
-vi.stubEnv("BETTER_AUTH_SECRET", "test-better-auth-secret")
+vi.stubEnv("EVENT_FEED_OAUTH_SECRET", "test-better-auth-secret")
 
 const { GET } = await import("../route")
 const { signState } = await import("@/lib/oauth-state")

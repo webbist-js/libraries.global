@@ -253,7 +253,7 @@ export const detailCount = (n: number, verb: string) =>
  * A timeline row's headline, icon, tint and detail count, worded for
  * readers: "Opening hours updated", "Details checked", "Photo added".
  */
-export function batchRow(
+function changedBatchRow(
   b: Pick<LibraryHistoryBatch, "action" | "source" | "fields">
 ): { title: string; icon: string; tone: RowTone; count: string | null } {
   const keys = b.fields.map((f) => f.field)
@@ -298,6 +298,21 @@ export function batchRow(
     tone: "indigo",
     count: detailCount(n, "changed"),
   }
+}
+
+/** A reset baseline has no contributor-facing change count. */
+export function batchRow(
+  b: Pick<LibraryHistoryBatch, "action" | "source" | "fields">
+): ReturnType<typeof changedBatchRow> {
+  if (b.action === "baseline")
+    return {
+      title: "Content baseline",
+      icon: LIB_ICONS.download,
+      tone: "import",
+      count: null,
+    }
+
+  return changedBatchRow(b)
 }
 
 /** Initial import; its origin and date are already shown in the source list. */

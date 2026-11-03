@@ -13,9 +13,6 @@ vi.mock("@/lib/auth", () => ({
 vi.mock("@/lib/access-server", () => ({
   requireCapability: mocks.requireCapability,
 }))
-vi.mock("@/lib/session-profile", () => ({
-  invalidateSessionProfile: mocks.invalidate,
-}))
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => "http://strapi.test" }))
 
 import { POST as avatar } from "@/app/api/profile/me/avatar/route"
@@ -84,7 +81,6 @@ describe("avatar, cover and legacy article upload adapters", () => {
       baUserId: "writer",
       coverImageFileId: 7,
     })
-    expect(mocks.invalidate).toHaveBeenCalledWith("writer")
   })
   it("removes a cover relation but never calls media deletion, and blocks cross-origin removal", async () => {
     const req = (origin: string) =>
@@ -111,7 +107,6 @@ describe("avatar, cover and legacy article upload adapters", () => {
       "http://strapi.test/api/auth-bridge/upsert-profile",
     ])
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body).purpose).toBe("avatar")
-    expect(mocks.invalidate).toHaveBeenCalledWith("writer")
   })
   it("does not update an avatar when ownership cannot be confirmed", async () => {
     const normal = fetchMock.getMockImplementation()!
@@ -126,7 +121,6 @@ describe("avatar, cover and legacy article upload adapters", () => {
         String(url).endsWith("upsert-profile")
       )
     ).toBe(false)
-    expect(mocks.invalidate).not.toHaveBeenCalled()
   })
   it("uses the same reservation and ownership path for an authorised article upload", async () => {
     expect((await article(request("files"))).status).toBe(200)

@@ -1,5 +1,4 @@
 import {
-  GRANTABLE_ROLES,
   type GrantableRole,
   highestRole,
   isGrantableRole,
@@ -13,10 +12,7 @@ const PROFILE = "api::user-profile.user-profile"
 /** Most Role Grants one user carries into a session or a policy check. */
 export const MAX_ACTIVE_GRANTS = 50
 
-const MIGRATION_STORE = { type: "core", name: "role-grants" } as const
-const MIGRATION_KEY = "role-grants-migrated-v1"
-const MIGRATION_PAGE = 200
-const INVALIDATE_TIMEOUT_MS = 3000
+const GRANT_PAGE = 200
 
 export type RoleGrantRow = RoleGrant & {
   documentId: string
@@ -162,115 +158,6 @@ export async function syncDerivedRole(
   })
 }
 
-/** Grants for one legacy profile; true when at least one was created. */
-async function migrateProfile(
-  strapi: any,
-  profile: {
-    baUserId?: string | null
-    contributorRole?: string | null
-    isVerifiedLibrarian?: boolean | null
-  }
-): Promise<boolean> {
-  if (!profile.baUserId || !isGrantableRole(profile.contributorRole))
-    return false
-  const roles: GrantableRole[] = [profile.contributorRole]
-  if (
-    profile.isVerifiedLibrarian &&
-    profile.contributorRole !== "verified_librarian"
-  )
-    roles.push("verified_librarian")
-
-  let createdAny = false
-  for (const role of roles) {
-    const { created } = await createGrant(strapi, {
-      baUserId: profile.baUserId,
-      role,
-      source: "migration",
-      reason: "Backfilled from user-profile.contributorRole",
-    })
-    createdAny ||= created
-  }
-
-  return createdAny
-}
-
-/**
- * One-off backfill: a global grant for every profile whose legacy
- * `contributorRole` is above reader, plus a `verified_librarian` grant where
- * the profile is flagged verified under a higher role (otherwise the derived
- * `isVerifiedLibrarian` would drop). Guarded by a core-store flag, and
- * idempotent anyway through `createGrant`.
- */
-export async function migrateContributorRolesToGrants(
-  strapi: any
-): Promise<{ migrated: number }> {
-  const store = strapi.store(MIGRATION_STORE)
-  if (await store.get({ key: MIGRATION_KEY })) return { migrated: 0 }
-
-  let migrated = 0
-  for (let start = 0; ; start += MIGRATION_PAGE) {
-    const profiles = (await strapi.db.query(PROFILE).findMany({
-      where: { contributorRole: { $in: [...GRANTABLE_ROLES] } },
-      select: ["baUserId", "contributorRole", "isVerifiedLibrarian"],
-      orderBy: { id: "asc" },
-      offset: start,
-      limit: MIGRATION_PAGE,
-    })) as {
-      baUserId?: string | null
-      contributorRole?: string | null
-      isVerifiedLibrarian?: boolean | null
-    }[]
-
-    for (const profile of profiles) {
-      if (await migrateProfile(strapi, profile)) migrated += 1
-    }
-    if (profiles.length < MIGRATION_PAGE) break
-  }
-
-  await store.set({
-    key: MIGRATION_KEY,
-    value: { migratedAt: new Date().toISOString(), migrated },
-  })
-  strapi.log.info(`[role-grants] Backfilled grants for ${migrated} profiles`)
-
-  return { migrated }
-}
-
-/**
- * Tells the Next app to drop its cached session profile for this user, so a
- * role change shows within one request rather than the 60 s TTL. Best
- * effort: skipped without config, logs and returns on any failure.
- */
-export async function notifySessionInvalidated(
-  strapi: any,
-  baUserId: string
-): Promise<void> {
-  const base = process.env.APP_PUBLIC_URL
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  if (!base || !secret) return
-
-  try {
-    const res = await fetch(
-      new URL("/api/internal/session/invalidate", base).toString(),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Service-Secret": secret,
-        },
-        body: JSON.stringify({ baUserId }),
-        signal: AbortSignal.timeout(INVALIDATE_TIMEOUT_MS),
-      }
-    )
-    if (!res.ok)
-      strapi.log.warn(
-        `[role-grants] Session invalidation returned ${res.status}`
-      )
-  } catch (err) {
-    strapi.log.warn("[role-grants] Session invalidation failed:", err)
-  }
-}
-
 /**
  * Daily: grants that expired in the last 48 hours fire no lifecycle, so
  * re-derive the role of every user who held one.
@@ -282,7 +169,7 @@ export async function resyncExpiredRoleGrants(
   const since = new Date(now.getTime() - 48 * 60 * 60 * 1000)
   const users = new Set<string>()
   const expired: { baUserId: string; documentId: string }[] = []
-  for (let start = 0; ; start += MIGRATION_PAGE) {
+  for (let start = 0; ; start += GRANT_PAGE) {
     const rows = (await strapi.db.query(ROLE_GRANT).findMany({
       where: {
         $and: [
@@ -293,14 +180,14 @@ export async function resyncExpiredRoleGrants(
       select: ["baUserId", "documentId"],
       orderBy: { id: "asc" },
       offset: start,
-      limit: MIGRATION_PAGE,
+      limit: GRANT_PAGE,
     })) as { baUserId?: string | null; documentId: string }[]
     for (const row of rows)
       if (row.baUserId) {
         users.add(row.baUserId)
         expired.push({ baUserId: row.baUserId, documentId: row.documentId })
       }
-    if (rows.length < MIGRATION_PAGE) break
+    if (rows.length < GRANT_PAGE) break
   }
 
   for (const row of expired) {
@@ -322,7 +209,6 @@ export async function resyncExpiredRoleGrants(
   for (const baUserId of users) {
     try {
       await syncDerivedRole(strapi, baUserId)
-      void notifySessionInvalidated(strapi, baUserId)
     } catch (err) {
       strapi.log.warn(`[role-grants] Resync failed for ${baUserId}:`, err)
     }

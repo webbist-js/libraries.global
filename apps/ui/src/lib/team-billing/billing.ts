@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto"
 import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
+import { verifiedIdentity } from "@/lib/auth-identities"
 import { BillingError } from "@/lib/billing/config"
 import { withBillingLock } from "@/lib/billing/database"
 import {
@@ -66,11 +67,7 @@ export async function createSelfServiceTeam(
     throw new BillingError("team_purchases_unavailable", 409)
 
   return withBillingLock(pool, `user:${buyer.id}`, async (client) => {
-    const identity = await client.query(
-      'select id from "user" where id=$1 and "emailVerified"=true',
-      [buyer.id]
-    )
-    if (!identity.rowCount)
+    if (!(await verifiedIdentity(buyer.id)))
       throw new BillingError("verified_account_required", 403)
     if (
       (

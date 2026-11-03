@@ -4,11 +4,13 @@ import { mapSpanishLibrary, type SpanishLibrary } from "./map"
 import { flag, type IngestArgs } from "../../_shared/cli"
 import { executeDirectoryIngest } from "../../_shared/directory"
 import { JsonSources } from "../../_shared/json-source"
+import { assertIngestTarget } from "../../_shared/target"
 
 const EXPORT_URL =
-  "https://directoriobibliotecas.mcu.es/DescargaFicheros/datos_completos.json"
+  "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=descarga&accion=descargar&completa=si&formato=json"
 
 export async function runSpain(args: IngestArgs) {
+  assertIngestTarget(args)
   const sources = new JsonSources(
     args.snapshot ?? path.join(__dirname, ".cache"),
     { offline: Boolean(args.snapshot), refresh: flag(args, "refresh") }
@@ -17,7 +19,7 @@ export async function runSpain(args: IngestArgs) {
   const snapshot = await sources.read<{ bibliotecas: SpanishLibrary[] }>(
     "libraries",
     EXPORT_URL,
-    { bytes: true, checksum: true },
+    undefined,
     async () => {
       const response = await fetch(EXPORT_URL, {
         signal: AbortSignal.timeout(60000),
@@ -26,7 +28,7 @@ export async function runSpain(args: IngestArgs) {
         throw new Error(`Spanish MCU directory HTTP ${response.status}`)
       }
 
-      return response.json()
+      return parseSpanishExport(await response.text())
     }
   )
 
@@ -73,9 +75,24 @@ export async function runSpain(args: IngestArgs) {
     skipped,
     details: {
       coverage:
-        "Spanish public, university, specialized and cultural libraries (16 regions, 50 provinces)",
+        "Libraries in Spain across 17 autonomous communities and two autonomous cities; abroad entries quarantined",
       typeCounts,
       coordinatesIncluded: libraries.filter((l) => l.data.location).length,
     },
   })
+}
+
+/** Escape only illegal control characters inside JSON strings; retain their values. */
+export function parseSpanishExport(text: string): {
+  bibliotecas: SpanishLibrary[]
+} {
+  return JSON.parse(
+    text
+      .replace(/^\uFEFF/, "")
+      .replaceAll(/"(?:\\[\s\S]|[^"\\])*"/g, (literal) =>
+        Array.from(literal, (char) =>
+          char.codePointAt(0)! < 32 ? JSON.stringify(char).slice(1, -1) : char
+        ).join("")
+      )
+  )
 }

@@ -1,5 +1,4 @@
-import { toNextJsHandler } from "better-auth/next-js"
-
-import { auth } from "@/lib/auth"
-
-export const { POST, GET } = toNextJsHandler(auth)
+export {
+  proxyAuthRequest as GET,
+  proxyAuthRequest as POST,
+} from "@/lib/auth-transport"
