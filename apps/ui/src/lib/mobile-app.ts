@@ -1,49 +1,23 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "@repo/shared-data"
+import { mobileAuthConfig } from "@repo/shared-data/mobile-auth"
 
 import { getEnvVar } from "@/lib/env-vars"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
-export const MOBILE_SESSION_COOKIE = "libraries-shared.session_token"
+export { MOBILE_SESSION_COOKIE } from "@repo/shared-data/mobile-auth"
 export const MOBILE_BETA_COOKIE = "lg-mobile-beta-access"
 const ID = /^[a-z0-9]{20,32}$/
 
 /** Explicit opt-in: the mobile app must be a child of the account domain. */
 export function mobileAppConfig() {
-  const value =
+  return mobileAuthConfig(
     typeof window === "undefined"
       ? process.env.MOBILE_APP_URL
-      : getEnvVar("MOBILE_APP_URL")
-  if (!value) return null
-  const site = new URL(
-    (typeof window === "undefined"
+      : getEnvVar("MOBILE_APP_URL"),
+    typeof window === "undefined"
       ? process.env.APP_PUBLIC_URL
-      : getEnvVar("APP_PUBLIC_URL", true))!
+      : getEnvVar("APP_PUBLIC_URL", true)
   )
-  const mobile = new URL(value)
-  const local = site.hostname.endsWith(".localhost")
-  if (
-    mobile.hostname !== `mobile.${site.hostname}` ||
-    mobile.protocol !== site.protocol ||
-    (!local && site.protocol !== "https:") ||
-    [site, mobile].some(
-      (url) =>
-        url.pathname !== "/" ||
-        url.search ||
-        url.hash ||
-        url.username ||
-        url.password
-    )
-  )
-    throw new Error(
-      "MOBILE_APP_URL must be the mobile subdomain of APP_PUBLIC_URL"
-    )
-
-  return {
-    site,
-    mobile,
-    cookieDomain: site.hostname,
-    secure: site.protocol === "https:",
-  }
 }
 
 export function splitMobileLocale(pathname: string) {
