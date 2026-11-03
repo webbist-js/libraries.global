@@ -12,6 +12,7 @@ function article(i: number, extra: Record<string, unknown> = {}) {
     title: `Article ${i}`,
     slug: `article-${i}`,
     publishedAt: `2026-09-${String(i).padStart(2, "0")}T00:00:00.000Z`,
+    publicationDate: `2026-09-${String(i).padStart(2, "0")}T00:00:00.000Z`,
     relatedArticles: [],
     ...extra,
   }
@@ -40,7 +41,7 @@ describe("blog-article.detail related-articles fallback (E2)", () => {
     const fallback = calls[2]
     expect(fallback.pagination).toBeUndefined()
     expect(fallback.limit).toBe(3)
-    expect(fallback.sort).toEqual(["publishedAt:desc", "id:asc"])
+    expect(fallback.sort).toEqual(["publicationDate:desc", "id:asc"])
     expect(fallback.status).toBe("published")
     expect(c.body.data.relatedArticles.map((a: any) => a.slug)).toEqual([
       "article-5",

@@ -39,9 +39,9 @@ export const ATLAS_LIMITS = {
 } as const
 
 export const ATLAS_TYPE_GROUPS = {
-  public: ["Public", "Municipal"],
+  public: ["Public", "Municipal", "Specific User Groups"],
   academic: ["Academic", "University"],
-  national: ["National", "Parliamentary", "State"],
+  national: ["National", "Regional", "Parliamentary", "State"],
   special: ["Special", "Archive", "Private", "Cultural"],
   mobile: ["Mobile"],
   monastic: ["Monastic"],

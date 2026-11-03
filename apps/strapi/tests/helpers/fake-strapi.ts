@@ -19,6 +19,9 @@ const snakeCase = (s: string) =>
   s.replaceAll(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()
 const camelCase = (s: string) =>
   s.replaceAll(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase())
+// Dates compare as ISO strings, as the stored datetimes are.
+const orderText = (v: unknown) =>
+  v instanceof Date ? v.toISOString() : String(v ?? "")
 
 /**
  * In-memory stand-in for strapi.documents() and the few strapi.db calls the
@@ -40,7 +43,11 @@ export function makeFakeStrapi(
   const store: Record<string, Doc[]> = structuredClone(seed)
   let n = 0
   const table = (uid: string) => (store[uid] ??= [])
-  const tables: Record<string, string> = { ...options.tables }
+  const tables: Record<string, string> = {
+    // Moderation reads Review Locks on every queue page (ADR-0008).
+    cm_review_locks: "plugin::content-moderation.review-lock",
+    ...options.tables,
+  }
   const contentTypes: Record<string, any> = { ...options.contentTypes }
 
   const publishedView = (d: Doc): Doc | null => {
@@ -87,8 +94,8 @@ export function makeFakeStrapi(
   // everything else as strings (ISO dates order correctly that way).
   const compare = (a: unknown, b: unknown): number => {
     if (typeof a === "number" && typeof b === "number") return a - b
-    const sa = String(a ?? "")
-    const sb = String(b ?? "")
+    const sa = orderText(a)
+    const sb = orderText(b)
 
     return sa < sb ? -1 : sa > sb ? 1 : 0
   }
@@ -405,23 +412,20 @@ export function makeFakeStrapi(
       distinct: false,
       first: false,
     }
-    const run = () => {
-      const rows = table(uid).filter(
-        (d) =>
-          state.whereIn.every((w) =>
-            w.values.includes(d[camelCase(w.column)])
-          ) &&
-          state.where.every((w) => {
-            const value = d[camelCase(w.column)]
-            if (w.operator === ">=") return compare(value, w.value) >= 0
-            if (w.operator === ">") return compare(value, w.value) > 0
-            if (w.operator === "<=") return compare(value, w.value) <= 0
-            if (w.operator === "<") return compare(value, w.value) < 0
+    const matches = (d: Doc) =>
+      state.whereIn.every((w) => w.values.includes(d[camelCase(w.column)])) &&
+      state.where.every((w) => {
+        const value = d[camelCase(w.column)]
+        if (w.operator === ">=") return compare(value, w.value) >= 0
+        if (w.operator === ">") return compare(value, w.value) > 0
+        if (w.operator === "<=") return compare(value, w.value) <= 0
+        if (w.operator === "<") return compare(value, w.value) < 0
 
-            return value === w.value
-          }) &&
-          state.whereNotNull.every((col) => d[camelCase(col)] != null)
-      )
+        return value === w.value
+      }) &&
+      state.whereNotNull.every((col) => d[camelCase(col)] != null)
+    const run = () => {
+      const rows = table(uid).filter(matches)
       const project = (group: Doc[], sample: Doc) => {
         const out: Record<string, unknown> = {}
         for (const col of [...state.selects, ...state.groupBy])
@@ -523,6 +527,15 @@ export function makeFakeStrapi(
         state.whereNotNull.push(column)
 
         return builder
+      },
+      // `delete()`: removes the matching rows and resolves to their count.
+      delete: async () => {
+        const rows = table(uid)
+        const kept = rows.filter((d) => !matches(d))
+        const removed = rows.length - kept.length
+        rows.splice(0, rows.length, ...kept)
+
+        return removed
       },
       // `distinct(...cols)`: selects them and drops duplicate result rows.
       distinct: (...cols: string[]) => {

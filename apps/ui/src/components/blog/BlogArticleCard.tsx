@@ -23,7 +23,7 @@ export function BlogArticleCard({
     ? formatStrapiMediaUrl(article.heroImage.url)
     : null
   const date = formatDate(
-    article.publishedAt ?? article.updatedAt,
+    article.publicationDate ?? article.publishedAt ?? article.updatedAt,
     "short",
     locale
   )

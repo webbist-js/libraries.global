@@ -45,6 +45,10 @@ const Search = z
       .string()
       .regex(/^[a-z0-9-]{1,100}$/)
       .optional(),
+    area: z
+      .string()
+      .regex(/^[a-z0-9-]{1,100}$/)
+      .optional(),
     libraryType: z.string().max(80).optional(),
     operationalStatus: z.string().max(40).optional(),
     near: z
@@ -72,6 +76,8 @@ const ATTRIBUTES = [
   "country_name",
   "region_slug",
   "region_name",
+  "area_slug",
+  "area_name",
   "_geo",
 ]
 const headers = {
@@ -145,12 +151,16 @@ export async function apiSearch(request: Request, maximum: number) {
   const choice = Search.safeParse(parsed.body)
   if (!choice.success) throw new BillingError("invalid_search", 400)
   const query = choice.data
+  // A region is unique within its country and an area within its region.
+  if ((query.region && !query.country) || (query.area && !query.region))
+    throw new BillingError("invalid_search", 400)
   if (!LIVE_LOCALES.includes(query.locale))
     throw new BillingError("locale_unavailable", 400)
   const filters = [`locale = ${JSON.stringify(query.locale)}`]
   for (const [field, value] of Object.entries({
     country_slug: query.country,
     region_slug: query.region,
+    area_slug: query.area,
     libraryType: query.libraryType,
     operationalStatus: query.operationalStatus,
   })) {
@@ -210,30 +220,65 @@ export async function apiSearch(request: Request, maximum: number) {
   }
 }
 
+type Place = { country?: string; region?: string; area?: string }
+const PLACE_SLUG = /^[a-z0-9-]{1,100}$/
+
+function assertSingleAllowedKeys(
+  incoming: URLSearchParams,
+  allowed: Set<string>
+) {
+  for (const key of incoming.keys())
+    if (!allowed.has(key) || incoming.getAll(key).length !== 1)
+      throw new BillingError("invalid_query", 400)
+}
+
+/** The country, region and area filters, from the path or else the query. */
+function libraryPlaceFilters(incoming: URLSearchParams, place?: Place) {
+  const country = place?.country ?? incoming.get("country"),
+    region = place?.region ?? incoming.get("region"),
+    area = place?.area ?? incoming.get("area")
+  if (country && !PLACE_SLUG.test(country))
+    throw new BillingError("invalid_country", 400)
+  if (
+    (region && (!country || !PLACE_SLUG.test(region))) ||
+    (area && (!region || !PLACE_SLUG.test(area)))
+  )
+    throw new BillingError("invalid_place", 400)
+
+  return { country, region, area }
+}
+
+/**
+ * The list, one record, or (with `place` from a /places path) the libraries
+ * in a country, region or area. Query places need each level above them.
+ */
 export async function apiLibraries(
   request: Request,
   maximum: number,
-  entityRef?: string
+  entityRef?: string,
+  place?: Place
 ) {
   if (entityRef !== undefined && !isLibraryEntityRef(entityRef))
     throw new BillingError("record_not_found", 404)
   const incoming = new URL(request.url).searchParams
-  const allowed = new Set(["locale", "limit", "after", "country"])
-  for (const key of incoming.keys())
-    if (!allowed.has(key) || incoming.getAll(key).length !== 1)
-      throw new BillingError("invalid_query", 400)
+  assertSingleAllowedKeys(
+    incoming,
+    new Set(
+      place
+        ? ["locale", "limit", "after"]
+        : ["locale", "limit", "after", "country", "region", "area"]
+    )
+  )
   const locale = incoming.get("locale") ?? "en"
   if (!LIVE_LOCALES.includes(locale))
     throw new BillingError("locale_unavailable", 400)
   const limit = incoming.get("limit") ?? "50"
   if (!/^\d{1,3}$/.test(limit) || Number(limit) < 1 || Number(limit) > 100)
     throw new BillingError("invalid_limit", 400)
-  const after = incoming.get("after"),
-    country = incoming.get("country")
+  const after = incoming.get("after")
   if (after && !isDocumentIdParam(after))
     throw new BillingError("invalid_cursor", 400)
-  if (country && !/^[a-z0-9-]{1,100}$/.test(country))
-    throw new BillingError("invalid_country", 400)
+  const { country, region, area } = libraryPlaceFilters(incoming, place)
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret) throw new BillingError("api_records_unavailable")
   const url = new URL(
@@ -243,6 +288,40 @@ export async function apiLibraries(
   url.searchParams.set("limit", limit)
   if (after) url.searchParams.set("after", after)
   if (country) url.searchParams.set("country", country)
+  if (region) url.searchParams.set("region", region)
+  if (area) url.searchParams.set("area", area)
+
+  return upstreamJson(
+    url.toString(),
+    { headers: { "X-Service-Secret": secret } },
+    maximum
+  )
+}
+
+/**
+ * Countries with published libraries, a country's regions, or a region's
+ * areas, each with a library count. Accepts only `locale` as a query.
+ */
+export async function apiPlaces(
+  request: Request,
+  maximum: number,
+  place: { country?: string; region?: string }
+) {
+  const incoming = new URL(request.url).searchParams
+  for (const key of incoming.keys())
+    if (key !== "locale" || incoming.getAll(key).length !== 1)
+      throw new BillingError("invalid_query", 400)
+  const locale = incoming.get("locale") ?? "en"
+  if (!LIVE_LOCALES.includes(locale))
+    throw new BillingError("locale_unavailable", 400)
+  const secret = process.env.STRAPI_BRIDGE_SECRET
+  if (!secret) throw new BillingError("api_records_unavailable")
+  const url = new URL(
+    `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/access/api/places`
+  )
+  url.searchParams.set("locale", locale)
+  if (place.country) url.searchParams.set("country", place.country)
+  if (place.region) url.searchParams.set("region", place.region)
 
   return upstreamJson(
     url.toString(),

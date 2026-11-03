@@ -354,6 +354,135 @@ export interface ProfileLanguageEntry extends Struct.ComponentSchema {
   }
 }
 
+export interface RoadmapDataImport extends Struct.ComponentSchema {
+  collectionName: "components_roadmap_data_imports"
+  info: {
+    description: "An open dataset we are looking at or bringing into the index: on our list, then explore, validate, licence and ingest. Keep its key identical in every language: votes and discussion attach to it."
+    displayName: "Roadmap data import"
+    icon: "database"
+  }
+  attributes: {
+    code: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 3
+      }>
+    fields: Schema.Attribute.Component<"utilities.text", true> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 6
+        },
+        number
+      >
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 60
+      }>
+    libraries: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      >
+    place: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    regions: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 160
+      }>
+    source: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 200
+      }>
+    stage: Schema.Attribute.Enumeration<
+      [
+        "listed",
+        "exploring",
+        "validating",
+        "licensing",
+        "ingesting",
+        "ingested",
+      ]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"listed">
+    stageNote: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+  }
+}
+
+export interface RoadmapFeature extends Struct.ComponentSchema {
+  collectionName: "components_roadmap_features"
+  info: {
+    description: "A product feature on the roadmap. Keep its key identical in every language: votes and discussion attach to it."
+    displayName: "Roadmap feature"
+    icon: "rocket"
+  }
+  attributes: {
+    area: Schema.Attribute.Enumeration<
+      ["atlas", "watching", "widgets", "teams", "events", "data"]
+    > &
+      Schema.Attribute.Required
+    description: Schema.Attribute.Text &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 400
+      }>
+    key: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 60
+      }>
+    note: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+    noteKind: Schema.Attribute.Enumeration<["target", "testing", "depends"]>
+    plans: Schema.Attribute.Component<"roadmap.plan", true> &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 4
+        },
+        number
+      >
+    stage: Schema.Attribute.Enumeration<["now", "next", "later"]> &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"later">
+    title: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 120
+      }>
+  }
+}
+
+export interface RoadmapPlan extends Struct.ComponentSchema {
+  collectionName: "components_roadmap_plans"
+  info: {
+    description: 'A plan a feature is intended to land in, with an optional allowance such as "3 saved".'
+    displayName: "Roadmap plan"
+    icon: "priceTag"
+  }
+  attributes: {
+    detail: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 40
+      }>
+    plan: Schema.Attribute.Enumeration<
+      ["free", "supporter", "pro", "team", "api"]
+    > &
+      Schema.Attribute.Required
+  }
+}
+
 export interface SectionsCtaBanner extends Struct.ComponentSchema {
   collectionName: "components_sections_cta_banners"
   info: {
@@ -869,6 +998,9 @@ declare module "@strapi/strapi" {
       "library.library-stat": LibraryLibraryStat
       "library.source-record": LibrarySourceRecord
       "profile.language-entry": ProfileLanguageEntry
+      "roadmap.data-import": RoadmapDataImport
+      "roadmap.feature": RoadmapFeature
+      "roadmap.plan": RoadmapPlan
       "sections.cta-banner": SectionsCtaBanner
       "sections.editorial-block": SectionsEditorialBlock
       "sections.quick-links": SectionsQuickLinks

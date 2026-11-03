@@ -59,6 +59,18 @@ export function useMembershipGroups() {
       label: t(`rows.${row.id.replaceAll(".", "_")}`, {
         limit: exportLimitOf("supporter"),
       }),
+      ...(row.cellLabelIsSavedViews && row.cellLabels
+        ? {
+            cellLabels: Object.fromEntries(
+              Object.entries(row.cellLabels).map(([plan, value]) => [
+                plan,
+                value === "unlimited"
+                  ? t("copy.unlimited")
+                  : t("copy.eachCount", { count: Number(value) }),
+              ])
+            ),
+          }
+        : {}),
     })),
   }))
 }

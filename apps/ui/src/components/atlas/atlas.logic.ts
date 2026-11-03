@@ -360,7 +360,21 @@ export function accessibilityOptions(
 
 // ── Filters ─────────────────────────────────────────────────────────────────
 
+/** A place the Atlas is limited to: slug from the URL, id and name once resolved. */
+export interface AtlasPlaceFilter {
+  slug: string
+  /** The place's documentId: scopes server queries and tiles. */
+  id?: string
+  name?: string
+}
+/** @deprecated The country level of AtlasPlaceFilter. */
+export type AtlasCountryFilter = AtlasPlaceFilter
+
 export interface AtlasFilters {
+  /** Country, then a region in it, then an area in that region. */
+  country?: AtlasPlaceFilter | null
+  region?: AtlasPlaceFilter | null
+  area?: AtlasPlaceFilter | null
   networks?: string[]
   types: TypeGroupKey[]
   opening: "any" | "now" | "staff_now" | "at"
@@ -394,6 +408,9 @@ export const EMPTY_FILTERS: AtlasFilters = {
 
 export function activeFilterCount(f: AtlasFilters): number {
   return (
+    (f.country ? 1 : 0) +
+    (f.region ? 1 : 0) +
+    (f.area ? 1 : 0) +
     (f.networks?.length ? 1 : 0) +
     (f.types.length > 0 ? 1 : 0) +
     (f.opening === "any" ? 0 : 1) +
@@ -412,11 +429,53 @@ export function isListed(lib: AtlasLibrary): boolean {
   return lib.status !== "permanently_closed"
 }
 
+/**
+ * Whether a library is in the chosen country, region and area. Its path is
+ * /continent/country/region[/area]/library; without one, names decide.
+ */
+function inPlace(lib: AtlasLibrary, f: AtlasFilters): boolean {
+  if (!f.country && !f.region && !f.area) return true
+  const parts = lib.path?.split("/").filter(Boolean)
+  if (parts && parts.length >= 3) return pathInPlace(parts, f)
+
+  return namesInPlace(lib, f)
+}
+
+/** The path's country, region and area segments against the chosen slugs. */
+function pathInPlace(parts: string[], f: AtlasFilters): boolean {
+  if (f.country && parts[1] !== f.country.slug) return false
+  if (f.region && parts[2] !== f.region.slug) return false
+  if (f.area && (parts.length < 5 || parts[3] !== f.area.slug)) return false
+
+  return true
+}
+
+/** Without a path, names decide; an area can't be matched by name. */
+function namesInPlace(lib: AtlasLibrary, f: AtlasFilters): boolean {
+  if (f.area) return false
+  if (f.country?.name && lib.country !== f.country.name) return false
+  if (f.region?.name && lib.region !== f.region.name) return false
+
+  return true
+}
+
+/** The deepest chosen place with an id, as the Atlas scope's place. */
+export function atlasPlaceScope(
+  f: AtlasFilters
+): { level: "country" | "region" | "area"; id: string } | undefined {
+  if (f.area?.id) return { level: "area", id: f.area.id }
+  if (f.region?.id) return { level: "region", id: f.region.id }
+  if (f.country?.id) return { level: "country", id: f.country.id }
+
+  return undefined
+}
+
 export function matches(
   lib: AtlasLibrary,
   f: AtlasFilters,
   now: Date
 ): boolean {
+  if (!inPlace(lib, f)) return false
   if (
     f.networks?.length &&
     !f.networks.some((id) => lib.networkIds?.includes(id))
@@ -890,6 +949,25 @@ const OPERATOR_KEYS = new Set(OPERATOR_GROUPS.map((g) => g.key))
 
 const csv = (v: string | null) => (v ? v.split(",").filter(Boolean) : [])
 
+const PLACE_SLUG = /^[a-z0-9][a-z0-9-]{0,99}$/
+/** country, region and area from the URL, each only under the one before. */
+function placeParams(params: URLSearchParams): Partial<AtlasFilters> {
+  const slug = (key: string) => {
+    const value = params.get(key)
+
+    return value && PLACE_SLUG.test(value) ? { slug: value } : null
+  }
+  const country = slug("country")
+  const region = country ? slug("region") : null
+  const area = region ? slug("area") : null
+
+  return {
+    ...(country ? { country } : {}),
+    ...(region ? { region } : {}),
+    ...(area ? { area } : {}),
+  }
+}
+
 export function parseUrlState(params: URLSearchParams): AtlasUrlState {
   const view = csv(params.get("v")).map(Number)
   const founded = csv(params.get("fy")).map(Number)
@@ -902,6 +980,7 @@ export function parseUrlState(params: URLSearchParams): AtlasUrlState {
         ? { lat: view[0]!, lng: view[1]!, zoom: view[2]! }
         : null,
     filters: {
+      ...placeParams(params),
       ...(params.has("network")
         ? {
             networks: csv(params.get("network"))
@@ -962,6 +1041,9 @@ export function toUrlParams(s: AtlasUrlState): URLSearchParams {
       ].join(",")
     )
   const f = s.filters
+  if (f.country) p.set("country", f.country.slug)
+  if (f.country && f.region) p.set("region", f.region.slug)
+  if (f.country && f.region && f.area) p.set("area", f.area.slug)
   if (f.networks?.length) p.set("network", f.networks.join(","))
   if (f.types.length) p.set("type", f.types.join(","))
   if (f.opening !== "any") p.set("open", f.opening)

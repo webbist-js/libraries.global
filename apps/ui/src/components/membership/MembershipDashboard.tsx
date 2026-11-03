@@ -131,12 +131,6 @@ export function MembershipDashboard({
     >
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.85fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />
-
-          <IncludedToolsPanel view={view} copy={copy} />
-
-          <RecognitionPanel view={view} copy={copy} recognition={recognition} />
-
           {team ? (
             <TeamMembershipPanel
               team={team}
@@ -144,6 +138,12 @@ export function MembershipDashboard({
               copy={copy}
             />
           ) : null}
+
+          <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />
+
+          <IncludedToolsPanel view={view} copy={copy} />
+
+          <RecognitionPanel view={view} copy={copy} recognition={recognition} />
           {personalBilling ? (
             <PersonalBillingPanel billing={billing} billingOnly />
           ) : !team ? (
@@ -469,12 +469,12 @@ function TeamMembershipPanel({
   copy: MembershipCopy
 }) {
   const { t } = copy
-  const teamHref = "/staff/teams"
+  const organiser = team.role === "organiser"
 
   return (
     <StaffPanel
       id="team-billing"
-      title={t("teamMembership")}
+      title={t(active ? "inTeamTitle" : "teamMembership")}
       aside={
         <Badge
           color={active ? "aurora" : "dim"}
@@ -482,22 +482,41 @@ function TeamMembershipPanel({
         />
       }
     >
-      <h3 className="type-card-title m-0">{team.name}</h3>
+      <h3 className="type-card-title m-0 [overflow-wrap:anywhere]">
+        {team.name}
+      </h3>
+      {active ? (
+        <p className="mt-2 mb-0 text-base font-semibold">
+          {t(organiser ? "inTeamOrganiser" : "inTeamMember", {
+            team: team.name,
+          })}
+        </p>
+      ) : null}
       <p className="mt-3 mb-5 text-base leading-relaxed text-(--t-ink-dim)">
         {t(
           !active
             ? "inactiveTeamBilling"
-            : team.role === "organiser"
+            : organiser
               ? "organiserBilling"
               : "memberBilling"
         )}
       </p>
-      <GlobalLink
-        href={`${teamHref}${team.role === "organiser" ? "/billing" : ""}`}
-        className={buttonVariants({ variant: "surface", size: "pill" })}
-      >
-        {t(team.role === "organiser" ? "manageTeamBilling" : "openTeam")}
-      </GlobalLink>
+      <div className="flex flex-wrap gap-3">
+        <GlobalLink
+          href="/staff/teams"
+          className={buttonVariants({ variant: "primary", size: "pill" })}
+        >
+          {t(organiser ? "manageTeam" : "openTeam")}
+        </GlobalLink>
+        {organiser ? (
+          <GlobalLink
+            href="/staff/teams/billing"
+            className={buttonVariants({ variant: "surface", size: "pill" })}
+          >
+            {t("manageTeamBilling")}
+          </GlobalLink>
+        ) : null}
+      </div>
       <p className="mt-4 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         {t("apiSeparate")}
       </p>

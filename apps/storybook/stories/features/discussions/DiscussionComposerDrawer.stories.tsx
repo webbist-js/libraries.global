@@ -245,7 +245,8 @@ export const SendFailure: Story = {
     )
     await userEvent.type(
       await editor.findByRole("textbox", { name: "Message" }),
-      "Keep my message too"
+      "Keep my message too",
+      { delay: 30 }
     )
     await userEvent.click(
       editor.getByRole("button", { name: "Send for review" })

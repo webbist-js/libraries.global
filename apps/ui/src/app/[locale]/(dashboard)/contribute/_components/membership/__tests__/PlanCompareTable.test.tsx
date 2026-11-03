@@ -23,6 +23,20 @@ it("compares two selected plans on mobile using the same export limits as the fu
   expect(mobile.getByRole("table", { name: /Atlas analysis/ })).toBeTruthy()
 })
 
+it("links unbuilt rows to roadmap items the published Roadmap still lists", () => {
+  render(<PlanCompareTable roadmapKeys={["compare-libraries"]} />)
+  const full = within(
+    screen.getByRole("region", { name: "What each plan includes" })
+  )
+  fireEvent.click(full.getByRole("button", { name: /Watching and comparing/ }))
+  const links = full.getAllByRole("link", { name: /On the roadmap/ })
+  expect(links).toHaveLength(1)
+  expect(links[0]!.getAttribute("href")).toMatch(
+    /\/community\/roadmap#roadmap-compare-libraries$/
+  )
+  expect(links[0]!.textContent).toMatch(/Compare up to six libraries/)
+})
+
 it("keeps the highlighted column distinct from the current membership and syncs the mobile selection", () => {
   render(<PlanCompareTable currentPlan="pro" />)
   const full = within(

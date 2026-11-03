@@ -199,6 +199,7 @@ const COUNTRY_TO_CONTINENT: Record<string, string> = {
   SR: "South America",
   UY: "South America",
   VE: "South America",
+  AQ: "Antarctica",
 }
 
 export const CONTINENTS = [
@@ -208,6 +209,7 @@ export const CONTINENTS = [
   "North America",
   "Oceania",
   "South America",
+  "Antarctica",
 ] as const
 
 export type Continent = (typeof CONTINENTS)[number]

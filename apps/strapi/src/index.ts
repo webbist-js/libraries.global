@@ -13,6 +13,12 @@ import { registerFreshAuthorityMiddleware } from "./documentMiddlewares/fresh-au
 import { registerLibraryPublishPlacesMiddleware } from "./documentMiddlewares/library-publish-places"
 import { registerMobileTimetableMiddleware } from "./documentMiddlewares/mobile-timetable"
 import { registerOpeningScheduleMiddleware } from "./documentMiddlewares/opening-schedule"
+import {
+  backfillArticlePublicationDates,
+  normaliseArticleRepublishHistory,
+  registerPublicationDateMiddleware,
+} from "./documentMiddlewares/publication-date"
+import { registerRoadmapKeyMiddleware } from "./documentMiddlewares/roadmap-keys"
 import { registerAdminUserSubscriber } from "./lifeCycles/adminUser"
 import {
   registerArticlePrivacySubscriber,
@@ -122,16 +128,26 @@ export default {
     registerAtlasOutboxMiddleware({ strapi })
     // Change Records / Article Changes: audit every library and article write.
     registerChangeRecordsMiddleware({ strapi })
+    registerPublicationDateMiddleware({ strapi })
     registerArticleDiscoveryMiddleware({ strapi })
     // Refuse to publish a library into a draft place (Strapi drops the link).
     registerLibraryPublishPlacesMiddleware({ strapi })
     registerOpeningScheduleMiddleware({ strapi })
     registerMobileTimetableMiddleware({ strapi })
+    registerRoadmapKeyMiddleware({ strapi })
 
     // Seed approved topics (idempotent — skips existing names)
     await seedTopics(strapi)
     await seedDiscussionSubjects(strapi)
     await backfillArticleDiscovery(strapi)
+    // Existing articles: public publication dates and republish history.
+    // A failure is logged and never blocks boot.
+    try {
+      await normaliseArticleRepublishHistory(strapi)
+      await backfillArticlePublicationDates(strapi)
+    } catch (err) {
+      strapi.log.error("[publication-date] Article backfill failed:", err)
+    }
     await seedMobileFacilities(strapi)
 
     // Draft legal documents with placeholder copy on first boot (idempotent)

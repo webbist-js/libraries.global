@@ -32,6 +32,7 @@ import {
 } from "@/components/moderation"
 import { NetworkClaimReview } from "@/components/moderation/NetworkClaimReview"
 import { reviewReturnHref } from "@/components/moderation/queue-navigation"
+import { ReviewLockGate } from "@/components/moderation/ReviewLockGate"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
@@ -399,32 +400,40 @@ export default async function ReviewSubmissionPage({
           aria-label={tUi("decision")}
           className="flex flex-col gap-6 self-start lg:sticky lg:top-(--sticky-content-top) lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
         >
-          <Section title={tUi("your_decision")}>
-            {d.submissionType === "network_claim" ? (
-              <NetworkClaimReview documentId={d.documentId} status={d.status} />
-            ) : (
-              <ReviewDecisionForm
-                canApprove={
-                  !isStaleTimetableSuggestion(
-                    d.submissionType,
-                    d.fields,
-                    (
-                      d.review as {
-                        current?: Record<string, unknown>
-                      } | null
-                    )?.current?.mobileTimetable
-                  )
-                }
-                documentId={d.documentId}
-                status={d.status}
-                submissionType={d.submissionType}
-                canPublish={d.canPublish}
-                reviewedAt={d.reviewedAt}
-                driveDocumentId={d.drive?.documentId ?? null}
-                returnTo={returnTo}
-              />
-            )}
-          </Section>
+          <ReviewLockGate
+            documentId={d.documentId}
+            active={d.status === "pending"}
+          >
+            <Section title={tUi("your_decision")}>
+              {d.submissionType === "network_claim" ? (
+                <NetworkClaimReview
+                  documentId={d.documentId}
+                  status={d.status}
+                />
+              ) : (
+                <ReviewDecisionForm
+                  canApprove={
+                    !isStaleTimetableSuggestion(
+                      d.submissionType,
+                      d.fields,
+                      (
+                        d.review as {
+                          current?: Record<string, unknown>
+                        } | null
+                      )?.current?.mobileTimetable
+                    )
+                  }
+                  documentId={d.documentId}
+                  status={d.status}
+                  submissionType={d.submissionType}
+                  canPublish={d.canPublish}
+                  reviewedAt={d.reviewedAt}
+                  driveDocumentId={d.drive?.documentId ?? null}
+                  returnTo={returnTo}
+                />
+              )}
+            </Section>
+          </ReviewLockGate>
           <Section title={tUi("history")}>
             {d.reviewNote && events.every((e) => !e.note) ? (
               <p className="m-0 text-base" style={{ color: T.ink.base }}>

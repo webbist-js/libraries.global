@@ -1,0 +1,26 @@
+{
+  "collectionName": "components_roadmap_plans",
+  "info": {
+    "displayName": "Roadmap plan",
+    "icon": "priceTag",
+    "description": "A plan a feature is intended to land in, with an optional allowance such as \"3 saved\"."
+  },
+  "options": {},
+  "attributes": {
+    "plan": {
+      "type": "enumeration",
+      "enum": [
+        "free",
+        "supporter",
+        "pro",
+        "team",
+        "api"
+      ],
+      "required": true
+    },
+    "detail": {
+      "type": "string",
+      "maxLength": 40
+    }
+  }
+}

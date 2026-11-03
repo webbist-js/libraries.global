@@ -29,15 +29,17 @@
     {
       "name": "Libraries",
       "description": "Published public Library search and records."
+    },
+    {
+      "name": "Places",
+      "description": "Countries, regions and areas with published Libraries, and the Libraries in each."
     }
   ],
   "paths": {
     "/api/v1/search/libraries": {
       "post": {
         "operationId": "searchLibraries",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "summary": "Search published Libraries",
         "description": "Requires the search:read key scope. Search uses offset pagination. Increment offset by limit; stop on an empty or short page. Use the cursor-based Library list for longer sequential extraction. Retrieve a full record for source credits.",
         "requestBody": {
@@ -121,9 +123,7 @@
     "/api/v1/libraries": {
       "get": {
         "operationId": "listLibraries",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "summary": "List published Libraries",
         "description": "Requires the libraries:read key scope. Unknown and repeated query parameters are rejected. Records are ordered by document identifier. Follow meta.nextCursor using after until it is null. This is not a frozen snapshot; published records can change during pagination.",
         "parameters": [
@@ -135,6 +135,12 @@
           },
           {
             "$ref": "#/components/parameters/Country"
+          },
+          {
+            "$ref": "#/components/parameters/Region"
+          },
+          {
+            "$ref": "#/components/parameters/Area"
           },
           {
             "$ref": "#/components/parameters/After"
@@ -197,9 +203,7 @@
     "/api/v1/libraries/{entityRef}": {
       "get": {
         "operationId": "getLibrary",
-        "tags": [
-          "Libraries"
-        ],
+        "tags": ["Libraries"],
         "summary": "Retrieve one published Library",
         "description": "Requires the libraries:read key scope. Take entityRef from a search or list result and URL-encode it as a single path segment. A reference may change after a rename or geographic move. Returns an object in data, not an array.",
         "parameters": [
@@ -266,6 +270,459 @@
           }
         }
       }
+    },
+    "/api/v1/places": {
+      "get": {
+        "operationId": "listCountries",
+        "tags": ["Places"],
+        "summary": "List countries with published Libraries",
+        "description": "Requires the libraries:read key scope. Countries with at least one published Library, with counts and ISO codes, by name. Only locale is accepted as a query parameter.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Locale"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/places/{country}": {
+      "get": {
+        "operationId": "listRegions",
+        "tags": ["Places"],
+        "summary": "List a country's regions",
+        "description": "Requires the libraries:read key scope. Regions of the country with at least one published Library, with counts. Only locale is accepted as a query parameter.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CountryPath"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/places/{country}/{region}": {
+      "get": {
+        "operationId": "listAreas",
+        "tags": ["Places"],
+        "summary": "List a region's areas",
+        "description": "Requires the libraries:read key scope. Areas of the region with at least one published Library, with counts. Only locale is accepted as a query parameter.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CountryPath"
+          },
+          {
+            "$ref": "#/components/parameters/RegionPath"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/places/{country}/libraries": {
+      "get": {
+        "operationId": "listCountryLibraries",
+        "tags": ["Places", "Libraries"],
+        "summary": "List the Libraries in a country",
+        "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CountryPath"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/places/{country}/{region}/libraries": {
+      "get": {
+        "operationId": "listRegionLibraries",
+        "tags": ["Places", "Libraries"],
+        "summary": "List the Libraries in a region",
+        "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CountryPath"
+          },
+          {
+            "$ref": "#/components/parameters/RegionPath"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
+    },
+    "/api/v1/places/{country}/{region}/{area}/libraries": {
+      "get": {
+        "operationId": "listAreaLibraries",
+        "tags": ["Places", "Libraries"],
+        "summary": "List the Libraries in an area",
+        "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/CountryPath"
+          },
+          {
+            "$ref": "#/components/parameters/RegionPath"
+          },
+          {
+            "$ref": "#/components/parameters/AreaPath"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published public Library data.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -284,9 +741,7 @@
         "description": "Content locale. Only English is currently live.",
         "schema": {
           "type": "string",
-          "enum": [
-            "en"
-          ],
+          "enum": ["en"],
           "default": "en"
         }
       },
@@ -329,6 +784,56 @@
           "type": "string"
         },
         "example": "europe:united-kingdom:scotland:national-library-of-scotland"
+      },
+      "Region": {
+        "name": "region",
+        "in": "query",
+        "required": false,
+        "description": "Region slug from GET /api/v1/places/{country}. Requires country.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+        }
+      },
+      "Area": {
+        "name": "area",
+        "in": "query",
+        "required": false,
+        "description": "Area slug from GET /api/v1/places/{country}/{region}. Requires region.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+        }
+      },
+      "CountryPath": {
+        "name": "country",
+        "in": "path",
+        "required": true,
+        "description": "Country slug from GET /api/v1/places.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+        }
+      },
+      "RegionPath": {
+        "name": "region",
+        "in": "path",
+        "required": true,
+        "description": "Region slug from GET /api/v1/places/{country}; unique within its country.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+        }
+      },
+      "AreaPath": {
+        "name": "area",
+        "in": "path",
+        "required": true,
+        "description": "Area slug from GET /api/v1/places/{country}/{region}; unique within its region.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+        }
       }
     },
     "schemas": {
@@ -344,9 +849,7 @@
           },
           "locale": {
             "type": "string",
-            "enum": [
-              "en"
-            ],
+            "enum": ["en"],
             "default": "en",
             "description": "Only live content locales are accepted."
           },
@@ -385,11 +888,7 @@
           "near": {
             "type": "object",
             "additionalProperties": false,
-            "required": [
-              "lat",
-              "lng",
-              "radius"
-            ],
+            "required": ["lat", "lng", "radius"],
             "properties": {
               "lat": {
                 "type": "number",
@@ -408,6 +907,11 @@
                 "description": "Search radius in metres."
               }
             }
+          },
+          "area": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,99}$",
+            "description": "Area slug; requires region, which requires country."
           }
         }
       },
@@ -416,94 +920,49 @@
         "description": "Search summary; fields absent from the index may be omitted. Retrieve the full Library record for its source credits.",
         "properties": {
           "documentId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "name": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "slug": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "entityRef": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "summary": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "libraryType": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "operationalStatus": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "city": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "continent_slug": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "country_slug": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "country_name": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "region_slug": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "region_name": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "_geo": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "lat": {
                 "type": "number"
@@ -512,15 +971,18 @@
                 "type": "number"
               }
             }
+          },
+          "area_slug": {
+            "type": "string"
+          },
+          "area_name": {
+            "type": "string"
           }
         }
       },
       "SearchResponse": {
         "type": "object",
-        "required": [
-          "data",
-          "meta"
-        ],
+        "required": ["data", "meta"],
         "properties": {
           "data": {
             "type": "array",
@@ -548,10 +1010,7 @@
                 "type": "integer"
               },
               "estimatedTotal": {
-                "type": [
-                  "integer",
-                  "null"
-                ],
+                "type": ["integer", "null"],
                 "description": "Search estimate, not a guaranteed complete catalogue count."
               },
               "attribution": {
@@ -563,10 +1022,7 @@
       },
       "LibraryRecord": {
         "type": "object",
-        "required": [
-          "documentId",
-          "sourceRecords"
-        ],
+        "required": ["documentId", "sourceRecords"],
         "description": "Explicit public record projection. Null means information is not recorded. These routes do not include opening times, facility relations, Events, verification dates or every field shown on the website.",
         "properties": {
           "documentId": {
@@ -574,179 +1030,95 @@
             "description": "Strapi document identifier; not accepted by the entityRef detail route."
           },
           "name": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "slug": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "entityRef": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "shortName": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "summary": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "operationalStatus": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "operatorType": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "streetAddress": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "city": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "postalCode": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "timezone": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "website": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "phone": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "email": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "catalogueUrl": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "libraryType": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "location": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "description": "Stored coordinates; older records may contain numeric strings.",
             "properties": {
               "lat": {
-                "type": [
-                  "number",
-                  "string"
-                ]
+                "type": ["number", "string"]
               },
               "lng": {
-                "type": [
-                  "number",
-                  "string"
-                ]
+                "type": ["number", "string"]
               },
               "address": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             }
           },
           "updatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "Record modification time, not a verification date."
           },
           "country": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "slug": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "iso2": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             }
           },
           "region": {
-            "type": [
-              "object",
-              "null"
-            ],
+            "type": ["object", "null"],
             "properties": {
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               },
               "slug": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": ["string", "null"]
               }
             }
           },
@@ -755,6 +1127,17 @@
             "items": {
               "$ref": "#/components/schemas/SourceRecord"
             }
+          },
+          "area": {
+            "type": ["object", "null"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "slug": {
+                "type": "string"
+              }
+            }
           }
         }
       },
@@ -762,46 +1145,24 @@
         "type": "object",
         "properties": {
           "dataset": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "recordId": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "retrievedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           },
           "url": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "label": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "role": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "origin",
-              "reference",
-              null
-            ]
+            "type": ["string", "null"],
+            "enum": ["origin", "reference", null]
           },
           "fields": {
             "description": "Source field associations as stored JSON, or null when unspecified."
@@ -812,47 +1173,26 @@
         }
       },
       "DatasetCredit": {
-        "type": [
-          "object",
-          "null"
-        ],
+        "type": ["object", "null"],
         "description": "Source-specific credits. A missing credit or unconfirmed licence does not establish redistribution permission. API access does not replace source terms.",
         "properties": {
           "key": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "publisher": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "licence": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "licenceUrl": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "attribution": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "redistribution": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "permitted",
               "permitted_with_attribution",
@@ -862,10 +1202,7 @@
             ]
           },
           "licenceStatus": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "enum": [
               "confirmed_in_writing",
               "stated_by_publisher",
@@ -877,20 +1214,13 @@
       },
       "RecordMeta": {
         "type": "object",
-        "required": [
-          "locale",
-          "nextCursor",
-          "attribution"
-        ],
+        "required": ["locale", "nextCursor", "attribution"],
         "properties": {
           "locale": {
             "type": "string"
           },
           "nextCursor": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "Opaque cursor for the next list page, or null at the end and for a detail response."
           },
           "attribution": {
@@ -901,10 +1231,7 @@
       },
       "LibraryListResponse": {
         "type": "object",
-        "required": [
-          "data",
-          "meta"
-        ],
+        "required": ["data", "meta"],
         "properties": {
           "data": {
             "type": "array",
@@ -919,10 +1246,7 @@
       },
       "LibraryDetailResponse": {
         "type": "object",
-        "required": [
-          "data",
-          "meta"
-        ],
+        "required": ["data", "meta"],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/LibraryRecord"
@@ -934,19 +1258,75 @@
       },
       "Error": {
         "type": "object",
-        "required": [
-          "error"
-        ],
+        "required": ["error"],
         "properties": {
           "error": {
             "type": "object",
-            "required": [
-              "code"
-            ],
+            "required": ["code"],
             "properties": {
               "code": {
                 "type": "string",
                 "description": "Machine-readable error code."
+              }
+            }
+          }
+        }
+      },
+      "Place": {
+        "type": "object",
+        "required": ["name", "slug", "libraryCount"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
+          },
+          "libraryCount": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Published Libraries in this place."
+          },
+          "iso2": {
+            "type": ["string", "null"],
+            "description": "Countries only: ISO 3166-1 alpha-2 (ISO 3166-2 for the UK's nations)."
+          },
+          "iso3": {
+            "type": ["string", "null"],
+            "description": "Countries only: ISO 3166-1 alpha-3."
+          },
+          "continent": {
+            "type": ["string", "null"],
+            "description": "Countries only: continent slug."
+          }
+        }
+      },
+      "PlaceListResponse": {
+        "type": "object",
+        "required": ["data", "meta"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Place"
+            }
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "locale": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string",
+                "enum": ["country", "region", "area"]
+              },
+              "country": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
               }
             }
           }

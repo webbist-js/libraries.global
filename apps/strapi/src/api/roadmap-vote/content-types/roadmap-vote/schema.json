@@ -1,0 +1,33 @@
+{
+  "kind": "collectionType",
+  "collectionName": "roadmap_votes",
+  "info": {
+    "singularName": "roadmap-vote",
+    "pluralName": "roadmap-votes",
+    "displayName": "Roadmap Vote",
+    "description": "One account's vote for a roadmap item or dataset suggestion"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "itemKey": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "baUserId": {
+      "type": "string",
+      "required": true,
+      "private": true
+    }
+  }
+}

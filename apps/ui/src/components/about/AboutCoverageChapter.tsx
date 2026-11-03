@@ -1,10 +1,8 @@
 "use client"
 
-/* motion-site · profile: editorial · archetype: full-height coverage chapter · patterns: sequential-country-build·shared-counter-clock·viewport-gating · critique: P5 T4 C5 R5 A5 V5 */
+/* motion-site · profile: editorial · archetype: coverage chapter in page flow · patterns: sequential-country-build·shared-counter-clock·viewport-gating */
 
-import { Pause, Play, RotateCcw } from "lucide-react"
-import { useTranslations } from "next-intl"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useRef, type ReactNode } from "react"
 
 import {
   aboutViewport,
@@ -16,10 +14,10 @@ import {
 } from "@/components/about/coverage-timeline"
 import { Container } from "@/components/elementary/Container"
 
-type Playback = "idle" | "playing" | "paused" | "complete"
-
 /** A single native animation clock keeps the continents sequential. The server
- * renders final values; only aria-hidden visual copies count up after hydration. */
+ * renders final values; only aria-hidden visual copies count up after hydration.
+ * The chapter scrolls with the page: it starts once well into view and plays
+ * through once, waiting for each row to be readable. */
 export function AboutCoverageChapter({
   children,
   footer,
@@ -27,11 +25,7 @@ export function AboutCoverageChapter({
   readonly children: ReactNode
   readonly footer: ReactNode
 }) {
-  const t = useTranslations("aboutCoverage")
   const ref = useRef<HTMLDivElement>(null)
-  const actions = useRef({ pause: () => {}, replay: () => {} })
-  const [enabled, setEnabled] = useState(false)
-  const [playback, setPlayback] = useState<Playback>("idle")
 
   useEffect(() => {
     const chapter = ref.current
@@ -66,14 +60,10 @@ export function AboutCoverageChapter({
       elapsed = 0,
       lastTime = 0
     let visible = false,
-      paused = false,
       completed = false,
       started = false
     let prepared = false,
-      disposed = false,
-      awaitingReplay = false
-    let owner: HTMLElement | null = null
-    let oldSnapTop = ""
+      disposed = false
 
     const text = (element: HTMLElement | null, value: number) => {
       const next = value.toLocaleString("en-US")
@@ -99,30 +89,16 @@ export function AboutCoverageChapter({
         })
       }
     }
-    const releaseOwner = () => {
-      if (!owner) return
-      owner.classList.remove("about-coverage-scroll-root")
-      if (oldSnapTop) owner.style.setProperty("--coverage-snap-top", oldSnapTop)
-      else owner.style.removeProperty("--coverage-snap-top")
-      owner = null
-    }
     const finish = () => {
       cancelAnimationFrame(frame)
       frame = 0
       elapsed = duration
       completed = true
       paint()
-      setPlayback("complete")
     }
     const tick = (now: number) => {
       frame = 0
-      if (
-        paused ||
-        completed ||
-        !visible ||
-        document.hidden ||
-        motion.matches
-      ) {
+      if (completed || !visible || document.hidden || motion.matches) {
         lastTime = 0
 
         return
@@ -134,21 +110,9 @@ export function AboutCoverageChapter({
 
         return
       }
-      if (awaitingReplay) {
-        if (
-          bounds.top < viewport.top - 4 ||
-          bounds.top > viewport.top + viewport.height * 0.3
-        ) {
-          lastTime = 0
-
-          return
-        }
-        awaitingReplay = false
-      }
       if (!started) {
-        if (bounds.top > viewport.top + viewport.height * 0.3) return
+        if (bounds.top > viewport.top + viewport.height * 0.75) return
         started = true
-        setPlayback("playing")
       }
       // On smaller screens, wait for the next row to be readable. If a visitor
       // scrolls past a row, settle it instead of trapping the later rows at zero.
@@ -184,13 +148,7 @@ export function AboutCoverageChapter({
     }
     function schedule() {
       if (disposed) return
-      if (
-        !visible ||
-        document.hidden ||
-        paused ||
-        completed ||
-        motion.matches
-      ) {
+      if (!visible || document.hidden || completed || motion.matches) {
         cancelAnimationFrame(frame)
         frame = 0
         lastTime = 0
@@ -201,60 +159,17 @@ export function AboutCoverageChapter({
     }
     const measure = () => {
       if (disposed) return
-      const viewport = setAboutViewport(chapter)
-      const root = viewport.root ?? document.documentElement
+      setAboutViewport(chapter)
       if (motion.matches) {
         finish()
-        releaseOwner()
-        setEnabled(false)
 
         return
       }
-      if (root !== owner) {
-        releaseOwner()
-        owner = root
-        oldSnapTop = owner.style.getPropertyValue("--coverage-snap-top")
-        owner.classList.add("about-coverage-scroll-root")
-      }
-      owner.style.setProperty("--coverage-snap-top", `${viewport.stickyTop}px`)
       if (!prepared) {
         prepared = true
         paint()
-        setPlayback("idle")
       }
-      setEnabled(true)
       schedule()
-    }
-    const settled = () => {
-      if (!awaitingReplay) return
-      awaitingReplay = false
-      schedule()
-    }
-    actions.current = {
-      pause: () => {
-        paused = !paused
-        lastTime = 0
-        setPlayback(paused ? "paused" : started ? "playing" : "idle")
-        schedule()
-      },
-      replay: () => {
-        cancelAnimationFrame(frame)
-        frame = 0
-        elapsed = 0
-        lastTime = 0
-        paused = completed = started = false
-        paint()
-        setPlayback("idle")
-        const viewport = aboutViewport(chapter)
-        const offset = chapter.getBoundingClientRect().top - viewport.top
-        awaitingReplay = Math.abs(offset) > 4
-        if (awaitingReplay)
-          (viewport.root ?? window).scrollTo({
-            top: offset + (viewport.root?.scrollTop ?? window.scrollY),
-            behavior: "smooth",
-          })
-        schedule()
-      },
     }
     const intersection = new IntersectionObserver(
       ([entry]) => {
@@ -275,7 +190,6 @@ export function AboutCoverageChapter({
       passive: true,
       capture: true,
     })
-    scrollTarget.addEventListener("scrollend", settled, { capture: true })
     measure()
     document.fonts?.ready.then(measure)
 
@@ -288,8 +202,6 @@ export function AboutCoverageChapter({
       window.removeEventListener("resize", measure)
       document.removeEventListener("visibilitychange", schedule)
       scrollTarget.removeEventListener("scroll", schedule, true)
-      scrollTarget.removeEventListener("scrollend", settled, true)
-      releaseOwner()
       elapsed = duration
       paint()
       for (const { row, countries, segments } of elements) {
@@ -309,36 +221,10 @@ export function AboutCoverageChapter({
       ref={ref}
       id="coverage-by-continent"
       className="about-coverage-chapter about-coverage-rows"
-      data-playback={playback}
     >
       {children}
       <Container className="about-coverage-chapter-footer">
         <div>{footer}</div>
-        {enabled ? (
-          <div className="about-coverage-playback">
-            <button
-              type="button"
-              className="about-motion-toggle"
-              disabled={playback === "complete"}
-              onClick={() => actions.current.pause()}
-            >
-              {playback === "paused" ? (
-                <Play size={15} aria-hidden="true" />
-              ) : (
-                <Pause size={15} aria-hidden="true" />
-              )}
-              {t(playback === "paused" ? "resume" : "pause")}
-            </button>
-            <button
-              type="button"
-              className="about-motion-toggle"
-              onClick={() => actions.current.replay()}
-            >
-              <RotateCcw size={15} aria-hidden="true" />
-              {t("replay")}
-            </button>
-          </div>
-        ) : null}
       </Container>
     </div>
   )

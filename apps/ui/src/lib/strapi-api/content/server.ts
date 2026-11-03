@@ -1043,6 +1043,7 @@ export type BlogArticleSummary = {
   authorBio?: string | null
   authorAvatar?: MediaItem | null
   featured?: boolean | null
+  publicationDate?: string | null
   publishedAt?: string | null
   updatedAt?: string | null
   heroImage?: MediaItem | null
@@ -1148,11 +1149,12 @@ export async function fetchRecentBlogArticles(locale: Locale) {
         "summary",
         "author",
         "featured",
+        "publicationDate",
         "publishedAt",
         "updatedAt",
       ] as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sort: ["publishedAt:desc"] as any,
+      sort: ["publicationDate:desc", "id:desc"] as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pagination: { pageSize: 24 } as any,
     })) as APIResponseCollection<BlogArticleSummary>
@@ -1243,6 +1245,7 @@ export async function fetchJournalArticles({
         "summary",
         "author",
         "featured",
+        "publicationDate",
         "publishedAt",
         "updatedAt",
       ] as any,
@@ -1386,6 +1389,7 @@ export type WikiArticleSummary = {
   author?: string | null
   featured?: boolean | null
   priority?: number | null
+  publicationDate?: string | null
   publishedAt?: string | null
   updatedAt?: string | null
   heroImage?: MediaItem | null
@@ -1542,6 +1546,7 @@ export async function fetchDocsWikiArticles(locale: Locale) {
           "slug",
           "summary",
           "author",
+          "publicationDate",
           "publishedAt",
           "updatedAt",
           "docsSections",
@@ -2258,6 +2263,7 @@ async function fetchLibraryForEditingIn(slug: string, locale: Locale) {
 export type ArticleForEditing = {
   sources?: ArticleSource[] | null
   availableLocales?: string[]
+  publicationDate?: string | null
   publishedAt?: string | null
   documentId: string
   slug: string

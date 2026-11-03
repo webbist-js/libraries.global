@@ -35,6 +35,12 @@ const COMMUNITY_TABS: readonly SectionTab[] = [
     icon: "mdi:forum-outline",
   },
   {
+    id: "roadmap",
+    href: "/community/roadmap",
+    label: "Roadmap",
+    icon: "mdi:map-marker-path",
+  },
+  {
     id: "supporters",
     href: "/community/supporters",
     label: "Supporters",
@@ -50,6 +56,7 @@ const SEGMENT_TO_TAB: Record<string, string> = {
   suggestions: "suggestions",
   supporters: "supporters",
   discussions: "discussions",
+  roadmap: "roadmap",
 }
 
 export function activeCommunityTab(pathname: string): string | null {

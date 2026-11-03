@@ -77,7 +77,7 @@ export async function generateMetadata({
     image: formatStrapiMediaUrl(
       article.seo?.metaImage?.url ?? article.heroImage?.url
     ),
-    publishedTime: article.publishedAt,
+    publishedTime: article.publicationDate ?? article.publishedAt,
     modifiedTime: article.updatedAt,
     // A default-locale stand-in for a missing translation isn't indexed.
     robots: res?.localeFallback || contentLanguage ? "noindex-follow" : "index",
@@ -148,7 +148,7 @@ export default async function DocsArticleRoute({
             description: article.summary,
             url,
             authorName: article.author,
-            publishedAt: article.publishedAt,
+            publishedAt: article.publicationDate ?? article.publishedAt,
             updatedAt: article.updatedAt,
             sectionName: home.title,
           }),

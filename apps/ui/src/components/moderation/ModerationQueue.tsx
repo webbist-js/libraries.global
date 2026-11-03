@@ -1,6 +1,6 @@
 "use client"
 
-import { ClipboardList, RefreshCw } from "lucide-react"
+import { ArrowRight, ClipboardList, RefreshCw } from "lucide-react"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -9,6 +9,7 @@ import { ModerationQueueSkeleton } from "@/components/moderation/ModerationQueue
 import { ModerationSubmissionList } from "@/components/moderation/ModerationSubmissionList"
 import {
   queueHref,
+  reviewHref,
   type QueueState,
 } from "@/components/moderation/queue-navigation"
 import { REVIEW_ICONS } from "@/components/moderation/workspace"
@@ -79,6 +80,7 @@ export function ModerationQueue({
   const [loading, setLoading] = useState(true)
   const [refreshEpoch, setRefreshEpoch] = useState(0)
   const [stats, setStats] = useState<ModerationStat[] | null>(null)
+  const [next, setNext] = useState<"idle" | "busy" | "none" | "failed">("idle")
   const query = apiQuery(state)
   const statsParams = new URLSearchParams(query)
   for (const key of ["status", "page", "pageSize"]) statsParams.delete(key)
@@ -202,18 +204,59 @@ export function ModerationQueue({
             )}
           </p>
         </div>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => {
-            setRefreshEpoch((value) => value + 1)
-            router.refresh()
-          }}
-          className="inline-flex min-h-11 items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-semibold disabled:opacity-50"
-        >
-          <RefreshCw size={15} aria-hidden />
-          {workspace("refresh")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {state.segment === "pending" ? (
+            <button
+              type="button"
+              disabled={next === "busy"}
+              onClick={async () => {
+                // Locks the next submission nobody else is reviewing (ADR-0008).
+                setNext("busy")
+                const res = await fetch(`/api/moderation/locks/next?${query}`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: "{}",
+                }).catch(() => null)
+                const body = res?.ok
+                  ? ((await res.json()) as {
+                      data?: { documentId: string } | null
+                    })
+                  : null
+                if (body?.data?.documentId) {
+                  router.push(
+                    reviewHref(body.data.documentId, queueHref(state))
+                  )
+
+                  return
+                }
+                setNext(res?.ok ? "none" : "failed")
+              }}
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-(--t-action-primary) px-4 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              Review next
+              <ArrowRight size={15} aria-hidden />
+            </button>
+          ) : null}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => {
+              setRefreshEpoch((value) => value + 1)
+              router.refresh()
+            }}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 text-sm font-semibold disabled:opacity-50"
+          >
+            <RefreshCw size={15} aria-hidden />
+            {workspace("refresh")}
+          </button>
+        </div>
+        {next === "none" || next === "failed" ? (
+          <p role="status" className="m-0 w-full text-sm text-(--t-ink-dim)">
+            {next === "none"
+              ? "Nothing here is free to review: everything waiting is already being reviewed."
+              : "Couldn’t find the next submission. Try again."}
+          </p>
+        ) : null}
       </header>
       <ModerationFilters
         value={state}

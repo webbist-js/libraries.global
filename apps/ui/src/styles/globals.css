@@ -47,6 +47,7 @@
   --t-bg-deep: #ffffff; /* card / panel surface */
   --t-bg-surface: #fbfaf7; /* nested surface — row hover, inputs */
   --t-bg-muted: #f3f0ea; /* muted fills — disabled, neutral chips */
+  --t-bg-code: #ebe6dc; /* code blocks — darker than the page */
   --t-edge-ok: #c9dccb;
   --t-edge-info: #d6d2f5;
   --t-edge-warn: #e4d3a8;
@@ -150,6 +151,7 @@
   --t-bg-deep: #1d1c33;
   --t-bg-surface: #24233d;
   --t-bg-muted: #2b2945;
+  --t-bg-code: #08071a;
   --t-bg-muted-2: #302e4c;
   --t-bg-selected: #302b52;
   --t-bg-inverse: #0a0a16;

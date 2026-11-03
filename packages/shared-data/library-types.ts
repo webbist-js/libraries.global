@@ -1,5 +1,6 @@
 export const DEFAULT_LIBRARY_TYPES = [
   "National",
+  "Regional",
   "Public",
   "Academic",
   "University",
@@ -7,6 +8,7 @@ export const DEFAULT_LIBRARY_TYPES = [
   "State",
   "Municipal",
   "Special",
+  "Specific User Groups",
   "Monastic",
   "Archive",
   "Private",

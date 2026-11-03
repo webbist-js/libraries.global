@@ -28,6 +28,14 @@ import {
   NON_REMOVED_STATUSES,
 } from "../utils/option-suggestions"
 import { isDocumentId } from "../utils/params"
+import {
+  acquireLock,
+  liveLocks,
+  readLock,
+  releaseLock,
+  SUBMISSION_LOCK,
+  takeOverLock,
+} from "../utils/review-locks"
 import { contributorReviewer } from "../utils/reviewer"
 import { isValidServiceSecret } from "../utils/service-secret"
 import { reviewRoundView, updateReviewRound } from "../utils/suggestion-rounds"
@@ -102,6 +110,22 @@ function viewerOf(ctx: any): Viewer | null {
 }
 
 const NOT_FOUND = "Submission not found."
+
+/** The Koa context fields the Review Lock routes read and write. */
+type LockContext = {
+  params?: Record<string, unknown>
+  query?: Record<string, unknown>
+  request?: { body?: unknown; headers?: Record<string, unknown> }
+  status?: number
+  body?: unknown
+  set?: (field: string, value: string) => void
+}
+
+/** The caller as a Review Lock holder: the same id their decisions use. */
+const holderOf = (auth: { viewer: Viewer }) => ({
+  id: `ba:${auth.viewer.id}`,
+  name: auth.viewer.name ?? null,
+})
 
 /** Optional enumerated query value: undefined, a member, or invalid. */
 function oneOf<T extends string>(
@@ -263,6 +287,27 @@ export default ({ strapi }: { strapi: any }) => {
     if (!s) fail(ctx, 404, NOT_FOUND)
 
     return s
+  }
+
+  /**
+   * False after a 423 when another Moderator holds a live Review Lock on
+   * the submission (ADR-0008); writes need the lock free or the caller's.
+   */
+  async function unlocked(
+    ctx: LockContext,
+    s: { documentId: string },
+    auth: { viewer: Viewer }
+  ): Promise<boolean> {
+    const lock = await readLock(strapi, SUBMISSION_LOCK, s.documentId)
+    if (!lock || lock.holderId === holderOf(auth).id) return true
+    fail(
+      ctx,
+      423,
+      `${lock.holderName ?? "Another moderator"} is reviewing this submission. Take over to make changes.`,
+      { name: "locked", holderName: lock.holderName }
+    )
+
+    return false
   }
 
   return {
@@ -427,7 +472,7 @@ export default ({ strapi }: { strapi: any }) => {
       const filters = await readReviewFilters(strapi, ctx)
       if (!filters) return
 
-      ctx.body = await moderation().list(
+      const result = await moderation().list(
         auth.caps,
         auth.viewer.id,
         {
@@ -438,6 +483,120 @@ export default ({ strapi }: { strapi: any }) => {
         },
         { board: isBoard(auth) }
       )
+      // Who is reviewing what on this page: one bounded read (ADR-0008).
+      const locks = await liveLocks(
+        strapi,
+        SUBMISSION_LOCK,
+        result.data.map((row: { documentId: string }) => row.documentId)
+      )
+      const me = holderOf(auth).id
+      ctx.body = {
+        ...result,
+        data: result.data.map((row: { documentId: string }) => {
+          const lock = locks.get(row.documentId)
+
+          return lock
+            ? {
+                ...row,
+                lock: {
+                  holderName: lock.holderName,
+                  mine: lock.holderId === me,
+                  expiresAt: lock.expiresAt,
+                },
+              }
+            : row
+        }),
+      }
+    },
+
+    /**
+     * POST /moderation/locks/:documentId { action }
+     * Takes or renews ("acquire"), releases, or takes over the caller's
+     * Review Lock on a pending submission (ADR-0008). The same scope and
+     * self-review checks as a decision; the answer is the caller's view.
+     */
+    async lock(ctx: LockContext) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      const action = (ctx.request?.body as { action?: unknown } | null)?.action
+      if (
+        typeof action !== "string" ||
+        !["acquire", "release", "takeover"].includes(action)
+      )
+        return fail(ctx, 400, "action must be acquire, release or takeover")
+      const holder = holderOf(auth)
+      if (action === "release") {
+        const { documentId } = (ctx.params ?? {}) as { documentId?: unknown }
+        if (!isDocumentId(documentId))
+          return fail(ctx, 400, "Invalid documentId")
+        await releaseLock(strapi, SUBMISSION_LOCK, documentId, holder.id)
+        ctx.body = { data: { state: "free" } }
+
+        return
+      }
+      const s = await decidable(ctx, auth)
+      if (!s) return
+      // Only work waiting for a decision is worth holding.
+      if (s.status !== "pending") {
+        ctx.body = { data: { state: "free" } }
+
+        return
+      }
+      if (action === "takeover") {
+        const { lock, previousHolderId } = await takeOverLock(
+          strapi,
+          SUBMISSION_LOCK,
+          s.documentId,
+          holder
+        )
+        if (previousHolderId)
+          strapi.log.info(
+            `[review-lock] ${holder.id} took over ${s.documentId} from ${previousHolderId}`
+          )
+        ctx.body = { data: lock }
+
+        return
+      }
+      ctx.body = {
+        data: await acquireLock(strapi, SUBMISSION_LOCK, s.documentId, holder),
+      }
+    },
+
+    /**
+     * POST /moderation/locks/next (the queue's filters as query)
+     * Locks the first pending submission on the caller's current queue
+     * page that nobody else is reviewing, and names it; null when none.
+     */
+    async nextLock(ctx: LockContext) {
+      const auth = await authorise(ctx)
+      if (!auth) return
+      const filters = await readReviewFilters(strapi, ctx)
+      if (!filters) return
+      const holder = holderOf(auth)
+      const page = await moderation().list(
+        auth.caps,
+        auth.viewer.id,
+        { status: "pending", ...filters, page: 1, pageSize: PAGE_SIZE.max },
+        { board: isBoard(auth) }
+      )
+      const ids = page.data.map((row: { documentId: string }) => row.documentId)
+      const locks = await liveLocks(strapi, SUBMISSION_LOCK, ids)
+      for (const documentId of ids) {
+        const held = locks.get(documentId)
+        if (held && held.holderId !== holder.id) continue
+        const lock = await acquireLock(
+          strapi,
+          SUBMISSION_LOCK,
+          documentId,
+          holder
+        )
+        if (lock.state === "mine") {
+          ctx.body = { data: { documentId } }
+
+          return
+        }
+      }
+      ctx.body = { data: null }
     },
 
     // GET /moderation/submissions/:documentId
@@ -484,6 +643,7 @@ export default ({ strapi }: { strapi: any }) => {
       // Refused before the service is asked to do anything (`canModerate`).
       const s = await decidable(ctx, auth)
       if (!s) return
+      if (!(await unlocked(ctx, s, auth))) return
       if (
         status === "approved" &&
         ["role_application", "library_claim"].includes(s.submissionType) &&
@@ -565,6 +725,7 @@ export default ({ strapi }: { strapi: any }) => {
             )
         }
       }
+      await releaseLock(strapi, SUBMISSION_LOCK, documentId, holderOf(auth).id)
       const fresh = await strapi
         .documents("plugin::content-moderation.submission")
         .findOne({ documentId })
@@ -579,6 +740,7 @@ export default ({ strapi }: { strapi: any }) => {
       if (!auth) return
       const s = await decidable(ctx, auth)
       if (!s) return
+      if (!(await unlocked(ctx, s, auth))) return
       const body = ctx.request?.body
       if (!body || typeof body !== "object" || Array.isArray(body))
         return fail(ctx, 400, "Expected an object of place ids")
@@ -630,6 +792,7 @@ export default ({ strapi }: { strapi: any }) => {
       if (!auth) return
       const s = await decidable(ctx, auth)
       if (!s) return
+      if (!(await unlocked(ctx, s, auth))) return
       const body = ctx.request?.body
       const { startsAt, endsAt } = (
         body && typeof body === "object" && !Array.isArray(body) ? body : {}

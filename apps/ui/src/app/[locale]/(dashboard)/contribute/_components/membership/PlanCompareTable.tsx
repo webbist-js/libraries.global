@@ -10,6 +10,7 @@ import {
   PlanCompareMobile,
   PlanCompareSelectors,
 } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareMobile"
+import { PlanRowLabel } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanRoadmapLink"
 import { PlanToggle } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanToggle"
 import { T } from "@/lib/design-tokens"
 import {
@@ -83,13 +84,33 @@ function GroupHeader({
 }
 
 /** Every plan against every feature, in collapsible groups, with a "built only" filter. */
+/** Keep roadmap links only for items the published Roadmap still lists. */
+function withRoadmap(
+  groups: CompareGroup[],
+  keys: readonly string[]
+): CompareGroup[] {
+  const live = new Set(keys)
+
+  return groups.map((group) => ({
+    ...group,
+    rows: group.rows.map(({ roadmapKey, ...row }) =>
+      roadmapKey && live.has(roadmapKey) ? { ...row, roadmapKey } : row
+    ),
+  }))
+}
+
 export function PlanCompareTable({
   currentPlan,
-}: { readonly currentPlan?: string } = {}) {
+  roadmapKeys = [],
+}: {
+  readonly currentPlan?: string
+  /** Keys of the published Roadmap's items; rows link to the ones listed. */
+  readonly roadmapKeys?: readonly string[]
+} = {}) {
   const m = useMembershipContent()
   const planCard = useMembershipPlan()
   const shortPrice = useMembershipShortPrice()
-  const GROUPS = useMembershipGroups()
+  const GROUPS = withRoadmap(useMembershipGroups(), roadmapKeys)
   const NOW = availableNow(GROUPS)
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("membershipCompare")
@@ -288,7 +309,10 @@ export function PlanCompareTable({
                         color: T.ink.base,
                       }}
                     >
-                      {row.label}
+                      <PlanRowLabel
+                        label={row.label}
+                        roadmapKey={row.roadmapKey}
+                      />
                     </th>
                     {COMPARE_PLANS.map((key) => (
                       <td

@@ -104,6 +104,22 @@ const HOT_PATH_INDEXES = [
   }),
   index("cm_option_votes", ["suggestion_document_id"]),
 
+  // Roadmap votes: one vote per account and item, and the per-item tally
+  // (the unique index leads with item_key). Duplicates keep the earliest.
+  index("roadmap_votes", ["item_key", "ba_user_id"], {
+    unique: true,
+    before: [dedupe("roadmap_votes", ["item_key", "ba_user_id"])],
+  }),
+  // A contributor's recent dataset suggestions (the weekly cap).
+  index("roadmap_suggestions", ["submitted_by", "created_at"]),
+  // An account's saved Atlas views and Find searches, counted per kind.
+  index("saved_views", ["ba_user_id", "kind", "created_at"]),
+  // Review Locks (ADR-0008): one lease per item, which the upsert relies on.
+  index("cm_review_locks", ["subject_kind", "subject_id"], {
+    unique: true,
+    before: [dedupe("cm_review_locks", ["subject_kind", "subject_id"])],
+  }),
+
   // Option suggestions: a contributor's daily post limit, and the
   // duplicate-name check on create.
   index("cm_option_suggestions", ["suggested_by", "created_at"]),

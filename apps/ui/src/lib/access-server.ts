@@ -142,14 +142,24 @@ export function sessionTeamsOf(user: unknown): SessionTeam[] {
   return Array.isArray(raw) ? preferredTeams(raw.filter(isTeam)) : []
 }
 
+const isActiveTeam = (team: SessionTeam, now: number) =>
+  team.status === "active" &&
+  (!team.expiresAt || Date.parse(team.expiresAt) > now)
+
+/** The session's current Team, if its membership is active. */
+export function activeTeamOf(
+  user: unknown,
+  now = Date.now()
+): SessionTeam | null {
+  return sessionTeamsOf(user).find((team) => isActiveTeam(team, now)) ?? null
+}
+
 /** Prefer a current Team to abandoned setup, while keeping explicit selection. */
 export function preferredTeams<T extends SessionTeam>(
   teams: readonly T[],
   now = Date.now()
 ): T[] {
-  const active = (team: T) =>
-    team.status === "active" &&
-    (!team.expiresAt || Date.parse(team.expiresAt) > now)
+  const active = (team: T) => isActiveTeam(team, now)
 
   return [...teams].sort(
     (a, b) =>
