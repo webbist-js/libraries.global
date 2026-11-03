@@ -103,6 +103,7 @@ const config: StorybookConfig = {
       "storybook/theming",
       "@storybook/addon-docs/blocks",
       "@repo/shared-data",
+      "@repo/shared-data/mobile-auth",
       "@repo/access",
       "@repo/ui > @better-auth/passkey/client",
       "@repo/ui > better-auth/client/plugins",
