@@ -89,3 +89,8 @@ __pycache__/
 
 *.pyo
 *.pyd
+
+# Live host copies of the release-agent and CMS maintenance units (commit the .example files only)
+scripts/release/*.service
+scripts/release/*.timer
+scripts/release/release-agent.json
