@@ -26,26 +26,34 @@
       "types": "./dist/service-key.d.ts",
       "import": "./dist/service-key.js",
       "require": "./dist/service-key.js"
+    },
+    "./email-ownership-proof": {
+      "types": "./dist/email-ownership-proof.d.ts",
+      "import": "./dist/email-ownership-proof.js",
+      "require": "./dist/email-ownership-proof.js"
+    },
+    "./live-proof": {
+      "types": "./dist/live-proof.d.ts",
+      "import": "./dist/live-proof.js",
+      "require": "./dist/live-proof.js"
+    },
+    "./auth-policy": {
+      "types": "./dist/auth-policy.d.ts",
+      "import": "./dist/auth-policy.js",
+      "require": "./dist/auth-policy.js"
+    },
+    "./mobile-confirmation": {
+      "types": "./dist/mobile-confirmation.d.ts",
+      "import": "./dist/mobile-confirmation.js",
+      "require": "./dist/mobile-confirmation.js"
+    },
+    "./mobile-auth": {
+      "types": "./dist/mobile-auth.d.ts",
+      "default": "./dist/mobile-auth.js"
     }
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "build": "tsc",
-    "dev": "tsc",
-    "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
-    "lint:fix": "pnpm lint --fix",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
-  },
-  "devDependencies": {
-    "typescript": "^5",
-    "vitest": "^2.0.0",
-    "@types/node": "^22.20.5"
-  },
-  "dependencies": {
-    "obscenity": "^0.4.6"
-  },
   "typesVersions": {
     "*": {
       "atlas-population": [
@@ -59,7 +67,38 @@
       ],
       "service-key": [
         "dist/service-key.d.ts"
+      ],
+      "email-ownership-proof": [
+        "dist/email-ownership-proof.d.ts"
+      ],
+      "live-proof": [
+        "dist/live-proof.d.ts"
+      ],
+      "auth-policy": [
+        "dist/auth-policy.d.ts"
+      ],
+      "mobile-confirmation": [
+        "dist/mobile-confirmation.d.ts"
+      ],
+      "mobile-auth": [
+        "dist/mobile-auth.d.ts"
       ]
     }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc",
+    "lint": "eslint -c ../../eslint.config.mjs './**/*.{js,ts,jsx,tsx,cjs,mjs}'",
+    "lint:fix": "pnpm lint --fix",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "obscenity": "^0.4.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5",
+    "vitest": "^2.0.0"
   }
 }

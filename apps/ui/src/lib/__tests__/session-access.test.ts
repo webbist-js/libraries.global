@@ -1,8 +1,7 @@
-import type { Limit } from "@repo/access"
+import type { Limit, SessionProfile } from "@repo/access"
 import { describe, expect, it } from "vitest"
 
 import { buildSessionAccess } from "../session-access"
-import type { SessionProfile } from "../session-profile"
 
 const FREE_LIMITS: Record<Limit, number> = {
   analysisAreaMultiplier: 0,

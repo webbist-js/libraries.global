@@ -1,30 +1,25 @@
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { verifiedEmailMap } from "../src/utils/email-recipients"
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-  vi.unstubAllEnvs()
-})
 describe("owned service-email recipients", () => {
-  it("uses only requested verified owners and keeps fictional sandbox recipients out of SMTP", async () => {
-    vi.stubEnv("STRAPI_BRIDGE_SECRET", "fixture")
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        Response.json({
-          data: [
-            { id: "owner", email: "owner@example.org" },
-            { id: "fixture", email: "billing@example.invalid" },
-            { id: "foreign", email: "foreign@example.org" },
-          ],
-        })
-      )
-    )
-    const result = await verifiedEmailMap({ log: { warn: vi.fn() } }, [
-      "owner",
-      "fixture",
+  it("reads only verified requested owners locally and excludes sandbox recipients", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      { id: 1, email: "owner@example.org" },
+      { id: 2, email: "billing@example.invalid" },
+      { id: 3, email: "foreign@example.org" },
     ])
-    expect([...result]).toEqual([["owner", "owner@example.org"]])
+    const query = vi.fn(() => ({ findMany }))
+    const result = await verifiedEmailMap({ db: { query } }, [
+      "1",
+      "2",
+      "deleted-legacy",
+    ])
+    expect([...result]).toEqual([["1", "owner@example.org"]])
+    expect(query).toHaveBeenCalledWith("plugin::better-auth.user")
+    expect(findMany).toHaveBeenCalledWith({
+      where: { id: { $in: [1, 2] }, emailVerified: true },
+      select: ["id", "email"],
+    })
   })
 })

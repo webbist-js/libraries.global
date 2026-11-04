@@ -19,7 +19,6 @@ const SUBSCRIBER = "api::subscriber.subscriber"
 const POINTS = "plugin::rewards.point-event"
 const BADGES = "plugin::rewards.badge-award"
 const SNAPSHOT = "plugin::rewards.leaderboard-snapshot"
-const UP_USER = "plugin::users-permissions.user"
 const UP_FILE = "plugin::upload.file"
 const CRED = "plugin::events.event-credential"
 const CRED_EVENT = "plugin::events.credential-event"
@@ -35,6 +34,7 @@ function seed() {
         documentId: "p1",
         id: 1,
         baUserId: "u1",
+        authUser: 1,
         contributorNumber: 42,
         username: "alice",
         firstName: "Alice",
@@ -197,7 +197,6 @@ function seed() {
         ],
       },
     ],
-    [UP_USER]: [{ documentId: "uu1", id: 3, email: "alice@example.org" }],
   })
   const remove = vi.fn()
   faked.services["upload.upload"] = { remove }
@@ -372,7 +371,7 @@ describe("eraseAccount", () => {
     expect(remove).toHaveBeenCalledWith(expect.objectContaining(avatar))
   })
 
-  it("deletes saved events, claims, votes, grants, verifications, upload ownership, the newsletter row and the users-permissions user", async () => {
+  it("deletes saved events, claims, votes, grants, verifications, upload ownership, the newsletter row", async () => {
     const { strapi, store } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
 
@@ -383,7 +382,7 @@ describe("eraseAccount", () => {
     expect(store[GRANT]).toEqual([])
     expect(store[VERIFY].map((v) => v.documentId)).toEqual(["pv2"])
     expect(store[SUBSCRIBER].map((n) => n.documentId)).toEqual(["n2"])
-    expect(store[UP_USER]).toEqual([])
+    expect(store[PROFILE][0].authUser).toBeNull()
   })
 
   it("erases owned notifications and guest newsletter delivery records for the deleted address", async () => {

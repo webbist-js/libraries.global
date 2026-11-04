@@ -68,7 +68,10 @@ const TIPS_FOR: Partial<
 }
 
 const STEPS = [
-  { title: "Create your account", body: "Email and password, or Google." },
+  {
+    title: "Create your account",
+    body: "Email and password, Google or Discord.",
+  },
   { title: "Confirm your email", body: "Open the link we send you." },
   {
     title: "Set up your profile",
@@ -124,7 +127,7 @@ const COPY: Record<
       </>
     ),
     subtext:
-      "Change your password, or add one if you sign in with Google. Library records stay free either way.",
+      "Change your password, or add one if you use a social sign-in. Library records stay free either way.",
   },
 }
 

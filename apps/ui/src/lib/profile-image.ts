@@ -6,7 +6,6 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { uploadOwnedImage } from "@/lib/owned-image-upload"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 import { formatStrapiMediaUrlForClient } from "@/lib/strapi-helpers"
 
 type ProfileImage = "avatar" | "cover"
@@ -55,7 +54,6 @@ export async function uploadProfileImage(req: Request, kind: ProfileImage) {
         { error: "Profile update failed" },
         { status: 502 }
       )
-    invalidateSessionProfile(session.user.id)
 
     return NextResponse.json(
       { url: formatStrapiMediaUrlForClient(uploaded.file.url) },
@@ -93,7 +91,6 @@ export async function clearProfileCover(req: Request) {
         { error: "Profile update failed" },
         { status: 502 }
       )
-    invalidateSessionProfile(session.user.id)
 
     return NextResponse.json(
       { ok: true },

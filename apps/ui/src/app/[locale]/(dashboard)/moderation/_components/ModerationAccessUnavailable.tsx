@@ -7,8 +7,8 @@ import { T } from "@/lib/design-tokens"
 import { ModerationHero } from "./ModerationHero"
 
 /**
- * Shown when the session's roles couldn't be read (the session-profile
- * bridge timed out or failed), so a Moderation page can't tell whether the
+ * Shown when the session's roles couldn't be read (the auth gateway
+ * timed out or failed), so a Moderation page can't tell whether the
  * viewer may review here. Not a 404: the submission may well exist and the
  * viewer may well be a Moderator. The retry is a plain GET form, so it
  * works before hydration and always re-renders on the server with a fresh

@@ -2,7 +2,7 @@ import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
-import controller from "../src/api/auth-bridge/controllers/auth-bridge"
+import { sessionProfile } from "../src/auth/session-profile"
 import { NON_CLAIM_AFFILIATION_ROLES } from "../src/utils/affiliations"
 
 const PROFILE = "api::user-profile.user-profile"
@@ -11,21 +11,9 @@ const GRANT = "api::entitlement-grant.entitlement-grant"
 const VERIFY = "api::pro-verification.pro-verification"
 const ROLE_GRANT = "api::role-grant.role-grant"
 
-function ctx(query: Record<string, unknown>, secret = "s3cret") {
-  const c: any = {
-    query,
-    request: { header: { "x-service-secret": secret } },
-    send: (b: unknown) => (c.body = b),
-    unauthorized: (m: string) => ((c.status = 401), (c.body = m)),
-    badRequest: (m: string) => ((c.status = 400), (c.body = m)),
-  }
-
-  return c
-}
-
 const FUTURE_ISO = "2099-01-01T00:00:00Z"
 
-describe("auth-bridge sessionProfile", () => {
+describe("local session profile projection", () => {
   let fake: any
   beforeEach(() => {
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
@@ -122,16 +110,9 @@ describe("auth-bridge sessionProfile", () => {
     delete (globalThis as any).strapi
   })
 
-  it("rejects a bad secret", async () => {
-    const c = ctx({ baUserId: "u1" }, "wrong")
-    await controller.sessionProfile(c)
-    expect(c.status).toBe(401)
-  })
-
   it("returns role, username, tier, known dismissed prompts and only this user's claims", async () => {
-    const c = ctx({ baUserId: "u1" })
-    await controller.sessionProfile(c)
-    expect(c.body).toEqual({
+    const result = await sessionProfile(fake, "u1")
+    expect(result).toEqual({
       contributorRole: "verified_librarian",
       username: "ada",
       country: "CO",
@@ -153,9 +134,8 @@ describe("auth-bridge sessionProfile", () => {
   })
 
   it("defaults an unknown user to a reader with nothing", async () => {
-    const c = ctx({ baUserId: "nobody" })
-    await controller.sessionProfile(c)
-    expect(c.body).toEqual({
+    const result = await sessionProfile(fake, "nobody")
+    expect(result).toEqual({
       contributorRole: "reader",
       username: null,
       country: null,
@@ -173,19 +153,8 @@ describe("auth-bridge sessionProfile", () => {
     })
   })
 
-  it.each([
-    ["missing", {}],
-    ["empty", { baUserId: "" }],
-    ["repeated (array)", { baUserId: ["u1", "u2"] }],
-  ])("returns 400 when baUserId is %s", async (_label, query) => {
-    const c = ctx(query)
-    await controller.sessionProfile(c)
-    expect(c.status).toBe(400)
-    expect(fake.documents).not.toHaveBeenCalled()
-  })
-
   it("reads at most SESSION_PROFILE_MAX_CLAIMS affiliations", async () => {
-    await controller.sessionProfile(ctx({ baUserId: "u1" }))
+    await sessionProfile(fake, "u1")
     const i = fake.documents.mock.calls.findIndex(
       ([uid]: [string]) => uid === AFF
     )
@@ -194,9 +163,8 @@ describe("auth-bridge sessionProfile", () => {
   })
 
   it("excludes expired role grants and reads at most 50", async () => {
-    const c = ctx({ baUserId: "u1" })
-    await controller.sessionProfile(c)
-    expect(c.body.roleGrants.map((g: any) => g.role)).not.toContain(
+    const result = await sessionProfile(fake, "u1")
+    expect(result.roleGrants.map((g: any) => g.role)).not.toContain(
       "editorial_board"
     )
     const i = fake.documents.mock.calls.findIndex(
@@ -210,7 +178,7 @@ describe("auth-bridge sessionProfile", () => {
     ["grants", GRANT],
     ["verifications", VERIFY],
   ])("reads at most 20 %s, scoped to this user", async (_label, uid) => {
-    await controller.sessionProfile(ctx({ baUserId: "u1" }))
+    await sessionProfile(fake, "u1")
     const i = fake.documents.mock.calls.findIndex(([u]: [string]) => u === uid)
     const { findMany } = fake.documents.mock.results[i].value
     expect(findMany.mock.calls[0][0].limit).toBe(20)

@@ -101,9 +101,17 @@ export async function executeDirectoryIngest(options: {
   if (options.sourceCount !== libraries.length + options.skipped.length)
     throw new Error("Every source row must be mapped or have a skip reason")
   const seed = DATASET_SEED.find((item) => item.key === dataset)
+  const unconfirmedSpainAcknowledged =
+    dataset === "es-mcu-libraries" &&
+    args["acknowledge-unconfirmed-licence"] === dataset &&
+    seed?.licenceStatus === "unconfirmed" &&
+    seed.redistribution === "unconfirmed"
   if (
     !seed ||
-    !["permitted", "permitted_with_attribution"].includes(seed.redistribution)
+    (!["permitted", "permitted_with_attribution"].includes(
+      seed.redistribution
+    ) &&
+      !unconfirmedSpainAcknowledged)
   )
     throw new Error(`Dataset ${dataset} has no confirmed redistribution terms`)
   const runs = path.join(directory, ".runs")
@@ -124,6 +132,8 @@ export async function executeDirectoryIngest(options: {
   options.skipped.forEach((row) => log.add({ ...row, status: "skipped" }))
   const report: Record<string, any> = {
     dataset,
+    redistribution: seed.redistribution,
+    unconfirmedLicenceAcknowledged: unconfirmedSpainAcknowledged,
     dryRun: !apply,
     concurrency,
     source: options.sourceCount,

@@ -9,7 +9,6 @@ import {
 import { auth } from "@/lib/auth"
 import { readOwnProfile } from "@/lib/own-profile-server"
 import { isSameOrigin, sameOriginResponse } from "@/lib/same-origin"
-import { invalidateSessionProfile } from "@/lib/session-profile"
 import { readTypedJson } from "@/lib/typed-json"
 
 const noStore = { "Cache-Control": "private, no-store" }
@@ -94,7 +93,6 @@ export async function PATCH(req: Request) {
       }
     )
     if (!response.ok) throw new Error("Save failed")
-    invalidateSessionProfile(session.user.id)
 
     return NextResponse.json(
       { actorId: session.user.id, preference: parsed.body.preference },

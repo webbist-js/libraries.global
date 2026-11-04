@@ -1,4 +1,3 @@
-import { notifySessionInvalidated } from "../../../../utils/role-grants"
 import { AccessError, isBaUserId, isEmail } from "../utils/admin"
 
 /**
@@ -192,7 +191,6 @@ export default ({ strapi }: { strapi: any }) => {
           grantedBy: `admin:${adminId}`,
         },
       })) as any
-      await notifySessionInvalidated(strapi, baUserId)
       strapi.log.info(
         `[access] admin:${adminId} granted plan ${String(input.plan)} to ${baUserId}`
       )
@@ -234,7 +232,6 @@ export default ({ strapi }: { strapi: any }) => {
           reason: row.reason ? `${row.reason}\n${line}` : line,
         },
       })
-      if (row.baUserId) await notifySessionInvalidated(strapi, row.baUserId)
       strapi.log.info(
         `[access] admin:${adminId} revoked plan grant ${documentId}`
       )
@@ -323,7 +320,6 @@ export default ({ strapi }: { strapi: any }) => {
           expiresAt: input.expiresAt,
         },
       })) as any
-      await notifySessionInvalidated(strapi, baUserId)
       strapi.log.info(
         `[access] admin:${adminId} verified ${baUserId} as ${String(input.kind)}`
       )
@@ -370,7 +366,6 @@ export default ({ strapi }: { strapi: any }) => {
         documentId,
         data: { expiresAt: now.toISOString() },
       })
-      if (row.baUserId) await notifySessionInvalidated(strapi, row.baUserId)
       strapi.log.info(
         `[access] admin:${adminId} revoked verification ${documentId}: ${reason}`
       )

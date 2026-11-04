@@ -892,11 +892,9 @@ async function mayReadHistoryValues(strapi: any, ctx: any): Promise<boolean> {
 }
 
 // Resolves the calling user from the request.
-// Accepts two auth patterns:
+// Accepts the trusted application bridge:
 //   1. Service-to-service: X-Service-Secret header (from Next.js API routes) +
 //      X-Ba-User-Id / X-Ba-User-Email / X-Ba-User-Name headers carrying identity
-//   2. Better Auth session cookie (requires strapi-better-auth plugin)
-//   3. Strapi users-permissions JWT in Authorization: Bearer header (fallback)
 export async function resolveUser(
   strapi: any,
   ctx: any
@@ -913,24 +911,6 @@ export async function resolveUser(
         decodeHeaderName(ctx.request.headers["x-ba-user-name"]) ?? ""
       if (userId && userEmail) {
         return { id: userId, email: userEmail, name: userName }
-      }
-    }
-
-    // Pattern 2: strapi-better-auth plugin (when installed)
-    if (strapi.betterAuth?.api?.getSession) {
-      const session = await strapi.betterAuth.api.getSession({
-        headers: ctx.request.headers,
-      })
-
-      return session?.user ?? null
-    }
-
-    // Pattern 3: Strapi users-permissions JWT
-    if (ctx.state.user) {
-      return {
-        id: String(ctx.state.user.id),
-        email: ctx.state.user.email,
-        name: ctx.state.user.username,
       }
     }
 

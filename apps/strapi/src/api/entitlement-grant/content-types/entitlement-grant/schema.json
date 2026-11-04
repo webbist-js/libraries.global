@@ -5,7 +5,7 @@
     "singularName": "entitlement-grant",
     "pluralName": "entitlement-grants",
     "displayName": "Entitlement Grant",
-    "description": "Complimentary Supporter, Pro or Team, granted by staff. Read only by the session-profile bridge."
+    "description": "Complimentary Supporter, Pro or Team, granted by staff and resolved by the local session projection."
   },
   "options": {
     "draftAndPublish": false

@@ -28,6 +28,7 @@ export default ({ env }) => {
   }
 
   return {
+    "better-auth": { enabled: true },
     discussions: {
       enabled: true,
       config: discussionsHostConfig,
@@ -323,14 +324,6 @@ export default ({ env }) => {
 
     seo: {
       enabled: true,
-    },
-
-    "users-permissions": {
-      config: {
-        jwt: {
-          expiresIn: "30d",
-        },
-      },
     },
 
     sentry: {

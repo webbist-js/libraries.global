@@ -1875,7 +1875,8 @@
     "savedNoMatches": "No saved stories match these filters. Try All stories or clear the filters.",
     "savedEmpty": "Save a story from its article sidebar to read it later.",
     "upNext": "Up next",
-    "nextStory": "Next story"
+    "nextStory": "Next story",
+    "baseline": "Content baseline"
   },
   "billing": {
     "secureCheckout": "Secure checkout",

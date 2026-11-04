@@ -33,7 +33,7 @@ export type AuthSessionResult = {
 } | null
 
 /**
- * Retrieve the current Better Auth session from the Next.js auth handler.
+ * Retrieve the current Better Auth session from the Strapi auth handler.
  * Returns null (never throws) so pages degrade gracefully when session is
  * unavailable, expired, or BA encounters a transient DB error.
  */
@@ -53,7 +53,7 @@ export async function getSessionSSR(
 
 /**
  * Whether the signed-in user can sign in with a password (a `credential`
- * account), as opposed to Google only. Unknown counts as yes: the change
+ * account), as opposed to social only. Unknown counts as yes: the change
  * password form then finds out from Better Auth's reply.
  */
 export async function hasPasswordSignIn(

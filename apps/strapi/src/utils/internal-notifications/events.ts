@@ -361,12 +361,9 @@ export async function collectAuthEvents(
   strapi: Core.Strapi,
   enqueue: (event: InternalEvent) => Promise<void>
 ) {
-  const base =
-    process.env.APP_INTERNAL_URL ||
-    process.env.APP_PUBLIC_URL ||
-    "https://libraries.global"
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  if (!secret) throw new Error("Internal activity bridge is not configured")
+  const since = process.env.INTERNAL_NOTIFICATIONS_SINCE
+  if (!since || !Number.isFinite(Date.parse(since)))
+    throw new Error("Internal activity start time is not configured")
   for (const kind of ["users", "sessions"] as const) {
     const store = strapi.store({
       type: "core",
@@ -374,27 +371,27 @@ export async function collectAuthEvents(
       key: kind,
     })
     const after = ((await store.get()) as { after?: string })?.after || ""
-    const response = await fetch(
-      `${base.replace(/\/$/, "")}/api/internal/notifications/activity`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Service-Secret": secret,
-        },
-        body: JSON.stringify({ kind, after }),
-        signal: AbortSignal.timeout(10000),
-        redirect: "error",
-      }
-    )
-    if (!response.ok) throw new Error("Internal activity bridge unavailable")
-    const result = (await response.json()) as { data: AuthRow[]; next: string }
-    if (
-      !Array.isArray(result.data) ||
-      result.data.length > 100 ||
-      typeof result.next !== "string"
-    )
-      throw new Error("Invalid internal activity feed")
+    const rows = (await strapi.db
+      .connection("auth_activity_events as e")
+      .join("ba_user as u", "u.id", "e.user_id")
+      .select(
+        strapi.db.connection.raw(
+          'e.id::text AS id, e.user_id::text AS "userId", e.created_at AS "createdAt", u.email_verified AS "emailVerified"'
+        )
+      )
+      .where(
+        "e.created_at",
+        ">=",
+        new Date(Math.max(Date.parse(since), Date.now() - 30 * 86400000))
+      )
+      .where("e.id", ">", after || "0")
+      .where("e.kind", kind)
+      .orderBy("e.id")
+      .limit(101)) as unknown as AuthRow[]
+    const result = {
+      data: rows.slice(0, 100) as AuthRow[],
+      next: rows.length > 100 ? String(rows[99].id) : "",
+    }
     for (const row of result.data) await enqueue(authEvent(kind, row))
     await store.set({ value: { after: result.next } })
   }

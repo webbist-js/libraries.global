@@ -20,7 +20,7 @@ export const LIVE_HEADERS = {
 export const errorResponse = (code: string, status: number) =>
   Response.json({ error: { code } }, { status, headers: LIVE_HEADERS })
 
-/** Uses BA's existing verification table; the atomic upsert holds across Next instances. */
+/** Uses the application auth-state table; the atomic upsert holds across Next instances. */
 export async function liveRateLimit(
   key: string,
   max: number,
@@ -29,7 +29,7 @@ export async function liveRateLimit(
   const id = `live-rate:${createHash("sha256").update(key).digest("hex")}`
   const resetAt = Date.now() + windowMs
   const { rows } = await authDbPool.query<{ value: string }>(
-    `insert into "verification" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=case when "verification"."expiresAt"<=now() then excluded.value else json_build_object('count',coalesce(("verification".value::json->>'count')::int,0)+1)::text end,"expiresAt"=case when "verification"."expiresAt"<=now() then excluded."expiresAt" else "verification"."expiresAt" end,"updatedAt"=now() returning value`,
+    `insert into "app_auth_state" (id,identifier,value,"expiresAt","createdAt","updatedAt") values ($1,$1,$2,$3,now(),now()) on conflict (id) do update set value=case when "app_auth_state"."expiresAt"<=now() then excluded.value else json_build_object('count',coalesce(("app_auth_state".value::json->>'count')::int,0)+1)::text end,"expiresAt"=case when "app_auth_state"."expiresAt"<=now() then excluded."expiresAt" else "app_auth_state"."expiresAt" end,"updatedAt"=now() returning value`,
     [id, JSON.stringify({ count: 1 }), new Date(resetAt)]
   )
 

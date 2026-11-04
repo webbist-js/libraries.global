@@ -57,7 +57,7 @@ document outline and visual roles for their context. See
 
 ## Authentication
 
-- **Better Auth v1**: Session management
+- **Strapi Better Auth plugin**: Owns credentials, sessions and profile provisioning. Next.js forwards `/api/auth/*` and uses a typed remote server gateway.
 - **Server bridge**: Dedicated Next.js routes resolve the Better Auth session; Strapi verifies trusted server headers and rechecks access. No Strapi JWT or service secret is exposed in the browser.
 
 ```typescript
