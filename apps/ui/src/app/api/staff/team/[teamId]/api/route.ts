@@ -1,3 +1,4 @@
+import { SUPPORTED_LOCALES } from "@repo/shared-data"
 import { z } from "zod"
 
 import { authDbPool } from "@/lib/auth"
@@ -38,12 +39,12 @@ const Action = z.discriminatedUnion("action", [
   z
     .object({
       action: z.literal("checkout"),
-      locale: z.enum(["en", "fr", "cs"]),
+      locale: z.enum(SUPPORTED_LOCALES),
       termsVersion: z.string().max(40),
     })
     .strict(),
   z
-    .object({ action: z.literal("portal"), locale: z.enum(["en", "fr", "cs"]) })
+    .object({ action: z.literal("portal"), locale: z.enum(SUPPORTED_LOCALES) })
     .strict(),
 ])
 

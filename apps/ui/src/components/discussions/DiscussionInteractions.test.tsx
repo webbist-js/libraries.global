@@ -135,7 +135,7 @@ describe("discussion interactions", () => {
     "resolves profile and shared discussion language choices (%s)",
     async (initialSearch, expected) => {
       actor.compositionPreferences = {
-        languages: [{ code: "es", proficiency: "native" }],
+        languages: [{ code: "de", proficiency: "native" }],
       }
       fetch.mockResolvedValue(Response.json({ data: [] }))
       const view = render(

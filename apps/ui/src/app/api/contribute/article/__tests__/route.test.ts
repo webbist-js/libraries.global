@@ -20,7 +20,7 @@ describe("translation lookups", () => {
     vi.stubGlobal("fetch", fetcher)
     const response = await GET(
       new Request(
-        "https://site.example/api/contribute/article?kind=knowledge&slug=story&locale=es"
+        "https://site.example/api/contribute/article?kind=knowledge&slug=story&locale=de"
       )
     )
     expect(response.status).toBe(400)

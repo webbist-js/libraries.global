@@ -2,6 +2,7 @@ import "server-only"
 
 import { randomUUID } from "node:crypto"
 
+import type { SupportedLocale } from "@repo/shared-data"
 import type { Pool } from "pg"
 import type Stripe from "stripe"
 
@@ -25,7 +26,7 @@ type Attempt = {
   created_at: Date
   actor_id: string
   limits: ApiLimits
-  locale: "en" | "cs" | "fr"
+  locale: SupportedLocale
 }
 
 export async function apiPrice(stripe: Stripe) {
@@ -60,7 +61,7 @@ export async function apiCheckout(
   stripe: Stripe,
   team: { documentId: string; name: string },
   buyer: { id: string; email: string; name: string },
-  choice: { locale: "en" | "fr" | "cs"; termsVersion: string }
+  choice: { locale: SupportedLocale; termsVersion: string }
 ) {
   if (choice.termsVersion !== API_TERMS_VERSION)
     throw new BillingError("api_terms_required", 400)

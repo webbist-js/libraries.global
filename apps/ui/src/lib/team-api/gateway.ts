@@ -1,6 +1,6 @@
 import "server-only"
 
-import { isLibraryEntityRef } from "@repo/shared-data"
+import { isLibraryEntityRef, SUPPORTED_LOCALES } from "@repo/shared-data"
 import type { Pool } from "pg"
 import { z } from "zod"
 
@@ -34,7 +34,7 @@ const preauth = createRateLimiter({
 const Search = z
   .object({
     q: z.string().max(512).default(""),
-    locale: z.enum(["en", "cs", "fr"]).default("en"),
+    locale: z.enum(SUPPORTED_LOCALES).default("en"),
     limit: z.number().int().min(1).max(100).default(20),
     offset: z.number().int().min(0).max(10_000).default(0),
     country: z

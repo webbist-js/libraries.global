@@ -1,3 +1,4 @@
+import { SUPPORTED_LOCALES } from "@repo/shared-data"
 import { z } from "zod"
 
 import { authDbPool } from "@/lib/auth"
@@ -12,7 +13,7 @@ const Choice = z
   .object({
     plan: z.enum(["pro", "supporter"]),
     interval: z.enum(["month", "year"]),
-    locale: z.enum(["en", "cs", "fr"]),
+    locale: z.enum(SUPPORTED_LOCALES),
     termsVersion: z.string(),
   })
   .strict()

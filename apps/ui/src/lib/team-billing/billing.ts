@@ -2,6 +2,7 @@ import "server-only"
 
 import { randomUUID } from "node:crypto"
 
+import type { SupportedLocale } from "@repo/shared-data"
 import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
@@ -39,7 +40,7 @@ export type TeamCheckoutAttempt = {
   price_id: string
   seats: number
   terms_version: string
-  locale: "en" | "fr" | "cs"
+  locale: SupportedLocale
   session_id: string | null
   created_at: Date
 }
@@ -232,7 +233,7 @@ export async function teamCheckout(
   stripe: Stripe,
   teamId: string,
   buyer: Buyer,
-  choice: { seats: number; locale: "en" | "fr" | "cs"; termsVersion: string }
+  choice: { seats: number; locale: SupportedLocale; termsVersion: string }
 ) {
   if (choice.termsVersion !== TEAM_TERMS_VERSION)
     throw new BillingError("team_terms_required", 400)
@@ -424,7 +425,7 @@ export async function teamPortal(
   const session = await stripe.billingPortal.sessions.create({
     customer: account.customer_id,
     configuration: portalId,
-    locale: locale as "en" | "fr" | "cs",
+    locale: locale as SupportedLocale,
     return_url: `${config.origin}${locale === "en" ? "" : `/${locale}`}/staff/teams/billing?payment=updated`,
   })
 
