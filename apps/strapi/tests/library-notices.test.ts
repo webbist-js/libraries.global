@@ -50,12 +50,12 @@ const notice: LibraryNotice = {
   stopId: null,
   reason: null,
 }
+// Open-ended notices last 30 days, so pin the clock to the fixtures' week.
+function pinClock() {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date("2026-10-06T12:00:00Z"))
+}
 describe("library notices", () => {
-  // Open-ended notices last 30 days, so pin the clock to the fixtures' week.
-  const pinClock = () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T12:00:00Z"))
-  }
   afterEach(() => vi.useRealTimers())
   it("refreshes each affected branch once at its local midnight", async () => {
     const utc = { ...branch, documentId: "utc-branch", timezone: "UTC" }
