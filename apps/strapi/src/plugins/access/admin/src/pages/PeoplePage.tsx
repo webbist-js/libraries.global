@@ -34,8 +34,8 @@ import { PersonModal } from "../components/PersonModal"
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 
 /**
- * People: find a contributor by name, username or the email their
- * submissions came from, then see and change their Role Grants. With no
+ * People: find a contributor by name, username or their current account
+ * email, then see and change their Role Grants. With no
  * search, the people who most recently got a role.
  */
 export function PeoplePage({

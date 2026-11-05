@@ -24,7 +24,7 @@ describe("article editor context", () => {
       "fetch",
       vi.fn().mockResolvedValue(
         Response.json({
-          data: [{ code: "es", name: "Spanish", isDefault: true }],
+          data: [{ code: "de", name: "German", isDefault: true }],
         })
       )
     )
@@ -37,7 +37,7 @@ describe("article editor context", () => {
         Response.json({
           data: [
             { code: "en", name: "English", isDefault: true },
-            { code: "es", name: "Spanish", isDefault: false },
+            { code: "de", name: "German", isDefault: false },
             { code: "fr", name: "French", isDefault: false },
           ],
         })
@@ -85,7 +85,7 @@ describe("article editor context", () => {
           documentId: "article",
           slug: "article",
           locale: "en",
-          availableLocales: ["en", "es"],
+          availableLocales: ["en", "de"],
           localizations: [{ locale: "fr" }],
         },
         "en"
@@ -234,11 +234,11 @@ it("refuses unsupported source and target locales before fetching", async () => 
   fetcher.mockClear()
   expect(
     await loadArticleForEditor("knowledge", "story", "en", {
-      sourceLocale: "es",
+      sourceLocale: "de",
     })
   ).toBeNull()
   expect(
-    await loadArticleForEditor("journal", "story", "en", { targetLocale: "es" })
+    await loadArticleForEditor("journal", "story", "en", { targetLocale: "de" })
   ).toBeNull()
   expect(fetcher).not.toHaveBeenCalled()
 })

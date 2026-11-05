@@ -1,3 +1,5 @@
+import { isSupportedLocale } from "./locales"
+
 /** The core Library endpoint is for bounded, indexed lookups. Text/facet
  * discovery belongs to the search index, not substring SQL on the catalogue.
  */
@@ -154,11 +156,7 @@ export function boundedLibraryQuery(
 ): Record<string, unknown> {
   if (input.filters !== undefined) validateFilters(input.filters, { nodes: 0 })
   if (input.sort !== undefined) validateSort(input.sort)
-  if (
-    input.locale !== undefined &&
-    !["en", "fr", "cs"].includes(String(input.locale))
-  )
-    fail()
+  if (input.locale !== undefined && !isSupportedLocale(input.locale)) fail()
 
   return { ...input, pagination: validatePagination(input.pagination) }
 }

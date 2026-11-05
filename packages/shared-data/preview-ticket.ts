@@ -1,6 +1,8 @@
 // Server-only entry point: deliberately excluded from the browser barrel.
 import { createHmac, randomUUID, timingSafeEqual } from "node:crypto"
 
+import { isSupportedLocale } from "./locales"
+
 export type PreviewTarget = {
   url: string
   locale: string
@@ -43,7 +45,7 @@ export function readPreviewTicket(
     if (
       typeof data.url !== "string" ||
       !/^\/(?!\/)[a-zA-Z0-9/%_-]*$/.test(data.url) ||
-      !["en", "fr", "cs"].includes(data.locale) ||
+      !isSupportedLocale(data.locale) ||
       !["draft", "published"].includes(data.status) ||
       typeof data.nonce !== "string" ||
       !/^[a-f0-9-]{36}$/.test(data.nonce) ||

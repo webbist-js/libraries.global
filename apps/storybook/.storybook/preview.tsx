@@ -26,11 +26,12 @@ import { resetServerFixtures } from "./server-fixtures"
 
 import cs from "../../ui/locales/cs.json"
 import en from "../../ui/locales/en.json"
+import es from "../../ui/locales/es.json"
 import fr from "../../ui/locales/fr.json"
 
 disableCache("all")
 addCollection(icons)
-const messages = { en, cs, fr }
+const messages = { en, cs, es, fr }
 function embeddedDocsRoot(): HTMLElement | null {
   // Only preset Doc-block iframes inherit their host's theme. Canvas keeps globals.
   if (!window.frameElement?.id.startsWith("iframe--")) return null
@@ -211,6 +212,7 @@ const preview: Preview = {
         items: [
           { value: "en", title: "English" },
           { value: "cs", title: "Čeština" },
+          { value: "es", title: "Español" },
           { value: "fr", title: "Français" },
         ],
       },

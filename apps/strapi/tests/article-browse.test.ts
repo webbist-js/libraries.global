@@ -371,7 +371,7 @@ it.each(["blog", "wiki"] as const)(
       documents: () => ({
         findMany: async () => [
           { ...row, documentId: "supported", locale: "fr" },
-          { ...row, documentId: "unsupported", locale: "es" },
+          { ...row, documentId: "unsupported", locale: "de" },
         ],
       }),
     }

@@ -1,6 +1,7 @@
 import "server-only"
 
 import { isPaidMembership } from "@repo/access"
+import type { SupportedLocale } from "@repo/shared-data"
 import type { Pool } from "pg"
 import type Stripe from "stripe"
 
@@ -22,7 +23,7 @@ export async function createPlanChangePortal(
   choice: {
     plan: PurchasePlan
     interval: PurchaseInterval
-    locale: "en" | "cs" | "fr"
+    locale: SupportedLocale
     complimentaryPro?: boolean
     action?: "review" | "confirm"
     effectiveAt?: number

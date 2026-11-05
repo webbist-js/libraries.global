@@ -20,14 +20,14 @@ import { summaryOf } from "../../../content-moderation/server/utils/submission-s
  * Grants (active, expired and revoked), grant a role and revoke one. Admin
  * routes only, behind `plugin::access.manage-roles`.
  *
- * A user-profile is not linked to a users-permissions user or a Better Auth
- * user in Strapi, so the email shown and searched is the one the person's
- * submissions were filed with (stamped from their session by the bridge).
+ * Account email comes only from the canonical Better Auth user. Historical
+ * submission email is attribution, never an identity source for access grants.
  * Revoking never deletes: it ends the grant now and appends who revoked it,
  * when and why to its `reason`, so the history stays.
  */
 
 const PROFILE = "api::user-profile.user-profile"
+const AUTH_USER = "plugin::better-auth.user"
 const SUBMISSION = "plugin::content-moderation.submission"
 
 export const PEOPLE_MAX = 25
@@ -249,20 +249,19 @@ export default ({ strapi }: { strapi: any }) => {
   const grants = () => strapi.documents(ROLE_GRANT as any)
   const submissions = () => strapi.documents(SUBMISSION)
 
-  /** The latest email each user's submissions were filed with. */
+  /** Canonical account emails, selected only inside these permissioned admin routes. */
   async function emailsOf(ids: string[]): Promise<Map<string, string>> {
     const out = new Map<string, string>()
-    if (ids.length === 0) return out
-    const rows = (await submissions().findMany({
-      filters: { submittedByUserId: { $in: ids } },
-      fields: ["submittedByUserId", "submittedByEmail"],
-      sort: [{ createdAt: "desc" }, { id: "desc" }],
-      limit: EMAIL_ROWS_MAX,
-    })) as { submittedByUserId?: string; submittedByEmail?: string }[]
-    for (const r of rows) {
-      const email = clean(r.submittedByEmail)
-      if (r.submittedByUserId && email && !out.has(r.submittedByUserId))
-        out.set(r.submittedByUserId, email)
+    const numericIds = ids.filter((id) => /^[1-9]\d{0,9}$/.test(id)).map(Number)
+    if (numericIds.length === 0) return out
+    const rows = await strapi.db.query(AUTH_USER).findMany({
+      where: { id: { $in: numericIds } },
+      select: ["id", "email"],
+      limit: numericIds.length,
+    })
+    for (const row of rows) {
+      const email = clean(row.email)
+      if (email) out.set(String(row.id), email)
     }
 
     return out
@@ -326,21 +325,17 @@ export default ({ strapi }: { strapi: any }) => {
   }
 
   return {
-    /**
-     * The Better Auth id whose submissions were last filed from `email`, or
-     * null. Plans and Teams accept an email where an admin has no id.
-     */
+    /** Resolve a current verified account, never an email in historical submissions. */
     async baUserIdByEmail(email: string): Promise<string | null> {
       const needle = email.trim().toLowerCase()
       if (!needle || needle.length > 254) return null
-      const rows = (await submissions().findMany({
-        filters: { submittedByEmail: { $eqi: needle } },
-        fields: ["submittedByUserId"],
-        sort: [{ createdAt: "desc" }, { id: "desc" }],
-        limit: 1,
-      })) as { submittedByUserId?: string }[]
+      const rows = await strapi.db.query(AUTH_USER).findMany({
+        where: { email: { $eqi: needle }, emailVerified: true },
+        select: ["id"],
+        limit: 2,
+      })
 
-      return rows[0]?.submittedByUserId ?? null
+      return rows.length === 1 ? String(rows[0].id) : null
     },
 
     /** The profile row for a Better Auth id, or null. */
@@ -370,8 +365,7 @@ export default ({ strapi }: { strapi: any }) => {
 
     /**
      * Up to 25 people. With `q`: every word must match a username, first or
-     * last name, and profiles whose submissions were filed from a matching
-     * email are added. Without: the people who most recently got a role.
+     * last name, and profiles with a matching current account email are added. Without: the people who most recently got a role.
      */
     async search(q: string): Promise<PersonRow[]> {
       const query = q.trim().slice(0, Q_MAX)
@@ -415,22 +409,17 @@ export default ({ strapi }: { strapi: any }) => {
 
         let byEmail: ProfileRow[] = []
         if (byName.length < PEOPLE_MAX && query.length >= 3) {
-          const rows = (await submissions().findMany({
-            filters: { submittedByEmail: { $containsi: query } },
-            fields: ["submittedByUserId"],
-            sort: [{ createdAt: "desc" }, { id: "desc" }],
+          const rows = await strapi.db.query(AUTH_USER).findMany({
+            where: { email: { $containsi: query } },
+            select: ["id"],
+            orderBy: [{ id: "asc" }],
             limit: EMAIL_ROWS_MAX,
-          })) as { submittedByUserId?: string }[]
+          })
           const seen = new Set(byName.map((p) => p.baUserId))
-          const ids = [
-            ...new Set(
-              rows.flatMap((r) =>
-                r.submittedByUserId && !seen.has(r.submittedByUserId)
-                  ? [r.submittedByUserId]
-                  : []
-              )
-            ),
-          ].slice(0, PEOPLE_MAX - byName.length)
+          const ids = rows
+            .map((row: { id: number }) => String(row.id))
+            .filter((id: string) => !seen.has(id))
+            .slice(0, PEOPLE_MAX - byName.length)
           if (ids.length > 0)
             byEmail = (await profiles().findMany({
               where: { baUserId: { $in: ids } },

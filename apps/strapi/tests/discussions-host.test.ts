@@ -84,7 +84,8 @@ describe("Libraries Global discussion adapter", () => {
     ).toBeNull()
   })
   it.each([
-    ["es", "/en/journal/reports/story?contentLang=es"],
+    ["de", "/en/journal/reports/story?contentLang=de"],
+    ["es", "/es/journal/reports/story"],
     ["fr", "/fr/journal/reports/story"],
   ])(
     "links an attached %s article through a supported interface locale",

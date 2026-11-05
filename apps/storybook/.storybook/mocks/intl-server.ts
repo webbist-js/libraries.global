@@ -8,9 +8,10 @@ import { getFixtureLocale } from "../fixture-locale"
 
 import cs from "../../../ui/locales/cs.json"
 import en from "../../../ui/locales/en.json"
+import es from "../../../ui/locales/es.json"
 import fr from "../../../ui/locales/fr.json"
 
-const messages = { en, cs, fr }
+const messages = { en, cs, es, fr }
 
 export async function getLocale() {
   return getFixtureLocale()

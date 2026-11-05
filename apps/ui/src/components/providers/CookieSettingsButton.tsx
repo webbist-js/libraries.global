@@ -28,7 +28,9 @@ export function CookieSettingsButton({
         ? "Choix des cookies"
         : locale === "cs"
           ? "Nastavení cookies"
-          : "Cookie choices"}
+          : locale === "es"
+            ? "Opciones de cookies"
+            : "Cookie choices"}
     </button>
   )
 }

@@ -54,7 +54,7 @@ type Tab = "grants" | "verifications"
 /**
  * Plans: complimentary plans (Pro or Team for one person) and Pro
  * verifications (library staff, student, charity). Grant by Better Auth id
- * or by the email a person's submissions came from, with a reason and an
+ * or by their current verified account email, with a reason and an
  * optional expiry; revoke with a reason. Nothing here touches a role.
  */
 export function PlansPage({
@@ -552,7 +552,7 @@ function AddPlanModal({
             <Field.Root
               name="person"
               required
-              hint="Use an email from their submissions, or copy their account ID from People."
+              hint="Use their verified account email, or copy their account ID from People."
             >
               <Field.Label>Person</Field.Label>
               <TextInput
