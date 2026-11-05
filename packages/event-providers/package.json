@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "vitest run --minWorkers=1 --maxWorkers=1",
+    "test": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
@@ -28,6 +28,6 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "4.1.12"
   }
 }
