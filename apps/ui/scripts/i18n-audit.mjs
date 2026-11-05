@@ -185,7 +185,7 @@ if (
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
   const catalogues = Object.fromEntries(
-    ["en", "cs", "fr"].map((locale) => [
+    ["en", "cs", "es", "fr"].map((locale) => [
       locale,
       JSON.parse(
         fs.readFileSync(path.join(root, "locales", `${locale}.json`), "utf8")

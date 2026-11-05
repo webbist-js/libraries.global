@@ -13,7 +13,7 @@ describe("fully supported content languages", () => {
   it("intersects CMS configuration with app support and keeps a valid default", () => {
     expect(
       supportedContentLocales([
-        { code: "es", name: "Spanish", isDefault: true },
+        { code: "de", name: "German", isDefault: true },
         { code: "en", name: "English", isDefault: false },
         { code: "fr", name: "French", isDefault: false },
         { code: "fr", name: "French duplicate", isDefault: false },
@@ -25,12 +25,12 @@ describe("fully supported content languages", () => {
     expect(supportedContentLocales([])).toEqual([])
   })
   it("does not offer an unsupported locale from an old link or a stale facet", () => {
-    expect(articleLanguageOptions(["en", "es"], ["es", "fr"])).toEqual([
+    expect(articleLanguageOptions(["en", "de"], ["de", "fr"])).toEqual([
       "en",
       "fr",
     ])
     expect(supportedContentLanguage("FR_ca")).toBe("fr")
-    expect(supportedContentLanguage("es-MX")).toBeNull()
+    expect(supportedContentLanguage("de-AT")).toBeNull()
   })
   it.each(SUPPORTED_LOCALES)(
     "has code translations for the shared %s route",

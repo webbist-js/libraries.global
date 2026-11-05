@@ -27,11 +27,11 @@ describe("explicit article language links", () => {
     )
   })
   it("drops CMS-only languages, arbitrary paths and unsupported query syntax", () => {
-    expect(articleContentLanguage({ contentLang: "es" })).toBeNull()
-    expect(contentLanguageSuffix("es")).toBe("")
+    expect(articleContentLanguage({ contentLang: "de" })).toBeNull()
+    expect(contentLanguageSuffix("de")).toBe("")
     expect(articleContentLanguage({ contentLang: "../../draft" })).toBeNull()
     expect(
-      articleContentLanguage({ contentLang: "es&status=draft" })
+      articleContentLanguage({ contentLang: "de&status=draft" })
     ).toBeNull()
     expect(contentLanguageSuffix(null)).toBe("")
   })

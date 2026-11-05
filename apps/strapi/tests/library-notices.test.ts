@@ -50,7 +50,13 @@ const notice: LibraryNotice = {
   stopId: null,
   reason: null,
 }
+// Open-ended notices last 30 days, so pin the clock to the fixtures' week.
+function pinClock() {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date("2026-10-06T12:00:00Z"))
+}
 describe("library notices", () => {
+  afterEach(() => vi.useRealTimers())
   it("refreshes each affected branch once at its local midnight", async () => {
     const utc = { ...branch, documentId: "utc-branch", timezone: "UTC" }
     const mobile = { ...branch, documentId: "mobile", libraryType: "Mobile" }
@@ -404,6 +410,7 @@ describe("library notices", () => {
     expect(await noticesForLibraries(f.strapi, [])).toEqual(new Map())
   })
   it("answers the index's per-entry reads with one query a batch, cached until a notice changes (1.7)", async () => {
+    pinClock()
     forgetIndexedNotices(id)
     const f = makeFakeStrapi({
       [LIB]: [branch],
@@ -430,6 +437,7 @@ describe("library notices", () => {
     expect(noticeQueries()).toBe(2)
   })
   it("serves the seed up to 100 libraries' notices in one request", async () => {
+    pinClock()
     const f = makeFakeStrapi({
       [LIB]: [branch],
       [NOTICE]: [

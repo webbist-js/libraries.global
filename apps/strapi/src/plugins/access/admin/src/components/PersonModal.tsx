@@ -465,7 +465,7 @@ export function PersonModal({
                     },
                     {
                       label: "Email",
-                      value: person.email ?? "No submission email recorded",
+                      value: person.email ?? "No account email available",
                     },
                     {
                       label: "Role",

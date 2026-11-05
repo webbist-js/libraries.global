@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS team_billing_attempts (
   price_id text NOT NULL,
   seats integer NOT NULL CHECK (seats BETWEEN 5 AND 500),
   terms_version text NOT NULL,
-  locale text NOT NULL CHECK (locale IN ('en','fr','cs')),
+  locale text NOT NULL CHECK (locale IN ('cs','en','es','fr')),
   session_id text UNIQUE,
   subscription_id text,
   checkout_url text,
@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS team_billing_attempts (
   created_at timestamptz NOT NULL DEFAULT now(),
   reconciled_at timestamptz NOT NULL DEFAULT now()
 );
+-- Existing tables keep the old inline CHECK; re-create it so new locales apply.
+ALTER TABLE team_billing_attempts DROP CONSTRAINT IF EXISTS team_billing_attempts_locale_check;
+ALTER TABLE team_billing_attempts ADD CONSTRAINT team_billing_attempts_locale_check
+  CHECK (locale IN ('cs','en','es','fr'));
 CREATE UNIQUE INDEX IF NOT EXISTS team_billing_one_open ON team_billing_attempts(account_id) WHERE state IN ('preparing','open');
 CREATE TABLE IF NOT EXISTS team_billing_memberships (
   subscription_id text PRIMARY KEY,

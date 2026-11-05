@@ -15,6 +15,10 @@
             {
               "uid": "api::article-change.article-change",
               "type": "contentType"
+            },
+            {
+              "uid": "plugin::access.network-mandate-event",
+              "type": "contentType"
             }
           ]
         },
@@ -22,7 +26,28 @@
           "parent": null,
           "name": "Community",
           "id": "grp_c0mmun1tyd71v35000000001",
-          "children": [{ "uid": "api::drive.drive", "type": "contentType" }]
+          "children": [
+            {
+              "uid": "api::drive.drive",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::drive-credit.drive-credit",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::drive-hold.drive-hold",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::roadmap-suggestion.roadmap-suggestion",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::roadmap-vote.roadmap-vote",
+              "type": "contentType"
+            }
+          ]
         },
         {
           "parent": null,
@@ -113,6 +138,33 @@
             {
               "uid": "api::amenity.amenity",
               "type": "contentType"
+            },
+            {
+              "uid": "api::library-network.library-network",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::library-type.library-type",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Notifications",
+          "id": "grp_ac72c8daaf63281eb1e5781e",
+          "children": [
+            {
+              "uid": "api::notification.notification",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::announcement.announcement",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::internal-notification.internal-notification",
+              "type": "contentType"
             }
           ]
         },
@@ -131,25 +183,6 @@
             },
             {
               "uid": "api::redirect.redirect",
-              "type": "contentType"
-            }
-          ]
-        },
-        {
-          "parent": null,
-          "name": "Utilities",
-          "id": "grp_w8x9y0z1a2b3c4d5e6f7g8h9",
-          "children": [
-            {
-              "uid": "api::dataset.dataset",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::topic.topic",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::subscriber.subscriber",
               "type": "contentType"
             }
           ]
@@ -178,13 +211,101 @@
             {
               "uid": "api::pro-verification.pro-verification",
               "type": "contentType"
+            },
+            {
+              "uid": "api::library-affiliation.library-affiliation",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::paid-membership.paid-membership",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::saved-view.saved-view",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Utilities",
+          "id": "grp_w8x9y0z1a2b3c4d5e6f7g8h9",
+          "children": [
+            {
+              "uid": "api::dataset.dataset",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::topic.topic",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::subscriber.subscriber",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::article-projection-job.article-projection-job",
+              "type": "contentType"
             }
           ]
         }
       ]
     },
     "singleTypes": {
-      "groups": []
+      "groups": [
+        {
+          "parent": null,
+          "name": "Community",
+          "id": "grp_0209a669fc009138b4bbbab4",
+          "children": [
+            {
+              "uid": "api::roadmap.roadmap",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Journal",
+          "id": "grp_6138ea4adf0bd5a96dd57c86",
+          "children": [
+            {
+              "uid": "api::blog-landing.blog-landing",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Knowledge",
+          "id": "grp_f9a9867bb0ac53dfe0b2d4ba",
+          "children": [
+            {
+              "uid": "api::wiki-landing.wiki-landing",
+              "type": "contentType"
+            }
+          ]
+        },
+        {
+          "parent": null,
+          "name": "Site",
+          "id": "grp_12e0080762fe53152000e3a6",
+          "children": [
+            {
+              "uid": "api::homepage.homepage",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::footer.footer",
+              "type": "contentType"
+            },
+            {
+              "uid": "api::site-config.site-config",
+              "type": "contentType"
+            }
+          ]
+        }
+      ]
     }
   }
 }

@@ -19,7 +19,12 @@ import {
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { getPathname, routing, usePathname } from "@/lib/navigation"
 
-const localeTranslation = { cs: "Čeština", en: "English", fr: "Français" }
+const localeTranslation = {
+  cs: "Čeština",
+  en: "English",
+  es: "Español",
+  fr: "Français",
+}
 
 function LocaleSwitcher({
   locale,

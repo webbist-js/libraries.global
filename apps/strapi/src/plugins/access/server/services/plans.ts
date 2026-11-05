@@ -80,7 +80,7 @@ export default ({ strapi }: { strapi: any }) => {
 
   /**
    * A person from an admin's reference: a Better Auth id with a profile,
-   * or an email their submissions were filed from. 404 otherwise.
+   * or their current verified account email. 404 otherwise.
    */
   async function resolvePerson(ref: unknown): Promise<string> {
     if (
@@ -96,7 +96,7 @@ export default ({ strapi }: { strapi: any }) => {
     throw new AccessError(
       404,
       "no_profile",
-      "No profile for that id or email. The person needs to have signed in and, for an email, sent a submission."
+      "No profile for that id or email. The person needs a profile and a verified account email."
     )
   }
 

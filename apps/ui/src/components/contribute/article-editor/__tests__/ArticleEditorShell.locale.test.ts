@@ -180,8 +180,8 @@ describe("article-type citation scope", () => {
             status: "draft",
             submissionType: "blog_submission",
             draftData: {
-              title: "Saved Spanish work",
-              locale: "es",
+              title: "Saved German work",
+              locale: "de",
               doc: { type: "doc", content: [] },
             },
           },
@@ -484,9 +484,9 @@ describe("editingLocaleFrom", () => {
     expect(editingLocaleFrom("fr", LOCALES)).toBe("fr")
     expect(editingLocaleFrom("de", LOCALES)).toBeUndefined()
     expect(
-      editingLocaleFrom("es", [
+      editingLocaleFrom("de", [
         ...LOCALES,
-        { code: "es", name: "Spanish", isDefault: false },
+        { code: "de", name: "German", isDefault: false },
       ])
     ).toBeUndefined()
     expect(editingLocaleFrom(["fr"], LOCALES)).toBeUndefined()
