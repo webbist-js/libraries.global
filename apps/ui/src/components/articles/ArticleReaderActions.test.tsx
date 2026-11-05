@@ -38,7 +38,7 @@ it("keeps published variants tied to the displayed language and chooses a config
     Response.json({
       data: [
         { code: "en", name: "English" },
-        { code: "es", name: "Spanish" },
+        { code: "de", name: "German" },
         { code: "fr", name: "French" },
       ],
     })
@@ -51,7 +51,7 @@ it("keeps published variants tied to the displayed language and chooses a config
       path="/knowledge/practice/guide"
       contentLocale="cs"
       interfaceLocale="en"
-      availableLocales={["cs", "en", "es"]}
+      availableLocales={["cs", "en", "de"]}
     />
   )
   expect(
@@ -62,14 +62,14 @@ it("keeps published variants tied to the displayed language and chooses a config
       .getByRole("link", { name: "Suggest an improvement" })
       .getAttribute("href")
   ).toContain("mode=report&locale=cs")
-  expect(screen.queryByRole("link", { name: "Read in Spanish" })).toBeNull()
+  expect(screen.queryByRole("link", { name: "Read in German" })).toBeNull()
   fireEvent.click(screen.getByRole("button", { name: "Add a translation" }))
   fireEvent.keyDown(
     await screen.findByLabelText("Choose a translation language"),
     { key: "ArrowDown" }
   )
   expect(screen.getByRole("option", { name: "French" })).toBeTruthy()
-  expect(screen.queryByRole("option", { name: "Spanish" })).toBeNull()
+  expect(screen.queryByRole("option", { name: "German" })).toBeNull()
   fireEvent.click(screen.getByRole("option", { name: "French" }))
   expect(
     screen.getByRole("link", { name: "Add a translation" }).getAttribute("href")

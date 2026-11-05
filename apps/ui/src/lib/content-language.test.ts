@@ -16,7 +16,7 @@ describe("content language defaults", () => {
     expect(
       preferredContentLanguage("en", {
         languages: [
-          { code: "es", proficiency: "conversational" },
+          { code: "de", proficiency: "conversational" },
           { code: "FR_ca", proficiency: "native" },
           { code: "cs", proficiency: "native" },
         ],
@@ -28,7 +28,7 @@ describe("content language defaults", () => {
       preferredContentLanguage("fr", {
         languages: [
           { code: "<invalid>", proficiency: "native" },
-          { code: "es", proficiency: "fluent" },
+          { code: "de", proficiency: "fluent" },
         ],
       })
     ).toBe("fr")

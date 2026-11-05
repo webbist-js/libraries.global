@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES } from "@repo/shared-data"
+import { SUPPORTED_LOCALES, type SupportedLocale } from "@repo/shared-data"
 
 /** Public, consented product metrics. Never pass URLs, form fields or users. */
 const SOURCES = [
@@ -134,7 +134,7 @@ export type AnalyticsParameters = {
     | "navigation"
     | "contribute"
     | "search"
-  target_locale?: "en" | "cs" | "fr"
+  target_locale?: SupportedLocale
   method?: "copy" | "x"
   format?: "csv" | "geojson"
   selection_mode?: "selected" | "all"
@@ -245,7 +245,7 @@ const ENUMS: Record<string, readonly string[]> = {
     "contribute",
     "search",
   ],
-  target_locale: ["en", "cs", "fr"],
+  target_locale: [...SUPPORTED_LOCALES],
 }
 const PUBLIC_ID = /^[A-Za-z0-9_-]{1,128}$/
 const EVENT_ACTIONS: Record<string, readonly string[]> = {

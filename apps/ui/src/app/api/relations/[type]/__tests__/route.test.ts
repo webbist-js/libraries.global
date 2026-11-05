@@ -61,7 +61,7 @@ describe("article taxonomy server reads", () => {
       Response.json({
         data: [
           { code: "en", name: "English", isDefault: true },
-          { code: "es", name: "Spanish", isDefault: false },
+          { code: "de", name: "German", isDefault: false },
           { code: "fr", name: "French", isDefault: false },
         ],
       })
@@ -78,7 +78,7 @@ describe("article taxonomy server reads", () => {
   })
   it("rejects a CMS-only language before requesting taxonomy content", async () => {
     const response = await GET(
-      new Request("http://localhost/api/relations/blog-sections?locale=es"),
+      new Request("http://localhost/api/relations/blog-sections?locale=de"),
       { params: Promise.resolve({ type: "blog-sections" }) }
     )
     expect(response.status).toBe(400)

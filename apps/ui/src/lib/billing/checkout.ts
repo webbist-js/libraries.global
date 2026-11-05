@@ -2,6 +2,7 @@ import "server-only"
 
 import { randomUUID } from "node:crypto"
 
+import type { SupportedLocale } from "@repo/shared-data"
 import type { Pool, PoolClient } from "pg"
 import type Stripe from "stripe"
 
@@ -79,7 +80,7 @@ export async function createManagedCheckout(
   choice: {
     plan: PurchasePlan
     interval: PurchaseInterval
-    locale: "en" | "cs" | "fr"
+    locale: SupportedLocale
     termsVersion: string
   }
 ) {

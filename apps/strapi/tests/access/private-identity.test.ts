@@ -36,10 +36,18 @@ function refusePrivateDocumentFields(strapi: any) {
 describe("admin contribution identity reads", () => {
   const fixture = () => {
     const fake = makeFakeStrapi({
+      ["plugin::better-auth.user"]: [
+        {
+          id: 7,
+          documentId: "auth-user",
+          email: "editor@example.test",
+          emailVerified: true,
+        },
+      ],
       [PROFILE]: [
         {
           documentId: "profile",
-          baUserId: "member",
+          baUserId: "7",
           username: "editor",
           firstName: "Jane",
           lastName: "Reader",
@@ -53,7 +61,7 @@ describe("admin contribution identity reads", () => {
       [ROLE]: [
         {
           documentId: "role",
-          baUserId: "member",
+          baUserId: "7",
           role: "wiki_editor",
           queue: "all",
           scopeLocale: null,
@@ -63,7 +71,7 @@ describe("admin contribution identity reads", () => {
       [SUBMISSION]: [
         {
           documentId: "accepted",
-          submittedByUserId: "member",
+          submittedByUserId: "7",
           submittedByEmail: "editor@example.test",
           status: "approved",
           submissionType: "wiki_edit",
@@ -72,7 +80,7 @@ describe("admin contribution identity reads", () => {
       [PLAN]: [
         {
           documentId: "plan",
-          baUserId: "member",
+          baUserId: "7",
           plan: "pro",
           expiresAt: null,
           privateProbe: "hidden",
@@ -81,7 +89,7 @@ describe("admin contribution identity reads", () => {
       [VERIFICATION]: [
         {
           documentId: "verified",
-          baUserId: "member",
+          baUserId: "7",
           kind: "library_staff",
           expiresAt: null,
           privateProbe: "hidden",
@@ -97,13 +105,13 @@ describe("admin contribution identity reads", () => {
   it("resolves private profile identities for names, recent role rosters and profile lookups", async () => {
     const { strapi, services } = fixture()
     const people = services["access.people"]
-    expect(await people.namesOf(["member", "member"])).toEqual(
-      new Map([["member", "Jane Reader"]])
+    expect(await people.namesOf(["7", "7"])).toEqual(
+      new Map([["7", "Jane Reader"]])
     )
-    expect(await people.profile("member")).toMatchObject({ baUserId: "member" })
+    expect(await people.profile("7")).toMatchObject({ baUserId: "7" })
     expect(await people.search("")).toEqual([
       {
-        baUserId: "member",
+        baUserId: "7",
         documentId: "profile",
         username: "editor",
         displayName: "Jane Reader",
@@ -118,17 +126,17 @@ describe("admin contribution identity reads", () => {
   it("keeps Plans and verification rosters on explicit admin DTOs", async () => {
     const { strapi } = fixture()
     const plans = plansService({ strapi })
-    expect(await plans.listGrants("member")).toMatchObject([
+    expect(await plans.listGrants("7")).toMatchObject([
       {
-        baUserId: "member",
+        baUserId: "7",
         name: "Jane Reader",
         plan: "pro",
         status: "active",
       },
     ])
-    expect(await plans.listVerifications("member")).toMatchObject([
+    expect(await plans.listVerifications("7")).toMatchObject([
       {
-        baUserId: "member",
+        baUserId: "7",
         name: "Jane Reader",
         kind: "library_staff",
         status: "active",
@@ -144,7 +152,7 @@ describe("admin contribution identity reads", () => {
 
   it("loads earned access and contributor numbering without selecting private Document Service fields", async () => {
     const { strapi } = fixture()
-    expect(await loadEntitlementInputs(strapi, "member")).toMatchObject({
+    expect(await loadEntitlementInputs(strapi, "7")).toMatchObject({
       tier: "Reader",
       earnedProUntil: "2099-01-01T00:00:00.000Z",
       teams: [],

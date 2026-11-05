@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS team_api_attempts (
   price_id text NOT NULL,
   terms_version text NOT NULL,
   limits jsonb NOT NULL,
-  locale text NOT NULL CHECK (locale IN ('en','cs','fr')),
+  locale text NOT NULL CHECK (locale IN ('cs','en','es','fr')),
   session_id text UNIQUE,
   subscription_id text,
   checkout_url text,
@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS team_api_attempts (
   created_at timestamptz NOT NULL DEFAULT now(),
   reconciled_at timestamptz NOT NULL DEFAULT now()
 );
+-- Existing tables keep the old inline CHECK; re-create it so new locales apply.
+ALTER TABLE team_api_attempts DROP CONSTRAINT IF EXISTS team_api_attempts_locale_check;
+ALTER TABLE team_api_attempts ADD CONSTRAINT team_api_attempts_locale_check
+  CHECK (locale IN ('cs','en','es','fr'));
 CREATE UNIQUE INDEX IF NOT EXISTS team_api_attempt_one_open
   ON team_api_attempts(team_id) WHERE state IN ('preparing','open');
 CREATE TABLE IF NOT EXISTS team_api_memberships (

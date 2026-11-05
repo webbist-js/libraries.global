@@ -14,7 +14,7 @@ import { OPENING_TIMES_FIELD_NAME } from "../customFields/openingTimes/shared"
 
 export default {
   config: {
-    locales: ["cs", "en", "fr"],
+    locales: ["cs", "en", "es", "fr"],
     translations: {
       cs,
     },
