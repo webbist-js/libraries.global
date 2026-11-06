@@ -190,6 +190,8 @@ describe("settlement deltas and invoice lines", () => {
   })
 })
 
+const scaled = (pence: number) => BigInt(pence) * BigInt(MIB)
+
 describe("warning thresholds", () => {
   it("reports each 50/80/100% threshold once, when first reached", () => {
     expect(thresholdsCrossed(4999, 5000, 10_000)).toEqual([50])
@@ -197,7 +199,6 @@ describe("warning thresholds", () => {
     expect(thresholdsCrossed(4000, 10_000, 10_000)).toEqual([50, 80, 100])
   })
   it("measures cap thresholds on exact scaled cost", () => {
-    const scaled = (pence: number) => BigInt(pence) * BigInt(MIB)
     expect(capThresholdsCrossed(scaled(499), scaled(500), 1000)).toEqual([50])
     expect(capThresholdsCrossed(scaled(0), scaled(0), 0)).toEqual([])
   })

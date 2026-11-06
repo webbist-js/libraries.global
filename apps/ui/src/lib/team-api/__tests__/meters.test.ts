@@ -106,23 +106,24 @@ describe("period reconciliation", () => {
   })
 })
 
-describe("meter delivery", () => {
-  const row = (attempts = 0) => ({
-    event_id: "req:abc",
-    dimension: "bytes",
-    quantity: "42",
-    occurred_at: new Date(),
-    attempts,
-    customer_id: "cus_api",
-    mode: "sandbox",
-  })
-  const pool = (rows: unknown[]) => {
-    const query = vi.fn(async (sql: string, _params?: unknown[]) =>
-      sql.startsWith("select d.event_id") ? { rows } : { rows: [], rowCount: 1 }
-    )
+const row = (attempts = 0) => ({
+  event_id: "req:abc",
+  dimension: "bytes",
+  quantity: "42",
+  occurred_at: new Date(),
+  attempts,
+  customer_id: "cus_api",
+  mode: "sandbox",
+})
+const pool = (rows: unknown[]) => {
+  const query = vi.fn(async (sql: string, _params?: unknown[]) =>
+    sql.startsWith("select d.event_id") ? { rows } : { rows: [], rowCount: 1 }
+  )
 
-    return { pool: { query } as unknown as Pool, query }
-  }
+  return { pool: { query } as unknown as Pool, query }
+}
+
+describe("meter delivery", () => {
   it("uses the ledger event id as the meter identifier and idempotency key", async () => {
     vi.stubEnv("BILLING_ENV", "sandbox")
     const create = vi.fn().mockResolvedValue({})

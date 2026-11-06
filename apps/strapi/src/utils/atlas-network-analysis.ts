@@ -333,6 +333,78 @@ async function networkMembers(
   return { members, excluded, error: null }
 }
 
+/** What to tell the user about a job that ended without a result. */
+function terminalMessage(job: { state: string; last_error?: string | null }) {
+  return job.state === "failed"
+    ? "Coverage could not be calculated. Please try again."
+    : (job.last_error ?? "Network analysis unavailable")
+}
+
+/**
+ * The stored result of a ready job, with its analysis and reporting-area
+ * provenance. A result the service no longer has retires the job (null).
+ */
+async function readyNetworkResult(
+  db: Core.Strapi["db"]["connection"],
+  key: string,
+  resultKey: string,
+  {
+    request,
+    payload,
+    areaName,
+    areaCodes,
+    serviceLibraries,
+  }: Pick<
+    Parameters<typeof networkJobResponse>[1],
+    "request" | "payload" | "areaName" | "areaCodes" | "serviceLibraries"
+  >
+) {
+  try {
+    const result = parseAtlasNetworkReachResult(
+      await analysisService(`/results/${resultKey}`)
+    )
+    verifyNetworkIdentity(result, request, payload)
+
+    return {
+      status: 200,
+      body: {
+        ...result,
+        areaCodes,
+        scope: request.scope,
+        analysis: {
+          schemaVersion: 2,
+          eligibleLibraries: payload.members,
+          serviceLibraries,
+          filteredOutLibraries:
+            serviceLibraries -
+            payload.excludedLibraries -
+            payload.members.length,
+          routingRelease: payload.release,
+          communityRelease: payload.communityRelease,
+        },
+        reportingArea: {
+          name: areaName,
+          version: atlasLocalGeography.version,
+          sourceUrl: atlasLocalGeography.boundaryUrl,
+          licence: atlasLocalGeography.boundaryLicence,
+        },
+      },
+    }
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !("status" in error) ||
+      error.status !== 404
+    )
+      throw error
+    await db("atlas_analysis_jobs")
+      .where({ key })
+      .update({ expires_at: new Date(0) })
+
+    return null
+  }
+}
+
 async function networkJobResponse(
   strapi: Core.Strapi,
   {
@@ -371,49 +443,15 @@ async function networkJobResponse(
     .where("expires_at", ">", new Date())
     .first()
   if (job?.state === "ready" && job.result_key) {
-    try {
-      const result = parseAtlasNetworkReachResult(
-        await analysisService(`/results/${job.result_key}`)
-      )
-      verifyNetworkIdentity(result, request, payload)
-
-      return {
-        status: 200,
-        body: {
-          ...result,
-          areaCodes,
-          scope: request.scope,
-          analysis: {
-            schemaVersion: 2,
-            eligibleLibraries: payload.members,
-            serviceLibraries,
-            filteredOutLibraries:
-              serviceLibraries -
-              payload.excludedLibraries -
-              payload.members.length,
-            routingRelease: payload.release,
-            communityRelease: payload.communityRelease,
-          },
-          reportingArea: {
-            name: areaName,
-            version: atlasLocalGeography.version,
-            sourceUrl: atlasLocalGeography.boundaryUrl,
-            licence: atlasLocalGeography.boundaryLicence,
-          },
-        },
-      }
-    } catch (error) {
-      if (
-        !(error instanceof Error) ||
-        !("status" in error) ||
-        error.status !== 404
-      )
-        throw error
-      await db("atlas_analysis_jobs")
-        .where({ key })
-        .update({ expires_at: new Date(0) })
-      job = null
-    }
+    const ready = await readyNetworkResult(db, key, job.result_key, {
+      request,
+      payload,
+      areaName,
+      areaCodes,
+      serviceLibraries,
+    })
+    if (ready) return ready
+    job = null
   }
   if (job?.state === "failed" && request.retry) {
     await db("atlas_analysis_jobs").where({ key, state: "failed" }).delete()
@@ -444,12 +482,7 @@ async function networkJobResponse(
       job.state
     )
   )
-    return state(
-      job.state,
-      job.state === "failed"
-        ? "Coverage could not be calculated. Please try again."
-        : (job.last_error ?? "Network analysis unavailable")
-    )
+    return state(job.state, terminalMessage(job))
 
   return {
     status: 202,

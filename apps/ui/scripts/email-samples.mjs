@@ -10,6 +10,7 @@ import {
 } from "@repo/shared-data"
 
 const { template } = createRequire(import.meta.url)("lodash")
+import { apiUsageNotice } from "../../strapi/src/plugins/access/server/utils/api-usage-notice.ts"
 import {
   applicationDecidedEmail,
   claimApprovedEmail,
@@ -17,7 +18,6 @@ import {
   driveThanksEmail,
   moderatorAlertEmail,
 } from "../../strapi/src/plugins/content-moderation/server/utils/email-templates.ts"
-import { apiUsageNotice } from "../../strapi/src/plugins/access/server/utils/api-usage-notice.ts"
 
 /** Inert previews: no tokens, enrollments, queue records or real moderation changes. */
 export function emailSamples() {

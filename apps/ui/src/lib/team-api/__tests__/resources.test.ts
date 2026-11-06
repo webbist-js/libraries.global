@@ -332,12 +332,13 @@ describe("submissions", () => {
   })
 })
 
+const accept = () =>
+  reachRoute(
+    call("/api/v1/analysis/reach", { method: "POST", body: reachBody }),
+    undefined as never
+  )
+
 describe("analysis jobs", () => {
-  const accept = () =>
-    reachRoute(
-      call("/api/v1/analysis/reach", { method: "POST", body: reachBody }),
-      undefined as never
-    )
   it("reserves credits at acceptance and returns 202 with a job", async () => {
     cms(200, { state: "pending" })
     const response = await accept()

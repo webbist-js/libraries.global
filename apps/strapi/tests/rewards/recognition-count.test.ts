@@ -4,14 +4,58 @@ import createPoints from "../../src/plugins/rewards/server/services/points"
 
 type Raw = { sql: string; bindings: (number | string)[] }
 
+type Profile = Record<string, unknown>
+type Work = (state: {
+  trx: object
+  onCommit?: (callback: () => void) => void
+}) => unknown
+
+const isRaw = (v: unknown): v is Raw =>
+  typeof v === "object" && v !== null && "sql" in v
+
+/** Apply one `knex.raw` column expression the way Postgres would. */
+function applyRaw(profile: Profile, col: string, v: Raw) {
+  const cur = profile[col] as number | string | null | undefined
+  if (v.sql.startsWith("CASE WHEN substr(last_activity_date, 1, 7) = ?")) {
+    // Month-boundary reset: [month, add, reset]
+    const [month, add, reset] = v.bindings as unknown as [
+      string,
+      number,
+      number,
+    ]
+    profile[col] =
+      String(profile.lastActivityDate ?? "").slice(0, 7) === month
+        ? ((cur as number) ?? 0) + add
+        : reset
+
+    return
+  }
+  if (v.sql === "COALESCE(accepted_contributions, 0) + 1") {
+    profile[col] = ((cur as number) ?? 0) + 1
+
+    return
+  }
+  if (v.sql.startsWith("CASE WHEN last_contribution_at IS NULL")) {
+    const [at] = v.bindings as string[]
+    profile[col] = cur == null || cur < at! ? at : cur
+
+    return
+  }
+  const coalesce = /^COALESCE\(\w+, 0\) \+ \?$/.test(v.sql)
+  profile[col] =
+    cur == null && !coalesce
+      ? null
+      : ((cur as number) ?? 0) + (v.bindings[0] as number)
+}
+
 // Same fake shape as award.test.ts's fakeStrapi, extended with a seedable
 // starting `tier` (the "previous tier" the award() call reads via `fresh`)
 // and an exposed `profileUpdate` mock so tests can inspect the exact `data`
 // payload sent to the final tier/streak update. The atomic counter update is
 // exposed as `update` so tests can read the recognition columns it sets.
 function fakeStrapi(initial: { points: number | null; tier: string }) {
-  const events: any[] = []
-  const profile: Record<string, any> = {
+  const events: Profile[] = []
+  const profile: Profile = {
     baUserId: "u1",
     points: initial.points,
     points_this_month: initial.points,
@@ -19,64 +63,44 @@ function fakeStrapi(initial: { points: number | null; tier: string }) {
     lastActivityDate: null,
   }
   const update = vi.fn(async (data: Record<string, number | Raw>) => {
-    for (const [col, v] of Object.entries(data)) {
-      if (typeof v === "object" && v && "sql" in v) {
-        if (
-          v.sql.startsWith("CASE WHEN substr(last_activity_date, 1, 7) = ?")
-        ) {
-          // Month-boundary reset: [month, add, reset]
-          const [month, add, reset] = v.bindings as unknown as [
-            string,
-            number,
-            number,
-          ]
-          profile[col] =
-            String(profile.lastActivityDate ?? "").slice(0, 7) === month
-              ? (profile[col] ?? 0) + add
-              : reset
-          continue
-        }
-        if (v.sql === "COALESCE(accepted_contributions, 0) + 1") {
-          profile[col] = (profile[col] ?? 0) + 1
-          continue
-        }
-        if (v.sql.startsWith("CASE WHEN last_contribution_at IS NULL")) {
-          const [at] = v.bindings as string[]
-          profile[col] =
-            profile[col] == null || profile[col] < at! ? at : profile[col]
-          continue
-        }
-        const coalesce = /^COALESCE\(\w+, 0\) \+ \?$/.test(v.sql)
-        const cur = profile[col]
-        profile[col] =
-          cur == null && !coalesce ? null : (cur ?? 0) + v.bindings[0]
-      } else profile[col] = v
-    }
+    for (const [col, v] of Object.entries(data))
+      if (isRaw(v)) applyRaw(profile, col, v)
+      else profile[col] = v
   })
-  const knex: any = vi.fn(() => {
-    const b: any = { transacting: () => b, where: () => b, update }
+  type Builder = {
+    transacting: () => Builder
+    where: () => Builder
+    update: typeof update
+  }
+  const builder: Builder = {
+    transacting: () => builder,
+    where: () => builder,
+    update,
+  }
+  const knex = Object.assign(
+    vi.fn(() => builder),
+    { raw: (sql: string, bindings: number[]): Raw => ({ sql, bindings }) }
+  )
 
-    return b
-  })
-  knex.raw = (sql: string, bindings: number[]): Raw => ({ sql, bindings })
-
-  const profileUpdate = vi.fn(async ({ data }: any) =>
+  const profileUpdate = vi.fn(async ({ data }: { data: Profile }) =>
     Object.assign(profile, data)
   )
 
-  const strapi: any = {
+  const strapi = {
     db: {
       // Same contract as the real one: run the callback, no rollback modelling.
-      transaction: vi.fn(async (cb: any) => cb({ trx: {} })),
+      transaction: vi.fn(async (cb: Work) => cb({ trx: {} })),
       connection: knex,
       query: vi.fn((uid: string) => ({
-        findOne: vi.fn(async ({ where }: any) =>
-          uid.includes("point-event")
-            ? (events.find((e) => e.idempotencyKey === where.idempotencyKey) ??
-              null)
-            : profile
+        findOne: vi.fn(
+          async ({ where }: { where: { idempotencyKey?: string } }) =>
+            uid.includes("point-event")
+              ? (events.find(
+                  (e) => e.idempotencyKey === where.idempotencyKey
+                ) ?? null)
+              : profile
         ),
-        create: vi.fn(async ({ data }: any) => {
+        create: vi.fn(async ({ data }: { data: Profile }) => {
           events.push(data)
 
           return data
@@ -86,7 +110,9 @@ function fakeStrapi(initial: { points: number | null; tier: string }) {
       })),
     },
     log: { warn: vi.fn(), error: vi.fn() },
-    plugin: () => ({
+    plugin: (): {
+      service: () => { checkAndAward: (...args: unknown[]) => unknown }
+    } => ({
       service: () => ({ checkAndAward: vi.fn(async () => {}) }),
     }),
   }
@@ -126,7 +152,7 @@ describe("points.award: recognition counting", () => {
         points: 100,
         tier: "Indexer",
       })
-      const svc: any = createPoints({ strapi })
+      const svc = createPoints({ strapi } as never)
       svc.updateStreak = vi.fn(async () => 1)
       const before = new Date().toISOString()
       await svc.award("u1", action, 5, {}, "accepted-1")
@@ -149,7 +175,7 @@ describe("points.award: recognition counting", () => {
         points: 5000,
         tier: "Scholar",
       })
-      const svc: any = createPoints({ strapi })
+      const svc = createPoints({ strapi } as never)
       svc.updateStreak = vi.fn(async () => 1)
       await svc.award(
         "u1",
@@ -167,7 +193,7 @@ describe("points.award: recognition counting", () => {
 
   it("a negative award for a qualifying action never counts", async () => {
     const { strapi, profile } = fakeStrapi({ points: 100, tier: "Indexer" })
-    const svc: any = createPoints({ strapi })
+    const svc = createPoints({ strapi } as never)
     svc.updateStreak = vi.fn(async () => 1)
     await svc.award("u1", "correction_approved", -5, {}, "reversal")
     expect(profile.accepted_contributions).toBeUndefined()
@@ -178,7 +204,7 @@ describe("points.award: recognition counting", () => {
       points: 5000,
       tier: "Scholar",
     })
-    const svc: any = createPoints({ strapi })
+    const svc = createPoints({ strapi } as never)
     svc.updateStreak = vi.fn(async () => 1)
     await svc.award("u1", "new_library_approved", 50, {}, "one-library")
     expect(
@@ -192,7 +218,7 @@ describe("points.award: recognition counting", () => {
 
   it("uses the acceptance time for delayed delivery and never moves lastContributionAt backwards", async () => {
     const { strapi, profile } = fakeStrapi({ points: 5000, tier: "Scholar" })
-    const svc: any = createPoints({ strapi })
+    const svc = createPoints({ strapi } as never)
     svc.updateStreak = vi.fn(async () => 1)
     await svc.award(
       "u1",

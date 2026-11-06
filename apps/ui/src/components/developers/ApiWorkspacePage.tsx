@@ -72,6 +72,52 @@ function overviewLinks(team: boolean) {
   ] as const
 }
 
+/** Where the offer's buy button goes, or null with nothing to buy yet. */
+function offerBuy(
+  signedIn: boolean,
+  prospect: boolean,
+  locale: string
+): { href: string; label: "buy" | "signIn" } | null {
+  if (!signedIn)
+    return {
+      href: featureSignInHref("api", locale, "/developers"),
+      label: "signIn",
+    }
+
+  return prospect ? { href: "#api-checkout", label: "buy" } : null
+}
+
+const isControlSection = (
+  section: ApiSection
+): section is "overview" | "keys" | "usage" =>
+  section === "overview" || section === "keys" || section === "usage"
+
+/** Which workspace panels a section shows for this viewer's access. */
+function workspaceView(
+  section: ApiSection,
+  access: Awaited<ReturnType<typeof apiWorkspaceAccess>>
+) {
+  const { data, prospect, unavailable, conflict } = access
+  const controls = isControlSection(section)
+  const actionable = controls || section === "playground"
+
+  return {
+    dashboard: controls && data ? { data, section } : null,
+    offer: section === "overview" && !data?.active && !conflict,
+    conflict: conflict && actionable,
+    unavailable: unavailable && actionable,
+    playground: section === "playground" && data?.active ? data : null,
+    checkout: controls && prospect ? prospect : null,
+    accessCta:
+      section !== "overview" &&
+      !data &&
+      !(prospect && controls) &&
+      !unavailable &&
+      !conflict,
+    inactiveNotice: Boolean(data && !data.active && !controls),
+  }
+}
+
 export async function ApiWorkspacePage({
   section,
   query = {},
@@ -83,19 +129,9 @@ export async function ApiWorkspacePage({
     apiWorkspaceAccess(),
     getLocale(),
   ])
-  const {
-    data,
-    prospect,
-    accountName,
-    scope,
-    signedIn,
-    unavailable,
-    conflict,
-    showUsageWarning,
-  } = access
-  const controls =
-    section === "overview" || section === "keys" || section === "usage"
-  const actionable = controls || section === "playground"
+  const { data, prospect, accountName, scope, signedIn, showUsageWarning } =
+    access
+  const view = workspaceView(section, access)
 
   return (
     <AccountGuard
@@ -113,28 +149,19 @@ export async function ApiWorkspacePage({
         team={Boolean(data)}
         teamName={data?.teamName}
       >
-        {controls && data ? (
+        {view.dashboard ? (
           <TeamApiDashboard
-            key={data.teamId}
-            section={section}
-            initial={data}
+            key={view.dashboard.data.teamId}
+            section={view.dashboard.section}
+            initial={view.dashboard.data}
             confirming={query.payment === "confirming"}
             setupRequested={query.setup === "1"}
           />
         ) : null}
-        {section === "overview" && !data?.active && !conflict ? (
+        {view.offer ? (
           <ApiOfferOverview
             limits={API_OFFER_LIMITS}
-            buy={
-              !signedIn
-                ? {
-                    href: featureSignInHref("api", locale, "/developers"),
-                    label: "signIn",
-                  }
-                : prospect
-                  ? { href: "#api-checkout", label: "buy" }
-                  : null
-            }
+            buy={offerBuy(signedIn, Boolean(prospect), locale)}
           />
         ) : null}
         {section === "overview" ? (
@@ -155,29 +182,25 @@ export async function ApiWorkspacePage({
             ))}
           </div>
         ) : null}
-        {conflict && actionable ? <TeamMembershipConflict /> : null}
-        {unavailable && actionable ? (
+        {view.conflict ? <TeamMembershipConflict /> : null}
+        {view.unavailable ? (
           <StaffLoadError what="your Team’s API controls" status={503} />
         ) : null}
         {section === "reference" ? <ApiGuidePanel /> : null}
-        {section === "playground" && data?.active ? (
+        {view.playground ? (
           <ApiPlayground
-            key={data.teamId}
-            teamName={data.teamName}
+            key={view.playground.teamId}
+            teamName={view.playground.teamName}
             showUsageWarning={showUsageWarning}
           />
         ) : null}
-        {prospect && controls ? (
+        {view.checkout ? (
           <ApiIndividualCheckout
-            prospect={prospect}
+            prospect={view.checkout}
             accountName={accountName}
           />
         ) : null}
-        {section !== "overview" &&
-        !data &&
-        !(prospect && controls) &&
-        !unavailable &&
-        !conflict ? (
+        {view.accessCta ? (
           <ApiAccessCta
             signedIn={signedIn}
             signInHref={featureSignInHref(
@@ -187,7 +210,7 @@ export async function ApiWorkspacePage({
             )}
           />
         ) : null}
-        {data && !data.active && !controls ? (
+        {view.inactiveNotice ? (
           <Notice
             tone="info"
             title="Active API access is required"

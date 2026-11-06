@@ -32,7 +32,8 @@ export type ApiKeyDraft = {
   confirmScopes?: true
 }
 
-// TODO(i18n): move these new scope labels into the teamApiKeys messages.
+// These newer scope labels are English-only; they belong in the teamApiKeys
+// messages once translated.
 const NEW_SCOPE_COPY: Partial<
   Record<ApiScope, { title: string; help: string }>
 > = {

@@ -28,56 +28,34 @@ const CAPS = Array.from(
   (_, i) => OVERAGE_CAP_MIN_PENCE + i * OVERAGE_CAP_STEP_PENCE
 )
 
-/**
- * Accrued overage, projected invoice and the organiser's opt-in control.
- * The cap is preselected at £100 but nothing is enabled until the organiser
- * confirms. Members see the same figures read-only.
- */
-export function ApiOveragePanel({
+type Money = (pence: number) => string
+
+/** The organiser's current cap, or the £100 default before opting in. */
+function initialCap(overage: ApiDashboard["overage"]) {
+  return overage.enabled && overage.capPence
+    ? overage.capPence
+    : OVERAGE_CAP_DEFAULT_PENCE
+}
+
+function readOnlyReason(organiser: boolean, active: boolean) {
+  if (!organiser) return "organisersOnly"
+
+  return active ? "unavailable" : "inactive"
+}
+
+/** Accrued overage, the projected invoice and the current rates. */
+function OverageFigures({
   data,
-  locale,
-  pending,
-  request,
+  money,
 }: {
   readonly data: ApiDashboard
-  readonly locale: string
-  readonly pending: boolean
-  readonly request: (body: unknown) => void
+  readonly money: Money
 }) {
   const t = useTranslations("apiOverage")
-  const money = (pence: number) => formatPence(pence, locale)
-  const consentId = useId()
-  const [cap, setCap] = useState(
-    data.overage.enabled && data.overage.capPence
-      ? data.overage.capPence
-      : OVERAGE_CAP_DEFAULT_PENCE
-  )
-  const [consent, setConsent] = useState(false)
-  const [confirmOff, setConfirmOff] = useState(false)
-  const { accrued, overage } = data
-  const capReached =
-    overage.enabled &&
-    overage.capPence > 0 &&
-    accrued.totalPence >= overage.capPence
-  const canManage = data.organiser && data.active
-  const changing = !overage.enabled || cap !== overage.capPence
+  const { accrued, rates, projectedInvoicePence, membership } = data
 
   return (
-    <StaffPanel
-      title={t("title")}
-      id="api-overage"
-      aside={
-        <Badge
-          label={
-            overage.enabled
-              ? t("badgeOn", { cap: money(overage.capPence) })
-              : t("badgeOff")
-          }
-          color={overage.enabled ? "ok" : "dim"}
-          dot
-        />
-      }
-    >
+    <>
       <dl className="m-0 grid gap-3 sm:grid-cols-2">
         <div className="min-w-0 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4">
           <dt className="text-sm font-semibold text-(--t-ink-dim)">
@@ -99,12 +77,12 @@ export function ApiOveragePanel({
             {t("projected")}
           </dt>
           <dd className="type-h2 mt-2 mb-0 ml-0 tabular-nums">
-            {data.projectedInvoicePence === null
+            {projectedInvoicePence === null
               ? "—"
-              : money(data.projectedInvoicePence)}
+              : money(projectedInvoicePence)}
           </dd>
           <dd className="mt-2 mb-0 ml-0 text-sm leading-relaxed text-(--t-ink-dim)">
-            {data.membership?.cancelAtPeriodEnd
+            {membership?.cancelAtPeriodEnd
               ? t("projectedEnding")
               : t("projectedRenewing")}
           </dd>
@@ -112,11 +90,114 @@ export function ApiOveragePanel({
       </dl>
       <p className="mt-4 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         {t("rates", {
-          request: money(data.rates.requestPence),
-          mib: money(data.rates.mibPence),
-          credit: money(data.rates.creditPence),
+          request: money(rates.requestPence),
+          mib: money(rates.mibPence),
+          credit: money(rates.creditPence),
         })}
       </p>
+    </>
+  )
+}
+
+/** Turning overage off asks for a second, explicit confirmation. */
+function TurnOffControl({
+  confirmOff,
+  setConfirmOff,
+  pending,
+  request,
+}: {
+  readonly confirmOff: boolean
+  readonly setConfirmOff: (value: boolean) => void
+  readonly pending: boolean
+  readonly request: (body: unknown) => void
+}) {
+  const t = useTranslations("apiOverage")
+  if (!confirmOff)
+    return (
+      <Button
+        type="button"
+        variant="surface"
+        size="pill"
+        disabled={pending}
+        onClick={() => setConfirmOff(true)}
+      >
+        {t("turnOff")}
+      </Button>
+    )
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="surface"
+        size="pill"
+        disabled={pending}
+        onClick={() => {
+          request({ action: "overage", enabled: false })
+          setConfirmOff(false)
+        }}
+      >
+        {t("confirmOff")}
+      </Button>
+      <Button
+        type="button"
+        variant="link"
+        disabled={pending}
+        onClick={() => setConfirmOff(false)}
+      >
+        {t("keepOn")}
+      </Button>
+    </>
+  )
+}
+
+/**
+ * Accrued overage, projected invoice and the organiser's opt-in control.
+ * The cap is preselected at £100 but nothing is enabled until the organiser
+ * confirms. Members see the same figures read-only.
+ */
+export function ApiOveragePanel({
+  data,
+  locale,
+  pending,
+  request,
+}: {
+  readonly data: ApiDashboard
+  readonly locale: string
+  readonly pending: boolean
+  readonly request: (body: unknown) => void
+}) {
+  const t = useTranslations("apiOverage")
+  const money = (pence: number) => formatPence(pence, locale)
+  const consentId = useId()
+  const { accrued, overage, organiser, active, overageAvailable } = data
+  const [cap, setCap] = useState(() => initialCap(overage))
+  const [consent, setConsent] = useState(false)
+  const [confirmOff, setConfirmOff] = useState(false)
+  const capReached =
+    overage.enabled &&
+    overage.capPence > 0 &&
+    accrued.totalPence >= overage.capPence
+  const canManage = organiser && active
+  const changing = !overage.enabled || cap !== overage.capPence
+
+  return (
+    <StaffPanel
+      title={t("title")}
+      id="api-overage"
+      aside={
+        <Badge
+          label={
+            overage.enabled
+              ? t("badgeOn", { cap: money(overage.capPence) })
+              : t("badgeOff")
+          }
+          color={overage.enabled ? "ok" : "dim"}
+          dot
+        />
+      }
+    >
+      <OverageFigures data={data} money={money} />
       {capReached ? (
         <div className="mt-4">
           <Notice
@@ -128,7 +209,7 @@ export function ApiOveragePanel({
           </Notice>
         </div>
       ) : null}
-      {canManage && data.overageAvailable ? (
+      {canManage && overageAvailable ? (
         <form
           className="mt-5 space-y-4 border-t border-(--t-border-line) pt-5"
           onSubmit={(event) => {
@@ -189,50 +270,18 @@ export function ApiOveragePanel({
               {t(overage.enabled ? "updateCap" : "turnOn")}
             </Button>
             {overage.enabled ? (
-              confirmOff ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="surface"
-                    size="pill"
-                    disabled={pending}
-                    onClick={() => {
-                      request({ action: "overage", enabled: false })
-                      setConfirmOff(false)
-                    }}
-                  >
-                    {t("confirmOff")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="link"
-                    disabled={pending}
-                    onClick={() => setConfirmOff(false)}
-                  >
-                    {t("keepOn")}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  variant="surface"
-                  size="pill"
-                  disabled={pending}
-                  onClick={() => setConfirmOff(true)}
-                >
-                  {t("turnOff")}
-                </Button>
-              )
+              <TurnOffControl
+                confirmOff={confirmOff}
+                setConfirmOff={setConfirmOff}
+                pending={pending}
+                request={request}
+              />
             ) : null}
           </div>
         </form>
       ) : (
         <p className="mt-4 mb-0 text-sm text-(--t-ink-dim)">
-          {!data.organiser
-            ? t("organisersOnly")
-            : !data.active
-              ? t("inactive")
-              : t("unavailable")}
+          {t(readOnlyReason(organiser, active))}
         </p>
       )}
     </StaffPanel>

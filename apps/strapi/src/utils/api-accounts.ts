@@ -15,6 +15,9 @@ type Queryable = {
 const billingMode = () =>
   process.env.BILLING_ENV === "live" ? ("live" as const) : ("sandbox" as const)
 
+const covered = (a: SessionApiAccount, now: number) =>
+  !a.revoked && !!a.paidThrough && Date.parse(a.paidThrough) > now
+
 /**
  * The API accounts a user belongs to, from each organisation's API paid
  * projection (`api_subscriptions.snapshot`, application database). Only
@@ -23,7 +26,7 @@ const billingMode = () =>
  * Unavailable storage reads as no API accounts: coverage is never assumed.
  */
 export async function loadApiAccounts(
-  strapi: any,
+  strapi: { log?: { debug?: (message: string) => unknown } },
   memberships: { teamDocumentId: string; teamRole: "organiser" | "member" }[],
   db?: Queryable
 ): Promise<SessionApiAccount[]> {
@@ -59,11 +62,9 @@ export async function loadApiAccounts(
       paidThrough,
       revoked: row.revoked === "true",
     }
-    const covered = (a: SessionApiAccount) =>
-      !a.revoked && !!a.paidThrough && Date.parse(a.paidThrough) > now
     const prior = best.get(teamId)
     // Latest snapshot wins unless an earlier one still gives coverage.
-    if (!prior || (!covered(prior) && covered(account)))
+    if (!prior || (!covered(prior, now) && covered(account, now)))
       best.set(teamId, account)
   }
 

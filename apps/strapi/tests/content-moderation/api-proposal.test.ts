@@ -43,7 +43,7 @@ const context = (
   set: vi.fn(),
   unauthorized: vi.fn(),
   status: 200,
-  body: undefined as any,
+  body: undefined as unknown,
 })
 
 const library = {
@@ -54,26 +54,37 @@ const library = {
   location: { lat: 51.45, lng: -2.59 },
 }
 
+type SubmissionFake = Record<string, unknown>
+type Condition = { $eq?: unknown; $in?: unknown[] } | undefined
+
+const meetsCondition = (value: unknown, cond: Condition) => {
+  if (cond?.$eq !== undefined) return value === cond.$eq
+  if (cond?.$in) return cond.$in.includes(value)
+
+  return true
+}
+
 function runtime(
-  options: { submissions?: any[]; counts?: number; safe?: boolean } = {}
+  options: {
+    submissions?: SubmissionFake[]
+    counts?: number
+    safe?: boolean
+  } = {}
 ) {
   const submissions = options.submissions ?? []
-  const create = vi.fn(async (data: any) => ({
+  const create = vi.fn(async (data: object) => ({
     documentId: "submission000000000000001",
     createdAt: "2026-11-06T00:00:00.000Z",
     ...data,
   }))
   const events = vi.fn(async () => ({}))
-  const findSubmissions = vi.fn(async ({ filters }: any) =>
-    submissions.filter((row) =>
-      Object.entries(filters).every(([key, cond]: [string, any]) =>
-        cond?.$eq !== undefined
-          ? row[key] === cond.$eq
-          : cond?.$in
-            ? cond.$in.includes(row[key])
-            : true
+  const findSubmissions = vi.fn(
+    async ({ filters }: { filters: Record<string, Condition> }) =>
+      submissions.filter((row) =>
+        Object.entries(filters).every(([key, cond]) =>
+          meetsCondition(row[key], cond)
+        )
       )
-    )
   )
   const strapi = {
     documents: (uid: string) => {

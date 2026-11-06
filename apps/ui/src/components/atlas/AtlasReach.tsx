@@ -279,6 +279,21 @@ export function AtlasReachAnalysis({
   )
 }
 
+function reachErrorMessage(error: string) {
+  if (error === "rate") return "reachRateLimit"
+  if (error === "allowance") return "reachAllowance"
+
+  return "reachUnavailable"
+}
+
+function reachStateMessage(state: AtlasReachResponse["state"]) {
+  if (state === "unroutable") return "reachUnroutable"
+  if (state === "missing_population") return "reachMissingPopulation"
+  if (state === "failed") return "reachUnavailable"
+
+  return "reachUnsupported"
+}
+
 function ReachStatus({
   hasLibrary,
   response,
@@ -313,15 +328,7 @@ function ReachStatus({
   if (error)
     return (
       <div role="alert">
-        <p>
-          {t(
-            error === "rate"
-              ? "reachRateLimit"
-              : error === "allowance"
-                ? "reachAllowance"
-                : "reachUnavailable"
-          )}
-        </p>
+        <p>{t(reachErrorMessage(error))}</p>
         <button
           type="button"
           className="min-h-12 w-full rounded-xl border border-(--t-border-line) px-4 py-3 text-left text-sm font-semibold text-(--t-ink-base) hover:bg-(--t-bg-surface)"
@@ -344,18 +351,10 @@ function ReachStatus({
         </button>
       </div>
     )
-  const message =
-    response.state === "unroutable"
-      ? "reachUnroutable"
-      : response.state === "missing_population"
-        ? "reachMissingPopulation"
-        : response.state === "failed"
-          ? "reachUnavailable"
-          : "reachUnsupported"
 
   return (
     <div role="status">
-      <p>{t(message)}</p>
+      <p>{t(reachStateMessage(response.state))}</p>
       {response.state === "failed" ? (
         <button
           type="button"

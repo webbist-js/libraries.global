@@ -108,6 +108,30 @@ async function ensureAccount(
   return account
 }
 
+/** The account's Stripe customer, created once from its stored payload. */
+async function ensureCustomer(
+  client: PoolClient,
+  stripe: Stripe,
+  teamId: string,
+  account: Awaited<ReturnType<typeof ensureAccount>>
+) {
+  if (account.customer_id) return account.customer_id
+  if (
+    Date.now() - account.created_at.getTime() > 23 * 3_600_000 ||
+    !account.customer_payload
+  )
+    throw new BillingError("api_customer_needs_reconciliation")
+  const created = await stripe.customers.create(account.customer_payload, {
+    idempotencyKey: `lg-api-customer:${account.create_token}`,
+  })
+  await client.query(
+    "update api_accounts set customer_id=$2,customer_payload=null where team_id=$1",
+    [teamId, created.id]
+  )
+
+  return created.id
+}
+
 /**
  * Organisers buy one API subscription per organisation. The offer snapshot
  * (version, Price, tax behaviour, limits, overage rates/prices and consent)
@@ -126,23 +150,12 @@ export async function apiCheckout(
     config = apiConfig()
 
   return withBillingLock(pool, lockKey(team.documentId), async (client) => {
-    const account = await ensureAccount(client, team, buyer.email)
-    let customer = account.customer_id
-    if (!customer) {
-      if (
-        Date.now() - account.created_at.getTime() > 23 * 3_600_000 ||
-        !account.customer_payload
-      )
-        throw new BillingError("api_customer_needs_reconciliation")
-      const created = await stripe.customers.create(account.customer_payload, {
-        idempotencyKey: `lg-api-customer:${account.create_token}`,
-      })
-      customer = created.id
-      await client.query(
-        "update api_accounts set customer_id=$2,customer_payload=null where team_id=$1",
-        [team.documentId, customer]
-      )
-    }
+    const customer = await ensureCustomer(
+      client,
+      stripe,
+      team.documentId,
+      await ensureAccount(client, team, buyer.email)
+    )
     let attempt = (
       await client.query<Attempt>(
         "select * from api_attempts where team_id=$1 and state in ('preparing','open')",
@@ -427,6 +440,49 @@ export type OverageChoice =
   | { enabled: true; capPence: number; termsVersion: string }
   | { enabled: false }
 
+/** Add any missing metered overage Prices to an eligible API subscription. */
+async function attachOverageItems(
+  pool: Pool,
+  stripe: Stripe,
+  teamId: string,
+  mode: ReturnType<typeof apiConfig>["mode"]
+) {
+  const subscription = await apiSubscription(pool, teamId)
+  const membership = subscription?.membership
+  if (!subscription || !membership)
+    throw new BillingError("api_access_required", 403)
+  const prices = membership.offer.overagePrices
+  if (API_DIMENSIONS.some((d) => !prices[d]))
+    throw new BillingError("api_overage_unavailable", 409)
+  if (membership.status !== "active" || membership.revoked)
+    throw new BillingError("api_overage_standing_required", 409)
+  let added = false
+  for (const dimension of API_DIMENSIONS) {
+    if (membership.overageItems[dimension]) continue
+    await stripe.subscriptionItems.create(
+      {
+        subscription: subscription.subscriptionId,
+        price: prices[dimension]!,
+        proration_behavior: "none",
+        metadata: { lg_api_team_id: teamId, lg_api_dimension: dimension },
+      },
+      {
+        idempotencyKey: `lg-api-overage-item:${subscription.subscriptionId}:${dimension}`,
+      }
+    )
+    added = true
+  }
+  if (added)
+    await refreshApiSubscriptionUnlocked(
+      pool,
+      stripe,
+      subscription.subscriptionId
+    )
+  const refreshed = await apiSubscription(pool, teamId)
+  if (!overagePermitted(refreshed?.membership, mode, new Date()))
+    throw new BillingError("api_overage_unavailable", 409)
+}
+
 /**
  * Organiser opt-in, cap change or opt-out. Enabling needs `API_OVERAGE_ENABLED`,
  * fresh consent, a settled period in good standing and the offer's metered
@@ -451,42 +507,8 @@ export async function setApiOverage(
   }
 
   return withBillingLock(pool, lockKey(teamId), async () => {
-    if (choice.enabled) {
-      const subscription = await apiSubscription(pool, teamId)
-      const membership = subscription?.membership
-      if (!subscription || !membership)
-        throw new BillingError("api_access_required", 403)
-      const prices = membership.offer.overagePrices
-      if (API_DIMENSIONS.some((d) => !prices[d]))
-        throw new BillingError("api_overage_unavailable", 409)
-      if (membership.status !== "active" || membership.revoked)
-        throw new BillingError("api_overage_standing_required", 409)
-      let added = false
-      for (const dimension of API_DIMENSIONS) {
-        if (membership.overageItems[dimension]) continue
-        await stripe.subscriptionItems.create(
-          {
-            subscription: subscription.subscriptionId,
-            price: prices[dimension]!,
-            proration_behavior: "none",
-            metadata: { lg_api_team_id: teamId, lg_api_dimension: dimension },
-          },
-          {
-            idempotencyKey: `lg-api-overage-item:${subscription.subscriptionId}:${dimension}`,
-          }
-        )
-        added = true
-      }
-      if (added)
-        await refreshApiSubscriptionUnlocked(
-          pool,
-          stripe,
-          subscription.subscriptionId
-        )
-      const refreshed = await apiSubscription(pool, teamId)
-      if (!overagePermitted(refreshed?.membership, config.mode, new Date()))
-        throw new BillingError("api_overage_unavailable", 409)
-    }
+    if (choice.enabled)
+      await attachOverageItems(pool, stripe, teamId, config.mode)
 
     return transaction(pool, async (client) => {
       const account = (

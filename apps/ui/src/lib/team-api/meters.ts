@@ -192,6 +192,97 @@ export function comparePeriodInvoice(input: {
   return { state: "mismatch", detail: { invoiceStatus: input.invoice.status } }
 }
 
+/** The subscription invoice carrying this period's overage lines, if any. */
+async function findPeriodInvoice(
+  stripe: Stripe,
+  subscriptionId: string,
+  priceIds: Set<string | undefined>,
+  periodStart: number
+): Promise<{ status: string | null; lines: InvoiceLineView[] } | null> {
+  const invoices = await stripe.invoices.list({
+    subscription: subscriptionId,
+    limit: 10,
+  })
+  for (const candidate of invoices.data) {
+    const lines: InvoiceLineView[] = []
+    for await (const line of stripe.invoices.listLineItems(candidate.id!, {
+      limit: 100,
+    }))
+      lines.push({
+        priceId: stripeId(line.pricing?.price_details?.price),
+        periodStart: line.period.start,
+        quantity: line.quantity,
+        amount: line.amount,
+      })
+    if (
+      lines.some(
+        (l) =>
+          l.priceId && priceIds.has(l.priceId) && l.periodStart === periodStart
+      )
+    )
+      return { status: candidate.status, lines }
+  }
+
+  return null
+}
+
+async function reconcilePeriod(pool: Pool, stripe: Stripe, period: PeriodRow) {
+  const deliveries = await pool.query<{
+    dimension: ApiDimension
+    quantity: string
+    open: string
+    dead: string
+  }>(
+    "select dimension,coalesce(sum(quantity),0) as quantity,count(*) filter(where state='pending') as open,count(*) filter(where state='dead') as dead from api_meter_deliveries where team_id=$1 and period_start=$2 group by dimension",
+    [period.team_id, period.period_start]
+  )
+  const mark = (state: string, detail: unknown = null) =>
+    pool.query(
+      "update api_periods set reconciliation=$3,reconciliation_detail=$4,reconciliation_checked_at=now() where team_id=$1 and period_start=$2",
+      [period.team_id, period.period_start, state, detail]
+    )
+  if (deliveries.rows.some((d) => Number(d.open) > 0)) {
+    await mark(period.reconciliation)
+
+    return
+  }
+  if (deliveries.rows.some((d) => Number(d.dead) > 0)) {
+    await mark("mismatch", { reason: "meter_dead_letter" })
+
+    return
+  }
+  const expected: PeriodQuantities = { requests: 0, bytes: 0, credits: 0 }
+  for (const d of deliveries.rows) expected[d.dimension] = Number(d.quantity)
+  const snapshot = await pool.query<{
+    prices: Partial<Record<ApiDimension, string>> | null
+  }>(
+    "select snapshot->'offer'->'overagePrices' as prices from api_subscriptions where subscription_id=$1",
+    [period.subscription_id]
+  )
+  const prices = snapshot.rows[0]?.prices ?? {}
+  const periodStart = Math.floor(period.period_start.getTime() / 1000)
+  const invoice = await findPeriodInvoice(
+    stripe,
+    period.subscription_id,
+    new Set(Object.values(prices)),
+    periodStart
+  )
+  const result = comparePeriodInvoice({
+    periodStart,
+    expected,
+    rates: period.rates,
+    prices,
+    invoice,
+  })
+  if (result.state === "wait") {
+    const late = Date.now() - period.period_end.getTime() > 3 * 86_400_000
+    await (late && !invoice
+      ? mark("mismatch", { reason: "invoice_missing" })
+      : mark(period.reconciliation))
+  } else
+    await mark(result.state, result.state === "mismatch" ? result.detail : null)
+}
+
 /**
  * Reconcile ended periods against Stripe's invoiced meter quantities, by
  * customer, period and dimension. Pending deliveries postpone the check;
@@ -209,86 +300,7 @@ export async function reconcileApiPeriods(
   for (const period of periods.rows) {
     if (!withinBudget()) break
     try {
-      const deliveries = await pool.query<{
-        dimension: ApiDimension
-        quantity: string
-        open: string
-        dead: string
-      }>(
-        "select dimension,coalesce(sum(quantity),0) as quantity,count(*) filter(where state='pending') as open,count(*) filter(where state='dead') as dead from api_meter_deliveries where team_id=$1 and period_start=$2 group by dimension",
-        [period.team_id, period.period_start]
-      )
-      const mark = (state: string, detail: unknown = null) =>
-        pool.query(
-          "update api_periods set reconciliation=$3,reconciliation_detail=$4,reconciliation_checked_at=now() where team_id=$1 and period_start=$2",
-          [period.team_id, period.period_start, state, detail]
-        )
-      if (deliveries.rows.some((d) => Number(d.open) > 0)) {
-        await mark(period.reconciliation)
-        continue
-      }
-      if (deliveries.rows.some((d) => Number(d.dead) > 0)) {
-        await mark("mismatch", { reason: "meter_dead_letter" })
-        continue
-      }
-      const expected: PeriodQuantities = { requests: 0, bytes: 0, credits: 0 }
-      for (const d of deliveries.rows)
-        expected[d.dimension] = Number(d.quantity)
-      const snapshot = await pool.query<{
-        prices: Partial<Record<ApiDimension, string>> | null
-      }>(
-        "select snapshot->'offer'->'overagePrices' as prices from api_subscriptions where subscription_id=$1",
-        [period.subscription_id]
-      )
-      const prices = snapshot.rows[0]?.prices ?? {}
-      const periodStart = Math.floor(period.period_start.getTime() / 1000)
-      const priceIds = new Set(Object.values(prices))
-      let invoice: { status: string | null; lines: InvoiceLineView[] } | null =
-        null
-      const invoices = await stripe.invoices.list({
-        subscription: period.subscription_id,
-        limit: 10,
-      })
-      for (const candidate of invoices.data) {
-        const lines: InvoiceLineView[] = []
-        for await (const line of stripe.invoices.listLineItems(candidate.id!, {
-          limit: 100,
-        }))
-          lines.push({
-            priceId: stripeId(line.pricing?.price_details?.price),
-            periodStart: line.period.start,
-            quantity: line.quantity,
-            amount: line.amount,
-          })
-        if (
-          lines.some(
-            (l) =>
-              l.priceId &&
-              priceIds.has(l.priceId) &&
-              l.periodStart === periodStart
-          )
-        ) {
-          invoice = { status: candidate.status, lines }
-          break
-        }
-      }
-      const result = comparePeriodInvoice({
-        periodStart,
-        expected,
-        rates: period.rates,
-        prices,
-        invoice,
-      })
-      if (result.state === "wait") {
-        const late = Date.now() - period.period_end.getTime() > 3 * 86_400_000
-        await (late && !invoice
-          ? mark("mismatch", { reason: "invoice_missing" })
-          : mark(period.reconciliation))
-      } else
-        await mark(
-          result.state,
-          result.state === "mismatch" ? result.detail : null
-        )
+      await reconcilePeriod(pool, stripe, period)
     } catch {
       failed++
       await pool.query(

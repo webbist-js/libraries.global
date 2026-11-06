@@ -28,7 +28,7 @@ const PROFILE_FIELDS = [
  * Supporter profiles (earned recognition: at least SUPPORTER_MIN_ACCEPTED
  * accepted contributions, not revoked), read by bounded keyset pages on id.
  */
-async function readSupporterProfiles(strapi: any): Promise<any[]> {
+async function readSupporterProfiles(strapi: any) {
   const rows: any[] = []
   let after = 0
   while (rows.length < SUPPORTERS_MAX) {
@@ -41,7 +41,7 @@ async function readSupporterProfiles(strapi: any): Promise<any[]> {
       fields: PROFILE_FIELDS,
       sort: "id:asc",
       limit: Math.min(BATCH_SIZE, SUPPORTERS_MAX - rows.length),
-    })) as any[]
+    })) as typeof rows
     rows.push(...batch)
     if (batch.length < BATCH_SIZE) break
     after = Number(batch.at(-1).id)

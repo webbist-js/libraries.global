@@ -19,7 +19,7 @@ import { StaffPanel, STAFF_LINK } from "./StaffPanel"
  * Free organisation setup. Creating a Team buys nothing and grants no library
  * authority: chosen libraries remain claims until verified access is
  * reviewed. API access is bought separately at /developers.
- * TODO(staff): the staff-workspace owner may restyle this step.
+ * The staff-workspace owner may restyle this step.
  */
 export function TeamSignup({
   verified,

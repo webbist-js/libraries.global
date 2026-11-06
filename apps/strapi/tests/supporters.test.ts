@@ -26,6 +26,10 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+const joined = (id: string) => ({
+  createdAt: id === "future" ? "2026-10-20T00:00:00Z" : "2026-10-01T00:00:00Z",
+})
+
 describe("supporter directory", () => {
   it("lists earned Supporters only: 100 accepted contributions, never points, plans or revoked recognition", async () => {
     const { strapi } = makeFakeStrapi({
@@ -128,10 +132,6 @@ describe("supporter directory", () => {
   })
 
   it("filters continent pills using public locations and shows only public new members this month", async () => {
-    const joined = (id: string) => ({
-      createdAt:
-        id === "future" ? "2026-10-20T00:00:00Z" : "2026-10-01T00:00:00Z",
-    })
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [
         profile("europe", { country: "GB", ...joined("europe") }),

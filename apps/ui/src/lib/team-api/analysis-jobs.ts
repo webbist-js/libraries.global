@@ -550,6 +550,23 @@ export function jobResult(job: JobRow) {
   }
 }
 
+/** Refund a summary the bridge did not answer, then raise its error. */
+async function failSummary(
+  pool: Pool,
+  job: JobRow,
+  status: number
+): Promise<never> {
+  await failJob(
+    pool,
+    job,
+    "failed",
+    status === 404 ? "record_not_found" : "analysis_unavailable"
+  )
+  if (status === 404) throw new BillingError("record_not_found", 404)
+  if (status === 400) throw new BillingError("invalid_analysis", 400)
+  throw new BillingError("analysis_unavailable", 503)
+}
+
 /**
  * POST /api/v1/analysis/summary: a bounded, synchronous summary of a
  * published service or place. Identical input within 15 minutes reuses the
@@ -609,17 +626,8 @@ export async function runSummary(
     await failJob(pool, job, "failed", "analysis_unavailable")
     throw error
   }
-  if (result.status !== 200 || !result.body?.data) {
-    await failJob(
-      pool,
-      job,
-      "failed",
-      result.status === 404 ? "record_not_found" : "analysis_unavailable"
-    )
-    if (result.status === 404) throw new BillingError("record_not_found", 404)
-    if (result.status === 400) throw new BillingError("invalid_analysis", 400)
-    throw new BillingError("analysis_unavailable", 503)
-  }
+  if (result.status !== 200 || !result.body?.data)
+    await failSummary(pool, job, result.status)
   const done = await completeJob(pool, job, result.body, {
     cached: false,
     resultTtl: `${JOB_LIMITS.summaryResultMinutes} minutes`,

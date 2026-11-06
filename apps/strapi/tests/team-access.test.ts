@@ -96,7 +96,7 @@ describe("loadTeamMemberships", () => {
         status: "active",
         expiresAt: "2000-01-01T00:00:00.000Z",
         source: "checkout",
-      } as any)
+      } as Parameters<typeof teamIsActive>[0])
     ).toBe(true)
   })
 })

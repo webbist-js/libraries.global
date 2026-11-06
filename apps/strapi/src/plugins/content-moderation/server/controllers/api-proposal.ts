@@ -1,4 +1,5 @@
 import { isLibraryEntityRef } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
 import { resolveSubmissionLocale } from "../services/submission"
 import {
@@ -35,6 +36,43 @@ const PROPOSAL_ID = /^[a-z0-9]{20,32}$/
 const HOUR = 3_600_000
 
 type Body = Record<string, unknown>
+type Row = Record<string, unknown> & { documentId: string }
+type SubmissionRow = Row & {
+  status?: string
+  submissionType?: string
+  resultDocumentId?: string | null
+  targetDocumentId?: string | null
+  contentLocale?: string | null
+  createdAt?: string | null
+  reviewedAt?: string | null
+  payloadHash?: string | null
+}
+type LibraryRow = Row & {
+  slug?: string
+  name?: string
+  entityRef?: string | null
+  location?: { lat?: number; lng?: number } | null
+}
+type PlaceRow = Row & { continent?: { documentId?: string } | null }
+/** The Document Service calls this intake makes, typed by what it reads. */
+type Store<T> = {
+  findMany: (args: Body) => Promise<T[]>
+  count: (args: Body) => Promise<number>
+  create: (args: Body) => Promise<T>
+}
+type BridgeContext = {
+  request: { header: Record<string, unknown>; body: unknown }
+  query?: Record<string, unknown>
+  params?: Record<string, unknown>
+  unauthorized: (message?: string) => unknown
+  set: (name: string, value: string) => void
+  body: unknown
+  status: number
+}
+
+const store = <T>(strapi: Core.Strapi, uid: string) =>
+  strapi.documents(uid as never) as unknown as Store<T>
+
 const object = (v: unknown): Body => {
   if (!v || typeof v !== "object" || Array.isArray(v))
     throw new ProposalError(400, "invalid_proposal")
@@ -47,7 +85,7 @@ const onlyKeys = (v: Body, keys: string[]) => {
 }
 
 /** The response an API account may see about its own proposal. */
-async function safeProposal(strapi: any, row: any) {
+async function safeProposal(strapi: Core.Strapi, row: SubmissionRow) {
   let result: Record<string, unknown> | null = null
   if (row.status === "approved") {
     const target =
@@ -55,7 +93,7 @@ async function safeProposal(strapi: any, row: any) {
         ? row.resultDocumentId
         : row.targetDocumentId
     if (isDocumentId(target)) {
-      const [library] = await strapi.documents(LIBRARY).findMany({
+      const [library] = await store<LibraryRow>(strapi, LIBRARY).findMany({
         status: "published",
         locale: row.contentLocale ?? "en",
         filters: { documentId: { $eq: target } },
@@ -81,9 +119,12 @@ async function safeProposal(strapi: any, row: any) {
   }
 }
 
-async function place(strapi: any, slugs: ReturnType<typeof placeSlugs>) {
+async function place(
+  strapi: Core.Strapi,
+  slugs: ReturnType<typeof placeSlugs>
+) {
   const find = async (uid: string, filters: Body, populate?: Body) => {
-    const [row] = await strapi.documents(uid).findMany({
+    const [row] = await store<PlaceRow>(strapi, uid).findMany({
       status: "published",
       locale: "en",
       filters,
@@ -124,7 +165,11 @@ async function place(strapi: any, slugs: ReturnType<typeof placeSlugs>) {
   }
 }
 
-async function libraryProposal(strapi: any, proposal: Body, locale: string) {
+async function libraryProposal(
+  strapi: Core.Strapi,
+  proposal: Body,
+  locale: string
+) {
   onlyKeys(proposal, ["library", "place"])
   const fields = proposalFields(proposal.library, API_LIBRARY_FIELDS, {
     max: 18,
@@ -132,15 +177,16 @@ async function libraryProposal(strapi: any, proposal: Body, locale: string) {
   if (typeof fields.name !== "string")
     throw new ProposalError(400, "invalid_field_value", { field: "name" })
   if (fields.libraryType !== undefined) {
-    const [type] = await strapi
-      .documents("api::library-type.library-type")
-      .findMany({
-        status: "published",
-        locale: "en",
-        filters: { name: { $eq: fields.libraryType } },
-        fields: ["name"],
-        limit: 1,
-      })
+    const [type] = await store<Row>(
+      strapi,
+      "api::library-type.library-type"
+    ).findMany({
+      status: "published",
+      locale: "en",
+      filters: { name: { $eq: fields.libraryType } },
+      fields: ["name"],
+      limit: 1,
+    })
     if (!type)
       throw new ProposalError(400, "invalid_field_value", {
         field: "libraryType",
@@ -149,7 +195,7 @@ async function libraryProposal(strapi: any, proposal: Body, locale: string) {
   const hierarchy = await place(strapi, placeSlugs(proposal.place))
   // A published library with this name in the same country (and city) is
   // public information: point the client at it instead of filing a copy.
-  const existing = await strapi.documents(LIBRARY).findMany({
+  const existing = await store<LibraryRow>(strapi, LIBRARY).findMany({
     status: "published",
     locale,
     filters: {
@@ -164,7 +210,7 @@ async function libraryProposal(strapi: any, proposal: Body, locale: string) {
   })
   if (existing.length)
     throw new ProposalError(409, "possible_duplicate", {
-      existing: existing.map((row: any) => row.entityRef).filter(Boolean),
+      existing: existing.map((row) => row.entityRef).filter(Boolean),
     })
 
   return {
@@ -174,7 +220,11 @@ async function libraryProposal(strapi: any, proposal: Body, locale: string) {
   }
 }
 
-async function correctionProposal(strapi: any, proposal: Body, locale: string) {
+async function correctionProposal(
+  strapi: Core.Strapi,
+  proposal: Body,
+  locale: string
+) {
   onlyKeys(proposal, ["target", "changes"])
   if (!isLibraryEntityRef(proposal.target))
     throw new ProposalError(404, "not_found")
@@ -184,7 +234,7 @@ async function correctionProposal(strapi: any, proposal: Body, locale: string) {
   const fieldNames = Object.keys(changes).filter(
     (k) => k !== "lat" && k !== "lng"
   )
-  const [library] = await strapi.documents(LIBRARY).findMany({
+  const [library] = await store<LibraryRow>(strapi, LIBRARY).findMany({
     status: "published",
     locale,
     filters: { entityRef: { $eq: proposal.target } },
@@ -217,8 +267,59 @@ async function correctionProposal(strapi: any, proposal: Body, locale: string) {
   }
 }
 
-export default ({ strapi }: { strapi: any }) => {
-  const wrap = (work: (ctx: any) => Promise<unknown>) => async (ctx: any) => {
+const CREATE_KEYS = [
+  "account",
+  "keyId",
+  "idempotencyKey",
+  "kind",
+  "locale",
+  "proposal",
+  "evidence",
+  "note",
+]
+
+/** The validated identity fields of a create body, or a 400. */
+function createFields(body: Body) {
+  onlyKeys(body, CREATE_KEYS)
+  const { account, keyId, idempotencyKey, kind, note } = body
+  if (
+    !isDocumentId(account) ||
+    typeof keyId !== "string" ||
+    !KEY_ID.test(keyId) ||
+    typeof idempotencyKey !== "string" ||
+    !IDEMPOTENCY_KEY.test(idempotencyKey) ||
+    (kind !== "library" && kind !== "correction")
+  )
+    throw new ProposalError(400, "invalid_proposal")
+  if (note !== undefined && (typeof note !== "string" || note.length > 1000))
+    throw new ProposalError(400, "invalid_proposal")
+
+  return {
+    account,
+    keyId,
+    idempotencyKey,
+    kind: kind as "library" | "correction",
+    note: note as string | undefined,
+  }
+}
+
+/** The moderator-facing note: source, attribution and the client's note. */
+function intakeNote(
+  evidence: ReturnType<typeof proposalEvidence>,
+  note: string | undefined
+) {
+  return [
+    `Untrusted API proposal. Source: ${evidence.sourceName} (${evidence.licence}).`,
+    evidence.attribution ? `Attribution: ${evidence.attribution}.` : "",
+    typeof note === "string" ? note : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+const wrap =
+  (work: (ctx: BridgeContext) => Promise<unknown>) =>
+  async (ctx: BridgeContext) => {
     if (!isValidServiceSecret(ctx.request.header["x-service-secret"]))
       return ctx.unauthorized("Invalid service secret")
     ctx.set("Cache-Control", "no-store")
@@ -230,40 +331,65 @@ export default ({ strapi }: { strapi: any }) => {
       ctx.body = { error: { code: error.code, ...error.detail } }
     }
   }
-  const submissions = () => strapi.documents(SUBMISSION)
+
+export default ({ strapi }: { strapi: Core.Strapi }) => {
+  const submissions = () => store<SubmissionRow>(strapi, SUBMISSION)
+  /** An earlier proposal under this idempotency key, or a conflict. */
+  const replayed = async (
+    ctx: BridgeContext,
+    account: string,
+    idempotencyKey: string,
+    hash: string
+  ) => {
+    const [replay] = await submissions().findMany({
+      filters: {
+        apiAccountId: { $eq: account },
+        idempotencyKey: { $eq: idempotencyKey },
+      },
+      limit: 1,
+    })
+    if (!replay) return null
+    if (replay.payloadHash !== hash)
+      throw new ProposalError(409, "idempotency_conflict")
+    ctx.status = 200
+
+    return { data: await safeProposal(strapi, replay), replayed: true }
+  }
+  const enforceRateLimit = async (account: string, keyId: string) => {
+    const now = Date.now()
+    const [byKey, byAccount] = await Promise.all([
+      submissions().count({
+        filters: {
+          apiKeyId: { $eq: keyId },
+          createdAt: { $gte: new Date(now - HOUR).toISOString() },
+        },
+      }),
+      submissions().count({
+        filters: {
+          apiAccountId: { $eq: account },
+          createdAt: { $gte: new Date(now - 24 * HOUR).toISOString() },
+        },
+      }),
+    ])
+    if (
+      byKey >= API_PROPOSAL_LIMITS.perKeyHour ||
+      byAccount >= API_PROPOSAL_LIMITS.perAccountDay
+    )
+      throw new ProposalError(429, "proposal_rate_limit")
+  }
 
   return {
     /** POST /api/proposals: file one untrusted API proposal. */
     create: wrap(async (ctx) => {
       const body = object(ctx.request.body)
-      onlyKeys(body, [
-        "account",
-        "keyId",
-        "idempotencyKey",
-        "kind",
-        "locale",
-        "proposal",
-        "evidence",
-        "note",
-      ])
-      const { account, keyId, idempotencyKey, kind } = body
-      if (
-        !isDocumentId(account) ||
-        typeof keyId !== "string" ||
-        !KEY_ID.test(keyId) ||
-        typeof idempotencyKey !== "string" ||
-        !IDEMPOTENCY_KEY.test(idempotencyKey) ||
-        (kind !== "library" && kind !== "correction") ||
-        (body.note !== undefined &&
-          (typeof body.note !== "string" || body.note.length > 1000))
-      )
-        throw new ProposalError(400, "invalid_proposal")
+      const { account, keyId, idempotencyKey, kind, note } = createFields(body)
       const evidence = proposalEvidence(body.evidence)
       const proposal = object(body.proposal)
-      const locale = await resolveSubmissionLocale(strapi, body.locale, {
+      const requestedLocale = body.locale
+      const locale = await resolveSubmissionLocale(strapi, requestedLocale, {
         submissionType: kind === "library" ? "new_library" : "correction",
       })
-      if (typeof body.locale === "string" && body.locale !== locale)
+      if (typeof requestedLocale === "string" && requestedLocale !== locale)
         throw new ProposalError(400, "locale_unavailable")
       const built =
         kind === "library"
@@ -273,40 +399,9 @@ export default ({ strapi }: { strapi: any }) => {
 
       // A replayed request returns the original proposal without filing
       // another; the same key with a different payload is a conflict.
-      const [replay] = await submissions().findMany({
-        filters: {
-          apiAccountId: { $eq: account },
-          idempotencyKey: { $eq: idempotencyKey },
-        },
-        limit: 1,
-      })
-      if (replay) {
-        if (replay.payloadHash !== hash)
-          throw new ProposalError(409, "idempotency_conflict")
-        ctx.status = 200
-
-        return { data: await safeProposal(strapi, replay), replayed: true }
-      }
-      const now = Date.now()
-      const [byKey, byAccount] = await Promise.all([
-        submissions().count({
-          filters: {
-            apiKeyId: { $eq: keyId },
-            createdAt: { $gte: new Date(now - HOUR).toISOString() },
-          },
-        }),
-        submissions().count({
-          filters: {
-            apiAccountId: { $eq: account },
-            createdAt: { $gte: new Date(now - 24 * HOUR).toISOString() },
-          },
-        }),
-      ])
-      if (
-        byKey >= API_PROPOSAL_LIMITS.perKeyHour ||
-        byAccount >= API_PROPOSAL_LIMITS.perAccountDay
-      )
-        throw new ProposalError(429, "proposal_rate_limit")
+      const replay = await replayed(ctx, account, idempotencyKey, hash)
+      if (replay) return replay
+      await enforceRateLimit(account, keyId)
       // The same payload, still open, from this account is a duplicate.
       // Other accounts' proposals are never consulted or revealed.
       const [duplicate] = await submissions().findMany({
@@ -328,7 +423,7 @@ export default ({ strapi }: { strapi: any }) => {
         .checkContent(
           {
             fields: built.fields,
-            note: body.note,
+            note,
             evidenceUrl: evidence.url,
           },
           {
@@ -338,7 +433,7 @@ export default ({ strapi }: { strapi: any }) => {
         )
       if (!safe.ok) throw new ProposalError(400, "unsafe_content")
 
-      let created: any
+      let created: SubmissionRow
       try {
         created = await strapi
           .plugin("content-moderation")
@@ -346,15 +441,7 @@ export default ({ strapi }: { strapi: any }) => {
           .create({
             ...built,
             locale,
-            note: [
-              `Untrusted API proposal. Source: ${evidence.sourceName} (${evidence.licence}).`,
-              evidence.attribution
-                ? `Attribution: ${evidence.attribution}.`
-                : "",
-              typeof body.note === "string" ? body.note : "",
-            ]
-              .filter(Boolean)
-              .join("\n"),
+            note: intakeNote(evidence, note),
             evidenceType: evidence.type,
             evidenceUrl: evidence.url,
             submittedByUserId: `${API_SUBMITTER_PREFIX}${account}`,
@@ -368,21 +455,12 @@ export default ({ strapi }: { strapi: any }) => {
           })
       } catch (error) {
         // A concurrent replay won the unique (account, idempotency key) index.
-        const [winner] = await submissions().findMany({
-          filters: {
-            apiAccountId: { $eq: account },
-            idempotencyKey: { $eq: idempotencyKey },
-          },
-          limit: 1,
-        })
+        const winner = await replayed(ctx, account, idempotencyKey, hash)
         if (!winner) throw error
-        if (winner.payloadHash !== hash)
-          throw new ProposalError(409, "idempotency_conflict")
-        ctx.status = 200
 
-        return { data: await safeProposal(strapi, winner), replayed: true }
+        return winner
       }
-      await strapi.documents(REVIEW_EVENT).create({
+      await store<Row>(strapi, REVIEW_EVENT).create({
         data: {
           submissionDocumentId: created.documentId,
           toStatus: "pending",

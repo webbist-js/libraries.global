@@ -21,6 +21,12 @@ const PUBLIC_DESTINATIONS: Record<AccessFeature, string> = {
   roles: "/knowledge",
 }
 
+function requirementKey(feature: AccessFeature, teamFeature: boolean) {
+  if (feature === "api") return "apiRequired"
+
+  return teamFeature ? "teamRequired" : "freeAccount"
+}
+
 /** Only explanatory product copy reaches this view; no workspace data is loaded. */
 export async function FeatureAccessLanding({
   feature,
@@ -111,13 +117,7 @@ export async function FeatureAccessLanding({
           aria-labelledby="feature-next-step"
         >
           <p className="m-0 mb-4 inline-flex rounded-full bg-(--t-bg-deep) px-3 py-1 text-sm font-semibold text-(--t-accent-primary)">
-            {t(
-              feature === "api"
-                ? "apiRequired"
-                : memberTitleKey
-                  ? "teamRequired"
-                  : "freeAccount"
-            )}
+            {t(requirementKey(feature, memberTitleKey !== null))}
           </p>
           <h2 id="feature-next-step" className="type-h2 m-0">
             {t(needsTeam ? "teamTitle" : "accountTitle")}

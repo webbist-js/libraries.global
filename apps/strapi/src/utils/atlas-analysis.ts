@@ -123,7 +123,7 @@ export type ReachRefusal = {
  * weekly and daily allowances sum the rows inside their rolling window.
  */
 export async function spendReachAllowance(
-  trx: any,
+  trx: Core.Strapi["db"]["connection"],
   userKey: string,
   allowance: ReachAllowance,
   now: Date = new Date()
@@ -184,6 +184,73 @@ export async function spendReachAllowance(
   return null
 }
 
+/** Reach is for libraries people visit: not mobile, digital, closed or planned. */
+function isVisitorLibrary(type: unknown, operationalStatus: unknown) {
+  return (
+    !["Mobile", "Digital"].includes(type as string) &&
+    !["permanently_closed", "temporarily_closed", "planned"].includes(
+      operationalStatus as string
+    )
+  )
+}
+
+function isValidCoordinate(
+  coordinate: { lat: number; lng: number } | null
+): coordinate is { lat: number; lng: number } {
+  return (
+    !!coordinate &&
+    Number.isFinite(coordinate.lat) &&
+    Number.isFinite(coordinate.lng) &&
+    Math.abs(coordinate.lat) <= 90 &&
+    Math.abs(coordinate.lng) <= 180
+  )
+}
+
+/** Whether an installed release covers this country and origin point. */
+function releaseCovers(
+  release: { countries?: unknown; originBounds: number[] },
+  iso2: unknown,
+  coordinate: { lat: number; lng: number }
+) {
+  return (
+    Array.isArray(release.countries) &&
+    release.countries.includes(iso2) &&
+    release.originBounds[0] <= coordinate.lng &&
+    release.originBounds[2] >= coordinate.lng &&
+    release.originBounds[1] <= coordinate.lat &&
+    release.originBounds[3] >= coordinate.lat
+  )
+}
+
+/**
+ * The unexpired job for `key`, if any. A pending job moves to interactive
+ * priority; a failed one is retired (and none returned) when the caller
+ * asks to retry.
+ */
+async function reusableReachJob(
+  database: Core.Strapi["db"]["connection"],
+  key: string,
+  retry: unknown
+) {
+  const job = await database("atlas_analysis_jobs")
+    .where({ key })
+    .where("expires_at", ">", new Date())
+    .first()
+  if (job?.state === "pending" && job.priority < 10)
+    await database("atlas_analysis_jobs")
+      .where({ key, state: "pending" })
+      .update({ priority: 10 })
+  if (job?.state === "failed" && retry) {
+    await database("atlas_analysis_jobs")
+      .where({ key, state: "failed" })
+      .update({ expires_at: new Date(0) })
+
+    return null
+  }
+
+  return job
+}
+
 /** Called only behind the private Atlas bridge, after the UI's entitlement check. */
 export async function requestAtlasReach(
   strapi: Core.Strapi,
@@ -209,15 +276,8 @@ export async function requestAtlasReach(
   })
   const coordinate = library.location as { lat: number; lng: number } | null
   if (
-    ["Mobile", "Digital"].includes(library.libraryType?.name) ||
-    ["permanently_closed", "temporarily_closed", "planned"].includes(
-      library.operationalStatus
-    ) ||
-    !coordinate ||
-    !Number.isFinite(coordinate.lat) ||
-    !Number.isFinite(coordinate.lng) ||
-    Math.abs(coordinate.lat) > 90 ||
-    Math.abs(coordinate.lng) > 180
+    !isVisitorLibrary(library.libraryType?.name, library.operationalStatus) ||
+    !isValidCoordinate(coordinate)
   )
     return unavailable(
       "unsupported",
@@ -226,14 +286,8 @@ export async function requestAtlasReach(
   const releases = await analysisService("/releases")
   if (!Array.isArray(releases) || releases.length > 512)
     throw new Error("Invalid analysis catalogue")
-  const matching = releases.filter(
-    (release) =>
-      Array.isArray(release.countries) &&
-      release.countries.includes(library.country?.iso2) &&
-      release.originBounds[0] <= coordinate.lng &&
-      release.originBounds[2] >= coordinate.lng &&
-      release.originBounds[1] <= coordinate.lat &&
-      release.originBounds[3] >= coordinate.lat
+  const matching = releases.filter((release) =>
+    releaseCovers(release, library.country?.iso2, coordinate)
   )
   if (matching.length !== 1)
     return unavailable(
@@ -256,20 +310,7 @@ export async function requestAtlasReach(
     )
     .digest("hex")
   const database = strapi.db.connection
-  let job = await database("atlas_analysis_jobs")
-    .where({ key })
-    .where("expires_at", ">", new Date())
-    .first()
-  if (job?.state === "pending" && job.priority < 10)
-    await database("atlas_analysis_jobs")
-      .where({ key, state: "pending" })
-      .update({ priority: 10 })
-  if (job?.state === "failed" && request.retry) {
-    await database("atlas_analysis_jobs")
-      .where({ key, state: "failed" })
-      .update({ expires_at: new Date(0) })
-    job = null
-  }
+  let job = await reusableReachJob(database, key, request.retry)
   if (!job) {
     const result = await admitReachJob(database, {
       request,

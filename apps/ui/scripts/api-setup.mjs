@@ -53,10 +53,15 @@ if (apply && !taxCode)
 const offer = pricing.version
 const amount = pricing.api.month
 if (amount !== 10000) throw new Error("The API offer is £100/month")
-const kibDecimal = (pricing.api.overage.mibPence / 1024)
-  .toFixed(12)
-  .replace(/0+$/, "")
-  .replace(/\.$/, "")
+/** Drops trailing zeros (and a bare point) from a fixed-point string. */
+function trimFixed(fixed) {
+  let end = fixed.length
+  while (end > 0 && fixed[end - 1] === "0") end--
+  if (fixed[end - 1] === ".") end--
+
+  return fixed.slice(0, end)
+}
+const kibDecimal = trimFixed((pricing.api.overage.mibPence / 1024).toFixed(12))
 const DIMENSIONS = [
   {
     key: "requests",

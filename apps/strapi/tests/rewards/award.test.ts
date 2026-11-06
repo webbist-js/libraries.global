@@ -177,7 +177,7 @@ describe("machine API proposals", () => {
     const points = createPoints({
       strapi: {
         db: { query, transaction: vi.fn(), connection: vi.fn() },
-      } as any,
+      } as never,
     })
     const result = await points.award(
       "api:team00000000000000000001",

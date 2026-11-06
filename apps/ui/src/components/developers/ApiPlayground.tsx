@@ -159,17 +159,51 @@ function chosenPlace(
   return { country, region, area: slug }
 }
 
+function needsServiceRef(chosen: PlaygroundInput) {
+  if (["service", "serviceLibraries"].includes(chosen.operation)) return true
+  if (chosen.operation === "summary")
+    return Boolean(chosen.summaryOperation?.startsWith("service."))
+
+  return chosen.operation === "reach" && chosen.reachMode !== "library"
+}
+
+function reachProblem(chosen: PlaygroundInput) {
+  if (chosen.reachMode === "library" && !chosen.entityRef.trim())
+    return "Enter a Library entityRef, or search to choose one."
+  if (chosen.reachMode === "service" && !chosen.areaCode?.trim())
+    return "Enter the service's reporting area code."
+
+  return null
+}
+
+/** Send one playground request with the visitor's key; never with cookies. */
+async function sendPlaygroundRequest(
+  request: ReturnType<typeof playgroundRequest>,
+  token: string,
+  signal: AbortSignal
+) {
+  const response = await fetch(request.path, {
+    method: request.method,
+    headers: {
+      Authorization: `Bearer ${token.trim()}`,
+      ...(request.body ? { "Content-Type": "application/json" } : {}),
+    },
+    body: request.body,
+    cache: "no-store",
+    credentials: "omit",
+    redirect: "error",
+    signal,
+  })
+
+  return { status: response.status, body: await responseBody(response) }
+}
+
 /** Why a request cannot be sent yet, or null when it can. */
 function requestProblem(chosen: PlaygroundInput, token: string) {
   if (!token.trim()) return "Enter your Team API key before running a request."
   if (chosen.operation === "placeLibraries" && !chosen.country?.trim())
     return "Enter a country slug, or browse places to choose one."
-  const needsService =
-    ["service", "serviceLibraries"].includes(chosen.operation) ||
-    (chosen.operation === "summary" &&
-      chosen.summaryOperation?.startsWith("service.")) ||
-    (chosen.operation === "reach" && chosen.reachMode !== "library")
-  if (needsService && !chosen.serviceRef?.trim())
+  if (needsServiceRef(chosen) && !chosen.serviceRef?.trim())
     return "Enter a service ref, or list services to choose one."
   if (
     chosen.operation === "summary" &&
@@ -177,18 +211,8 @@ function requestProblem(chosen: PlaygroundInput, token: string) {
     !chosen.country?.trim()
   )
     return "Enter a country slug for a place summary."
-  if (
-    chosen.operation === "reach" &&
-    chosen.reachMode === "library" &&
-    !chosen.entityRef.trim()
-  )
-    return "Enter a Library entityRef, or search to choose one."
-  if (
-    chosen.operation === "reach" &&
-    chosen.reachMode === "service" &&
-    !chosen.areaCode?.trim()
-  )
-    return "Enter the service's reporting area code."
+  const reach = chosen.operation === "reach" ? reachProblem(chosen) : null
+  if (reach) return reach
   if (
     (chosen.operation === "job" || chosen.operation === "jobResult") &&
     !chosen.jobId?.trim()
@@ -198,6 +222,13 @@ function requestProblem(chosen: PlaygroundInput, token: string) {
     return "Paste a proposal id returned by a submissions request."
 
   return null
+}
+
+/** Places from a place browse; a place's library list is shown as records. */
+function resultPlaces(result: Result | null) {
+  return result?.request.includes("/libraries")
+    ? []
+    : playgroundPlaces(result?.body)
 }
 
 /** The JSON body, or a stand-in error when the server did not send JSON. */
@@ -271,9 +302,7 @@ export function ApiPlayground({
     operation === "services" ? playgroundServices(result?.body) : []
   const job = playgroundJob(result?.body)
   const placeOperation = PLACE_OPERATIONS.has(operation)
-  const places = result?.request.includes("/libraries")
-    ? []
-    : playgroundPlaces(result?.body)
+  const places = resultPlaces(result)
   const placeLevel = placeLevelOf(country, region)
   const clear = () => {
     setResult(null)
@@ -298,21 +327,13 @@ export function ApiPlayground({
     const timeout = setTimeout(() => abort.abort(), 30_000)
     setPending(true)
     try {
-      const response = await fetch(request.path, {
-        method: request.method,
-        headers: {
-          Authorization: `Bearer ${token.trim()}`,
-          ...(request.body ? { "Content-Type": "application/json" } : {}),
-        },
-        body: request.body,
-        cache: "no-store",
-        credentials: "omit",
-        redirect: "error",
-        signal: abort.signal,
-      })
-      const body = await responseBody(response)
+      const { status, body } = await sendPlaygroundRequest(
+        request,
+        token,
+        abort.signal
+      )
       setResult({
-        status: response.status,
+        status,
         body,
         request: description,
         records:

@@ -20,8 +20,8 @@ const FUTURE_ISO = "2099-01-01T00:00:00Z"
 
 describe("local session profile projection", () => {
   let fake: any
-  let fakeServices: Record<string, any>
-  let fakeStore: Record<string, any[]>
+  let fakeServices: ReturnType<typeof makeFakeStrapi>["services"]
+  let fakeStore: ReturnType<typeof makeFakeStrapi>["store"]
   beforeEach(() => {
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
     const { strapi, services, store } = makeFakeStrapi({

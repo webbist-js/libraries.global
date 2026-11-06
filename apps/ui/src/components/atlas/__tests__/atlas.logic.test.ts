@@ -296,11 +296,12 @@ describe("url state", () => {
   })
 })
 
+const access = (signedIn: boolean, features: string[]) => ({
+  signedIn,
+  can: (f: string) => features.includes(f),
+})
+
 describe("tierForAccess", () => {
-  const access = (signedIn: boolean, features: string[]) => ({
-    signedIn,
-    can: (f: string) => features.includes(f),
-  })
   it("maps entitlements to a tier and fails closed", () => {
     expect(tierForAccess(access(false, ["atlas.reach"]))).toBe("public")
     expect(tierForAccess(access(true, []))).toBe("free")

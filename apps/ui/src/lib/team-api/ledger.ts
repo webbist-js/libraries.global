@@ -69,6 +69,32 @@ export function overageScaled(
   )
 }
 
+function includedRefusal(
+  demand: Demand,
+  requests: number,
+  credits: number,
+  limits: Included
+): Admission | null {
+  if (demand.requests && requests > limits.requests)
+    return { ok: false, code: "quota_requests" }
+  if (demand.credits && credits > limits.analysisCredits)
+    return { ok: false, code: "quota_analysis" }
+
+  return null
+}
+
+/** Bytes the remaining overage `room` (scaled pence) can still pay for. */
+function affordableBytes(
+  room: bigint,
+  demand: Demand,
+  rates: ApiOverageRates
+): number {
+  if (room <= 0n) return 0
+  if (rates.mibPence <= 0) return demand.maxBytes
+
+  return Number(room / big(rates.mibPence))
+}
+
 /**
  * Admit one operation against the worst case of settled usage, every
  * concurrent reservation and this demand. Without an overage policy the
@@ -86,10 +112,8 @@ export function admit(
   const requests = used.requests + demand.requests
   const credits = used.credits + demand.credits
   if (!overage) {
-    if (demand.requests && requests > limits.requests)
-      return { ok: false, code: "quota_requests" }
-    if (demand.credits && credits > limits.analysisCredits)
-      return { ok: false, code: "quota_analysis" }
+    const refused = includedRefusal(demand, requests, credits, limits)
+    if (refused) return refused
   }
   const includedHeadroom = Math.max(0, limits.bytes - used.bytes)
   let budget = Math.min(demand.maxBytes, includedHeadroom)
@@ -102,13 +126,7 @@ export function admit(
     )
     if (base > cap) return { ok: false, code: "overage_cap" }
     if (demand.maxBytes > includedHeadroom) {
-      const room = cap - HALF_PENNY - base
-      const affordable =
-        room <= 0n
-          ? 0
-          : rates.mibPence <= 0
-            ? demand.maxBytes
-            : Number(room / big(rates.mibPence))
+      const affordable = affordableBytes(cap - HALF_PENNY - base, demand, rates)
       budget = Math.min(demand.maxBytes, includedHeadroom + affordable)
     }
   }
@@ -179,8 +197,15 @@ export function invoiceLines(units: OverageUnits, rates: ApiOverageRates) {
 }
 
 /** Stripe `unit_amount_decimal` (pence) for one KiB of byte overage. */
-export const kibUnitAmountDecimal = (mibPence: number) =>
-  (mibPence / 1024).toFixed(12).replace(/0+$/, "").replace(/\.$/, "")
+export function kibUnitAmountDecimal(mibPence: number) {
+  // toFixed never uses exponent notation below 1e21, so this is plain digits.
+  const fixed = (mibPence / 1024).toFixed(12)
+  let end = fixed.length
+  while (end > 0 && fixed[end - 1] === "0") end--
+  if (fixed[end - 1] === ".") end--
+
+  return fixed.slice(0, end)
+}
 
 /** Thresholds (percent) newly reached between two readings of `used / limit`. */
 export function thresholdsCrossed(

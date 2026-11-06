@@ -36,7 +36,7 @@ const context = (
   set: vi.fn(),
   unauthorized: vi.fn(),
   status: 200,
-  body: undefined as any,
+  body: undefined as unknown,
 })
 const network = {
   documentId: ref,
@@ -59,7 +59,9 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs())
 
 function runtime(rows: Record<string, unknown[]>, counts = 0) {
-  const findMany = vi.fn(async (args: any) => rows[args.__uid] ?? [])
+  const findMany = vi.fn(
+    async (args: { __uid: string }) => rows[args.__uid] ?? []
+  )
   const count = vi.fn(async () => counts)
 
   return {
@@ -67,8 +69,8 @@ function runtime(rows: Record<string, unknown[]>, counts = 0) {
     count,
     strapi: {
       documents: (uid: string) => ({
-        findMany: (args: any) => findMany({ ...args, __uid: uid }),
-        count: (args: any) => count({ ...args, __uid: uid }),
+        findMany: (args: object) => findMany({ ...args, __uid: uid }),
+        count: (args: object) => count({ ...args, __uid: uid }),
       }),
     },
   }
@@ -313,7 +315,9 @@ describe("machine API analysis bridge", () => {
       { mode: "network", ref }
     )
     expect(projected.geometry).toBe("unavailable")
-    expect((projected.contours as any[])[0].geometry).toBeNull()
+    expect(
+      (projected.contours as { geometry: unknown }[])[0].geometry
+    ).toBeNull()
     expect(JSON.stringify(projected)).not.toContain("eligibleLibraries")
   })
 
