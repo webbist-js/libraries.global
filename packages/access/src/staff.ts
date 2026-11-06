@@ -10,6 +10,10 @@ export type StaffAction =
   | "manageTeam"
   | "manageLive"
   | "goLive"
+  /** Embeds, bulk upload and traffic: free staff tools on this library. */
+  | "embed"
+  | "bulkUpload"
+  | "traffic"
 export interface StaffClaim {
   libraryDocumentId: string
   staffRole: StaffRole
@@ -37,6 +41,9 @@ export function canStaff(
     case "reviewSuggestions":
     case "notices":
     case "seeTeam":
+    case "embed":
+    case "bulkUpload":
+    case "traffic":
       return true
 
     default:
