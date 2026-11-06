@@ -2998,7 +2998,7 @@
     "rate": "{count} requests per minute",
     "concurrency": "{count} requests at once",
     "keys": "Unlimited keys sharing one allowance",
-    "consent": "I agree to the <membership>membership terms</membership>, <refunds>cancellation and refund policy</refunds>, and the API limits shown here, and request access as soon as payment is confirmed.",
+    "consent": "I agree to the <membership>API purchase terms</membership>, <refunds>cancellation and refund policy</refunds>, and the API limits shown here, and request access as soon as payment is confirmed.",
     "subscribe": "Subscribe to API access",
     "opening": "Opening secure checkout…",
     "cancel": "Cancel",

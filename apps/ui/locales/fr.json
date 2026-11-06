@@ -2998,7 +2998,7 @@
     "rate": "{count} requêtes par minute",
     "concurrency": "{count} requêtes simultanées",
     "keys": "Clés illimitées partageant un même quota",
-    "consent": "J’accepte les <membership>conditions d’adhésion</membership>, la <refunds>politique d’annulation et de remboursement</refunds> et les limites de l’API indiquées ici, et demande l’accès dès confirmation du paiement.",
+    "consent": "J’accepte les <membership>conditions d’achat de l’API</membership>, la <refunds>politique d’annulation et de remboursement</refunds> et les limites de l’API indiquées ici, et demande l’accès dès confirmation du paiement.",
     "subscribe": "Souscrire à l’accès à l’API",
     "opening": "Ouverture du paiement sécurisé…",
     "cancel": "Annuler",

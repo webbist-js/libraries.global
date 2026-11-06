@@ -207,7 +207,7 @@ export function compareGroups(): CompareGroup[] {
       rows: [
         featureRow("api.key"),
         plain("apiAllowance", ["api"], "yes", { api: "apiAllowance" }),
-        plain("apiOverage", ["api"]),
+        plain("apiOverage", ["api"], "soon"),
         plain("apiPlayground", ["api"]),
       ],
     },

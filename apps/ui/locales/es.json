@@ -2998,7 +2998,7 @@
     "rate": "{count} solicitudes por minuto",
     "concurrency": "{count} solicitudes simultáneas",
     "keys": "Claves ilimitadas que comparten un mismo cupo",
-    "consent": "Acepto las <membership>condiciones de membresía</membership>, la <refunds>política de cancelación y reembolso</refunds> y los límites de la API indicados aquí, y solicito el acceso en cuanto se confirme el pago.",
+    "consent": "Acepto las <membership>condiciones de compra del acceso a la API</membership>, la <refunds>política de cancelación y reembolso</refunds> y los límites de la API indicados aquí, y solicito el acceso en cuanto se confirme el pago.",
     "subscribe": "Suscribirse al acceso a la API",
     "opening": "Abriendo el pago seguro…",
     "cancel": "Cancelar",

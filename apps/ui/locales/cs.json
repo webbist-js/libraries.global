@@ -2998,7 +2998,7 @@
     "rate": "{count} požadavků za minutu",
     "concurrency": "{count} souběžných požadavků",
     "keys": "Neomezený počet klíčů se společným limitem",
-    "consent": "Souhlasím s <membership>podmínkami členství</membership>, <refunds>pravidly zrušení a vrácení peněz</refunds> a zde uvedenými limity API a žádám o zpřístupnění ihned po potvrzení platby.",
+    "consent": "Souhlasím s <membership>podmínkami nákupu přístupu k API</membership>, <refunds>pravidly zrušení a vrácení peněz</refunds> a zde uvedenými limity API a žádám o zpřístupnění ihned po potvrzení platby.",
     "subscribe": "Předplatit přístup k API",
     "opening": "Otevírání zabezpečené platby…",
     "cancel": "Zrušit",
