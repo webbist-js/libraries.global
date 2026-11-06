@@ -131,6 +131,22 @@ function OfferCard({
       ))}
 
       <div className="mt-auto pt-6">
+        {offer.secondary ? (
+          <GlobalLink
+            href={offer.secondary.href}
+            className="mb-2 flex min-h-11 items-center justify-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          >
+            {offer.secondary.label}
+          </GlobalLink>
+        ) : null}
+        {offer.key === "contributor" ? (
+          <GlobalLink
+            href="/community/supporters"
+            className="mb-2 flex min-h-11 items-center justify-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          >
+            {m("copy.meetSupporters")}
+          </GlobalLink>
+        ) : null}
         {cta ? (
           <GlobalLink
             className={`${PILL} ${
@@ -174,22 +190,6 @@ function OfferCard({
             {m("copy.signedIn")}
           </p>
         )}
-        {offer.secondary ? (
-          <GlobalLink
-            href={offer.secondary.href}
-            className="mt-2 flex min-h-11 items-center justify-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
-          >
-            {offer.secondary.label}
-          </GlobalLink>
-        ) : null}
-        {offer.key === "contributor" ? (
-          <GlobalLink
-            href="/community/supporters"
-            className="mt-2 flex min-h-11 items-center justify-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
-          >
-            {m("copy.meetSupporters")}
-          </GlobalLink>
-        ) : null}
       </div>
     </li>
   )
