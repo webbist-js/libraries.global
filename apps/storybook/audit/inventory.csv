@@ -2128,7 +2128,7 @@ path,layer,role,coverage,exported_symbols,story_modules,composition_modules,boun
 "apps/ui/src/lib/team-api/__tests__/period.test.ts","lib","test","test","","","","","f307a2a3b17c"
 "apps/ui/src/lib/team-api/__tests__/playground.test.ts","lib","test","test","","","","","f3712ca5f3bb"
 "apps/ui/src/lib/team-api/__tests__/projection.test.ts","lib","test","test","","","","server","305d563a3de9"
-"apps/ui/src/lib/team-api/__tests__/resources.test.ts","lib","test","test","","","","server; network/session","b12ef3656e81"
+"apps/ui/src/lib/team-api/__tests__/resources.test.ts","lib","test","test","","","","server; network/session","37a83eac2dc2"
 "apps/ui/src/lib/team-api/__tests__/team.test.ts","lib","test","test","","","","server; network/session","9fcf5e218097"
 "apps/ui/src/lib/team-api/__tests__/usage.test.ts","lib","test","test","","","","server","2a03815ff7af"
 "apps/ui/src/lib/team-api/__tests__/workspace.test.ts","lib","test","test","","","","server; network/session","4bbec724a7a0"
