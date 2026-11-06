@@ -112,7 +112,7 @@ if (args.has("--write-legal-markdown")) {
   for (const draft of legalDrafts())
     writeFileSync(
       new URL(`${draft.slug}.md`, out),
-      legalDraftMarkdown(draft, date) + "\n"
+      legalDraftMarkdown(draft, date).trimEnd() + "\n"
     )
   console.log(JSON.stringify({ wrote: legalDrafts().map((d) => d.slug) }))
   process.exit(0)

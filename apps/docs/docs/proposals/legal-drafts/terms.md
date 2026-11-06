@@ -70,4 +70,3 @@ _New section._
 _In short: The service is in closed beta._
 
 Libraries Global is in a closed beta. Features, limits and availability can change, and some features are introduced in stages. During the beta, checkout uses test payments and no real payment is taken until live purchases are announced.
-

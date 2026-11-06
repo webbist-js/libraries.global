@@ -100,4 +100,3 @@ Do not include a password, sign-in link, API key, full card number or CVC.
 _In short: Check billing status before paying again._
 
 If a payment is uncertain or access is still confirming, check the billing page and your financial confirmation before paying again. Contact info@libraries.global for access problems. For unresolved transaction issues, use Link's support process. You can read the [UK Consumer Contracts Regulations](https://www.legislation.gov.uk/uksi/2013/3134). Your statutory remedies are unaffected.
-

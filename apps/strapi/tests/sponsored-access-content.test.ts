@@ -452,7 +452,7 @@ describe("legal revision drafts", () => {
       )
       const committed = readFileSync(file, "utf8")
       const date = /prepared (\d{4}-\d{2}-\d{2})/.exec(committed)![1]
-      expect(committed).toBe(legalDraftMarkdown(draft, date) + "\n")
+      expect(committed).toBe(legalDraftMarkdown(draft, date).trimEnd() + "\n")
     }
   })
 })

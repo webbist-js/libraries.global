@@ -66,4 +66,3 @@ _New section._
 _In short: Optional analytics stay optional._
 
 With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. [Confirm retention against the cookie policy.]
-
