@@ -9,7 +9,7 @@ description: "Draft revision of /legal/privacy for the sponsored-access model. R
 
 CMS document: `privacy` (English). Revision: next major. Mode: replaces or adds the sections below; other published sections are kept, with retired paid-plan sentences removed. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Explains API billing references, usage events, submitted payloads, analysis job retention, recognition counters, sponsor records and analytics for access journeys. Withdrawn membership and Team billing processing removed.
+Revision summary: Explains API billing references, usage events, submitted payloads, analysis job retention, recognition counters, sponsor records and analytics for access journeys. Withdrawn membership and Team billing processing removed.
 
 ## Draft for legal review – not in force
 
@@ -65,4 +65,4 @@ _New section._
 
 _In short: Optional analytics stay optional._
 
-With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. [Confirm retention against the cookie policy.]
+With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. Analytics choice and our GA cookies last up to 180 days without rolling renewal. Google Analytics event-level data is retained for two months and user-level data for 14 months, with the latter reset on new activity; aggregate reports may remain separately. You can withdraw consent at any time to stop future optional collection and contact us about your privacy rights. See the [cookie policy](/legal/cookies).

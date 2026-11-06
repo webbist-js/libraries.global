@@ -9,7 +9,7 @@ description: "Draft revision of /legal/data-licence for the sponsored-access mod
 
 CMS document: `data-licence` (English). Revision: next major. Mode: replaces or adds the sections below; other published sections are kept, with retired paid-plan sentences removed. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Explains licences and attribution for API responses, contributions submitted through the API and analysis results. Paid access does not change the licence.
+Revision summary: Explains licences and attribution for API responses, contributions submitted through the API and analysis results. Paid access does not change the licence.
 
 ## Draft for legal review – not in force
 
@@ -41,7 +41,7 @@ _New section._
 
 _In short: Results carry the credits of the data they use._
 
-Analysis and Reach results combine published records with third-party datasets, such as population grids, routing data from OpenStreetMap contributors and official statistics. Keep the source credits and dates supplied with a result and follow those sources' terms, including any share-alike obligations. [Confirm OpenStreetMap ODbL obligations for derived results with legal review.]
+Analysis and Reach results combine published records with third-party datasets, such as population grids, routing data from OpenStreetMap contributors and official statistics. Keep the source credits and dates supplied with a result and follow those sources' terms. If a result is a Produced Work derived from OpenStreetMap data, credit OpenStreetMap and its contributors as required by the ODbL. If you publicly use or distribute an adapted database made from ODbL data, the ODbL may require you to make that adapted database available under the same licence. The distinction depends on what you create and how you use it; consult the [OpenStreetMap attribution guidance](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines) and [ODbL](https://opendatacommons.org/licenses/odbl/summary/index.html) before reuse.
 
 ## Paid access and sponsorship
 

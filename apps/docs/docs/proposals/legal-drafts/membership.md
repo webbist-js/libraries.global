@@ -9,7 +9,7 @@ description: "Draft revision of /legal/membership for the sponsored-access model
 
 CMS document: `membership` (English). Revision: next major. Mode: replaces the whole document. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Replaces the earlier beta test terms with the £100/month API purchase terms (offer version 2.0) and capped overage terms (version 2.0).
+Revision summary: Replaces the earlier beta test terms with the £100/month API purchase terms (offer version 2.0) and capped overage terms (version 2.0).
 
 Lead: Terms for buying and using paid API access to Libraries Global, including allowances, capped overage, renewal and cancellation.
 
@@ -53,7 +53,7 @@ _In short: £100 a month, including tax at the base GBP price._
 
 API access costs £100 a month. This GBP price includes applicable tax. Stripe confirms the final tax, any local currency and the recurring total before you pay, and the invoice shows the actual charge. The subscription renews monthly until an organiser cancels it.
 
-We will not change the price of an existing subscription without telling the organisers before the change affects a renewal. [Confirm notice period with legal review.]
+We will give organisers at least 30 days' notice before a price change affects their next renewal. They can cancel renewal before the new price takes effect. A change to an included allowance or overage rate will apply only after the same notice; the terms recorded with a purchase govern its current paid period.
 
 ## Billing period and allowances
 
@@ -115,7 +115,7 @@ _In short: Proposals are reviewed; analysis results are models._
 
 Proposals sent through the API are untrusted suggestions. They enter the normal moderation process and may be accepted, changed or rejected. A key cannot act as a library's staff. By submitting, you confirm that you have the right to share the material, and you license accepted contributions under the [data licence](/legal/data-licence).
 
-Analysis and Reach results are modelled estimates based on published records and third-party datasets. They do not measure visits, admission or step-free access, and they can be incomplete. Completed job results are kept for [retention period — confirm before publication] and then deleted.
+Analysis and Reach results are modelled estimates based on published records and third-party datasets. They do not measure visits, admission or step-free access, and they can be incomplete. Completed Reach results are kept for 24 hours and completed summary results for 15 minutes, then deleted. Pending jobs expire after 30 minutes; job inputs and metadata are kept for 30 days. Separate billing usage records follow the [privacy policy](/legal/privacy).
 
 ## Suspension and ending access
 

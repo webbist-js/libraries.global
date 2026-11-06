@@ -9,7 +9,7 @@ description: "Draft revision of /legal/cancellation-refunds for the sponsored-ac
 
 CMS document: `cancellation-refunds` (English). Revision: next major. Mode: replaces the whole document. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.
+Revision summary: Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.
 
 Lead: How to stop API renewal, request a refund and get payment help.
 
@@ -49,7 +49,7 @@ If overage was switched on, overage incurred before cancellation remains payable
 
 _In short: UK consumers normally have 14 days to cancel._
 
-If you are a consumer in the UK buying online, the cancellation period normally ends 14 days after the day the contract is entered into. Tell us clearly before that period ends; no special form is required. Asking for access to start immediately does not remove this right, but a proportionate amount for the service already supplied may be deducted where the law allows. Other countries may give additional rights. Stopping renewal is separate from cancelling a purchase. [Confirm treatment of business customers with legal review.]
+If you are a consumer in the UK buying online, the cancellation period normally ends 14 days after the day the contract is entered into. Tell us clearly before that period ends; no special form is required. Asking for access to start immediately does not remove this right, but a proportionate amount for the service already supplied may be deducted where the law allows. Other countries may give additional rights. Stopping renewal is separate from cancelling a purchase. The UK consumer cooling-off right does not generally apply when a buyer contracts wholly for business purposes. Business buyers can stop future renewal and request a refund under the transaction terms, this policy and any applicable law.
 
 ## Request a refund
 

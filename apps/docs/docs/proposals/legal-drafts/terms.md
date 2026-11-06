@@ -9,7 +9,7 @@ description: "Draft revision of /legal/terms for the sponsored-access model. Req
 
 CMS document: `terms` (English). Revision: next major. Mode: replaces or adds the sections below; other published sections are kept, with retired paid-plan sentences removed. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Describes free Explorer accounts, earned Contributor and Supporter recognition, free verified staff tools, the paid API, API submissions, sponsorship and the beta. Withdrawn paid-plan and earned-access wording removed.
+Revision summary: Describes free Explorer accounts, earned Contributor and Supporter recognition, free verified staff tools, the paid API, API submissions, sponsorship and the beta. Withdrawn paid-plan and earned-access wording removed.
 
 ## Draft for legal review – not in force
 

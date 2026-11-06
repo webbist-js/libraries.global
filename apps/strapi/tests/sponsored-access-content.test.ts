@@ -384,7 +384,9 @@ describe("legal revision drafts", () => {
       version: "2.0",
       date: "2026-11-06",
     })
-    expect(data.revisions[2].summary).toMatch(/^DRAFT for legal review/)
+    expect(data.revisions[2].summary).toMatch(
+      /^Describes free Explorer accounts/
+    )
     expect(report.replaced.every((r: { found: boolean }) => r.found)).toBe(true)
     expect(data.sections[0].heading).toBe(REVIEW_HEADING)
     expect(data.sections[1].heading).toBe("Who we are")

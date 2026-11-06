@@ -43,7 +43,7 @@ export function legalDrafts({
     {
       slug: "membership",
       mode: "replace",
-      summary: `DRAFT for legal review. Replaces the earlier beta test terms with the ${v.price}/month API purchase terms (offer version ${API_OFFER_TERMS_VERSION}) and capped overage terms (version ${API_OVERAGE_TERMS_VERSION}).`,
+      summary: `Replaces the earlier beta test terms with the ${v.price}/month API purchase terms (offer version ${API_OFFER_TERMS_VERSION}) and capped overage terms (version ${API_OVERAGE_TERMS_VERSION}).`,
       metadata: {
         title: "API purchase terms",
         heroTitle: "API purchase *terms.*",
@@ -85,7 +85,7 @@ API access never grants staff verification, library editing rights, moderation, 
           `${v.price} a month, including tax at the base GBP price.`,
           `API access costs ${v.price} a month. This GBP price includes applicable tax. Stripe confirms the final tax, any local currency and the recurring total before you pay, and the invoice shows the actual charge. The subscription renews monthly until an organiser cancels it.
 
-We will not change the price of an existing subscription without telling the organisers before the change affects a renewal. [Confirm notice period with legal review.]`
+We will give organisers at least 30 days' notice before a price change affects their next renewal. They can cancel renewal before the new price takes effect. A change to an included allowance or overage rate will apply only after the same notice; the terms recorded with a purchase govern its current paid period.`
         ),
         section(
           "Billing period and allowances",
@@ -140,7 +140,7 @@ An organiser can lower the cap or switch overage off at any time. This stops fur
           "Proposals are reviewed; analysis results are models.",
           `Proposals sent through the API are untrusted suggestions. They enter the normal moderation process and may be accepted, changed or rejected. A key cannot act as a library's staff. By submitting, you confirm that you have the right to share the material, and you license accepted contributions under the [data licence](/legal/data-licence).
 
-Analysis and Reach results are modelled estimates based on published records and third-party datasets. They do not measure visits, admission or step-free access, and they can be incomplete. Completed job results are kept for [retention period — confirm before publication] and then deleted.`
+Analysis and Reach results are modelled estimates based on published records and third-party datasets. They do not measure visits, admission or step-free access, and they can be incomplete. Completed Reach results are kept for 24 hours and completed summary results for 15 minutes, then deleted. Pending jobs expire after 30 minutes; job inputs and metadata are kept for 30 days. Separate billing usage records follow the [privacy policy](/legal/privacy).`
         ),
         section(
           "Suspension and ending access",
@@ -178,7 +178,7 @@ Analysis and Reach results are modelled estimates based on published records and
       slug: "cancellation-refunds",
       mode: "replace",
       summary:
-        "DRAFT for legal review. Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.",
+        "Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.",
       metadata: {
         title: "Cancellation and refunds",
         heroTitle: "Cancellation *and refunds.*",
@@ -213,7 +213,7 @@ Analysis and Reach results are modelled estimates based on published records and
         section(
           "Statutory cancellation rights",
           "UK consumers normally have 14 days to cancel.",
-          `If you are a consumer in the UK buying online, the cancellation period normally ends 14 days after the day the contract is entered into. Tell us clearly before that period ends; no special form is required. Asking for access to start immediately does not remove this right, but a proportionate amount for the service already supplied may be deducted where the law allows. Other countries may give additional rights. Stopping renewal is separate from cancelling a purchase. [Confirm treatment of business customers with legal review.]`
+          `If you are a consumer in the UK buying online, the cancellation period normally ends 14 days after the day the contract is entered into. Tell us clearly before that period ends; no special form is required. Asking for access to start immediately does not remove this right, but a proportionate amount for the service already supplied may be deducted where the law allows. Other countries may give additional rights. Stopping renewal is separate from cancelling a purchase. The UK consumer cooling-off right does not generally apply when a buyer contracts wholly for business purposes. Business buyers can stop future renewal and request a refund under the transaction terms, this policy and any applicable law.`
         ),
         section(
           "Request a refund",
@@ -264,7 +264,7 @@ Do not include a password, sign-in link, API key, full card number or CVC.`
       slug: "terms",
       mode: "merge",
       summary:
-        "DRAFT for legal review. Describes free Explorer accounts, earned Contributor and Supporter recognition, free verified staff tools, the paid API, API submissions, sponsorship and the beta. Withdrawn paid-plan and earned-access wording removed.",
+        "Describes free Explorer accounts, earned Contributor and Supporter recognition, free verified staff tools, the paid API, API submissions, sponsorship and the beta. Withdrawn paid-plan and earned-access wording removed.",
       replace: {
         "Donations and paid features": section(
           "Free access and paid services",
@@ -308,7 +308,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
       slug: "privacy",
       mode: "merge",
       summary:
-        "DRAFT for legal review. Explains API billing references, usage events, submitted payloads, analysis job retention, recognition counters, sponsor records and analytics for access journeys. Withdrawn membership and Team billing processing removed.",
+        "Explains API billing references, usage events, submitted payloads, analysis job retention, recognition counters, sponsor records and analytics for access journeys. Withdrawn membership and Team billing processing removed.",
       replace: {
         "Membership and payment information": section(
           "API billing and payment information",
@@ -340,7 +340,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
         section(
           "Analytics for access and the API",
           "Optional analytics stay optional.",
-          "With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. [Confirm retention against the cookie policy.]"
+          "With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. Analytics choice and our GA cookies last up to 180 days without rolling renewal. Google Analytics event-level data is retained for two months and user-level data for 14 months, with the latter reset on new activity; aggregate reports may remain separately. You can withdraw consent at any time to stop future optional collection and contact us about your privacy rights. See the [cookie policy](/legal/cookies)."
         ),
       ],
     },
@@ -348,7 +348,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
       slug: "data-licence",
       mode: "merge",
       summary:
-        "DRAFT for legal review. Explains licences and attribution for API responses, contributions submitted through the API and analysis results. Paid access does not change the licence.",
+        "Explains licences and attribution for API responses, contributions submitted through the API and analysis results. Paid access does not change the licence.",
       replace: {},
       add: [
         section(
@@ -364,7 +364,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
         section(
           "Analysis results",
           "Results carry the credits of the data they use.",
-          "Analysis and Reach results combine published records with third-party datasets, such as population grids, routing data from OpenStreetMap contributors and official statistics. Keep the source credits and dates supplied with a result and follow those sources' terms, including any share-alike obligations. [Confirm OpenStreetMap ODbL obligations for derived results with legal review.]"
+          "Analysis and Reach results combine published records with third-party datasets, such as population grids, routing data from OpenStreetMap contributors and official statistics. Keep the source credits and dates supplied with a result and follow those sources' terms. If a result is a Produced Work derived from OpenStreetMap data, credit OpenStreetMap and its contributors as required by the ODbL. If you publicly use or distribute an adapted database made from ODbL data, the ODbL may require you to make that adapted database available under the same licence. The distinction depends on what you create and how you use it; consult the [OpenStreetMap attribution guidance](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines) and [ODbL](https://opendatacommons.org/licenses/odbl/summary/index.html) before reuse."
         ),
         section(
           "Paid access and sponsorship",
