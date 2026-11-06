@@ -83,7 +83,6 @@ export const team: TeamDetail = {
   slug: "example-library-team",
   status: "active",
   verifiedAt: null,
-  expiresAt: null,
   libraries: [],
   members: [],
   viewerRole: "organiser",
