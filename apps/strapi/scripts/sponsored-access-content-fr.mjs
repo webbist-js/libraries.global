@@ -494,6 +494,7 @@ Envoyez votre demande via le formulaire de contact ou écrivez à info@libraries
 
   /** Link labels left by earlier rollouts, renamed when related guides are scrubbed. */
   linkLabels: {
+    "Forfaits et Pro": "Formules et tarifs",
     "Formules et Pro": "Formules et tarifs",
     "Formules & Pro": "Formules et tarifs",
     "Accès à l’API Team": "Limites, dépassements et facturation de l’API",

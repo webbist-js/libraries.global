@@ -505,7 +505,10 @@ if (knowledge) {
         else unchanged.push(key)
         continue
       }
-      const data = { body: result.body }
+      const data = {
+        body: result.body,
+        ...(result.summary ? { summary: result.summary } : {}),
+      }
       const done = matches(draft, data)
       if (row.status !== "published" && !done && !ownDraft(key, draft)) {
         blockers.push(`${key}: unrelated unpublished edits need review`)

@@ -304,6 +304,39 @@ describe("scrubbing related guides", () => {
     ).toBeNull()
   })
 
+  it("replaces the old Pro summary on the change-history guide", () => {
+    const guide = {
+      slug: "change-history-on-library-pages",
+      summary: "What Pro members can see.",
+      body: [],
+    }
+    const revised = scrubbedBody(guide, "en")!
+    expect(revised.summary).toContain("how to read it")
+    expect(
+      scrubbedBody({ ...guide, summary: revised.summary }, "en")
+    ).toBeNull()
+  })
+
+  it("renames the French plans link left by the earlier rollout", () => {
+    const { blocks } = scrubBlocks(
+      [
+        {
+          type: "paragraph",
+          children: [
+            {
+              type: "link",
+              url: "/knowledge/governance/plans-and-pro",
+              children: [{ type: "text", text: "Forfaits et Pro" }],
+            },
+          ],
+        },
+      ],
+      "fr"
+    )
+    expect(JSON.stringify(blocks)).toContain("Formules et tarifs")
+    expect(JSON.stringify(blocks)).toContain("plans-and-pricing")
+  })
+
   it("does not overlap the guides it rewrites", () => {
     const owned = new Set(KNOWLEDGE_ARTICLES.map((a) => a.slug))
     expect(SCRUB_SLUGS.filter((slug) => owned.has(slug))).toEqual([])

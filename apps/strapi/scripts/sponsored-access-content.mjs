@@ -591,6 +591,13 @@ export function scrubBlocks(blocks, locale) {
  * Returns null when nothing changes. Idempotent.
  */
 export function scrubbedBody(doc, locale) {
+  const summary =
+    doc.slug === "change-history-on-library-pages"
+      ? {
+          en: "What the Changes section on a library page shows, who it names, and how to read it.",
+          fr: "Ce qu'affiche la section « Modifications » d'une page de bibliothèque, les personnes qui y sont mentionnées et comment la lire.",
+        }[locale]
+      : undefined
   const removed = []
   const original = cleanBody(doc.body)
   let body = original.filter((component) => {
@@ -629,7 +636,9 @@ export function scrubbedBody(doc, locale) {
     if (position === -1) body.push(note)
     else body[position] = note
   }
-  if (JSON.stringify(body) === JSON.stringify(original)) return null
+  const revisedSummary = summary && doc.summary !== summary ? summary : null
+  if (JSON.stringify(body) === JSON.stringify(original) && !revisedSummary)
+    return null
 
-  return { body, removed }
+  return { body, removed, ...(revisedSummary ? { summary: revisedSummary } : {}) }
 }
