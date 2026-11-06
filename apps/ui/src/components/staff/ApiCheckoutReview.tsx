@@ -22,6 +22,7 @@ import { formatApiBytes, formatPence } from "./api-format"
 export function ApiCheckoutReview({
   price,
   purchasing,
+  overageAvailable,
   limits,
   rates,
   locale,
@@ -33,6 +34,7 @@ export function ApiCheckoutReview({
 }: {
   readonly price: { unitAmount: number; currency: string } | null
   readonly purchasing: boolean
+  readonly overageAvailable: boolean
   readonly limits: ApiLimits
   readonly rates: ApiOverageRates
   readonly locale: string
@@ -112,13 +114,15 @@ export function ApiCheckoutReview({
           <li>{t("keys")}</li>
         </ul>
         <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-          {t("periodAndOverage", {
-            capMin: formatPence(OVERAGE_CAP_MIN_PENCE, locale),
-            capMax: formatPence(OVERAGE_CAP_MAX_PENCE, locale),
-            request: formatPence(rates.requestPence, locale),
-            mib: formatPence(rates.mibPence, locale),
-            credit: formatPence(rates.creditPence, locale),
-          })}
+          {overageAvailable
+            ? t("periodAndOverage", {
+                capMin: formatPence(OVERAGE_CAP_MIN_PENCE, locale),
+                capMax: formatPence(OVERAGE_CAP_MAX_PENCE, locale),
+                request: formatPence(rates.requestPence, locale),
+                mib: formatPence(rates.mibPence, locale),
+                credit: formatPence(rates.creditPence, locale),
+              })
+            : t("periodNoOverage")}
         </p>
       </div>
 

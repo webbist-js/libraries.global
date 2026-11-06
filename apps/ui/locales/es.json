@@ -3006,6 +3006,7 @@
     "billedTo": "Se factura mensualmente a {owner}. Puede cancelar cuando quiera desde la gestión de la facturación; tiene efecto al final del periodo pagado.",
     "credits": "Créditos de análisis",
     "responseLimit": "Respuesta máxima de {size} · {records} fichas por página",
+    "periodNoOverage": "El periodo sigue a su suscripción pagada: el primero empieza cuando se confirma el pago e incluye el cupo completo. El excedente no está disponible. Las solicitudes se detienen al agotar un cupo incluido; las solicitudes fallidas o rechazadas nunca se cobran.",
     "periodAndOverage": "El periodo sigue a su suscripción pagada: el primero empieza cuando se confirma el pago e incluye el cupo completo. El excedente está desactivado por defecto. Un organizador puede activarlo más adelante con un límite mensual de {capMin} a {capMax} sin impuestos, a {request} por solicitud adicional, {mib} por MiB adicional y {credit} por crédito de análisis adicional. Sin excedente, las solicitudes se detienen al agotar un cupo."
   },
   "teamInvitation": {
@@ -4249,7 +4250,9 @@
     "buy": "Comprar acceso a la API",
     "signIn": "Iniciar sesión para comprar acceso a la API",
     "readReference": "Leer la referencia de solicitudes",
+    "overageOffTitle": "Sin cargos por excedente",
     "overageTitle": "El excedente está desactivado hasta que lo active",
+    "overageUnavailable": "El excedente no está disponible. Las solicitudes se detienen con un error claro al agotar un cupo incluido, hasta el siguiente periodo pagado. Las solicitudes fallidas o rechazadas nunca se cobran.",
     "overageBody": "Un organizador puede activarlo y elegir un límite mensual de {capMin} a {capMax} sin impuestos (se sugieren {capDefault}). Por encima del cupo incluido:",
     "overageRequest": "{requestPrice} por solicitud adicional",
     "overageMib": "{mibPrice} por MiB adicional de datos de respuesta",
@@ -4628,7 +4631,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Comprar acceso a la API",
-    "lead": "¿Compra para usted? Creamos una organización gratuita para su cuenta para que pueda añadir compañeros más adelante. Usted será su organizador y gestionará las claves, el excedente y la facturación.",
+    "lead": "¿Compra para usted? Creamos una organización gratuita para su cuenta para que pueda añadir compañeros más adelante. Usted será su organizador y gestionará las claves y la facturación.",
     "verifyTitle": "Verifique su correo para comprar acceso a la API",
     "verifyBody": "El acceso a la API está disponible para cuentas con una dirección de correo verificada.",
     "openSettings": "Abrir la configuración de la cuenta",

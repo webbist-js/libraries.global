@@ -3006,6 +3006,7 @@
     "billedTo": "Účtuje se měsíčně organizaci {owner}. Zrušit lze kdykoli ve správě plateb; zrušení platí od konce zaplaceného období.",
     "credits": "Analytické kredity",
     "responseLimit": "Největší odpověď {size} · {records} záznamů na stránku",
+    "periodNoOverage": "Období se řídí vaším zaplaceným předplatným: první začíná potvrzením platby a má plný limit. Překročení není dostupné. Po vyčerpání zahrnutého limitu se požadavky zastaví; neúspěšné nebo odmítnuté požadavky se neúčtují.",
     "periodAndOverage": "Období se řídí vaším zaplaceným předplatným: první začíná potvrzením platby a má plný limit. Překročení je ve výchozím stavu vypnuté. Organizátor jej může později zapnout s měsíčním limitem {capMin} až {capMax} bez daně, za {request} za každý další požadavek, {mib} za každý další MiB a {credit} za každý další analytický kredit. Bez překročení se požadavky po vyčerpání limitu zastaví."
   },
   "teamInvitation": {
@@ -4249,7 +4250,9 @@
     "buy": "Koupit přístup k API",
     "signIn": "Přihlásit se a koupit přístup k API",
     "readReference": "Přečíst referenční popis požadavků",
+    "overageOffTitle": "Bez poplatků za překročení",
     "overageTitle": "Překročení je vypnuté, dokud jej nezapnete",
+    "overageUnavailable": "Překročení není dostupné. Po vyčerpání zahrnutého limitu se požadavky do dalšího zaplaceného období zastaví se srozumitelnou chybou. Neúspěšné nebo odmítnuté požadavky se neúčtují.",
     "overageBody": "Organizátor jej může zapnout a zvolit měsíční limit od {capMin} do {capMax} bez daně (doporučujeme {capDefault}). Nad rámec zahrnutého limitu:",
     "overageRequest": "{requestPrice} za každý další požadavek",
     "overageMib": "{mibPrice} za každý další MiB dat v odpovědích",
@@ -4628,7 +4631,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Koupit přístup k API",
-    "lead": "Kupujete pro sebe? Pro váš účet založíme bezplatnou organizaci, abyste mohli později přidat kolegy. Stanete se jejím organizátorem a budete spravovat klíče, překročení a platby.",
+    "lead": "Kupujete pro sebe? Pro váš účet založíme bezplatnou organizaci, abyste mohli později přidat kolegy. Stanete se jejím organizátorem a budete spravovat klíče a platby.",
     "verifyTitle": "Pro koupi přístupu k API ověřte svůj e-mail",
     "verifyBody": "Přístup k API je k dispozici účtům s ověřenou e-mailovou adresou.",
     "openSettings": "Otevřít nastavení účtu",

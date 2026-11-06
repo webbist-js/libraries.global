@@ -34,6 +34,13 @@ export async function apiProspect(verified: boolean): Promise<ApiProspect> {
 
   return {
     purchasing: config.purchasing && Boolean(price),
+    overageAvailable:
+      config.overage &&
+      Boolean(
+        config.overagePrices.requests &&
+        config.overagePrices.bytes &&
+        config.overagePrices.credits
+      ),
     price,
     limits: config.limits,
     rates: config.rates,
@@ -88,9 +95,11 @@ export async function apiDashboard(
     purchasing: config.purchasing && Boolean(price),
     overageAvailable:
       config.overage &&
-      Boolean(membership?.offer.overagePrices.requests) &&
-      Boolean(membership?.offer.overagePrices.bytes) &&
-      Boolean(membership?.offer.overagePrices.credits),
+      Boolean(
+        (membership?.offer.overagePrices ?? config.overagePrices).requests &&
+        (membership?.offer.overagePrices ?? config.overagePrices).bytes &&
+        (membership?.offer.overagePrices ?? config.overagePrices).credits
+      ),
     price,
     limits,
     rates,

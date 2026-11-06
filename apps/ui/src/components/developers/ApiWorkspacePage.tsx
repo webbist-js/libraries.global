@@ -17,7 +17,7 @@ import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflic
 import { Button } from "@/components/ui/button"
 import { featureSignInHref } from "@/lib/feature-access"
 import { Link } from "@/lib/navigation"
-import { API_OFFER_LIMITS } from "@/lib/team-api/config"
+import { apiConfig, API_OFFER_LIMITS } from "@/lib/team-api/config"
 import { apiWorkspaceAccess } from "@/lib/team-api/workspace"
 
 export type ApiWorkspaceQuery = { payment?: string; setup?: string }
@@ -161,6 +161,7 @@ export async function ApiWorkspacePage({
         {view.offer ? (
           <ApiOfferOverview
             limits={API_OFFER_LIMITS}
+            overageAvailable={apiConfig().overage}
             buy={offerBuy(signedIn, Boolean(prospect), locale)}
           />
         ) : null}

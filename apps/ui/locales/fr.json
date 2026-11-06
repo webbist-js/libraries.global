@@ -3006,6 +3006,7 @@
     "billedTo": "Facturé chaque mois à {owner}. Résiliable à tout moment depuis la gestion de la facturation ; la résiliation prend effet à la fin de la période payée.",
     "credits": "Crédits d’analyse",
     "responseLimit": "Réponse maximale de {size} · {records} fiches par page",
+    "periodNoOverage": "La période suit votre abonnement payé : la première commence à la confirmation du paiement et comprend le quota complet. Le dépassement n’est pas disponible. Les requêtes s’arrêtent lorsqu’un quota inclus est épuisé ; les requêtes échouées ou refusées ne sont jamais facturées.",
     "periodAndOverage": "La période suit votre abonnement payé : la première commence à la confirmation du paiement et comprend le quota complet. Le dépassement est désactivé par défaut. Un organisateur peut l’activer plus tard avec un plafond mensuel de {capMin} à {capMax} hors taxes, à {request} par requête supplémentaire, {mib} par Mio supplémentaire et {credit} par crédit d’analyse supplémentaire. Sans dépassement, les requêtes s’arrêtent lorsqu’un quota est épuisé."
   },
   "teamInvitation": {
@@ -4249,7 +4250,9 @@
     "buy": "Acheter l’accès API",
     "signIn": "Se connecter pour acheter l’accès API",
     "readReference": "Lire la référence des requêtes",
+    "overageOffTitle": "Aucun frais de dépassement",
     "overageTitle": "Le dépassement reste désactivé tant que vous ne l’activez pas",
+    "overageUnavailable": "Le dépassement n’est pas disponible. Les requêtes s’arrêtent avec une erreur explicite lorsqu’un quota inclus est épuisé, jusqu’à la période payée suivante. Les requêtes échouées ou refusées ne sont jamais facturées.",
     "overageBody": "Un organisateur peut l’activer et choisir un plafond mensuel de {capMin} à {capMax} hors taxes ({capDefault} est suggéré). Au-delà du quota inclus :",
     "overageRequest": "{requestPrice} par requête supplémentaire",
     "overageMib": "{mibPrice} par Mio de données de réponse supplémentaire",
@@ -4628,7 +4631,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Acheter l’accès API",
-    "lead": "Vous achetez pour vous-même ? Nous créons une organisation gratuite pour votre compte afin que vous puissiez ajouter des collègues plus tard. Vous en devenez l’organisateur et gérez les clés, le dépassement et la facturation.",
+    "lead": "Vous achetez pour vous-même ? Nous créons une organisation gratuite pour votre compte afin que vous puissiez ajouter des collègues plus tard. Vous en devenez l’organisateur et gérez les clés et la facturation.",
     "verifyTitle": "Vérifiez votre e-mail pour acheter l’accès API",
     "verifyBody": "L’accès API est réservé aux comptes dont l’adresse e-mail est vérifiée.",
     "openSettings": "Ouvrir les paramètres du compte",

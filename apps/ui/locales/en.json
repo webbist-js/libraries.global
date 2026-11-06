@@ -3006,6 +3006,7 @@
     "billedTo": "Billed monthly to {owner}. Cancel at any time from billing management; it takes effect at the end of the paid period.",
     "credits": "Analysis credits",
     "responseLimit": "{size} largest response · {records} records per page",
+    "periodNoOverage": "The period follows your paid subscription: the first starts when payment is confirmed and has the full allowance. Overage is unavailable. Requests stop when an included allowance is used up; failed or refused requests are never charged.",
     "periodAndOverage": "The period follows your paid subscription: the first starts when payment is confirmed and has the full allowance. Overage is off by default. An Organiser can opt in later with a monthly cap of {capMin} to {capMax} before tax, at {request} per extra request, {mib} per extra MiB and {credit} per extra analysis credit. Without overage, requests stop when an allowance is used up."
   },
   "teamInvitation": {
@@ -4249,7 +4250,9 @@
     "buy": "Buy API access",
     "signIn": "Sign in to buy API access",
     "readReference": "Read the request reference",
+    "overageOffTitle": "No overage charges",
     "overageTitle": "Overage is off unless you switch it on",
+    "overageUnavailable": "Overage is unavailable. Requests stop with a clear error when an included allowance is used up, until the next paid period. Failed or refused requests are never charged.",
     "overageBody": "An Organiser can opt in and choose a monthly cap from {capMin} to {capMax} before tax ({capDefault} is suggested). Above the included allowance:",
     "overageRequest": "{requestPrice} per extra request",
     "overageMib": "{mibPrice} per extra MiB of response data",
@@ -4628,7 +4631,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Buy API access",
-    "lead": "Buying for yourself? We set up a free organisation for your account so you can add colleagues later. You become its Organiser and manage keys, overage and billing.",
+    "lead": "Buying for yourself? We set up a free organisation for your account so you can add colleagues later. You become its Organiser and manage keys and billing.",
     "verifyTitle": "Verify your email to buy API access",
     "verifyBody": "API access is available to accounts with a verified email address.",
     "openSettings": "Open account settings",

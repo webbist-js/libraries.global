@@ -17,6 +17,7 @@ import type { ApiLimits } from "@/lib/team-api/types"
 export function ApiOfferOverview({
   buy,
   limits,
+  overageAvailable,
 }: {
   /** Where "Buy API access" goes, or null when the viewer already has an account to manage. */
   readonly buy: { href: string; label: "buy" | "signIn" } | null
@@ -25,6 +26,7 @@ export function ApiOfferOverview({
     ApiLimits,
     "perMinute" | "concurrency" | "responseBytes" | "pageSize"
   >
+  readonly overageAvailable: boolean
 }) {
   const t = useTranslations("developersOffer")
   const locale = useLocale()
@@ -120,18 +122,30 @@ export function ApiOfferOverview({
       </StaffPanel>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <StaffPanel compact id="api-overage" title={t("overageTitle")}>
-          <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
-            {t("overageBody", values)}
-          </p>
-          <ul className="mt-3 mb-0 flex list-disc flex-col gap-1 pl-5 text-sm leading-relaxed text-(--t-ink-dim)">
-            <li>{t("overageRequest", values)}</li>
-            <li>{t("overageMib", values)}</li>
-            <li>{t("overageCredit", values)}</li>
-          </ul>
-          <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-            {t("overageStop")}
-          </p>
+        <StaffPanel
+          compact
+          id="api-overage"
+          title={t(overageAvailable ? "overageTitle" : "overageOffTitle")}
+        >
+          {overageAvailable ? (
+            <>
+              <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
+                {t("overageBody", values)}
+              </p>
+              <ul className="mt-3 mb-0 flex list-disc flex-col gap-1 pl-5 text-sm leading-relaxed text-(--t-ink-dim)">
+                <li>{t("overageRequest", values)}</li>
+                <li>{t("overageMib", values)}</li>
+                <li>{t("overageCredit", values)}</li>
+              </ul>
+              <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+                {t("overageStop")}
+              </p>
+            </>
+          ) : (
+            <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
+              {t("overageUnavailable")}
+            </p>
+          )}
         </StaffPanel>
         <StaffPanel compact id="api-who" title={t("whoTitle")}>
           <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">

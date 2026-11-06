@@ -144,6 +144,7 @@ export type ApiDashboard = {
 /** Shown to a signed-in account without an organisation. */
 export type ApiProspect = {
   purchasing: boolean
+  overageAvailable: boolean
   price: { unitAmount: number; currency: string } | null
   limits: ApiLimits
   rates: ApiOverageRates

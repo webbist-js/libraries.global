@@ -85,6 +85,7 @@ export function ApiIndividualCheckout({
       <ApiCheckoutReview
         price={prospect.price}
         purchasing={prospect.purchasing}
+        overageAvailable={prospect.overageAvailable}
         limits={prospect.limits}
         rates={prospect.rates}
         locale={locale}

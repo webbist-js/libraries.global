@@ -98,6 +98,7 @@ export function TeamApiSubscribeDialog({
         <ApiCheckoutReview
           price={data.price}
           purchasing={data.purchasing}
+          overageAvailable={data.overageAvailable}
           limits={data.limits}
           rates={data.rates}
           locale={locale}
