@@ -26,6 +26,7 @@ import {
   nodeText,
   plannedArticle,
   retiredCopy,
+  scrubBlocks,
   scrubbedBody,
 } from "../scripts/sponsored-access-content.mjs"
 import {
@@ -437,5 +438,29 @@ describe("staging runner", () => {
     expect(source).not.toMatch(
       /PRODUCTION_MCP_TOKEN\s*\|\|\s*(?:process\.)?env\.STRAPI_MCP_TOKEN/
     )
+  })
+})
+
+describe("scrubBlocks", () => {
+  it("drops a heading whose whole text was retired copy, keeping the section", () => {
+    const { blocks, removed } = scrubBlocks(
+      [
+        {
+          type: "heading",
+          level: 2,
+          children: [{ type: "text", text: "Claims and Pro" }],
+        },
+        {
+          type: "paragraph",
+          children: [{ type: "text", text: "A claim covers one library." }],
+        },
+      ],
+      "en"
+    )
+    expect(removed.length).toBeGreaterThan(0)
+    expect(
+      blocks.some((node: { type: string }) => node.type === "heading")
+    ).toBe(false)
+    expect(blocks).toHaveLength(1)
   })
 })

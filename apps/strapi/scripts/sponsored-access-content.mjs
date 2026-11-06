@@ -558,9 +558,9 @@ export function scrubBlocks(blocks, locale) {
     if (!Array.isArray(node.children)) return node
     const children = scrubInline(node.children)
 
-    return meaningful(children) || node.type === "heading"
-      ? { ...node, children }
-      : null
+    // A heading whose whole text was retired copy is dropped with it:
+    // Strapi rejects a heading without a text or link child.
+    return meaningful(children) ? { ...node, children } : null
   }
 
   return { blocks: (blocks ?? []).map(scrubNode).filter(Boolean), removed }

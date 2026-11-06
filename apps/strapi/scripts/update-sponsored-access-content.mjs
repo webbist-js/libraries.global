@@ -176,10 +176,16 @@ async function api(path, locale, method = "GET", data) {
     ...(data ? { body: JSON.stringify({ ...data, locale }) } : {}),
     signal: AbortSignal.timeout(30000),
   })
-  if (!response.ok)
+  if (!response.ok) {
+    // Strapi validation messages name fields, never credentials.
+    const detail = await response
+      .json()
+      .then((body) => body?.error?.message ?? "")
+      .catch(() => "")
     throw new Error(
-      `CMS ${method} ${locale} failed with HTTP ${response.status}`
+      `CMS ${method} ${path.split("?")[0]} (${locale}) failed with HTTP ${response.status}${detail ? `: ${detail}` : ""}`
     )
+  }
 
   return response.json()
 }

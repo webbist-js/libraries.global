@@ -2394,51 +2394,6 @@ export interface ApiDriveDrive extends Struct.CollectionTypeSchema {
   }
 }
 
-export interface ApiEntitlementGrantEntitlementGrant
-  extends Struct.CollectionTypeSchema {
-  collectionName: "entitlement_grants"
-  info: {
-    description: "Complimentary Supporter, Pro or Team, granted by staff and resolved by the local session projection."
-    displayName: "Entitlement Grant"
-    pluralName: "entitlement-grants"
-    singularName: "entitlement-grant"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  attributes: {
-    baUserId: Schema.Attribute.String & Schema.Attribute.Required
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    expiresAt: Schema.Attribute.DateTime
-    grantedBy: Schema.Attribute.String
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::entitlement-grant.entitlement-grant"
-    > &
-      Schema.Attribute.Private
-    plan: Schema.Attribute.Enumeration<["supporter", "pro", "team"]> &
-      Schema.Attribute.Required &
-      Schema.Attribute.DefaultTo<"pro">
-    publishedAt: Schema.Attribute.DateTime
-    reason: Schema.Attribute.Text
-    source: Schema.Attribute.Enumeration<
-      ["admin", "press", "partner", "team", "grant_funder"]
-    > &
-      Schema.Attribute.DefaultTo<"admin">
-    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
-    strapi_stage: Schema.Attribute.Relation<
-      "oneToOne",
-      "plugin::review-workflows.workflow-stage"
-    >
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-  }
-}
-
 export interface ApiFooterFooter extends Struct.SingleTypeSchema {
   collectionName: "footers"
   info: {
@@ -3825,98 +3780,6 @@ export interface ApiPagePage extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
-  }
-}
-
-export interface ApiPaidMembershipPaidMembership
-  extends Struct.CollectionTypeSchema {
-  collectionName: "paid_memberships"
-  info: {
-    description: "Read-only Stripe Managed Payments projection. Updated by the private billing bridge."
-    displayName: "Paid membership"
-    pluralName: "paid-memberships"
-    singularName: "paid-membership"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  pluginOptions: {
-    "content-manager": {
-      visible: false
-    }
-    "content-type-builder": {
-      visible: false
-    }
-  }
-  attributes: {
-    baUserId: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Private
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::paid-membership.paid-membership"
-    > &
-      Schema.Attribute.Private
-    membership: Schema.Attribute.JSON &
-      Schema.Attribute.Required &
-      Schema.Attribute.Private
-    publishedAt: Schema.Attribute.DateTime
-    revision: Schema.Attribute.Integer &
-      Schema.Attribute.Required &
-      Schema.Attribute.Private
-    subscriptionId: Schema.Attribute.String &
-      Schema.Attribute.Required &
-      Schema.Attribute.Private &
-      Schema.Attribute.Unique
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-  }
-}
-
-export interface ApiProVerificationProVerification
-  extends Struct.CollectionTypeSchema {
-  collectionName: "pro_verifications"
-  info: {
-    description: "Verified library staff, student or charity. Complimentary Pro while unexpired (spec \u00A76.5). Self-serve C5 flow comes in P-D1; staff create rows by hand until then."
-    displayName: "Pro Verification"
-    pluralName: "pro-verifications"
-    singularName: "pro-verification"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  attributes: {
-    baUserId: Schema.Attribute.String & Schema.Attribute.Required
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    expiresAt: Schema.Attribute.DateTime
-    kind: Schema.Attribute.Enumeration<
-      ["library_staff", "student", "charity"]
-    > &
-      Schema.Attribute.Required
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "api::pro-verification.pro-verification"
-    > &
-      Schema.Attribute.Private
-    publishedAt: Schema.Attribute.DateTime
-    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
-    strapi_stage: Schema.Attribute.Relation<
-      "oneToOne",
-      "plugin::review-workflows.workflow-stage"
-    >
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    verifiedAt: Schema.Attribute.DateTime
-    verifiedEmail: Schema.Attribute.Email
   }
 }
 
@@ -8934,7 +8797,6 @@ declare module "@strapi/strapi" {
       "api::drive-credit.drive-credit": ApiDriveCreditDriveCredit
       "api::drive-hold.drive-hold": ApiDriveHoldDriveHold
       "api::drive.drive": ApiDriveDrive
-      "api::entitlement-grant.entitlement-grant": ApiEntitlementGrantEntitlementGrant
       "api::footer.footer": ApiFooterFooter
       "api::homepage.homepage": ApiHomepageHomepage
       "api::internal-notification.internal-notification": ApiInternalNotificationInternalNotification
@@ -8947,8 +8809,6 @@ declare module "@strapi/strapi" {
       "api::library.library": ApiLibraryLibrary
       "api::notification.notification": ApiNotificationNotification
       "api::page.page": ApiPagePage
-      "api::paid-membership.paid-membership": ApiPaidMembershipPaidMembership
-      "api::pro-verification.pro-verification": ApiProVerificationProVerification
       "api::redirect.redirect": ApiRedirectRedirect
       "api::region.region": ApiRegionRegion
       "api::roadmap-suggestion.roadmap-suggestion": ApiRoadmapSuggestionRoadmapSuggestion
