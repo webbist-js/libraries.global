@@ -85,7 +85,7 @@
         "two": "Doplňte hodiny, fotografie, přístupnost nebo spolehlivý zdroj.",
         "three": "Uložte návrh a sledujte jeho kontrolu."
       },
-      "requirement": "K navržení změn stačí bezplatný účet. Běžné příspěvky procházejí kontrolou před zveřejněním; placený plán není nutný."
+      "requirement": "K navržení změn stačí bezplatný účet. Běžné příspěvky procházejí kontrolou před zveřejněním."
     },
     "add": {
       "title": "Přihlaste se a přidejte knihovnu na mapu",
@@ -4225,7 +4225,7 @@
   },
   "developersOffer": {
     "title": "Přístup k API",
-    "badge": "Jeden tarif, žádná místa",
+    "badge": "Jedno měsíční předplatné",
     "perMonth": "měsíčně, včetně daně",
     "priceNote": "Stripe před platbou potvrdí konečnou částku včetně místní daně. Účtuje se měsíčně; zrušit lze kdykoli s účinností ke konci zaplaceného období.",
     "includedTitle": "Zahrnuto v každém zúčtovacím období",
@@ -4327,7 +4327,7 @@
           "keys": "Neomezený počet klíčů, přehled využití, referenční popis požadavků a testovací prostředí",
           "overage": "Volitelné překročení s měsíčním limitem podle vaší volby ({capMin} až {capMax}). Je vypnuté, dokud jej nezapnete.",
           "reach": "Organizátoři mají v Atlasu více výpočtů dosahu: {apiReachPerHour} nových výpočtů za hodinu a dosah služby až pro {apiReachLibraries} knihoven",
-          "noOrganisation": "Kupte pro sebe nebo pro organizaci. Žádná místa k počítání.",
+          "noOrganisation": "Kupte pro sebe nebo pro organizaci.",
           "noAuthority": "Klíč API identifikuje vaši aplikaci. Nikdy nedává oprávnění upravovat knihovny, ověření ani lepší pozici ve vyhledávání."
         }
       },
@@ -4468,30 +4468,26 @@
         "a": "Vše kromě přístupu k API. Bez účtu si můžete přečíst každý záznam knihovny a používat mapu. Bezplatný účet (Průzkumník) přidává kontextové vrstvy, srovnání, historii změn, uložené pohledy a exporty až {exportRows} řádků. Prvním přijatým příspěvkem se stanete Přispěvatelem s {reachPerWeek} výpočty dosahu týdně."
       },
       "1": {
-        "q": "Mohu si zaplatit Pro nebo Podporovatele?",
-        "a": "Ne. Osobní placené tarify byly zrušeny a jejich nástroje jsou nyní s účtem zdarma. Podporovatel je ocenění, které získáte při {supporterAt} přijatých příspěvcích; koupit ho nelze."
-      },
-      "2": {
         "q": "Jak funguje Podporovatel?",
         "a": "Každý přijatý podstatný příspěvek se počítá jednou: nové knihovny, opravy, fotografie, překlady, články a podobně. Denní série, bonusy a administrativní úpravy se nepočítají. Na profilu uvidíte svůj počet a postup k {supporterAt}. Podporovatel nepřidává nástroje ani oprávnění."
       },
-      "3": {
+      "2": {
         "q": "Kolik stojí přístup k API?",
         "a": "{apiPrice} měsíčně včetně daně za {apiRequests} požadavků, {apiMib} MiB dat v odpovědích a {apiCredits} analytických kreditů v každém zúčtovacím období. Překročení je vypnuté, dokud jej nezapnete; pak stojí {requestPrice} za každý další požadavek, {mibPrice} za každý další MiB a {creditPrice} za každý další analytický kredit, až do měsíčního limitu {capMin} až {capMax}."
       },
-      "4": {
+      "3": {
         "q": "Potřebuji ke koupi přístupu k API organizaci?",
         "a": "Ne. Pokud kupujete pro sebe, založíme bezplatnou organizaci, ve které jste jediným organizátorem, abyste mohli později přidat kolegy. Organizátoři spravují klíče a platby; členové vidí využití."
       },
-      "5": {
+      "4": {
         "q": "Získám placením nebo sponzorstvím oprávnění k úpravám?",
         "a": "Ne. Úprava záznamu knihovny vyžaduje ověřené oprávnění zaměstnance pro danou knihovnu, které ověřujeme přímo u ní. Přístup k API, sponzorství, ocenění ani členství v organizaci jej nikdy nedávají."
       },
-      "6": {
+      "5": {
         "q": "Co sponzorství zahrnuje?",
         "a": "Sponzorství financuje konkrétní program práce, například kvalitu dat nebo překlady, se čtvrtletními přehledy činnosti a výroční zprávou o dopadu. Doporučené částky jsou {communityPrice}, {servicePrice} nebo {foundingPrice} ročně. Nejde o charitativní dar a nezahrnuje přístup k API."
       },
-      "7": {
+      "6": {
         "q": "Mohu přístup k API zrušit?",
         "a": "Ano, kdykoli ve správě plateb na stránce pro vývojáře. Přístup trvá do konce zaplaceného období. Vaše zákonná práva najdete v zásadách zrušení a vrácení peněz."
       }
@@ -4617,7 +4613,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Koupit přístup k API",
-    "lead": "Kupujete pro sebe? Pro váš účet založíme bezplatnou organizaci, abyste mohli později přidat kolegy. Stanete se jejím organizátorem a budete spravovat klíče, překročení a platby. Žádná místa nejsou potřeba.",
+    "lead": "Kupujete pro sebe? Pro váš účet založíme bezplatnou organizaci, abyste mohli později přidat kolegy. Stanete se jejím organizátorem a budete spravovat klíče, překročení a platby.",
     "verifyTitle": "Pro koupi přístupu k API ověřte svůj e-mail",
     "verifyBody": "Přístup k API je k dispozici účtům s ověřenou e-mailovou adresou.",
     "openSettings": "Otevřít nastavení účtu",

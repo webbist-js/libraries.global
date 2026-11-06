@@ -52,7 +52,7 @@ Les points, badges, reconnaissances, rôles, la modération et la vérification 
 
 ## Pendant la bêta fermée
 
-Tant que la bêta fermée se poursuit, le paiement de l’API utilise le mode Test de Stripe et aucun paiement réel n’est prélevé. Certaines fonctions de l’API sont introduites par étapes ; les pages développeurs indiquent ce qui est activé pour votre compte. Les anciennes formules de test de la bêta pour les adhésions personnelles, les places dans les espaces de travail et l’ancienne option API ont été retirées.`,
+Tant que la bêta fermée se poursuit, le paiement de l’API utilise le mode Test de Stripe et aucun paiement réel n’est prélevé. Certaines fonctions de l’API sont introduites par étapes ; les pages développeurs indiquent ce qui est activé pour votre compte.`,
     },
 
     "earned-recognition-and-rewards": {

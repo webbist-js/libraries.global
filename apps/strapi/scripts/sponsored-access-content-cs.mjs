@@ -52,7 +52,7 @@ Body, odznaky, uznání, role, moderace ani ověření zaměstnanců se nikdy ne
 
 ## Během uzavřené bety
 
-Dokud trvá uzavřená beta, platba za API probíhá v testovacím režimu Stripe (Test mode) a žádné skutečné peníze se nestrhávají. Některé funkce API zavádíme postupně; stránky pro vývojáře ukazují, co je pro váš účet zapnuto. Dřívější testovací plány z bety pro osobní členství, místa v pracovních prostorech a předchozí doplněk API byly zrušeny.`,
+Dokud trvá uzavřená beta, platba za API probíhá v testovacím režimu Stripe (Test mode) a žádné skutečné peníze se nestrhávají. Některé funkce API zavádíme postupně; stránky pro vývojáře ukazují, co je pro váš účet zapnuto.`,
     },
 
     "earned-recognition-and-rewards": {

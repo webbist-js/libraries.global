@@ -9,7 +9,7 @@ description: "Draft revision of /legal/cancellation-refunds for the sponsored-ac
 
 CMS document: `cancellation-refunds` (English). Revision: next major. Mode: replaces the whole document. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Rewritten for the monthly API subscription and capped overage; withdrawn personal membership and Team seat routes removed. Statutory rights unchanged.
+Revision summary: DRAFT for legal review. Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.
 
 Lead: How to stop API renewal, request a refund and get payment help.
 

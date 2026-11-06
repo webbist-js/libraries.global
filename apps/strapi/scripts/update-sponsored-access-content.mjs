@@ -234,6 +234,25 @@ const metadata = (doc, fields) =>
   )
 const comparable = (key, value) =>
   key === "body" ? cleanBody(value) : stripComponentIds(value ?? null)
+/**
+ * Drafts this script staged in its last run on this target, by key. A draft
+ * that still equals what we wrote is ours to replace; anything else is
+ * someone's unrelated edit and blocks.
+ */
+const previousStage = (() => {
+  try {
+    const saved = JSON.parse(
+      readFileSync(new URL(`${target}-staged.json`, folder), "utf8")
+    )
+
+    return new Map((saved.entries ?? []).map((e) => [e.key, e.data]))
+  } catch {
+    return new Map()
+  }
+})()
+const ownDraft = (key, draft) =>
+  previousStage.has(key) && matches(draft, previousStage.get(key))
+
 function matches(doc, data) {
   return Object.entries(data).every(
     ([key, value]) =>
@@ -370,7 +389,7 @@ if (knowledge) {
           published ?? draft
         )
         const done = matches(draft, data)
-        if (row.status !== "published" && !done) {
+        if (row.status !== "published" && !done && !ownDraft(key, draft)) {
           blockers.push(`${key}: unrelated unpublished edits need review`)
           continue
         }
@@ -440,7 +459,7 @@ if (knowledge) {
       }
       const data = { body: result.body }
       const done = matches(draft, data)
-      if (row.status !== "published" && !done) {
+      if (row.status !== "published" && !done && !ownDraft(key, draft)) {
         blockers.push(`${key}: unrelated unpublished edits need review`)
         continue
       }
@@ -507,11 +526,16 @@ if (legal) {
       staged?.date ?? date
     )
     const done = matches(draft, data)
-    if (row.status !== "published" && !done) {
+    const ours = ownDraft(key, draft)
+    if (row.status !== "published" && !done && !ours) {
       blockers.push(`${key}: unrelated unpublished edits need review`)
       continue
     }
-    if (draft.sections?.some((s) => s.heading === REVIEW_HEADING) && !done) {
+    if (
+      draft.sections?.some((s) => s.heading === REVIEW_HEADING) &&
+      !done &&
+      !ours
+    ) {
       blockers.push(`${key}: an earlier review draft differs; inspect it first`)
       continue
     }

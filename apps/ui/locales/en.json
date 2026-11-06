@@ -85,7 +85,7 @@
         "two": "Add hours, photos, accessibility details or a reliable source.",
         "three": "Save a draft and follow your suggestion through review."
       },
-      "requirement": "A free account is enough to suggest changes. Ordinary contributions are reviewed before publication; no paid plan is required."
+      "requirement": "A free account is enough to suggest changes. Ordinary contributions are reviewed before publication."
     },
     "add": {
       "title": "Sign in to put a library on the map",
@@ -4225,7 +4225,7 @@
   },
   "developersOffer": {
     "title": "API Access",
-    "badge": "One plan, no seats",
+    "badge": "One monthly subscription",
     "perMonth": "a month, tax included",
     "priceNote": "Stripe confirms the final charge, including any local tax, before you pay. Billed monthly; cancel at any time, effective at the end of the paid period.",
     "includedTitle": "Included in each billing period",
@@ -4327,7 +4327,7 @@
           "keys": "Unlimited keys, a usage dashboard, the request reference and the playground",
           "overage": "Optional overage with a monthly cap you choose ({capMin} to {capMax}). It stays off unless you switch it on.",
           "reach": "Organisers get more Atlas Reach: {apiReachPerHour} new calculations an hour, and service Reach of up to {apiReachLibraries} libraries",
-          "noOrganisation": "Buy for yourself or for an organisation. No seats to count.",
+          "noOrganisation": "Buy for yourself or for an organisation.",
           "noAuthority": "An API key identifies your application. It never grants library editing, verification or a better place in search."
         }
       },
@@ -4468,30 +4468,26 @@
         "a": "Everything except API Access. Without an account you can read every library record and use the map. A free account (Explorer) adds context layers, comparisons, change history, saved views and exports of up to {exportRows} rows. Your first accepted contribution makes you a Contributor, with {reachPerWeek} Reach calculations a week."
       },
       "1": {
-        "q": "Can I pay for Pro or Supporter?",
-        "a": "No. Personal paid plans have been retired, and their tools are now free with an account. Supporter is recognition you earn at {supporterAt} accepted contributions; it can’t be bought."
-      },
-      "2": {
         "q": "How does Supporter work?",
         "a": "Each accepted, substantive contribution counts once: new libraries, corrections, photos, translations, articles and similar. Daily streaks, bonuses and administrative adjustments don’t count. Your profile shows your count and your progress to {supporterAt}. Supporter adds no tools or authority."
       },
-      "3": {
+      "2": {
         "q": "What does API Access cost?",
         "a": "{apiPrice} a month, tax included, for {apiRequests} requests, {apiMib} MiB of response data and {apiCredits} analysis credits in each billing period. Overage is off unless you switch it on; then it costs {requestPrice} per extra request, {mibPrice} per extra MiB and {creditPrice} per extra analysis credit, up to a monthly cap of {capMin} to {capMax}."
       },
-      "4": {
+      "3": {
         "q": "Do I need an organisation to buy API Access?",
         "a": "No. If you buy for yourself we set up a free organisation with you as its only Organiser, so you can add colleagues later. Organisers manage keys and billing; members can see usage."
       },
-      "5": {
+      "4": {
         "q": "Does paying or sponsoring give me editing rights?",
         "a": "No. Editing a library record needs verified staff authority for that library, which we check with the library. API Access, sponsorship, recognition and organisation membership never grant it."
       },
-      "6": {
+      "5": {
         "q": "What does sponsorship include?",
         "a": "Sponsorship funds a programme of work, such as data quality or translation, with quarterly activity updates and an annual impact report. Suggested amounts are {communityPrice}, {servicePrice} or {foundingPrice} a year. It is not a charitable donation and doesn’t include API Access."
       },
-      "7": {
+      "6": {
         "q": "Can I cancel API Access?",
         "a": "Yes, at any time from billing management on the Developers page. Access continues until the end of the paid period. See the cancellation and refund policy for your statutory rights."
       }
@@ -4617,7 +4613,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Buy API access",
-    "lead": "Buying for yourself? We set up a free organisation for your account so you can add colleagues later. You become its Organiser and manage keys, overage and billing. No seats are needed.",
+    "lead": "Buying for yourself? We set up a free organisation for your account so you can add colleagues later. You become its Organiser and manage keys, overage and billing.",
     "verifyTitle": "Verify your email to buy API access",
     "verifyBody": "API access is available to accounts with a verified email address.",
     "openSettings": "Open account settings",

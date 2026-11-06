@@ -131,4 +131,4 @@ export function useMembershipSummary() {
 }
 
 /** Number of FAQ entries under `membershipContent.faq`. */
-export const MEMBERSHIP_FAQ_COUNT = 8
+export const MEMBERSHIP_FAQ_COUNT = 7

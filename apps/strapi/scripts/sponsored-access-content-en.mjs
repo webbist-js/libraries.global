@@ -52,7 +52,7 @@ Points, badges, recognition, roles, moderation and staff verification are never 
 
 ## During the closed beta
 
-While the closed beta continues, API checkout uses Stripe Test mode and no real payment is taken. Some API features are introduced in stages; the developer pages show what is enabled for your account. The earlier beta test plans for personal memberships, workspace seats and the previous API add-on have been withdrawn.`,
+While the closed beta continues, API checkout uses Stripe Test mode and no real payment is taken. Some API features are introduced in stages; the developer pages show what is enabled for your account.`,
     },
 
     "earned-recognition-and-rewards": {

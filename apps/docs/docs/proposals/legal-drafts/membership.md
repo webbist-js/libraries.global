@@ -9,7 +9,7 @@ description: "Draft revision of /legal/membership for the sponsored-access model
 
 CMS document: `membership` (English). Revision: next major. Mode: replaces the whole document. Staged by `apps/strapi/scripts/update-sponsored-access-content.mjs --stage`; generated from `apps/strapi/scripts/sponsored-access-legal-content.mjs`. Edit the script, not this file.
 
-Revision summary: DRAFT for legal review. Replaces the withdrawn personal membership, Team seat and earlier API terms with the £100/month API purchase terms (offer version 2.0) and capped overage terms (version 2.0).
+Revision summary: DRAFT for legal review. Replaces the earlier beta test terms with the £100/month API purchase terms (offer version 2.0) and capped overage terms (version 2.0).
 
 Lead: Terms for buying and using paid API access to Libraries Global, including allowances, capped overage, renewal and cancellation.
 
@@ -145,7 +145,7 @@ Payment never buys trust, search ranking, staff verification, moderation, recogn
 
 _In short: The closed beta uses test payments._
 
-Libraries Global is in a closed beta. During the beta, checkout uses Stripe Test mode and no real payment is taken; live purchases start only when we announce them. Features can change or be unavailable. Personal membership, workspace seat and earlier API test subscriptions offered during the beta used test payments only. They have been withdrawn, and no rights carry over from them.
+Libraries Global is in a closed beta. During the beta, checkout uses Stripe Test mode and no real payment is taken; live purchases start only when we announce them. Features can change or be unavailable. Any earlier test subscriptions taken during the beta used test payments only; they have ended and no rights carry over from them.
 
 ## Changes and governing law
 

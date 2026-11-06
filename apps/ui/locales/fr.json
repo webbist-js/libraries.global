@@ -85,7 +85,7 @@
         "two": "Ajouter des horaires, photos, informations d’accessibilité ou sources.",
         "three": "Enregistrer un brouillon et suivre sa relecture."
       },
-      "requirement": "Un compte gratuit suffit pour proposer des changements. Les contributions ordinaires sont relues avant publication ; aucune offre payante n’est nécessaire."
+      "requirement": "Un compte gratuit suffit pour proposer des changements. Les contributions ordinaires sont relues avant publication."
     },
     "add": {
       "title": "Connectez-vous pour ajouter une bibliothèque à la carte",
@@ -4225,7 +4225,7 @@
   },
   "developersOffer": {
     "title": "Accès API",
-    "badge": "Une seule formule, sans sièges",
+    "badge": "Un seul abonnement mensuel",
     "perMonth": "par mois, taxes comprises",
     "priceNote": "Stripe confirme le montant final, taxes locales comprises, avant le paiement. Facturation mensuelle ; résiliable à tout moment, avec effet à la fin de la période payée.",
     "includedTitle": "Inclus à chaque période de facturation",
@@ -4327,7 +4327,7 @@
           "keys": "Clés illimitées, tableau de bord d’utilisation, référence des requêtes et bac à sable",
           "overage": "Dépassement facultatif avec un plafond mensuel de votre choix ({capMin} à {capMax}). Il reste désactivé tant que vous ne l’activez pas.",
           "reach": "Les organisateurs disposent de plus de calculs de portée dans l’Atlas : {apiReachPerHour} nouveaux calculs par heure et une portée de réseau jusqu’à {apiReachLibraries} bibliothèques",
-          "noOrganisation": "Achetez pour vous-même ou pour une organisation. Aucun siège à compter.",
+          "noOrganisation": "Achetez pour vous-même ou pour une organisation.",
           "noAuthority": "Une clé API identifie votre application. Elle ne donne jamais de droit de modification, de vérification ni de meilleure place dans les recherches."
         }
       },
@@ -4468,30 +4468,26 @@
         "a": "Tout, sauf l’accès API. Sans compte, vous pouvez consulter toutes les fiches et utiliser la carte. Un compte gratuit (Explorateur) ajoute les couches de contexte, les comparaisons, l’historique des modifications, les vues enregistrées et des exports jusqu’à {exportRows} lignes. Votre première contribution acceptée fait de vous un Contributeur, avec {reachPerWeek} calculs de portée par semaine."
       },
       "1": {
-        "q": "Puis-je payer pour Pro ou Soutien ?",
-        "a": "Non. Les formules personnelles payantes ont été supprimées et leurs outils sont désormais gratuits avec un compte. Soutien est une reconnaissance obtenue à {supporterAt} contributions acceptées ; elle ne s’achète pas."
-      },
-      "2": {
         "q": "Comment fonctionne Soutien ?",
         "a": "Chaque contribution substantielle acceptée compte une fois : nouvelles bibliothèques, corrections, photos, traductions, articles, etc. Les séries quotidiennes, les bonus et les ajustements administratifs ne comptent pas. Votre profil indique votre total et votre progression vers {supporterAt}. Soutien n’ajoute ni outil ni autorité."
       },
-      "3": {
+      "2": {
         "q": "Combien coûte l’accès API ?",
         "a": "{apiPrice} par mois, taxes comprises, pour {apiRequests} requêtes, {apiMib} Mio de données de réponse et {apiCredits} crédits d’analyse par période de facturation. Le dépassement est désactivé tant que vous ne l’activez pas ; il coûte alors {requestPrice} par requête supplémentaire, {mibPrice} par Mio supplémentaire et {creditPrice} par crédit d’analyse supplémentaire, dans la limite d’un plafond mensuel de {capMin} à {capMax}."
       },
-      "4": {
+      "3": {
         "q": "Faut-il une organisation pour acheter l’accès API ?",
         "a": "Non. Si vous achetez pour vous-même, nous créons une organisation gratuite dont vous êtes le seul organisateur, pour pouvoir ajouter des collègues plus tard. Les organisateurs gèrent les clés et la facturation ; les membres voient l’utilisation."
       },
-      "5": {
+      "4": {
         "q": "Payer ou être mécène donne-t-il des droits de modification ?",
         "a": "Non. Modifier la fiche d’une bibliothèque nécessite une autorité de personnel vérifiée pour cette bibliothèque, que nous confirmons auprès d’elle. L’accès API, le mécénat, la reconnaissance et l’appartenance à une organisation ne la donnent jamais."
       },
-      "6": {
+      "5": {
         "q": "Que comprend le mécénat ?",
         "a": "Le mécénat finance un programme de travail, comme la qualité des données ou la traduction, avec des points d’activité trimestriels et un rapport d’impact annuel. Les montants indicatifs sont de {communityPrice}, {servicePrice} ou {foundingPrice} par an. Ce n’est pas un don à une œuvre caritative et il n’inclut pas l’accès API."
       },
-      "7": {
+      "6": {
         "q": "Puis-je annuler l’accès API ?",
         "a": "Oui, à tout moment depuis la gestion de la facturation dans l’espace Développeurs. L’accès continue jusqu’à la fin de la période payée. Consultez la politique d’annulation et de remboursement pour vos droits légaux."
       }
@@ -4617,7 +4613,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Acheter l’accès API",
-    "lead": "Vous achetez pour vous-même ? Nous créons une organisation gratuite pour votre compte afin que vous puissiez ajouter des collègues plus tard. Vous en devenez l’organisateur et gérez les clés, le dépassement et la facturation. Aucun siège n’est nécessaire.",
+    "lead": "Vous achetez pour vous-même ? Nous créons une organisation gratuite pour votre compte afin que vous puissiez ajouter des collègues plus tard. Vous en devenez l’organisateur et gérez les clés, le dépassement et la facturation.",
     "verifyTitle": "Vérifiez votre e-mail pour acheter l’accès API",
     "verifyBody": "L’accès API est réservé aux comptes dont l’adresse e-mail est vérifiée.",
     "openSettings": "Ouvrir les paramètres du compte",

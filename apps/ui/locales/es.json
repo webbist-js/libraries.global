@@ -85,7 +85,7 @@
         "two": "Añada horarios, fotos, datos de accesibilidad o una fuente fiable.",
         "three": "Guarde un borrador y siga su sugerencia durante la revisión."
       },
-      "requirement": "Una cuenta gratuita basta para sugerir cambios. Las contribuciones habituales se revisan antes de publicarse; no se requiere ningún plan de pago."
+      "requirement": "Una cuenta gratuita basta para sugerir cambios. Las contribuciones habituales se revisan antes de publicarse."
     },
     "add": {
       "title": "Inicie sesión para poner una biblioteca en el mapa",
@@ -4225,7 +4225,7 @@
   },
   "developersOffer": {
     "title": "Acceso a la API",
-    "badge": "Un solo plan, sin plazas",
+    "badge": "Una sola suscripción mensual",
     "perMonth": "al mes, impuestos incluidos",
     "priceNote": "Stripe confirma el importe final, con los impuestos locales, antes del pago. Facturación mensual; puede cancelar cuando quiera, con efecto al final del periodo pagado.",
     "includedTitle": "Incluido en cada periodo de facturación",
@@ -4327,7 +4327,7 @@
           "keys": "Claves ilimitadas, panel de uso, referencia de solicitudes y entorno de pruebas",
           "overage": "Excedente opcional con un límite mensual que usted elige ({capMin} a {capMax}). Permanece desactivado hasta que lo active.",
           "reach": "Los organizadores tienen más alcance en el Atlas: {apiReachPerHour} nuevos cálculos por hora y alcance de servicio de hasta {apiReachLibraries} bibliotecas",
-          "noOrganisation": "Compre para usted o para una organización. Sin plazas que contar.",
+          "noOrganisation": "Compre para usted o para una organización.",
           "noAuthority": "Una clave de API identifica su aplicación. Nunca concede permisos de edición, verificación ni un mejor puesto en las búsquedas."
         }
       },
@@ -4468,30 +4468,26 @@
         "a": "Todo excepto el acceso a la API. Sin cuenta puede leer cualquier ficha y usar el mapa. Una cuenta gratuita (Explorador) añade capas de contexto, comparaciones, historial de cambios, vistas guardadas y exportaciones de hasta {exportRows} filas. Su primera contribución aceptada le convierte en Colaborador, con {reachPerWeek} cálculos de alcance por semana."
       },
       "1": {
-        "q": "¿Puedo pagar Pro o Supporter?",
-        "a": "No. Los planes personales de pago se han retirado y sus herramientas ahora son gratuitas con una cuenta. Colaborador destacado es un reconocimiento que se obtiene con {supporterAt} contribuciones aceptadas; no se puede comprar."
-      },
-      "2": {
         "q": "¿Cómo funciona Colaborador destacado?",
         "a": "Cada contribución sustancial aceptada cuenta una vez: nuevas bibliotecas, correcciones, fotos, traducciones, artículos y similares. Las rachas diarias, las bonificaciones y los ajustes administrativos no cuentan. Su perfil muestra su total y su progreso hasta {supporterAt}. No añade herramientas ni autoridad."
       },
-      "3": {
+      "2": {
         "q": "¿Cuánto cuesta el acceso a la API?",
         "a": "{apiPrice} al mes, impuestos incluidos, por {apiRequests} solicitudes, {apiMib} MiB de datos de respuesta y {apiCredits} créditos de análisis en cada periodo de facturación. El excedente está desactivado hasta que lo active; entonces cuesta {requestPrice} por solicitud adicional, {mibPrice} por MiB adicional y {creditPrice} por crédito de análisis adicional, hasta un límite mensual de {capMin} a {capMax}."
       },
-      "4": {
+      "3": {
         "q": "¿Necesito una organización para comprar el acceso a la API?",
         "a": "No. Si compra para usted, creamos una organización gratuita en la que es el único organizador, para que pueda añadir compañeros más adelante. Los organizadores gestionan las claves y la facturación; los miembros pueden ver el uso."
       },
-      "5": {
+      "4": {
         "q": "¿Pagar o patrocinar me da permisos de edición?",
         "a": "No. Editar la ficha de una biblioteca requiere autoridad verificada como personal de esa biblioteca, que confirmamos con ella. El acceso a la API, el patrocinio, el reconocimiento y pertenecer a una organización nunca la conceden."
       },
-      "6": {
+      "5": {
         "q": "¿Qué incluye el patrocinio?",
         "a": "El patrocinio financia un programa de trabajo, como la calidad de los datos o la traducción, con informes trimestrales de actividad y un informe anual de impacto. Los importes orientativos son {communityPrice}, {servicePrice} o {foundingPrice} al año. No es una donación benéfica y no incluye el acceso a la API."
       },
-      "7": {
+      "6": {
         "q": "¿Puedo cancelar el acceso a la API?",
         "a": "Sí, en cualquier momento desde la gestión de la facturación en la página de Desarrolladores. El acceso continúa hasta el final del periodo pagado. Consulte la política de cancelación y reembolsos para conocer sus derechos legales."
       }
@@ -4617,7 +4613,7 @@
   },
   "apiIndividualCheckout": {
     "title": "Comprar acceso a la API",
-    "lead": "¿Compra para usted? Creamos una organización gratuita para su cuenta para que pueda añadir compañeros más adelante. Usted será su organizador y gestionará las claves, el excedente y la facturación. No hacen falta plazas.",
+    "lead": "¿Compra para usted? Creamos una organización gratuita para su cuenta para que pueda añadir compañeros más adelante. Usted será su organizador y gestionará las claves, el excedente y la facturación.",
     "verifyTitle": "Verifique su correo para comprar acceso a la API",
     "verifyBody": "El acceso a la API está disponible para cuentas con una dirección de correo verificada.",
     "openSettings": "Abrir la configuración de la cuenta",

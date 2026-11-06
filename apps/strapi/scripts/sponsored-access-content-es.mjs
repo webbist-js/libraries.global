@@ -53,7 +53,7 @@ Los puntos, las insignias, el reconocimiento, los roles, la moderación y la ver
 
 ## Durante la beta cerrada
 
-Mientras continúe la beta cerrada, el pago de la API usa el modo de prueba de Stripe y no se cobra ningún importe real. Algunas funciones de la API se introducen por fases; las páginas para desarrolladores muestran qué está habilitado para su cuenta. Se han retirado los planes de prueba anteriores de la beta para membresías personales, puestos en los espacios de trabajo y el antiguo complemento de API.`,
+Mientras continúe la beta cerrada, el pago de la API usa el modo de prueba de Stripe y no se cobra ningún importe real. Algunas funciones de la API se introducen por fases; las páginas para desarrolladores muestran qué está habilitado para su cuenta.`,
     },
 
     "earned-recognition-and-rewards": {

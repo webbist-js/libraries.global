@@ -43,7 +43,7 @@ export function legalDrafts({
     {
       slug: "membership",
       mode: "replace",
-      summary: `DRAFT for legal review. Replaces the withdrawn personal membership, Team seat and earlier API terms with the ${v.price}/month API purchase terms (offer version ${API_OFFER_TERMS_VERSION}) and capped overage terms (version ${API_OVERAGE_TERMS_VERSION}).`,
+      summary: `DRAFT for legal review. Replaces the earlier beta test terms with the ${v.price}/month API purchase terms (offer version ${API_OFFER_TERMS_VERSION}) and capped overage terms (version ${API_OVERAGE_TERMS_VERSION}).`,
       metadata: {
         title: "API purchase terms",
         heroTitle: "API purchase *terms.*",
@@ -165,7 +165,7 @@ Analysis and Reach results are modelled estimates based on published records and
         section(
           "Beta service and earlier test offers",
           "The closed beta uses test payments.",
-          "Libraries Global is in a closed beta. During the beta, checkout uses Stripe Test mode and no real payment is taken; live purchases start only when we announce them. Features can change or be unavailable. Personal membership, workspace seat and earlier API test subscriptions offered during the beta used test payments only. They have been withdrawn, and no rights carry over from them."
+          "Libraries Global is in a closed beta. During the beta, checkout uses Stripe Test mode and no real payment is taken; live purchases start only when we announce them. Features can change or be unavailable. Any earlier test subscriptions taken during the beta used test payments only; they have ended and no rights carry over from them."
         ),
         section(
           "Changes and governing law",
@@ -178,7 +178,7 @@ Analysis and Reach results are modelled estimates based on published records and
       slug: "cancellation-refunds",
       mode: "replace",
       summary:
-        "DRAFT for legal review. Rewritten for the monthly API subscription and capped overage; withdrawn personal membership and Team seat routes removed. Statutory rights unchanged.",
+        "DRAFT for legal review. Rewritten for the monthly API subscription and capped overage. Statutory rights unchanged.",
       metadata: {
         title: "Cancellation and refunds",
         heroTitle: "Cancellation *and refunds.*",
