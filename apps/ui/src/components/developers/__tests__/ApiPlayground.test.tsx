@@ -15,7 +15,7 @@ const record = {
 const secret = `lg_api_${"a".repeat(43)}`
 function mount() {
   render(<ApiPlayground teamName="Library service" showUsageWarning={false} />)
-  fireEvent.change(screen.getByLabelText(/Team API key/), {
+  fireEvent.change(screen.getByLabelText(/API key/), {
     target: { value: secret },
   })
 }
@@ -24,7 +24,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it("clearly discloses Team usage and runs the normal authenticated API with no free proxy", async () => {
+it("clearly discloses API usage and runs the normal authenticated API with no free proxy", async () => {
   const fetch = vi
     .fn()
     .mockResolvedValue(
@@ -33,11 +33,11 @@ it("clearly discloses Team usage and runs the normal authenticated API with no f
   vi.stubGlobal("fetch", fetch)
   mount()
   expect(
-    screen.getByText("This playground uses your Team’s API allowance.")
+    screen.getByText("This playground uses your API account’s allowance.")
   ).toBeTruthy()
   expect(
     screen.getByText(
-      /Successful requests consume your Team’s shared request and response-data allowance/
+      /Successful requests consume your API account’s shared request and response-data allowance/
     )
   ).toBeTruthy()
   expect(fetch).not.toHaveBeenCalled()
@@ -161,7 +161,7 @@ it("requires a key even if native form validation is bypassed", async () => {
   fireEvent.submit(screen.getByRole("form", { name: "API request playground" }))
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
-    expect.stringContaining("Enter your Team API key")
+    expect.stringContaining("Enter your API key")
   )
   expect(fetch).not.toHaveBeenCalled()
 })
@@ -181,7 +181,7 @@ it("clears stale responses and warns that a timed-out request might still consum
   fireEvent.click(screen.getByRole("button", { name: "Run request" }))
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
-    expect.stringContaining("may still count toward your Team’s allowance")
+    expect.stringContaining("may still count toward your API account’s allowance")
   )
 })
 
