@@ -5,11 +5,11 @@ import { expect } from "storybook/test"
 const meta = {
   title: "Features/Staff/TeamStatusBadges",
   component: TeamStatusBadges,
-  args: { membership: "active", verified: false },
+  args: { workspace: "open", verified: false },
   argTypes: {
-    membership: {
+    workspace: {
       control: "select",
-      options: [undefined, "active", "lapsed", "expired"],
+      options: [undefined, "open", "closed"],
     },
     verified: { control: "boolean" },
   },
@@ -18,39 +18,38 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const ActiveUnverified: Story = {
+export const OpenUnverified: Story = {
   globals: { locale: "en" },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText("Team membership: Active")).toBeVisible()
+    await expect(canvas.getByText("Workspace: Open")).toBeVisible()
     await expect(
       canvas.getByText("Team verification: Not verified")
     ).toBeVisible()
     await expect(canvas.queryByText(/Awaiting review/)).not.toBeInTheDocument()
   },
 }
-export const ActiveVerified: Story = { args: { verified: true } }
-export const LapsedVerified: Story = {
-  args: { membership: "lapsed", verified: true },
+export const OpenVerified: Story = { args: { verified: true } }
+export const ClosedVerified: Story = {
+  args: { workspace: "closed", verified: true },
 }
-export const ExpiredUnverified: Story = { args: { membership: "expired" } }
 export const DetailsUnavailable: Story = {
-  args: { membership: undefined, verified: undefined },
+  args: { workspace: undefined, verified: undefined },
   parameters: {
     docs: {
       description: {
         story:
-          "Neither badge is rendered until its state is known. The parent workspace supplies refresh guidance; absence does not mean inactive or unverified.",
+          "Neither badge is rendered until its state is known. The parent workspace supplies refresh guidance; absence does not mean closed or unverified.",
       },
     },
   },
   globals: { locale: "en" },
   play: async ({ canvas }) => {
     await expect(
-      canvas.queryByText(/Team membership:|Team verification:/)
+      canvas.queryByText(/Workspace:|Team verification:/)
     ).not.toBeInTheDocument()
   },
 }
-export const MembershipOnly: Story = { args: { verified: undefined } }
+export const WorkspaceOnly: Story = { args: { verified: undefined } }
 export const NarrowFrench: Story = {
   globals: { locale: "fr" },
   decorators: [

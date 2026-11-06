@@ -1,8 +1,8 @@
 /** Reviewed editorial copy for the community publishing release, in each CMS locale. */
-import { stripComponentIds } from "./team-pricing-content.mjs"
+import { stripComponentIds } from "./cms-component-ids.mjs"
 
 const guidePath = "/knowledge/contributing/library-conversations"
-const plansPath = "/knowledge/governance/plans-and-pro"
+const plansPath = "/knowledge/governance/plans-and-pricing"
 
 // Plain paragraphs, level-two headings and ordinary Markdown links only.
 export function richText(markdown) {
@@ -41,7 +41,7 @@ export function richText(markdown) {
 
 const main = {
   en: {
-    "how-to-contribute": `Libraries Global is kept up to date by the people who use it. You need a free account and something you know about a library; you do not need technical knowledge or a paid membership.
+    "how-to-contribute": `Libraries Global is kept up to date by the people who use it. You need a free account and something you know about a library; you do not need technical knowledge or any payment.
 
 ## Ways to help
 
@@ -49,7 +49,7 @@ Suggest a correction from a library page, answer its Yes/No facilities questions
 
 Use [Add a missing library](/contribute/add-library) for a missing record. You can request a missing region or area from that form. Translate this record changes language-specific text; shared facts such as opening hours and location stay the same across languages.
 
-If you work or volunteer at a library, claim it so you can look after its record and connect its events feed once your claim is approved. A Team purchase does not verify a claim.
+If you work or volunteer at a library, claim it so you can look after its record and connect its events feed once your claim is approved. Payment never verifies a claim.
 
 You can submit a Journal story with a verified account, suggest an improvement to an article, or report a problem on a Knowledge page. An editor role is needed to edit Knowledge directly or revise another writer’s Journal work in your granted languages. Authored articles and revisions go to another reviewer before publication.
 
@@ -70,7 +70,7 @@ After five accepted changes you can apply to become a Knowledge editor, Journal 
 
 ## Roles, tiers and membership
 
-Roles grant responsibility; tiers reflect contribution points and affect formal submission limits; membership adds data tools. Paying for Supporter, Pro or Team never grants a community role, review authority or points.
+Roles grant responsibility; tiers reflect contribution points and affect formal submission limits; recognition says thank you for accepted work. Payment, sponsorship and recognition never grant a community role, review authority or points.
 
 ## Library staff and editors
 
@@ -93,7 +93,7 @@ Feed managers curate links and featured threads. Verified library staff may prop
 ## Applying and ending a role
 
 After five accepted formal changes you may apply for an editor or moderator role. Choose the queue and languages for a moderator application, including Discussions. There can be one open application per role; after rejection, the same role has a 30-day reapplication wait. Roles may expire or be ended, and a new grant can take up to a minute to appear.`,
-    "becoming-a-moderator": `Moderators check other people’s contributions, compare changes with their evidence and explain their decisions. The role is separate from editor access, library staff authority and paid membership.
+    "becoming-a-moderator": `Moderators check other people’s contributions, compare changes with their evidence and explain their decisions. The role is separate from editor access, library staff authority and API Access.
 
 ## Choose a queue and languages
 
@@ -240,7 +240,7 @@ Permitted board managers also curate library and drive feeds: accepting link pro
 [Joining library conversations](${guidePath}) explains message review and privacy. For questions about the board, contact info@libraries.global.`,
   },
   fr: {
-    "how-to-contribute": `Libraries Global est tenu à jour par les personnes qui l’utilisent. Un compte gratuit et une information sur une bibliothèque suffisent ; aucune connaissance technique ni adhésion payante n’est nécessaire.
+    "how-to-contribute": `Libraries Global est tenu à jour par les personnes qui l’utilisent. Un compte gratuit et une information sur une bibliothèque suffisent ; aucune connaissance technique ni paiement n’est nécessaire.
 
 ## Comment aider
 
@@ -248,7 +248,7 @@ Proposez une correction depuis une fiche, répondez aux questions Oui/Non sur le
 
 Utilisez [Ajouter une bibliothèque](/contribute/add-library) pour une fiche manquante. Le formulaire permet aussi de demander une région ou une zone absente. Traduire cette fiche ne modifie que les textes propres à la langue ; les horaires et la position sont communs aux traductions.
 
-Si vous travaillez ou êtes bénévole dans une bibliothèque, demandez votre rattachement pour gérer sa fiche et son flux d’événements après validation. Acheter Team ne valide pas ce rattachement.
+Si vous travaillez ou êtes bénévole dans une bibliothèque, demandez votre rattachement pour gérer sa fiche et son flux d’événements après validation. Un paiement ne valide jamais ce rattachement.
 
 Avec un compte vérifié, vous pouvez proposer un article au Journal, suggérer une amélioration ou signaler un problème dans un guide. Modifier directement Knowledge ou réviser le travail d’un autre auteur du Journal demande le rôle d’éditeur adapté à la langue. Les articles et révisions passent devant une autre personne avant publication.
 
@@ -269,7 +269,7 @@ Après cinq modifications acceptées, vous pouvez demander un rôle d’éditeur
 
 ## Rôles, niveaux et adhésion
 
-Les rôles donnent des responsabilités ; les niveaux reflètent les points et les plafonds de contributions formelles ; l’adhésion ajoute des outils de données. Supporter, Pro et Team n’accordent ni rôle communautaire, ni pouvoir de modération, ni points.
+Les rôles donnent des responsabilités ; les niveaux reflètent les points et les plafonds de contributions formelles ; la reconnaissance remercie les contributions acceptées. Ni le paiement, ni le parrainage, ni la reconnaissance n’accordent de rôle communautaire, de pouvoir de modération ou de points.
 
 ## Personnel et éditeurs
 
@@ -292,7 +292,7 @@ Les responsables de flux choisissent les liens et fils mis en avant. Le personne
 ## Demander ou quitter un rôle
 
 Après cinq modifications formelles acceptées, vous pouvez demander un rôle d’éditeur ou de modérateur. Choisissez la file et les langues, notamment Discussions. Une seule candidature par rôle peut être ouverte ; après un refus, le délai est de 30 jours. Les rôles peuvent expirer ou être retirés. Un nouveau droit peut prendre une minute à apparaître.`,
-    "becoming-a-moderator": `Les modérateurs vérifient les contributions d’autres personnes, les comparent aux sources et expliquent leurs décisions. Ce rôle est distinct des droits d’éditeur, du personnel de bibliothèque et de l’adhésion payante.
+    "becoming-a-moderator": `Les modérateurs vérifient les contributions d’autres personnes, les comparent aux sources et expliquent leurs décisions. Ce rôle est distinct des droits d’éditeur, du personnel de bibliothèque et de l’accès à l’API.
 
 ## Choisir une file et des langues
 
@@ -439,7 +439,7 @@ Les responsables autorisés gèrent aussi les flux des bibliothèques et campagn
 [Participer aux conversations](${guidePath}) explique la vérification et la confidentialité. Pour toute question sur le comité, écrivez à info@libraries.global.`,
   },
   cs: {
-    "how-to-contribute": `Libraries Global aktualizují lidé, kteří jej používají. Stačí bezplatný účet a informace o knihovně; nepotřebujete technické znalosti ani placené členství.
+    "how-to-contribute": `Libraries Global aktualizují lidé, kteří jej používají. Stačí bezplatný účet a informace o knihovně; nepotřebujete technické znalosti ani nic platit.
 
 ## Jak pomoci
 
@@ -447,7 +447,7 @@ Na stránce knihovny navrhněte opravu, odpovězte na otázky Ano/Ne o vybavení
 
 Chybějící záznam přidejte přes [Přidat knihovnu](/contribute/add-library). Ve formuláři lze požádat také o chybějící region či oblast. Překlad záznamu mění pouze text v daném jazyce; otevírací doba a poloha zůstávají společné.
 
-Pokud v knihovně pracujete nebo působíte jako dobrovolník, požádejte o přístup zaměstnance. Po schválení můžete spravovat záznam a zdroj akcí. Zakoupení Team tento vztah neověřuje.
+Pokud v knihovně pracujete nebo působíte jako dobrovolník, požádejte o přístup zaměstnance. Po schválení můžete spravovat záznam a zdroj akcí. Platba tento vztah nikdy neověřuje.
 
 S ověřeným účtem můžete zaslat článek do Journal, navrhnout úpravu článku nebo nahlásit problém v Knowledge. Přímé úpravy Knowledge a revize článků jiných autorů vyžadují příslušnou redakční roli pro daný jazyk. Články a revize před zveřejněním kontroluje jiná oprávněná osoba.
 
@@ -468,7 +468,7 @@ Po pěti přijatých změnách můžete požádat o roli editora Knowledge, edit
 
 ## Role, úrovně a členství
 
-Role určují odpovědnost, úrovně odrážejí body a limity formálních příspěvků a členství přidává datové nástroje. Supporter, Pro ani Team neudělují komunitní roli, oprávnění ke kontrole ani body.
+Role určují odpovědnost, úrovně odrážejí body a limity formálních příspěvků a uznání je poděkováním za přijatou práci. Platba, sponzorství ani uznání neudělují komunitní roli, oprávnění ke kontrole ani body.
 
 ## Zaměstnanci a editoři
 
@@ -491,7 +491,7 @@ Správci přehledů vybírají odkazy a zvýrazněná vlákna. Ověření zaměs
 ## Žádost a ukončení role
 
 Po pěti přijatých formálních změnách můžete požádat o redakční či moderační roli. U moderátora vyberte frontu a jazyky, včetně Discussions. Pro každou roli může být otevřena jedna žádost; po zamítnutí lze požádat znovu za 30 dní. Role mohou vypršet nebo být odebrány. Nové oprávnění se může projevit do minuty.`,
-    "becoming-a-moderator": `Moderátoři kontrolují příspěvky ostatních, porovnávají je se zdroji a vysvětlují rozhodnutí. Role je oddělená od redakčních práv, přístupu zaměstnanců knihoven a placeného členství.
+    "becoming-a-moderator": `Moderátoři kontrolují příspěvky ostatních, porovnávají je se zdroji a vysvětlují rozhodnutí. Role je oddělená od redakčních práv, přístupu zaměstnanců knihoven a přístupu k API.
 
 ## Vyberte frontu a jazyky
 
@@ -641,9 +641,9 @@ Oprávnění správci také vybírají obsah přehledů knihoven a kampaní: př
 
 const additions = {
   en: {
-    "plans-and-pro": `## Discussions are free
+    "plans-and-pricing": `## Discussions are free
 
-Read public discussions without an account. Starting a thread, replying, reacting and following are included in a free verified account. Supporter, Pro and Team do not grant discussion moderation. [Joining library conversations](${guidePath}) explains the review and privacy rules.`,
+Read public discussions without an account. Starting a thread, replying, reacting and following are included in a free verified account. Paid API access, sponsorship and recognition do not grant discussion moderation. [Joining library conversations](${guidePath}) explains the review and privacy rules.`,
     "reading-a-library-page": `## Conversations about this library
 
 A Conversations section can show threads associated with the library. Choose a language filter, read the original discussion or start one with a verified account. A thread linked to a drive or another page shares the same messages and decisions wherever it appears. Pending content remains private; linking it does not change its access rules.
@@ -653,7 +653,7 @@ A discussion does not correct library facts. Use the record’s correction actio
 
 The library’s shared conversation feed can reuse an existing discussion. Verified staff can propose links for their own libraries; permitted feed managers decide associations, featuring and visibility. Removing a feed link does not delete the thread.
 
-Staff access and Team seats do not grant discussion moderation. New messages and edits, including yours, require a different authorised reviewer and stay private until accepted. Use a record edit for library facts. See [Joining library conversations](${guidePath}).`,
+Staff access and workspace membership do not grant discussion moderation. New messages and edits, including yours, require a different authorised reviewer and stay private until accepted. Use a record edit for library facts. See [Joining library conversations](${guidePath}).`,
     "your-account-and-profile": `## Your discussion preferences
 
 New message forms use your selected writing language first, then your profile languages, your optional profile country as a hint and the interface fallback. You can change the language before sending. Reading all languages does not change your writing choice.
@@ -666,12 +666,12 @@ Accepted public discussion text can remain with its author attribution removed. 
 Account deletion first stops billing and is refused if cancellation cannot be confirmed. Independent access and payment records follow the retention rules in the membership and privacy notices; deletion does not erase emails already delivered to your inbox.`,
     "teams-for-library-services": `## Shared conversations
 
-Discussion participation is free for every verified account. A library or drive can reuse an existing thread, with one shared set of messages and review decisions. Staff may propose links for their own library; permitted managers curate feeds. A Team organiser or seat does not grant discussion moderation. See [Joining library conversations](${guidePath}).`,
+Discussion participation is free for every verified account. A library or drive can reuse an existing thread, with one shared set of messages and review decisions. Staff may propose links for their own library; permitted managers curate feeds. A workspace organiser or member role does not grant discussion moderation. See [Joining library conversations](${guidePath}).`,
   },
   fr: {
-    "plans-and-pro": `## Les discussions sont gratuites
+    "plans-and-pricing": `## Les discussions sont gratuites
 
-Lisez les discussions publiques sans compte. Démarrer un fil, répondre, réagir et suivre sont inclus dans un compte gratuit vérifié. Supporter, Pro et Team ne donnent aucun droit de modération. [Participer aux conversations](${guidePath}) explique la vérification et la confidentialité.`,
+Lisez les discussions publiques sans compte. Démarrer un fil, répondre, réagir et suivre sont inclus dans un compte gratuit vérifié. Ni l’accès payant à l’API, ni le parrainage, ni la reconnaissance ne donnent de droit de modération. [Participer aux conversations](${guidePath}) explique la vérification et la confidentialité.`,
     "reading-a-library-page": `## Conversations sur cette bibliothèque
 
 Une section Conversations peut afficher les fils associés à la bibliothèque. Filtrez par langue, ouvrez la discussion d’origine ou démarrez-en une avec un compte vérifié. Un fil associé à une campagne ou une autre page conserve partout les mêmes messages et décisions. Le contenu en attente reste privé ; l’association ne change pas ses droits d’accès.
@@ -681,7 +681,7 @@ Une discussion ne corrige pas les données. Utilisez la correction de fiche pour
 
 Le flux partagé peut reprendre une discussion existante. Le personnel vérifié peut proposer des liens pour ses bibliothèques ; les responsables autorisés décident des associations, mises en avant et de la visibilité. Retirer un lien ne supprime pas le fil.
 
-L’accès du personnel et les places Team ne donnent pas de droit de modération. Chaque message et modification, y compris les vôtres, attend la validation d’une autre personne autorisée et reste privé jusque-là. Utilisez une modification de fiche pour les faits. Voir [Participer aux conversations](${guidePath}).`,
+L’accès du personnel et l’appartenance à un espace de travail ne donnent pas de droit de modération. Chaque message et modification, y compris les vôtres, attend la validation d’une autre personne autorisée et reste privé jusque-là. Utilisez une modification de fiche pour les faits. Voir [Participer aux conversations](${guidePath}).`,
     "your-account-and-profile": `## Vos préférences de discussion
 
 Les formulaires utilisent d’abord la langue de rédaction choisie, puis les langues du profil, le pays facultatif comme indice et enfin la langue de l’interface par défaut. Vous pouvez changer la sélection avant l’envoi. Lire toutes les langues ne change pas ce choix.
@@ -694,12 +694,12 @@ Le texte public accepté peut être conservé sans attribution à votre compte. 
 La suppression arrête d’abord la facturation et est refusée si l’annulation ne peut pas être confirmée. Les droits d’accès indépendants et données de paiement suivent les règles de conservation des notices d’adhésion et de confidentialité. Les e-mails déjà reçus ne sont pas effacés.`,
     "teams-for-library-services": `## Conversations partagées
 
-La participation est gratuite pour tout compte vérifié. Une bibliothèque ou campagne peut reprendre un fil existant avec les mêmes messages et décisions. Le personnel propose les liens pour sa bibliothèque ; les responsables autorisés gèrent les flux. Être organisateur Team ou occuper une place ne donne pas de droit de modération. Voir [Participer aux conversations](${guidePath}).`,
+La participation est gratuite pour tout compte vérifié. Une bibliothèque ou campagne peut reprendre un fil existant avec les mêmes messages et décisions. Le personnel propose les liens pour sa bibliothèque ; les responsables autorisés gèrent les flux. Être organisateur ou membre d’un espace de travail ne donne pas de droit de modération. Voir [Participer aux conversations](${guidePath}).`,
   },
   cs: {
-    "plans-and-pro": `## Diskuse jsou zdarma
+    "plans-and-pricing": `## Diskuse jsou zdarma
 
-Veřejné diskuse čtěte bez účtu. Zakládání vláken, odpovědi, reakce a sledování jsou součástí bezplatného ověřeného účtu. Supporter, Pro ani Team nedávají moderační práva. [Zapojení do knihovních diskusí](${guidePath}) vysvětluje kontrolu a soukromí.`,
+Veřejné diskuse čtěte bez účtu. Zakládání vláken, odpovědi, reakce a sledování jsou součástí bezplatného ověřeného účtu. Placený přístup k API, sponzorství ani uznání nedávají moderační práva. [Zapojení do knihovních diskusí](${guidePath}) vysvětluje kontrolu a soukromí.`,
     "reading-a-library-page": `## Diskuse o knihovně
 
 Sekce Diskuse může zobrazovat vlákna spojená s knihovnou. Vyberte jazykový filtr, otevřete původní diskusi nebo založte novou s ověřeným účtem. Vlákno připojené ke kampani nebo jiné stránce všude sdílí stejné zprávy a rozhodnutí. Čekající obsah zůstává soukromý; propojení nemění přístupová pravidla.
@@ -709,7 +709,7 @@ Diskuse neopravuje údaje knihovny. Adresu, otevírací dobu či vybavení změ�
 
 Sdílený přehled může použít existující diskusi. Ověření zaměstnanci navrhují propojení pro své knihovny; oprávnění správci rozhodují o připojení, zvýraznění a viditelnosti. Odstranění odkazu nemaže vlákno.
 
-Zaměstnanecký přístup ani místo v Team nedává moderační práva. Každou zprávu a úpravu včetně vaší musí posoudit jiná oprávněná osoba; do schválení zůstává soukromá. Fakta měňte úpravou záznamu. Viz [Zapojení do knihovních diskusí](${guidePath}).`,
+Zaměstnanecký přístup ani členství v pracovním prostoru nedává moderační práva. Každou zprávu a úpravu včetně vaší musí posoudit jiná oprávněná osoba; do schválení zůstává soukromá. Fakta měňte úpravou záznamu. Viz [Zapojení do knihovních diskusí](${guidePath}).`,
     "your-account-and-profile": `## Předvolby diskusí
 
 Formuláře nejprve použijí zvolený jazyk psaní, potom jazyky profilu, volitelnou zemi jako vodítko a nakonec výchozí jazyk rozhraní. Před odesláním lze výběr změnit. Čtení ve všech jazycích tuto volbu nemění.
@@ -726,34 +726,36 @@ Smazání nejprve zastaví fakturaci a je odmítnuto, pokud zrušení nelze potv
   },
 }
 
+// Earlier headings ("Membership and access", "Staff access is independent of
+// payment") are retired; update-sponsored-access-content.mjs removes them.
 const billingSummary = {
-  en: `## Membership and access
+  en: `## Free access, recognition and the paid API
 
-Supporter and Pro add data tools; Team supplies Pro seats and service tools. They do not grant trust, community roles, staff verification or discussion moderation. Manage paid membership separately from complimentary access in Settings → Membership & billing. Read [Plans and Pro](${plansPath}) for current prices, included tools, invoices, plan changes and cancellation, and [Team API access](/knowledge/data-api/team-api-access) for the separately billed add-on.`,
-  fr: `## Adhésion et accès
+Every account is free. Accepted contributions earn Contributor and Supporter recognition; the API is a separate paid service for software. None of these grant trust, community roles, staff verification or discussion moderation. Read [Plans and pricing](${plansPath}) and [API limits, overages and billing](/knowledge/data-api/team-api-access).`,
+  fr: `## Accès gratuit, reconnaissance et API payante
 
-Supporter et Pro ajoutent des outils de données ; Team fournit des places Pro et des outils pour les services. Ils n’accordent ni confiance, ni rôle communautaire, ni vérification du personnel, ni pouvoir de modération. Gérez l’adhésion payante séparément des accès offerts dans Paramètres → Adhésion et facturation. Consultez [Formules et Pro](${plansPath}) pour les prix, outils, factures, changements et annulations, et [Accès à l’API Team](/knowledge/data-api/team-api-access) pour l’option facturée séparément.`,
-  cs: `## Členství a přístup
+Chaque compte est gratuit. Les contributions acceptées donnent la reconnaissance Contributor puis Supporter ; l’API est un service payant distinct, destiné aux logiciels. Rien de cela n’accorde de confiance, de rôle communautaire, de vérification du personnel ni de pouvoir de modération des discussions. Consultez [Formules et tarifs](${plansPath}) et [Limites, dépassements et facturation de l’API](/knowledge/data-api/team-api-access).`,
+  cs: `## Bezplatný přístup, uznání a placené API
 
-Supporter a Pro přidávají datové nástroje; Team poskytuje místa Pro a nástroje pro knihovní služby. Nedávají důvěru, komunitní roli, ověření zaměstnance ani moderační práva. Placené členství spravujte odděleně od bezplatného přístupu v Nastavení → Členství a fakturace. [Tarify a Pro](${plansPath}) uvádí aktuální ceny, nástroje, faktury, změny a rušení; [Přístup k Team API](/knowledge/data-api/team-api-access) popisuje samostatně účtovaný doplněk.`,
+Každý účet je zdarma. Přijaté příspěvky přinášejí uznání Contributor a Supporter; API je samostatná placená služba pro software. Nic z toho neuděluje důvěru, komunitní roli, ověření zaměstnance ani moderační práva v diskusích. Přečtěte si [Plány a ceny](${plansPath}) a [Limity API, nadlimitní využití a fakturace](/knowledge/data-api/team-api-access).`,
 }
 
 const staffPlans = {
-  en: `## Staff access is independent of payment
+  en: `## Staff access never depends on payment
 
-Every verified library staff member can look after their own library, post notices, connect event feeds and review other people’s record suggestions for free. A Team organiser can assign colleagues when the service has been verified. A paid seat alone does not verify anyone’s library relationship.
+Every verified library staff member can look after their own library, post notices, connect event feeds and review other people’s record suggestions for free. An organiser can assign colleagues to libraries their verified workspace covers. Joining a workspace alone does not verify anyone’s library relationship.
 
-Owner and Editor levels determine staff responsibilities. Owners control live-sharing permissions for mobile libraries; assigned people still need the relevant library access. Membership does not bypass record review or grant discussion moderation. Verified staff may propose conversation links for their libraries; permitted managers decide what appears in the feed. Read [Joining library conversations](${guidePath}).`,
-  fr: `## L’accès du personnel est indépendant du paiement
+Owner and Editor levels determine staff responsibilities. Owners control live-sharing permissions for mobile libraries; assigned people still need the relevant library access. No payment bypasses record review or grants discussion moderation. Verified staff may propose conversation links for their libraries; permitted managers decide what appears in the feed. Read [Joining library conversations](${guidePath}).`,
+  fr: `## L’accès du personnel ne dépend jamais d’un paiement
 
-Tout membre vérifié du personnel peut gérer sa bibliothèque, publier des avis, connecter des événements et examiner les propositions de fiche d’autrui gratuitement. Un organisateur Team peut affecter des collègues lorsque le service a été vérifié. Une place payante ne prouve pas à elle seule le lien avec la bibliothèque.
+Tout membre vérifié du personnel peut gérer sa bibliothèque, publier des avis, connecter des événements et examiner les propositions de fiche d’autrui gratuitement. Un organisateur peut affecter des collègues aux bibliothèques couvertes par son espace de travail vérifié. Rejoindre un espace de travail ne prouve pas à lui seul le lien avec une bibliothèque.
 
-Les niveaux Propriétaire et Éditeur déterminent les responsabilités. Les propriétaires contrôlent la diffusion en direct des bibliobus ; les personnes affectées doivent toujours disposer des droits adaptés. L’adhésion ne contourne pas la vérification et ne donne pas de pouvoir de modérer les discussions. Le personnel peut proposer des liens ; les responsables autorisés choisissent le contenu du flux. Voir [Participer aux conversations](${guidePath}).`,
-  cs: `## Přístup zaměstnanců nezávisí na platbě
+Les niveaux Propriétaire et Éditeur déterminent les responsabilités. Les propriétaires contrôlent la diffusion en direct des bibliobus ; les personnes affectées doivent toujours disposer des droits adaptés. Aucun paiement ne contourne la vérification ni ne donne de pouvoir de modérer les discussions. Le personnel peut proposer des liens ; les responsables autorisés choisissent le contenu du flux. Voir [Participer aux conversations](${guidePath}).`,
+  cs: `## Přístup zaměstnanců nikdy nezávisí na platbě
 
-Každý ověřený zaměstnanec může zdarma spravovat svou knihovnu, zveřejňovat oznámení, připojit akce a posuzovat cizí návrhy změn. Organizátor Team může přiřazovat kolegy po ověření služby. Placené místo samo neověřuje vztah člověka ke knihovně.
+Každý ověřený zaměstnanec může zdarma spravovat svou knihovnu, zveřejňovat oznámení, připojit akce a posuzovat cizí návrhy změn. Organizátor může přiřazovat kolegy ke knihovnám, které pokrývá jeho ověřený pracovní prostor. Samotné členství v pracovním prostoru neověřuje vztah člověka ke knihovně.
 
-Úrovně Vlastník a Editor určují odpovědnost zaměstnanců. Vlastníci řídí oprávnění k živému sdílení mobilních knihoven; přiřazené osoby stále potřebují odpovídající přístup. Členství neobchází kontrolu a nedává moderační práva. Zaměstnanci mohou navrhovat odkazy na diskuse; oprávnění správci vybírají obsah přehledu. Viz [Zapojení do knihovních diskusí](${guidePath}).`,
+Úrovně Vlastník a Editor určují odpovědnost zaměstnanců. Vlastníci řídí oprávnění k živému sdílení mobilních knihoven; přiřazené osoby stále potřebují odpovídající přístup. Žádná platba neobchází kontrolu ani nedává moderační práva. Zaměstnanci mohou navrhovat odkazy na diskuse; oprávnění správci vybírají obsah přehledu. Viz [Zapojení do knihovních diskusí](${guidePath}).`,
 }
 
 export const newGuides = {
@@ -763,7 +765,7 @@ export const newGuides = {
       "Start a discussion, reply, follow a conversation and understand what moderators check before a message appears.",
     body: `## Read and take part
 
-Open [Community → Discussions](/community/discussions) to ask a question, share an idea or read what others have tried. Public conversations can be read without an account. Sign in with a verified account to start, reply, react or follow. These features are free; no paid membership or editor role is required. Restricted subjects and threads keep their access rules wherever they are linked.
+Open [Community → Discussions](/community/discussions) to ask a question, share an idea or read what others have tried. Public conversations can be read without an account. Sign in with a verified account to start, reply, react or follow. These features are free; no payment or editor role is required. Restricted subjects and threads keep their access rules wherever they are linked.
 
 ## One conversation in several places
 
@@ -908,6 +910,15 @@ const teamHeadings = new Set([
   "Tarifs Team et accès à l’API",
   "Ceny Team a přístup k API",
 ])
+const retiredBillingHeadings = new Set([
+  "Supporter and Pro digital tools",
+  "Membership and access",
+  "Adhésion et accès",
+  "Členství a přístup",
+  "Staff access is independent of payment",
+  "L’accès du personnel est indépendant du paiement",
+  "Přístup zaměstnanců nezávisí na platbě",
+])
 const nodeText = (node) =>
   typeof node?.text === "string"
     ? node.text
@@ -987,7 +998,7 @@ export function updatedGuideBody(doc, locale) {
       (c) =>
         c.__component !== "content.rich-text" ||
         !(
-          nodeText(c.body?.[0]) === "Supporter and Pro digital tools" ||
+          retiredBillingHeadings.has(nodeText(c.body?.[0])) ||
           teamHeadings.has(nodeText(c.body?.[0])) ||
           ownHeadings.has(nodeText(c.body?.[0]))
         )

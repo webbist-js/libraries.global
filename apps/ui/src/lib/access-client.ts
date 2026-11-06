@@ -1,13 +1,14 @@
 "use client"
 
 import {
+  type AccessFact,
+  type AccessStanding,
   canDirectEdit,
   type Capability,
   type Feature,
   fromSessionCapabilities,
-  LIBRARY_SCOPED_FEATURES,
+  type Limit,
   type ModerationScope,
-  type PlanKey,
   type SessionCapabilities,
   canStaff,
   type StaffAction,
@@ -17,11 +18,7 @@ import {
 import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
 
-import {
-  sessionTeamsOf,
-  staffLibrariesOf,
-  teamLibraryIdsOf,
-} from "./access-server"
+import { sessionTeamsOf, staffLibrariesOf } from "./access-server"
 
 export type { SessionTeam } from "./access-server"
 
@@ -49,10 +46,8 @@ export function useStaff() {
 
   return {
     libraries: staffLibrariesOf(data?.user),
-    /** Teams the viewer belongs to (summaries from the session). */
+    /** Staff workspaces the viewer belongs to (never a source of authority). */
     teams: sessionTeamsOf(data?.user),
-    /** Libraries of the viewer's active Teams. */
-    teamLibraryIds: teamLibraryIdsOf(data?.user),
     roleFor: (id: string): StaffRole | null => c.staff.get(id)?.role ?? null,
     can: (action: StaffAction, id: string) => canStaff(c, action, id),
     ready: !isPending,
@@ -76,31 +71,43 @@ export function useCapabilities() {
   }
 }
 
+const STANDINGS: ReadonlySet<AccessStanding> = new Set<AccessStanding>([
+  "public",
+  "explorer",
+  "contributor",
+  "supporter",
+])
+
+/**
+ * The viewer's entitlements: tools and limits from independent facts
+ * (signed-in Explorer, earned recognition, API customer). Staff tools are
+ * capabilities (`useStaff().can`), never entitlements.
+ */
 export function useEntitlements() {
   const { data, isPending } = useHydratedSession()
-  const plan: PlanKey = data?.user ? (data.user.plan ?? "free") : "public"
-  const features = (data?.user?.features ?? []) as Feature[]
+  const user = data?.user
+  const standing: AccessStanding = !user
+    ? "public"
+    : STANDINGS.has(user.standing)
+      ? user.standing
+      : "explorer"
+  const features = (
+    Array.isArray(user?.features) ? user.features : []
+  ) as Feature[]
+  const facts = (Array.isArray(user?.facts) ? user.facts : []) as AccessFact[]
+  const rawLimits = (user?.limits ?? {}) as Partial<Record<Limit, unknown>>
+  const limitOf = (l: Limit) => {
+    const n = rawLimits[l]
 
-  const teamLibraryIds = teamLibraryIdsOf(data?.user)
-
-  const can = (f: Feature) => features.includes(f)
+    return typeof n === "number" && Number.isFinite(n) && n > 0 ? n : 0
+  }
 
   return {
-    plan,
-    analysisAreaMultiplier:
-      data?.user?.limits?.analysisAreaMultiplier === 2
-        ? (2 as const)
-        : (1 as const),
-    can,
-    /**
-     * Whether `feature` is unlocked for one library: `library.team` and
-     * `library.traffic` only on the libraries of the viewer's active Teams;
-     * every other feature is the personal check.
-     */
-    canForLibrary: (f: Feature, libraryDocumentId: string) =>
-      LIBRARY_SCOPED_FEATURES.includes(f)
-        ? teamLibraryIds.includes(libraryDocumentId)
-        : can(f),
+    signedIn: !!user,
+    standing,
+    has: (f: AccessFact) => facts.includes(f),
+    can: (f: Feature) => features.includes(f),
+    limitOf,
     ready: !isPending,
   }
 }

@@ -8,64 +8,44 @@ Use the operator-approved connection and a token scoped to the requested content
 
 Content helpers use private environment inputs such as `STRAPI_MCP_TOKEN`, `STRAPI_PRODUCTION_MCP_TOKEN` and `STRAPI_PRODUCTION_URL`. Never print values, put tokens in browser URLs or commit environment files. Do not enable a disabled transport, restart the CMS or expand permissions merely to complete a content update. Never silently fall back to local when production is unavailable.
 
-## Updating pricing content
+## Plans, API, recognition and legal drafts
 
-From the repository root:
-
-```sh
-# Production preview; no writes.
-node apps/strapi/scripts/update-team-pricing.mjs
-
-# Publish the reviewed production changes and verify them by reading back.
-node apps/strapi/scripts/update-team-pricing.mjs --apply
-
-# Correct just the existing Team API guide, preserving unrelated copy.
-node apps/strapi/scripts/update-team-pricing.mjs --api-guide-only --apply
-
-# Explicit local feature-development copy.
-node apps/strapi/scripts/update-team-pricing.mjs --local --apply
-```
-
-The script checks for unpublished edits, preserves unrelated content and creates private backups and previews under `.scratch/pricing-rollout/`. It updates existing Knowledge guides in English, French and Czech, membership pricing/API terms, and the English Team API guide. It does not change permissions, enable purchases or restart services.
-
-The production API guides distinguish closed-beta Stripe Test mode from live purchases. Update availability copy only after the deployed checkout passes owned acceptance. Existing published articles keep their section, links, author, media and other metadata.
-
-The self-service Team rollout also corrects the existing Team, staff-area and
-account-deletion guides in English, French and Czech. It keeps detailed pricing
-in the canonical plans and Team guides, removes obsolete copies from related
-articles, and explains organisation ownership, seat changes and Organiser
-handover. General terms record the descriptive changes as version 1.1; Team
-membership, privacy and cancellation changes use version 1.2. The single-Team refinement records membership document revision 1.3, describing
-one Team per account and unlimited API keys with one shared allowance. Cancellation document revision 1.3 updates its Team billing link. These are
-descriptive document revisions; personal/API offer consent stays at 1.1 and the
-annual Team offer at 1.2 because prices and settled purchase evidence are unchanged.
-Historical accepted purchase versions remain unchanged; new accounts record general terms
-version 1.1 without rewriting existing account consent. Preserve the published versions
-while staging production drafts until the matching application release passes
-acceptance. When local MCP is explicitly requested, use its discovered content
-tools and publish/read back there; production continues to use private REST.
-
-## Team API onboarding guides
-
-The signup walkthrough and request reference live in the production Knowledge Data & API section, linked from the existing API, Team and plans articles.
+`update-sponsored-access-content.mjs` stages the Knowledge guides and legal revision drafts for the access model in `apps/docs/docs/proposals/sponsored-access-decisions.md`: free Explorer accounts, earned Contributor and Supporter recognition, free Verified Staff workspaces, the £100/month API and sponsorship. Copy lives in `sponsored-access-content-{en,fr,cs,es}.mjs` (figures come from `apps/ui/src/lib/membership-pricing.json`) and `sponsored-access-legal-content.mjs`. It never publishes.
 
 ```sh
-# Preview the English onboarding/reference guides and related corrections.
-node apps/strapi/scripts/update-team-api-guides.mjs
+# No CMS: render every payload to .scratch/sponsored-access/offline-preview.json.
+node apps/strapi/scripts/update-sponsored-access-content.mjs --offline-preview
 
-# Publish and verify content, relations and preserved editorial metadata.
-node apps/strapi/scripts/update-team-api-guides.mjs --apply
+# Regenerate the review copies in apps/docs/docs/proposals/legal-drafts/.
+node apps/strapi/scripts/update-sponsored-access-content.mjs --write-legal-markdown
+
+# Read-only inventory: every Knowledge article and legal document by document ID,
+# slug, section, locale and status, plus retired copy found anywhere.
+node apps/strapi/scripts/update-sponsored-access-content.mjs --inventory
+
+# Preview: inventory plus the planned drafts, blockers, missing locales and a digest.
+node apps/strapi/scripts/update-sponsored-access-content.mjs
+
+# Stage exactly the reviewed preview as drafts.
+node apps/strapi/scripts/update-sponsored-access-content.mjs --stage --digest=<digest> --confirm-production
+
+# Explicit local feature development.
+node apps/strapi/scripts/update-sponsored-access-content.mjs --local --stage --digest=<digest>
 ```
 
-Use `--local` explicitly for development. Private previews and backups stay under ignored `.scratch/team-api-guides/`. The helper refuses unpublished edits and concurrent changes. It does not provision Teams, create keys, contact testers, change billing flags or deploy code.
+`--knowledge-only` and `--legal-only` narrow the plan; `--date=YYYY-MM-DD` sets the date of new legal revisions. Production uses `STRAPI_PRODUCTION_URL` and `STRAPI_PRODUCTION_MCP_TOKEN` only (never the development token), refuses the development CMS port and needs `--confirm-production` to write. `CMS_ENV_FILE` can select the private credential file; `BILLING_LEGAL_OPERATOR` and `BILLING_LEGAL_POSTAL_ADDRESS` supply the approved public operator details for legal drafts. Previews, before-images and staging checkpoints stay in ignored `.scratch/sponsored-access/`.
 
-The current rollout includes a beta-verification notice. Sandbox checkout and settled-payment activation have passed owned testing; the copy must not describe checkout as blocked. Keep the qualification in `team-api-knowledge-content.mjs` until dashboard-created key, real request and usage acceptance also pass. Keep Stripe Test mode and live availability separate. A source regression test or synthetic paid fixture does not prove provider checkout or complete API acceptance.
+Knowledge: thirteen guides in English, French, Czech and Spanish. `plans-and-pro` is renamed to `plans-and-pricing` (“Plans and pricing”); the site is not live, so there is no redirect, and links to the old path in related guides are rewritten. Other existing slugs keep their URLs and get new titles (`teams-for-library-services`, `the-public-api`, `team-api-quickstart`, `team-api-access`, `team-api-reference`, `exporting-from-the-atlas`); new ones are `earned-recognition-and-rewards`, `api-playground`, `api-services-submissions-and-analysis`, `api-cancellation-and-refunds`, `deleting-an-account-with-api-access` and `sponsoring-libraries-global`. Only title, summary and body are written; existing image, quote and callout components are kept unless they repeat retired copy. Related guides listed in `SCRUB_SLUGS` lose retired sections and sentences, have old plan links relabelled and, for the points, badges and contribution guides, gain a short recognition note. A locale variant is created only where the guide's section is already offered in that locale; the preview lists the rest as missing. Any guide with unrelated unpublished edits blocks staging. Translations need native-speaker review before publication.
 
-The older `update-billing-docs.mjs` script remains a local feature migration. It now preserves the current Team pricing section; use an explicit reviewed production update for editorial work.
+Legal: new draft revisions of `membership` (retitled API purchase terms, offer and overage consent version 2.0), `cancellation-refunds`, `terms`, `privacy` and `data-licence`, in English. Each draft opens with a "Draft for legal review – not in force" section and bracketed items to confirm. Existing revision rows are kept exactly and one next-major revision is appended; the published version and its accepted history are verified unchanged after staging. Translated legal variants are reported, not drafted. Remove the review section, publish and read back only after legal review and the matching release acceptance.
+
+## Retired pricing, Team API and rewards helpers
+
+The earlier pricing, billing-guide, Team API guide and rewards-guide helpers were deleted in the November 2026 beta reset; their offers were withdrawn. Use the sponsored-access helper above instead. Historical accepted revisions and consent records from those rollouts remain intact.
 
 ## Discussion guide rollout
 
-The community publishing release updates existing guides in English, French and Czech and adds one localized conversation guide. Detailed membership instructions belong in the plans and Team guides; other guides link to them. The pricing helper preserves that separation.
+The community publishing release updates existing guides in English, French and Czech and adds one localized conversation guide. Plans and workspace details belong in the guides staged by the sponsored-access helper; other guides link to them.
 
 ```sh
 # Read production and save a private preview; no CMS writes.
@@ -86,7 +66,7 @@ Use `--local` explicitly for local development. Backups, previews and staging ch
 
 ## Atlas guides and Journal roundup
 
-`atlas-knowledge-content.mjs` contains the reviewed Reach, population/context and partial-record guides, the Atlas roundup and corrections for existing English, French and Czech guides. The roundup uses the author's supplied Reddit examples; retain image credit, alt text and the population/routing source notes.
+`atlas-knowledge-content.mjs` contains the reviewed Reach, population/context and partial-record guides, the Atlas roundup and the exploring-guide corrections in English, French and Czech. The plans guides and the export/Reach-limits guide belong to the sponsored-access helper. The roundup uses the author's supplied Reddit examples; retain image credit, alt text and the population/routing source notes.
 
 ```sh
 # Read production and save a private preview.
@@ -127,34 +107,6 @@ produce a review-only preview with `--offline-preview`; this is not production
 verification and cannot stage changes. Publish the reviewed drafts only with the
 matching dashboard release. The new search guide has separate release copy in
 `apps/docs/docs/proposals/site-search-knowledge-article.md`.
-
-## Contributor rewards and access guides
-
-`rewards-guide-content.mjs` contains the pre-launch corrections for earned Pro,
-discussion, event-feed and option rewards, badge milestones, voluntary claim
-renunciation, exports, source credits and cookie-choice navigation. It updates
-14 existing Knowledge guides in English, French and Czech and four English legal
-documents. The 5,000-point threshold and 30-day activity window replace the old
-Archivist entitlement and 90-day hold. There is no rollout grace period in this
-pre-launch release.
-
-```sh
-# Save the exact production payloads and private before-images for review.
-node apps/strapi/scripts/update-rewards-guides.mjs
-
-# Publish that preview, rejecting unrelated drafts and concurrent changes.
-node apps/strapi/scripts/update-rewards-guides.mjs --apply
-```
-
-Use `CMS_ENV_FILE` for the existing production editorial connection. Previews,
-backups and resumable publication checkpoints stay in ignored
-`.scratch/rewards-guide-rollout/`. Every publication is read back, including
-editorial metadata and the CMS-derived reading time. General terms revision 1.2
-is recorded for new signups; historical account consent is preserved. Membership
-document revision 1.4 clarifies complimentary access without changing personal,
-Team or API purchase-consent versions, prices or renewal instructions. Privacy
-and cookie document revision 2.1 clarifies existing controls and attribution;
-analytics purposes and retention are unchanged.
 
 ## Homepage refresh
 

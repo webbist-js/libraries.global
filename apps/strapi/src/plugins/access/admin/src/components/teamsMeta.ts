@@ -1,4 +1,4 @@
-/** Shapes and labels for the Teams and Plans pages. */
+/** Shapes and labels for the Teams page. */
 
 export type TeamLibrary = {
   documentId: string
@@ -41,12 +41,8 @@ export type TeamSummary = {
   documentId: string
   name: string
   slug: string
-  seats: number
-  used: number
   status: "active" | "lapsed"
-  source: "admin" | "checkout"
   verifiedAt: string | null
-  expiresAt: string | null
   libraries: TeamLibrary[]
   createdAt: string | null
 }
@@ -54,35 +50,9 @@ export type TeamSummary = {
 export type Team = TeamSummary & {
   widgetBranding?: boolean
   publicServiceApproved?: boolean
-  billingSuspended?: boolean
   notes: string | null
   members: TeamMember[]
   organiserNames: string[]
-}
-
-export type PlanGrant = {
-  documentId: string
-  baUserId: string
-  name: string | null
-  plan: string
-  source: string | null
-  reason: string | null
-  grantedBy: string | null
-  expiresAt: string | null
-  createdAt: string | null
-  status: "active" | "expired" | "revoked"
-}
-
-export type Verification = {
-  documentId: string
-  baUserId: string
-  name: string | null
-  kind: string
-  verifiedEmail: string | null
-  verifiedAt: string | null
-  expiresAt: string | null
-  createdAt: string | null
-  status: "active" | "expired" | "revoked"
 }
 
 export const STAFF_ROLE_LABELS: Record<string, string> = {
@@ -93,35 +63,6 @@ export const STAFF_ROLE_LABELS: Record<string, string> = {
 export const TEAM_ROLE_LABELS: Record<string, string> = {
   organiser: "Organiser",
   member: "Member",
-}
-
-export const PLAN_LABELS: Record<string, string> = {
-  supporter: "Supporter",
-  pro: "Pro",
-  team: "Team",
-}
-
-export const GRANT_SOURCE_LABELS: Record<string, string> = {
-  admin: "Admin",
-  press: "Press",
-  partner: "Partner",
-  team: "Team",
-  grant_funder: "Grant funder",
-}
-
-export const VERIFICATION_KIND_LABELS: Record<string, string> = {
-  library_staff: "Library staff",
-  student: "Student",
-  charity: "Charity",
-}
-
-export const ROW_STATUS_META: Record<
-  "active" | "expired" | "revoked",
-  { label: string; variant: "success" | "secondary" | "danger" }
-> = {
-  active: { label: "Active", variant: "success" },
-  expired: { label: "Expired", variant: "secondary" },
-  revoked: { label: "Revoked", variant: "danger" },
 }
 
 /** A date for a table cell, or an em dash. */

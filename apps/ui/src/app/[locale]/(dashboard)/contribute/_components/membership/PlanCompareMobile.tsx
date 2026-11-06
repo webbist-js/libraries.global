@@ -9,14 +9,12 @@ import { PlanRowLabel } from "@/app/[locale]/(dashboard)/contribute/_components/
 import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
 import {
+  type LocalizedGroup,
+  useCompareColumn,
   useMembershipContent,
-  useMembershipPlan,
-  useMembershipShortPrice,
   useMembershipSummary,
 } from "@/lib/localized-plans"
-import pricing from "@/lib/membership-pricing.json"
-import { COMPARE_PLANS, type CompareGroup } from "@/lib/plan-compare"
-import type { PlanCardKey } from "@/lib/plans"
+import { COMPARE_COLUMNS, type CompareColumn } from "@/lib/plan-compare"
 
 /** The two mobile plan choices live alongside the shared comparison controls. */
 export function PlanCompareSelectors({
@@ -25,12 +23,12 @@ export function PlanCompareSelectors({
   onSelected,
   onBaseline,
 }: {
-  readonly selected: PlanCardKey
-  readonly baseline: PlanCardKey
-  readonly onSelected: (key: PlanCardKey) => void
-  readonly onBaseline: (key: PlanCardKey) => void
+  readonly selected: CompareColumn
+  readonly baseline: CompareColumn
+  readonly onSelected: (key: CompareColumn) => void
+  readonly onBaseline: (key: CompareColumn) => void
 }) {
-  const planCard = useMembershipPlan()
+  const column = useCompareColumn()
   const controlId = useId()
   const t = useTranslations("membershipCompare")
 
@@ -62,11 +60,11 @@ export function PlanCompareSelectors({
             className="min-h-11 w-full rounded-[12px] border border-(--t-border-hi) bg-(--t-bg-deep) px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             value={String(choice.value ?? "")}
             onValueChange={(selectedValue) =>
-              choice.onChange(selectedValue as PlanCardKey)
+              choice.onChange(selectedValue as CompareColumn)
             }
-            options={COMPARE_PLANS.map((key) => ({
+            options={COMPARE_COLUMNS.map((key) => ({
               value: String(key),
-              label: String(planCard(key).name),
+              label: column(key).name,
               disabled: key === choice.other,
             }))}
           />
@@ -83,15 +81,14 @@ export function PlanCompareMobile({
   selected,
   baseline,
 }: {
-  readonly groups: CompareGroup[]
+  readonly groups: LocalizedGroup[]
   readonly open: ReadonlySet<string>
   readonly onToggle: (id: string) => void
-  readonly selected: PlanCardKey
-  readonly baseline: PlanCardKey
+  readonly selected: CompareColumn
+  readonly baseline: CompareColumn
 }) {
   const m = useMembershipContent()
-  const planCard = useMembershipPlan()
-  const shortPrice = useMembershipShortPrice()
+  const column = useCompareColumn()
   const compareGroupSummary = useMembershipSummary()
   const columns = [baseline, selected]
 
@@ -137,8 +134,8 @@ export function PlanCompareMobile({
                   <caption className="sr-only">
                     {m("copy.comparisonCaption", {
                       group: group.title,
-                      first: planCard(baseline).name,
-                      second: planCard(selected).name,
+                      first: column(baseline).name,
+                      second: column(selected).name,
                     })}
                   </caption>
                   <thead>
@@ -161,19 +158,11 @@ export function PlanCompareMobile({
                               fontFamily: T.font.sans,
                             }}
                           >
-                            {planCard(key).name}
+                            {column(key).name}
                           </span>
                           <span className="mt-1 block text-xs text-(--t-ink-dim)">
-                            {shortPrice(planCard(key).price)}
-                            {key === "team" ? ` ${m("copy.exVat")}` : ""}
+                            {column(key).price}
                           </span>
-                          {key === "team" ? (
-                            <span className="mt-1 block text-xs font-normal text-(--t-ink-dim)">
-                              {m("copy.teamSeats", {
-                                count: pricing.team.includedSeats,
-                              })}
-                            </span>
-                          ) : null}
                         </th>
                       ))}
                     </tr>
@@ -197,8 +186,7 @@ export function PlanCompareMobile({
                           >
                             <PlanCompareCell
                               cell={row.cells[key]}
-                              label={row.cellLabels?.[key]}
-                              isExport={row.cellLabelIsExport}
+                              label={row.cellLabels[key]}
                             />
                           </td>
                         ))}

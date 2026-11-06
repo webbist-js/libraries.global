@@ -258,9 +258,17 @@ export async function searchSite(
       "/community/roadmap",
       "roadmap coming soon planned features datasets imports vote",
     ],
-    ["supporters", "/community/supporters", "support membership"],
+    [
+      "supporters",
+      "/community/supporters",
+      "supporter recognition contributors",
+    ],
     ["events", "/events", "calendar what's on"],
-    ["plans", "/plans", "pricing pro team"],
+    [
+      "plans",
+      "/plans",
+      "pricing access explorer contributor api developers sponsor",
+    ],
     ["networks", "/library-networks", "services networks"],
     ["contribute", "/contribute", "add library edit correct"],
   ] as const

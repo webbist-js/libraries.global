@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 import peopleService from "../../src/plugins/access/server/services/people"
-import plansService from "../../src/plugins/access/server/services/plans"
 import { loadEntitlementInputs } from "../../src/utils/entitlement-inputs"
 import { nextContributorNumber } from "../../src/utils/username"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 const PROFILE = "api::user-profile.user-profile"
 const ROLE = "api::role-grant.role-grant"
-const PLAN = "api::entitlement-grant.entitlement-grant"
-const VERIFICATION = "api::pro-verification.pro-verification"
 const SUBMISSION = "plugin::content-moderation.submission"
 
 /** Match Strapi's rejection of explicit private attribute selection. */
@@ -21,7 +18,9 @@ function refusePrivateDocumentFields(strapi: any) {
       const read = service[method]
       service[method] = async (query: any) => {
         const privateField = query.fields?.find((field: string) =>
-          ["baUserId", "earnedProUntil", "contributorNumber"].includes(field)
+          ["baUserId", "recognitionRevokedAt", "contributorNumber"].includes(
+            field
+          )
         )
         if (privateField) throw new Error(`Invalid key ${privateField}`)
 
@@ -55,7 +54,8 @@ describe("admin contribution identity reads", () => {
           contributorRole: "wiki_editor",
           contributorNumber: 42,
           tier: "Reader",
-          earnedProUntil: "2099-01-01T00:00:00.000Z",
+          acceptedContributions: 3,
+          recognitionRevokedAt: null,
         },
       ],
       [ROLE]: [
@@ -75,24 +75,6 @@ describe("admin contribution identity reads", () => {
           submittedByEmail: "editor@example.test",
           status: "approved",
           submissionType: "wiki_edit",
-        },
-      ],
-      [PLAN]: [
-        {
-          documentId: "plan",
-          baUserId: "7",
-          plan: "pro",
-          expiresAt: null,
-          privateProbe: "hidden",
-        },
-      ],
-      [VERIFICATION]: [
-        {
-          documentId: "verified",
-          baUserId: "7",
-          kind: "library_staff",
-          expiresAt: null,
-          privateProbe: "hidden",
         },
       ],
     })
@@ -123,44 +105,18 @@ describe("admin contribution identity reads", () => {
     expect(strapi.db.query).toHaveBeenCalledWith(PROFILE)
   })
 
-  it("keeps Plans and verification rosters on explicit admin DTOs", async () => {
-    const { strapi } = fixture()
-    const plans = plansService({ strapi })
-    expect(await plans.listGrants("7")).toMatchObject([
-      {
-        baUserId: "7",
-        name: "Jane Reader",
-        plan: "pro",
-        status: "active",
-      },
-    ])
-    expect(await plans.listVerifications("7")).toMatchObject([
-      {
-        baUserId: "7",
-        name: "Jane Reader",
-        kind: "library_staff",
-        status: "active",
-      },
-    ])
-    expect(JSON.stringify(await plans.listGrants())).not.toContain(
-      "privateProbe"
-    )
-    expect(JSON.stringify(await plans.listVerifications())).not.toContain(
-      "privateProbe"
-    )
-  })
-
   it("loads earned access and contributor numbering without selecting private Document Service fields", async () => {
     const { strapi } = fixture()
-    expect(await loadEntitlementInputs(strapi, "7")).toMatchObject({
-      tier: "Reader",
-      earnedProUntil: "2099-01-01T00:00:00.000Z",
-      teams: [],
+    expect(await loadEntitlementInputs(strapi, "7")).toEqual({
+      acceptedContributions: 3,
+      recognitionRevoked: false,
+      apiAccounts: [],
     })
     expect(await nextContributorNumber(strapi)).toBe(43)
-    expect(await loadEntitlementInputs(strapi, "unknown")).toMatchObject({
-      tier: null,
-      earnedProUntil: null,
+    expect(await loadEntitlementInputs(strapi, "unknown")).toEqual({
+      acceptedContributions: 0,
+      recognitionRevoked: false,
+      apiAccounts: [],
     })
   })
 })

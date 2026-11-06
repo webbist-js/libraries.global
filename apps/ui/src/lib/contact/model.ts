@@ -8,6 +8,7 @@ export const CONTACT_TYPES = [
   "library_correction",
   "plans",
   "partnership",
+  "sponsorship",
   "privacy",
 ] as const
 export const FEEDBACK_TOPICS = [
@@ -116,8 +117,8 @@ export function mailtoContactIntent(
     let type: ContactType = "general_inquiry"
     if (/\bmembership support\b/.test(text)) type = "membership_support"
     else if (/issue|bug|problem|error/.test(text)) type = "report_issue"
-    else if (/\b(?:plans?|pro|grants?|verification|team)\b/.test(text))
-      type = "plans"
+    else if (/\bsponsor(?:ship|ing)?\b/.test(text)) type = "sponsorship"
+    else if (/\b(?:plans?|pricing|api)\b/.test(text)) type = "plans"
     else if (/privacy|legal|data request/.test(text)) type = "privacy"
 
     return { mode: "contact", type, sourceSubject: subject }

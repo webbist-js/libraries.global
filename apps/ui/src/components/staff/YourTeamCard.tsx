@@ -2,7 +2,6 @@
 
 import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
 
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamStatusBadges } from "@/components/staff/TeamStatusBadges"
@@ -13,17 +12,17 @@ import { staffLibraryHref } from "@/lib/staff/paths"
 import { isActiveTeam } from "@/lib/staff/team-status"
 import type { TeamSummary } from "@/lib/staff/types"
 
-/** Team summary and destinations; API status is only shown by its own dashboard. */
+/**
+ * The free staff workspace summary and destinations. API access lives on
+ * /developers and is bought separately; neither grants library editing.
+ */
 export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
   const t = useTranslations("staffWorkspace")
   const { teams: sessionTeams, libraries, ready } = useStaff()
-  const [now] = useState(() => Date.now())
   const rows: TeamSummary[] = preferredTeams(
     teams ??
       sessionTeams.map((team) => ({
         ...team,
-        status: team.status ?? "lapsed",
-        expiresAt: team.expiresAt ?? null,
         verified: false,
         organiserName: null,
         libraryDocumentIds: [],
@@ -58,12 +57,9 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
           const covered = libraries.filter((lib) =>
             team.libraryDocumentIds.includes(lib.id)
           )
-          const statusKnown =
-            teams !== undefined ||
-            sessionTeams.some(
-              (item) => item.id === team.id && item.status != null
-            )
-          const active = isActiveTeam(team, now)
+          // Workspaces are free: only a workspace the server reports closed shows so.
+          const statusKnown = teams !== undefined
+          const active = isActiveTeam(team)
 
           return (
             <li key={team.id} className="min-w-0">
@@ -81,14 +77,8 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
               </p>
               <div className="mb-4">
                 <TeamStatusBadges
-                  membership={
-                    statusKnown
-                      ? active
-                        ? "active"
-                        : team.status === "lapsed"
-                          ? "lapsed"
-                          : "expired"
-                      : undefined
+                  workspace={
+                    statusKnown ? (active ? "open" : "closed") : undefined
                   }
                   verified={teams !== undefined ? team.verified : undefined}
                 />
@@ -108,13 +98,6 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                   className="flex min-h-14 items-center justify-between gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
                 >
                   {t("apiAccess")}
-                  <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
-                </Link>
-                <Link
-                  href="/staff/teams/billing"
-                  className="flex min-h-14 items-center justify-between gap-2 py-3 text-base font-semibold text-(--t-ink-base) no-underline hover:text-(--t-accent-primary)"
-                >
-                  {t("billing")}
                   <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
                 </Link>
               </div>

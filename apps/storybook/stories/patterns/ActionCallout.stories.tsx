@@ -20,7 +20,7 @@ const meta = {
     icon: "mdi:account-circle-outline",
     title: "Public recognition",
     children:
-      "Supporter, Pro and Team members can choose an optional profile mark and public credit. Each is chosen separately in Privacy settings; neither shows what you pay.",
+      "Supporters, recognised after 100 accepted contributions, can choose an optional profile mark and a listing on the Supporters page. Each is chosen separately in Privacy settings.",
     action: {
       href: "/community/supporters",
       label: "Meet the supporters",
@@ -45,7 +45,7 @@ export const LibraryStaff: Story = {
       </>
     ),
     children:
-      "Verification gives you free staff tools for your library. Membership and complimentary Pro are separate; paying never grants staff access.",
+      "Verification gives you free staff tools for your library. API Access is separate; paying never grants staff access.",
     action: { href: "/contribute/claim", label: "Claim your library" },
   },
 }

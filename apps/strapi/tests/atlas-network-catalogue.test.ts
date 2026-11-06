@@ -8,6 +8,13 @@ import {
   atlasNetworkCatalogue,
 } from "../src/utils/atlas-network-catalogue"
 
+const API_ALLOWANCE = {
+  kind: "api" as const,
+  hourly: 20,
+  daily: 100,
+  accountKey: "b".repeat(64),
+}
+
 const network = {
   documentId: "one",
   name: "Wirral Library Service",
@@ -81,7 +88,7 @@ it("rejects an unrelated reporting area before admitting any native work", async
         },
       },
       "a".repeat(64),
-      20
+      API_ALLOWANCE
     )
   ).rejects.toThrow("outside this service")
 })
@@ -161,7 +168,7 @@ it("rejects a large canonical reporting district even for one eligible origin", 
       },
     },
     "a".repeat(64),
-    20
+    API_ALLOWANCE
   )
   expect(response.body).toMatchObject({
     state: "unsupported",
@@ -207,7 +214,7 @@ it("requires a chosen time for an expanded rural service before native or cache 
       },
     },
     "a".repeat(64),
-    20
+    API_ALLOWANCE
   )
   expect(result.body).toMatchObject({
     state: "unsupported",
@@ -243,7 +250,7 @@ it("reports missing reporting geography as a data limitation rather than a plan 
       },
     },
     "a".repeat(64),
-    20
+    API_ALLOWANCE
   )
   expect(result.body).toMatchObject({
     state: "unsupported",

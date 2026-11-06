@@ -3,12 +3,11 @@
 import { Icon } from "@iconify/react"
 import type { SupportersResponse } from "@repo/shared-data"
 import { useTranslations as useUiTranslations } from "next-intl"
-import { useRef, useState, useTransition, type FormEvent } from "react"
+import { useState, useTransition, type FormEvent } from "react"
 
 import { Avatar } from "@/components/ds/Avatar"
 import { EmptyState } from "@/components/ds/EmptyState"
 import { SearchField } from "@/components/ds/SearchField"
-import { SelectField } from "@/components/ds/SelectField"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
   supportersHref,
@@ -59,8 +58,6 @@ export function SupportersDirectory({
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
-  const formRef = useRef<HTMLFormElement>(null)
-  const [sort, setSort] = useState(query.sort ?? "longest")
   const [directory, setDirectory] = useState(data)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -73,7 +70,8 @@ export function SupportersDirectory({
         supportersHref({
           ...query,
           q: String(form.get("q") ?? ""),
-          sort: String(form.get("sort") ?? "longest"),
+          // Alphabetical only: nothing records when someone reached 100.
+          sort: "name",
         })
       )
     )
@@ -139,7 +137,6 @@ export function SupportersDirectory({
             className="flex w-full flex-wrap items-center gap-3 md:w-auto"
             method="get"
             onSubmit={search}
-            ref={formRef}
           >
             <SearchField
               id="supporters-search"
@@ -153,34 +150,6 @@ export function SupportersDirectory({
                 disabled: pending,
               }}
             />
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              Sort
-              <SelectField
-                name="sort"
-                label="Sort"
-                value={sort}
-                disabled={pending}
-                className="w-auto font-normal"
-                options={[
-                  { value: "longest", label: "Longest supporting" },
-                  { value: "newest", label: "Newest supporting" },
-                  { value: "name", label: "Name A–Z" },
-                ]}
-                onValueChange={(value) => {
-                  setSort(value)
-                  const form = formRef.current && new FormData(formRef.current)
-                  startTransition(() =>
-                    router.push(
-                      supportersHref({
-                        ...query,
-                        q: String(form?.get("q") ?? ""),
-                        sort: value,
-                      })
-                    )
-                  )
-                }}
-              />
-            </label>
             <button type="submit" className="sr-only focus:not-sr-only">
               Search supporters
             </button>
@@ -212,30 +181,6 @@ export function SupportersDirectory({
             )
           })}
         </nav>
-      ) : null}
-      {directory ? (
-        <div
-          className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[22px] px-5 py-4"
-          style={{ background: T.accent.chip }}
-        >
-          <span className="mr-1 text-sm font-semibold">New this month</span>
-          {directory.newThisMonth?.length ? (
-            directory.newThisMonth.map((entry) => (
-              <GlobalLink
-                key={entry.username}
-                href={`/profile/${encodeURIComponent(entry.username)}`}
-                className="rounded-full px-3 py-1 text-sm font-semibold no-underline"
-                style={{ background: T.bg.deep, color: T.ink.base }}
-              >
-                {entry.displayName}
-              </GlobalLink>
-            ))
-          ) : (
-            <span className="text-sm" style={{ color: T.ink.dim }}>
-              No new public supporters listed this month.
-            </span>
-          )}
-        </div>
       ) : null}
       {!directory ? (
         <p
@@ -303,9 +248,7 @@ export function SupportersDirectory({
                     className="mt-1 block text-xs leading-snug font-semibold"
                     style={{ color: T.accent.primary }}
                   >
-                    {entry.since
-                      ? `Supporter since ${new Date(entry.since).getUTCFullYear()}`
-                      : tUi("supporter")}
+                    {tUi("supporter")}
                   </span>
                 </span>
               </GlobalLink>

@@ -9,7 +9,7 @@ const meta = {
   parameters: { fixtureResponses: geographyResponses },
   title: "Features/Atlas/AtlasExportButton",
   component: AtlasExportButton,
-  args: { libraries: atlasLibraries, onSeePlans: fn() },
+  args: { libraries: atlasLibraries, onSeePlans: fn(), onSignIn: fn() },
 } satisfies Meta<typeof AtlasExportButton>
 
 export default meta

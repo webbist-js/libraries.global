@@ -162,7 +162,7 @@ export default {
       }
     }
 
-    // Recognition preferences are independent, and never grant a plan.
+    // Recognition preferences are independent, and never grant tools.
     for (const key of ["supporterListed", "supporterBadgeVisible"] as const) {
       if (!(key in fields)) continue
       if (typeof fields[key] !== "boolean")

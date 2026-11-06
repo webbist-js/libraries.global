@@ -56,7 +56,7 @@ export function CommunityWorkspace({
   const { data } = useHydratedSession(),
     user = data?.user
   const board = user?.capabilities?.includes("drives.manage")
-  const supporting = ["supporter", "pro", "team"].includes(user?.plan ?? "")
+  const supporting = user?.facts?.includes("supporter") === true
   const actions: Record<
     string,
     { title: string; body: string; label: string; href: string; help: string }
@@ -94,13 +94,13 @@ export function CommunityWorkspace({
       body: t("roadmapBody"),
       label: t("roadmapAction"),
       href: "/community/roadmap#suggest-dataset",
-      help: "/plans#plan-comparison",
+      help: "/plans",
     },
     supporters: {
       title: t(supporting ? "supportThanks" : "supportTitle"),
       body: t("supportBody"),
       label: t(supporting ? "manageSupport" : "supportAction"),
-      href: supporting ? "/profile/membership" : "/plans",
+      href: supporting ? "/profile/settings#privacy" : "/contribute",
       help: "/plans",
     },
   }

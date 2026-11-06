@@ -1,9 +1,17 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import {
+  useTranslations,
+  useTranslations as useUiTranslations,
+} from "next-intl"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
-import { Icon, MutedChip, ProChip, Switch } from "@/components/atlas/atlas-ui"
+import {
+  AccessChip,
+  Icon,
+  MutedChip,
+  Switch,
+} from "@/components/atlas/atlas-ui"
 import {
   layerAccess,
   layerDef,
@@ -25,6 +33,7 @@ import {
   AtlasPopulationDensityControls,
   type PopulationControlsProps,
 } from "./AtlasPopulationDensity"
+import { AtlasReachLockDialog } from "./AtlasReachLockDialog"
 
 export const ABOUT: Record<LayerId, string> = {
   pins: "Library locations recorded in the index. The library-type key in Filters controls which types are shown.",
@@ -40,7 +49,7 @@ export const ABOUT: Record<LayerId, string> = {
   complete:
     "How much of each record is filled in: photo, hours, address, facilities, collections, history and contact. A good place to start contributing.",
   perCapita:
-    "Compare recorded libraries with the resident population of whole countries or supported local areas. Pro and Team include both libraries per 100k people and people per library. Filters apply; missing records do not prove poor provision.",
+    "Compare recorded libraries with the resident population of whole countries or supported local areas, as libraries per 100k people or people per library. Free with an account. Filters apply; missing records do not prove poor provision.",
   founded:
     "Colour libraries by recorded founding year. A founding date is not a complete history of openings, moves and closures; unknown dates stay visible separately.",
   reach:
@@ -112,8 +121,10 @@ export function AtlasLayersTab({
   readonly onEventsFilter?: () => void
 }) {
   const tUi = useUiTranslations("ui")
+  const tLock = useTranslations("accessLocks")
 
   const [upsell, setUpsell] = useState<LayerId | null>(null),
+    [reachLocked, setReachLocked] = useState(false),
     [localSettings, setLocalSettings] = useState<LayerId | null>(null)
   const settingsRef = useRef<HTMLElement>(null),
     upsellRef = useRef<HTMLDivElement>(null)
@@ -142,11 +153,10 @@ export function AtlasLayersTab({
 
         break
 
-      case "pro":
-        {
-          setUpsell(upsell === def.id ? null : def.id)
-          // No default
-        }
+      case "locked":
+        // Reach is earned or bought: explain both routes in a dialog.
+        if (def.tier === "reach") setReachLocked(true)
+        else setUpsell(upsell === def.id ? null : def.id)
         break
     }
   }
@@ -441,23 +451,22 @@ export function AtlasLayersTab({
                 style={{ background: T.accent.chip }}
               >
                 <p className="mt-0 mb-2">
-                  <strong>{layerDef(upsell).name}</strong> is included with Pro
-                  and Team.
+                  {tLock("layerIncluded", { name: layerDef(upsell).name })}
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
                   <button
                     type="button"
                     onClick={onSeePlans}
                     className="min-h-11 font-semibold underline"
                   >
-                    Compare plans
+                    {tLock("howAccessWorks")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setUpsell(null)}
                     className="min-h-11"
                   >
-                    Not now
+                    {tLock("notNow")}
                   </button>
                 </div>
               </div>
@@ -465,16 +474,21 @@ export function AtlasLayersTab({
           </section>
         )
       })}
+      <AtlasReachLockDialog
+        open={reachLocked}
+        onOpenChange={setReachLocked}
+        signedIn={tier !== "public"}
+        onSignIn={onSignIn}
+      />
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
-        Library facts are always free. Pro and Team add analysis and licensed
-        context data.{" "}
+        {tLock("layersFooter")}{" "}
         <button
           type="button"
           onClick={onSeePlans}
           className="font-semibold underline underline-offset-2"
           style={{ color: T.accent.primary }}
         >
-          Compare plans
+          {tLock("howAccessWorks")}
         </button>
       </p>
     </div>
@@ -509,6 +523,7 @@ function LayerRow({
   readonly children?: ReactNode
 }) {
   const tUi = useUiTranslations("ui")
+  const tLock = useTranslations("accessLocks")
 
   const [about, setAbout] = useState(false)
   const expandable = !pinRequirement
@@ -516,8 +531,12 @@ function LayerRow({
     <span className="block min-w-0 flex-1">
       <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm leading-5 font-semibold">
         <span>{def.name}</span>
-        {def.tier === "pro" ? <ProChip locked={false} soft /> : null}
-        {def.tier === "free" && def.ready ? (
+        {def.tier === "reach" ? (
+          <AccessChip locked={false} soft>
+            {tLock("contributorChip")}
+          </AccessChip>
+        ) : null}
+        {(def.tier === "free" || def.tier === "explorer") && def.ready ? (
           <MutedChip>{tUi("account")}</MutedChip>
         ) : null}
         {!def.ready ? (
@@ -546,8 +565,14 @@ function LayerRow({
           checked={checked}
           onChange={onToggle}
           variant="layer"
-          label={`${def.name}${access === "pro" ? " (Pro)" : access === "signin" ? " (sign in to use)" : ""}`}
-          locked={access === "pro"}
+          label={
+            access === "locked"
+              ? tLock("layerLocked", { name: def.name })
+              : access === "signin"
+                ? tLock("layerSignIn", { name: def.name })
+                : def.name
+          }
+          locked={access === "locked"}
           disabled={access === "soon" || Boolean(pinRequirement)}
           descriptionId={pinRequirement ? "atlas-pins-required" : undefined}
         />

@@ -216,7 +216,6 @@ describe("public analytics events", () => {
     "/fr/community/drives/a-drive/edit",
     "/cs/community/propose",
     "/en/profile/settings",
-    "/contribute/membership/checkout",
     "/live/vehicle",
   ])("blocks %s, including before the route effect runs", (path) => {
     expect(analyticsPageAllowed(path)).toBe(false)

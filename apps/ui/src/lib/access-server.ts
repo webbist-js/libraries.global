@@ -1,9 +1,9 @@
 import {
+  type AccessFact,
   type Capabilities,
   type Capability,
   type Feature,
   fromSessionCapabilities,
-  LIBRARY_SCOPED_FEATURES,
   MODERATION_QUEUES,
   type ModerationScope,
   canStaff,
@@ -107,16 +107,17 @@ export function staffLibrariesOf(user: unknown): StaffLibrarySummary[] {
     : []
 }
 
-/** A Team the viewer belongs to (the session field arrives with Teams). */
+/**
+ * A free staff workspace (organisation) the viewer belongs to. Membership
+ * never unlocks library tools: those come from the viewer's own verified
+ * staff claims (`requireStaff`).
+ */
 export type SessionTeam = {
   id: string
   name: string
   slug: string
   role: "organiser" | "member"
   libraryCount: number
-  selfService?: boolean
-  status?: "active" | "lapsed"
-  expiresAt?: string | null
 }
 
 const isTeam = (v: unknown): v is SessionTeam => {
@@ -139,61 +140,87 @@ export function sessionTeamsOf(user: unknown): SessionTeam[] {
       ? (user as Record<string, unknown>).teams
       : null
 
-  return Array.isArray(raw) ? preferredTeams(raw.filter(isTeam)) : []
+  return Array.isArray(raw)
+    ? preferredTeams(raw.filter(isTeam)).map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        role: t.role,
+        libraryCount: t.libraryCount,
+      }))
+    : []
 }
 
-const isActiveTeam = (team: SessionTeam, now: number) =>
-  team.status === "active" &&
-  (!team.expiresAt || Date.parse(team.expiresAt) > now)
-
-/** The session's current Team, if its membership is active. */
-export function activeTeamOf(
-  user: unknown,
-  now = Date.now()
-): SessionTeam | null {
-  return sessionTeamsOf(user).find((team) => isActiveTeam(team, now)) ?? null
-}
-
-/** Prefer a current Team to abandoned setup, while keeping explicit selection. */
+/** Organised workspaces first, keeping the session's order otherwise. */
 export function preferredTeams<T extends SessionTeam>(
-  teams: readonly T[],
-  now = Date.now()
+  teams: readonly T[]
 ): T[] {
-  const active = (team: T) => isActiveTeam(team, now)
-
   return [...teams].sort(
-    (a, b) =>
-      Number(active(b)) - Number(active(a)) ||
-      Number(b.selfService === true) - Number(a.selfService === true) ||
-      Number(b.role === "organiser") - Number(a.role === "organiser")
+    (a, b) => Number(b.role === "organiser") - Number(a.role === "organiser")
   )
 }
 
-/** The session's `teamLibraryIds`: libraries of the user's active Teams. */
-export function teamLibraryIdsOf(user: unknown): string[] {
+/** An API account the viewer belongs to, as the session reports it. */
+export type SessionApiAccount = {
+  teamId: string
+  role: "organiser" | "member"
+  active: boolean
+}
+
+/** The session's `apiAccounts`, or none. Malformed rows are dropped. */
+export function apiAccountsOf(user: unknown): SessionApiAccount[] {
   const raw =
     user && typeof user === "object"
-      ? (user as Record<string, unknown>).teamLibraryIds
+      ? (user as Record<string, unknown>).apiAccounts
       : null
 
-  return strings(raw)
+  return Array.isArray(raw)
+    ? raw.flatMap((row) => {
+        if (!row || typeof row !== "object") return []
+        const { teamId, role, active } = row as Record<string, unknown>
+
+        return typeof teamId === "string" &&
+          teamId.length > 0 &&
+          (role === "organiser" || role === "member") &&
+          typeof active === "boolean"
+          ? [{ teamId, role, active }]
+          : []
+      })
+    : []
 }
 
 /**
- * Whether `feature` is unlocked for one library in this session: a
- * library-scoped feature (`library.team`, `library.traffic`) needs an active
- * Team of the user's covering it; any other feature is the personal plan.
+ * The API account whose organiser bonus the viewer uses: the first active
+ * account they organise. Members never inherit it.
  */
-export function hasEntitlementForLibrary(
+export function bonusApiAccountOf(user: unknown): SessionApiAccount | null {
+  return (
+    apiAccountsOf(user).find((a) => a.active && a.role === "organiser") ?? null
+  )
+}
+
+/** A session access fact (`explorer`, `contributor`, `supporter`, `apiCustomer`). */
+export function hasFact(user: unknown, fact: AccessFact): boolean {
+  return (
+    !!user &&
+    typeof user === "object" &&
+    listHas((user as Record<string, unknown>).facts, fact)
+  )
+}
+
+/**
+ * Whether the viewer may use a free staff tool on one library: their own
+ * verified staff claim must cover it. Organisation membership, payment,
+ * recognition or an API key never does.
+ */
+export function canStaffTool(
   user: unknown,
-  feature: Feature,
+  action: StaffAction,
   libraryDocumentId: string
 ): boolean {
-  if (!user) return false
-  if (LIBRARY_SCOPED_FEATURES.includes(feature))
-    return teamLibraryIdsOf(user).includes(libraryDocumentId)
-
-  return listHas((user as WithFeatures)?.features, feature)
+  return (
+    !!user && canStaff(sessionCapabilities(user), action, libraryDocumentId)
+  )
 }
 
 export function requireStaff(
@@ -230,32 +257,7 @@ export function requireEntitlement(
   if (!listHas(user.features, feature))
     return Response.json(
       {
-        error: "Upgrade required",
-        feature,
-        upgradeUrl: "/plans",
-      },
-      { status: 402 }
-    )
-
-  return null
-}
-
-/**
- * `requireEntitlement` for a feature used on one library: `library.team`
- * and `library.traffic` are on only for the libraries of the user's active
- * Teams (`teamLibraryIds` in the session); other features are personal.
- * A pre-check: Strapi's `hasLibraryFeature` decides on every write.
- */
-export function requireEntitlementForLibrary(
-  user: WithFeatures,
-  feature: Feature,
-  libraryDocumentId: string
-): Response | null {
-  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 })
-  if (!hasEntitlementForLibrary(user, feature, libraryDocumentId))
-    return Response.json(
-      {
-        error: "Upgrade required",
+        error: "This feature is not available on this account",
         feature,
         upgradeUrl: "/plans",
       },

@@ -17,13 +17,41 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { API_SCOPES, type ApiScope } from "@/lib/team-api/types"
+import {
+  API_CONFIRMED_SCOPES,
+  API_READ_SCOPES,
+  API_SCOPES,
+  type ApiScope,
+} from "@/lib/team-api/types"
 
 export type ApiKeyDraft = {
   name: string
   scopes: ApiScope[]
   expiresAt: string | null
+  /** Sent only when a write or analysis scope was explicitly confirmed. */
+  confirmScopes?: true
 }
+
+// These newer scope labels are English-only; they belong in the teamApiKeys
+// messages once translated.
+const NEW_SCOPE_COPY: Partial<
+  Record<ApiScope, { title: string; help: string }>
+> = {
+  "services:read": {
+    title: "Read services",
+    help: "Published library services and networks, when that API is available.",
+  },
+  "analysis:run": {
+    title: "Run analysis",
+    help: "Starts analysis jobs that spend your account’s analysis credits.",
+  },
+  "submissions:write": {
+    title: "Submit proposals",
+    help: "Sends new-library and correction proposals for moderation. Nothing is published directly.",
+  },
+}
+const needsConfirmation = (scope: ApiScope) =>
+  (API_CONFIRMED_SCOPES as readonly ApiScope[]).includes(scope)
 
 /** The list stays compact; a new form is mounted only when a key is needed. */
 export function TeamApiKeyDialog({
@@ -113,7 +141,10 @@ function KeyForm({
   const t = useTranslations("teamApiKeys")
   const [name, setName] = useState("")
   const [expiry, setExpiry] = useState("")
-  const [scopes, setScopes] = useState<ApiScope[]>([...API_SCOPES])
+  const [scopes, setScopes] = useState<ApiScope[]>([...API_READ_SCOPES])
+  const [confirmed, setConfirmed] = useState(false)
+  const confirming = scopes.some(needsConfirmation)
+  const ready = name.trim() && scopes.length > 0 && (!confirming || confirmed)
   const toggleScope = (scope: ApiScope, checked: boolean) =>
     setScopes((previous) =>
       checked
@@ -126,10 +157,11 @@ function KeyForm({
       className="min-w-0 space-y-6"
       onSubmit={(event) => {
         event.preventDefault()
-        if (pending || !name.trim() || scopes.length === 0) return
+        if (pending || !ready) return
         onCreate({
           name: name.trim(),
           scopes,
+          ...(confirming ? { confirmScopes: true as const } : {}),
           expiresAt: expiry
             ? new Date(expiry + "T23:59:59Z").toISOString()
             : null,
@@ -194,6 +226,7 @@ function KeyForm({
           {API_SCOPES.map((scope) => {
             const selected = scopes.includes(scope)
             const search = scope === "search:read"
+            const copy = NEW_SCOPE_COPY[scope]
 
             return (
               <label
@@ -213,10 +246,10 @@ function KeyForm({
                 />
                 <span className="min-w-0">
                   <span className="block text-base font-semibold">
-                    {t(search ? "search" : "records")}
+                    {copy?.title ?? t(search ? "search" : "records")}
                   </span>
                   <span className="mt-1 block text-sm leading-relaxed text-(--t-ink-dim)">
-                    {t(search ? "searchHelp" : "recordsHelp")}
+                    {copy?.help ?? t(search ? "searchHelp" : "recordsHelp")}
                   </span>
                   <code
                     translate="no"
@@ -229,6 +262,20 @@ function KeyForm({
             )
           })}
         </div>
+        {confirming ? (
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) p-4 text-base leading-relaxed">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(event) => setConfirmed(event.target.checked)}
+              className="mt-1 size-5 shrink-0 accent-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary)"
+            />
+            <span>
+              I confirm this key may spend analysis credits or submit proposals
+              on behalf of our API account.
+            </span>
+          </label>
+        ) : null}
       </fieldset>
       <p className="m-0 flex items-start gap-2 rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed text-(--t-ink-dim)">
         <Icon
@@ -263,7 +310,7 @@ function KeyForm({
           variant="primary"
           size="pill"
           aria-busy={pending}
-          disabled={pending || !name.trim() || scopes.length === 0}
+          disabled={pending || !ready}
         >
           {t(pending ? "creating" : "create")}
         </Button>

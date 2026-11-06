@@ -26,6 +26,7 @@ const meta = {
               navigation={buildFooterNavigation(footerData, legalDocuments, {
                 legal: "Legal and policies",
                 plans: "Plans and pricing",
+                sponsor: "Sponsor",
               })}
             >
               <DashboardFrame navigation={<Story />}>

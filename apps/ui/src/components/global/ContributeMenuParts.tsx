@@ -1,7 +1,6 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { PlanKey } from "@repo/access"
 import { useTranslations as useUiTranslations } from "next-intl"
 import { useId } from "react"
 
@@ -10,7 +9,8 @@ import { SelectField } from "@/components/ds/SelectField"
 import type { ContributeMenu } from "@/hooks/useContributeMenu"
 import type { ContributorTint } from "@/lib/contributor-shortcuts"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
-import { planShortName } from "@/lib/plans"
+import { useMembershipContent } from "@/lib/localized-plans"
+import { standingName } from "@/lib/plans"
 
 /** A card monogram's tint pair: a library-type tint, or the indigo chip. */
 export function tintOf(tint: ContributorTint): { bg: string; fg: string } {
@@ -62,12 +62,18 @@ export function CountPill({
   )
 }
 
-/** "Plan: Pro" on the Membership row: a held plan indigo, Free neutral. */
-export function PlanPill({ plan }: { readonly plan: PlanKey }) {
+/**
+ * The viewer's earned standing on the Membership row: Explorer, Contributor
+ * or Supporter. Recognition indigo, Explorer neutral. Display only.
+ */
+export function StandingPill({ standing }: { readonly standing: string }) {
+  const m = useMembershipContent()
+  const name = standingName(standing)
+
   return (
     <Badge
-      label={`Plan: ${planShortName(plan)}`}
-      color={plan === "free" || plan === "public" ? "dim" : "aurora"}
+      label={m(`standing.${name}`)}
+      color={name === "supporter" || name === "contributor" ? "aurora" : "dim"}
     />
   )
 }

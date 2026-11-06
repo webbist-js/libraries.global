@@ -3,12 +3,12 @@ import { createHash, randomUUID } from "node:crypto"
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { isDeepStrictEqual, parseEnv } from "node:util"
 
+import { stripComponentIds } from "./cms-component-ids.mjs"
 import {
   newGuideData,
   updatedGuideBody,
   updatedGuideSlugs,
 } from "./discussions-guide-content.mjs"
-import { stripComponentIds } from "./team-pricing-content.mjs"
 
 const args = new Set(process.argv.slice(2))
 const target = args.has("--local") ? "local" : "production"

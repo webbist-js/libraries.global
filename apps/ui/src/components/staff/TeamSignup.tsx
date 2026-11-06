@@ -1,8 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
-import { useRef, useState, useTransition } from "react"
+import { useId, useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
 import { Badge } from "@/components/ds/Badge"
@@ -11,160 +10,78 @@ import {
   type TeamNetworkSelection,
 } from "@/components/networks/TeamNetworkChoice"
 import { Button } from "@/components/ui/button"
-import { captureCheckoutEvent } from "@/lib/checkout-analytics"
+import { Input } from "@/components/ui/input"
 import { Link, useRouter } from "@/lib/navigation"
-import { TEAM_TERMS_VERSION } from "@/lib/team-billing/types"
-import { rememberTeamApiChoice } from "@/lib/team-purchase-intent"
 
 import { StaffPanel, STAFF_LINK } from "./StaffPanel"
-import {
-  TeamCheckoutDialog,
-  type TeamCheckoutChoice,
-} from "./TeamCheckoutDialog"
 
+/**
+ * Free organisation setup. Creating a Team buys nothing and grants no library
+ * authority: chosen libraries remain claims until verified access is
+ * reviewed. API access is bought separately at /developers.
+ * The staff-workspace owner may restyle this step.
+ */
 export function TeamSignup({
-  available,
   verified,
-  initialSeats,
-  sandbox,
-  user,
   initialNetwork,
-  initialApiAddon = false,
-  initialPublicService = false,
+  user,
 }: {
-  readonly available: boolean
   readonly verified: boolean
-  readonly initialSeats: number
-  readonly sandbox: boolean
-  readonly initialApiAddon?: boolean
-  readonly initialPublicService?: boolean
   readonly initialNetwork?: string
   readonly user: { name: string; email: string }
 }) {
   const requestId = useRef(crypto.randomUUID())
-  const [team, setTeam] = useState<{ id: string; name: string } | null>(null)
+  const nameId = useId()
   const [network, setNetwork] = useState<TeamNetworkSelection>(null)
   const [networkChosen, setNetworkChosen] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [name, setName] = useState("")
   const [error, setError] = useState("")
   const [pending, startTransition] = useTransition()
   const refresh = useMembershipRefresh()
   const router = useRouter()
-  const locale = useLocale()
-  const create = (choice: TeamCheckoutChoice): Promise<boolean> =>
-    new Promise((resolve) => {
-      if (team) {
-        rememberTeamApiChoice(team.id, choice.apiAddon === true)
-        resolve(true)
 
-        return
-      }
-      const detailsAccepted = captureCheckoutEvent("checkout_step", {
-        product: "team",
-        billing_interval: "year",
-        checkout_step: "team_details",
-        api_addon: choice.apiAddon ? "selected" : "not_selected",
-        billing_mode: sandbox ? "sandbox" : "live",
-      })
-      startTransition(async () => {
-        setError("")
-        try {
-          const response = await fetch("/api/billing/teams", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: choice.name,
-              ...(network
-                ? {
-                    primaryNetworkId: network.network.documentId,
-                    libraryDocumentIds: network.libraryDocumentIds,
-                  }
-                : {}),
-              requestId: requestId.current,
-              publicServiceRequested: choice.publicServiceRequested,
-            }),
-          })
-          const result = await response.json()
-          if (!response.ok)
-            throw new Error(
-              result.error === "team_membership_exists"
-                ? "Your account already belongs to a Team. Open your Team to manage members or add seats."
-                : "The Team could not be created. Retry with the same name."
-            )
-          detailsAccepted()
-          rememberTeamApiChoice(result.teamId, choice.apiAddon === true)
-          setTeam({ id: result.teamId, name: choice.name })
-          await refresh()
-          resolve(true)
-        } catch (failure) {
-          setError(
-            failure instanceof Error ? failure.message : "Please try again."
-          )
-          resolve(false)
-        }
-      })
-    })
-  const checkout = (choice: TeamCheckoutChoice) =>
+  const create = () =>
     startTransition(async () => {
-      if (!team) return
-      rememberTeamApiChoice(team.id, choice.apiAddon === true)
-      const handoff = captureCheckoutEvent("checkout_handoff", {
-        product: "team",
-        billing_interval: "year",
-        api_addon: choice.apiAddon ? "selected" : "not_selected",
-        billing_mode: sandbox ? "sandbox" : "live",
-      })
-      const failed = captureCheckoutEvent("checkout_error", {
-        product: "team",
-        billing_interval: "year",
-        billing_mode: sandbox ? "sandbox" : "live",
-      })
       setError("")
       try {
-        const response = await fetch(`/api/staff/team/${team.id}/billing`, {
+        const response = await fetch("/api/billing/teams", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "checkout",
-            seats: choice.seats,
-            locale,
-            termsVersion: TEAM_TERMS_VERSION,
+            name: name.trim(),
+            ...(network
+              ? {
+                  primaryNetworkId: network.network.documentId,
+                  libraryDocumentIds: network.libraryDocumentIds,
+                }
+              : {}),
+            requestId: requestId.current,
           }),
         })
-        const result = await response.json()
-        if (!response.ok || !result.url)
+        const result = (await response.json()) as { error?: string }
+        if (!response.ok)
           throw new Error(
-            result.error === "team_payment_confirmation_pending"
-              ? "An earlier payment is being confirmed. Open your Team billing to check its status."
-              : "Checkout could not be opened. Your Team is saved; retry or continue from Team billing."
+            result.error === "organisation_exists"
+              ? "Your account already belongs to a Team. Open your Team to manage members."
+              : "The Team could not be created. Retry with the same name."
           )
-        handoff()
-        window.location.assign(result.url)
+        await refresh()
+        router.push("/staff/teams")
       } catch (failure) {
-        failed()
         setError(
           failure instanceof Error ? failure.message : "Please try again."
         )
       }
     })
-  if (!verified || !available)
+
+  if (!verified)
     return (
-      <StaffPanel
-        title={
-          !verified ? "Verify your email" : "Team subscriptions are unavailable"
-        }
-        compact
-      >
+      <StaffPanel title="Verify your email" compact>
         <p className="text-base leading-relaxed text-(--t-ink-dim)">
-          {!verified
-            ? "Verify your email before creating a Team."
-            : "New Team subscriptions are temporarily unavailable. Please check back later."}
+          Verify your email before creating a Team.
         </p>
-        <Link
-          className={STAFF_LINK}
-          href={!verified ? "/profile/settings" : "/plans"}
-        >
-          {!verified ? "Open account settings" : "View membership options"}
+        <Link className={STAFF_LINK} href="/profile/settings">
+          Open account settings
         </Link>
       </StaffPanel>
     )
@@ -175,92 +92,78 @@ export function TeamSignup({
         initialNetwork={initialNetwork}
         onChoose={(choice) => {
           setNetwork(choice)
+          setName((current) => current || choice?.network.name || "")
           setNetworkChosen(true)
-          setOpen(true)
         }}
       />
     )
 
   return (
-    <>
-      <div className="mx-auto max-w-3xl">
-        <StaffPanel title={team ? team.name : "Your Team, together"} compact>
-          <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
-            Step 2 of 2 · Team & billing
-          </p>
-          <SignupCoverage network={network} />
-          <p className="text-base leading-relaxed text-(--t-ink-dim)">
-            {team
-              ? "Your Team is saved. Complete annual billing when you’re ready to activate membership."
-              : "Start with five seats, invite colleagues and manage annual billing online."}
-          </p>
-          <div className="mt-5 flex flex-wrap items-center gap-4">
-            <Button variant="primary" size="pill" onClick={() => setOpen(true)}>
-              {team ? "Continue to payment" : "Create your Team"}
-            </Button>
-            <ServiceManagementLink team={team} network={network} />
-            {team ? (
-              <Link className={STAFF_LINK} href="/staff/teams/billing">
-                Open Team billing
-              </Link>
-            ) : (
-              <Link className={STAFF_LINK} href="/staff">
-                Your staff workspace
-              </Link>
-            )}
+    <div className="mx-auto max-w-3xl">
+      <StaffPanel title="Your Team, together" compact>
+        <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
+          Step 2 of 2 · Name your Team
+        </p>
+        <SignupCoverage network={network} />
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!pending && name.trim()) create()
+          }}
+        >
+          <div>
+            <label
+              htmlFor={nameId}
+              className="mb-2 block text-base font-semibold"
+            >
+              Team name
+            </label>
+            <Input
+              id={nameId}
+              value={name}
+              maxLength={120}
+              required
+              autoComplete="organization"
+              placeholder="Bristol Libraries"
+              onChange={(event) => setName(event.target.value)}
+            />
           </div>
-          {!team ? (
+          <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
+            Teams are free. You become its Organiser as {user.email}. Library
+            editing still needs verified access for each library.
+          </p>
+          {error ? (
+            <p
+              role="alert"
+              className="m-0 rounded-2xl border border-(--t-accent-danger)/30 bg-(--t-bg-surface) p-4 text-base text-(--t-accent-danger)"
+            >
+              {error}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap items-center gap-4">
             <Button
-              className="mt-5 px-0"
+              type="submit"
+              variant="primary"
+              size="pill"
+              disabled={pending || !name.trim()}
+              aria-busy={pending}
+            >
+              {pending ? "Creating…" : "Create your Team"}
+            </Button>
+            <Button
+              type="button"
               variant="link"
-              onClick={() => {
-                setNetworkChosen(false)
-                setOpen(false)
-              }}
+              className="px-0"
+              disabled={pending}
+              onClick={() => setNetworkChosen(false)}
             >
               Change library selection
             </Button>
-          ) : null}
-        </StaffPanel>
-      </div>
-      <TeamCheckoutDialog
-        open={open}
-        onOpenChange={(value) => {
-          setOpen(value)
-          if (!value && team) router.push(`/staff/teams/billing`)
-        }}
-        initialSeats={initialSeats}
-        initialApiAddon={initialApiAddon}
-        initialPublicService={initialPublicService}
-        teamName={team?.name}
-        initialName={network?.network.name}
-        sandbox={sandbox}
-        user={user}
-        busy={pending}
-        error={error}
-        onTeam={create}
-        onCheckout={checkout}
-      />
-    </>
-  )
-}
-
-function ServiceManagementLink({
-  team,
-  network,
-}: {
-  readonly team: { id: string; name: string } | null
-  readonly network: TeamNetworkSelection
-}) {
-  if (!team || !network) return null
-
-  return (
-    <Link
-      className={STAFF_LINK}
-      href={`/staff/networks?network=${network.network.documentId}`}
-    >
-      Request service management
-    </Link>
+          </div>
+        </form>
+      </StaffPanel>
+    </div>
   )
 }
 

@@ -77,7 +77,7 @@ export const Empty: Story = {
     ).toBeVisible()
   },
 }
-export const InactiveTeam: Story = {
+export const ClosedWorkspace: Story = {
   args: {
     initial: {
       ...widgetWorkspace,
@@ -85,7 +85,7 @@ export const InactiveTeam: Story = {
     },
   },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText("Your Team is inactive")).toBeVisible()
+    await expect(canvas.getByText("Your workspace is closed")).toBeVisible()
     await expect(
       canvas.queryByRole("button", { name: "Create widget" })
     ).not.toBeInTheDocument()

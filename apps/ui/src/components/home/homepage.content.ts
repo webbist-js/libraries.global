@@ -36,8 +36,8 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
     text: "Claim your library and keep its details right at the source: hours, services, accessibility, events and mobile stops. Publish once, wherever the record appears.",
     primaryLabel: "Claim your library",
     primaryHref: "/staff/claim",
-    secondaryLabel: "Explore Teams",
-    secondaryHref: "/plans#plan-team",
+    secondaryLabel: "How verified staff access works",
+    secondaryHref: "/plans#offer-staff",
   },
   libraryTools: [
     {
@@ -56,19 +56,19 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
       href: "/staff",
     },
     {
-      title: "A Team workspace for your service or network",
-      text: "Team",
+      title: "A free staff workspace for your service or network",
+      text: "Free",
       href: "/staff/teams",
     },
     {
       title: "Embeddable library finders and comparison tools",
-      text: "Team",
+      text: "Free",
       href: "/staff/teams/widgets",
     },
     {
       title: "Connect your application to the library API",
-      text: "API add-on",
-      href: "/knowledge/data-api/reusing-the-data",
+      text: "API Access",
+      href: "/developers",
     },
   ],
   trustItems: [
@@ -134,7 +134,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
 
   plansIntro: {
     title: "Library facts are always free.",
-    text: "Plans pay for analysis and extra data and keep the index independent. No ads, and money never buys a place in the index.",
+    text: "Explorer, Contributor and Verified Staff are free. API Access and sponsorship fund the service and keep it independent. No ads, and money never buys a place in the index.",
   },
 
   journalIntro: {
@@ -218,7 +218,7 @@ export const HOMEPAGE_DEFAULTS: HomepageDefaults = {
 export const FIND_CONTRIBUTE_PROMPT: { band: CtaBand; benefits: Step[] } = {
   band: {
     title: "Know a library? Put it on the map.",
-    text: "A free account takes a minute. You get credit for every accepted change, and regular contributors get Pro free.",
+    text: "A free account takes a minute. You get credit for every accepted change, and your first one unlocks two Reach calculations a week.",
     primaryLabel: "Create a free account",
     primaryHref: "/auth/register",
     secondaryLabel: "Make your first contribution",
@@ -238,8 +238,8 @@ export const FIND_CONTRIBUTE_PROMPT: { band: CtaBand; benefits: Step[] } = {
       text: "From contributor to reviewer or steward.",
     },
     {
-      title: "Pro free for regular contributors",
-      text: "Unlock atlas analysis by helping out.",
+      title: "Reach for contributors",
+      text: "Two travel-time calculations a week, free.",
     },
   ],
 }

@@ -1,4 +1,4 @@
-import { contributionProExpiry, isQualifyingContribution } from "@repo/access"
+import { isQualifyingContribution } from "@repo/access"
 
 import { nextContributorNumber } from "../utils/contributor-number"
 
@@ -138,6 +138,9 @@ export default ({ strapi }: { strapi: any }) => ({
     idempotencyKey?: string,
     contributedAt?: Date
   ): Promise<{ awarded: boolean }> {
+    // Machine API proposals (`api:<account>`) have no attributable person
+    // and never earn points, badges or accepted-contribution recognition.
+    if (baUserId.startsWith("api:")) return { awarded: false }
     const now = new Date()
 
     // Idempotency check: a previously-seen key means this award already happened.
@@ -289,7 +292,15 @@ export default ({ strapi }: { strapi: any }) => ({
     // decided in the same statement from the row's own last_activity_date
     // (a "YYYY-MM-DD" string column), so two awards straddling a month
     // boundary can't both see the old month and double-reset.
+    //
+    // Recognition: a qualifying, positive award is one accepted contribution.
+    // It is counted in the same statement, so it shares this transaction and
+    // the event insert above: a repeated idempotency key throws before here,
+    // so each key counts at most once. Streaks, manual adjustments and
+    // automatic bonuses never count (`isQualifyingContribution`).
     const knex = strapi.db.connection
+    const counts = isQualifyingContribution(action, pts)
+    const contributionAt = (contributedAt ?? now).toISOString()
     await knex("user_profiles")
       .transacting(trx)
       .where({ ba_user_id: baUserId })
@@ -299,6 +310,17 @@ export default ({ strapi }: { strapi: any }) => ({
           "CASE WHEN substr(last_activity_date, 1, 7) = ? THEN COALESCE(points_this_month, 0) + ? ELSE ? END",
           [currentMonth, pts, pts]
         ),
+        ...(counts
+          ? {
+              accepted_contributions: knex.raw(
+                "COALESCE(accepted_contributions, 0) + 1"
+              ),
+              last_contribution_at: knex.raw(
+                "CASE WHEN last_contribution_at IS NULL OR last_contribution_at < ? THEN ? ELSE last_contribution_at END",
+                [contributionAt, contributionAt]
+              ),
+            }
+          : {}),
       })
 
     const fresh = await strapi.db
@@ -306,17 +328,6 @@ export default ({ strapi }: { strapi: any }) => ({
       .findOne({ where: { baUserId } })
     const newStreak = await (this as any).updateStreak(baUserId)
     const tier = computeTier(fresh?.points ?? 0)
-    // Bonus/admin events must never manufacture fresh contributor activity.
-    const contributionExpiry = isQualifyingContribution(action, pts)
-      ? contributionProExpiry(contributedAt ?? now)
-      : undefined
-    const previousExpiry = Date.parse(fresh?.earnedProUntil ?? "")
-    const earnedProUntil =
-      contributionExpiry &&
-      (Number.isNaN(previousExpiry) ||
-        Date.parse(contributionExpiry) > previousExpiry)
-        ? contributionExpiry
-        : undefined
 
     await strapi.db.query("api::user-profile.user-profile").update({
       where: { baUserId },
@@ -324,7 +335,6 @@ export default ({ strapi }: { strapi: any }) => ({
         tier: tier.name,
         streak: newStreak,
         lastActivityDate: today,
-        ...(earnedProUntil !== undefined ? { earnedProUntil } : {}),
       },
     })
 

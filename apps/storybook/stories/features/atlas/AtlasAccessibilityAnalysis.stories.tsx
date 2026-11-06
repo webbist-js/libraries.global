@@ -38,7 +38,7 @@ const meta = {
   title: "Features/Atlas/AtlasAccessibilityAnalysis",
   component: AtlasAccessibilityAnalysis,
   args: {
-    tier: "pro",
+    tier: "explorer",
     enabled: true,
     libraries: atlasLibraries,
     selected: ["Step-free entrance"],

@@ -1,6 +1,6 @@
 "use client"
 
-import type { PlanKey } from "@repo/access"
+import type { AccessStanding } from "@repo/access"
 import { useQuery } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -117,8 +117,8 @@ function useInReview(userId: string | undefined, enabled: boolean) {
 export type ContributeMenu = ContributeMenuModel & {
   status: ContributeMenuStatus
   acceptedCount?: number | null
-  /** The viewer's plan, or null while signed out or loading. */
-  plan: PlanKey | null
+  /** The viewer's free standing, or null while signed out or loading. */
+  plan: AccessStanding | null
   /** The Your libraries card's selector: options only with two or more. */
   library: {
     options: { id: string; name: string }[]
@@ -192,7 +192,7 @@ export function useContributeMenu(active: boolean): ContributeMenu {
     ...model,
     status,
     acceptedCount: inReview.data?.acceptedCount ?? null,
-    plan: user ? ((user.plan as PlanKey | undefined) ?? "free") : null,
+    plan: user ? (user.standing ?? "explorer") : null,
     library: {
       options:
         options.length > 1

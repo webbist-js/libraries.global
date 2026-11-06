@@ -7,10 +7,7 @@ const meta = {
   title: "Features/Staff/TeamSignup",
   component: TeamSignup,
   args: {
-    available: true,
     verified: true,
-    initialSeats: 5,
-    sandbox: true,
     user: { name: "Maya S.", email: "member@example.invalid" },
   },
   parameters: {
@@ -23,4 +20,4 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
-export const Unavailable: Story = { args: { available: false } }
+export const EmailNotVerified: Story = { args: { verified: false } }

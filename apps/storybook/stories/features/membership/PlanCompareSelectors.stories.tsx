@@ -31,8 +31,8 @@ const meta = {
   },
 
   args: {
-    selected: "pro",
-    baseline: "free",
+    selected: "contributor",
+    baseline: "explorer",
     onSelected: fn(),
     onBaseline: fn(),
   },

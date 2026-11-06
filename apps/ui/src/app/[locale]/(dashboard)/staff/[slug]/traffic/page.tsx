@@ -2,12 +2,11 @@ import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
-import { PlanGatePanel } from "@/components/ds"
+import { FeatureGatePanel } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
-import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { canStaffTool } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
-import { TEAM_CONTACT_HREF } from "@/lib/plans"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import { loadStaffPage } from "@/lib/staff/server"
@@ -21,7 +20,7 @@ import { TrafficPreview } from "../_components/TrafficPreview"
 
 export const metadata = privateMetadata("Traffic")
 
-/** Decorative shapes for the plan explanation, without fabricated metrics. */
+/** Decorative shapes for the access explanation, without fabricated metrics. */
 function TrafficIllustration() {
   return (
     <div className="flex flex-col gap-5">
@@ -64,7 +63,7 @@ function TrafficNotice({
   const copy = {
     unconfigured: {
       title: "Traffic reports aren’t connected yet",
-      body: "Your Team plan includes this feature. Traffic reporting is not connected yet, so there are no figures to show for your library.",
+      body: "Traffic reports are free for your library’s staff. Reporting is not connected yet, so there are no figures to show.",
     },
     "no-page": {
       title: "No public page to report on",
@@ -108,8 +107,7 @@ export default async function TrafficPage({
 
   const { locale, slug } = await params
   const { user, documentId } = await loadStaffPage(slug, await staffPathname())
-  const covered =
-    requireEntitlementForLibrary(user, "library.traffic", documentId) === null
+  const covered = canStaffTool(user, "traffic", documentId)
   const range = parseTrafficRange((await searchParams)?.range)
   // Access is checked above; uncovered libraries never reach Google.
   const report = covered ? await getTrafficReport(documentId, range) : null
@@ -153,21 +151,24 @@ export default async function TrafficPage({
           ) : null}
         </section>
       ) : (
-        <PlanGatePanel
+        <FeatureGatePanel
+          badge="For verified staff"
           title={tUi("see_how_people_find_your_library")}
-          lead="Understand visits to your library’s page with the Team plan. Traffic reports are coming soon."
+          lead="Traffic reports are free for verified staff of this library. If your access changed recently, reload the page."
           points={[
             "Page views and visitors",
             "Daily views for 7, 30 or 90 days",
             "Where visitors came from",
           ]}
-          comingSoon
-          compareHref="/plans"
-          contactHref={TEAM_CONTACT_HREF}
+          action={{ href: "/staff", label: "Check your staff access" }}
           preview={<TrafficIllustration />}
+          previewCaption="Illustration of a traffic report"
         />
       )}
-      <LearnMoreLink slug={KNOWLEDGE_SLUGS.plans} locale={locale as Locale} />
+      <LearnMoreLink
+        slug={KNOWLEDGE_SLUGS.staffArea}
+        locale={locale as Locale}
+      />
     </div>
   )
 }

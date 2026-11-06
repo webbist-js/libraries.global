@@ -13,9 +13,6 @@ const f = vi.hoisted(() => ({
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }))
 vi.mock("next/navigation", () => ({ redirect: f.redirect }))
 vi.mock("@/lib/auth-server", () => ({ getSessionSSR: f.session }))
-vi.mock("@/lib/team-billing/config", () => ({
-  teamBillingConfig: () => ({ purchasing: true, mode: "sandbox" }),
-}))
 vi.mock("@/lib/staff-proxy", () => ({
   fetchStaff: async () => ({ body: { affiliations: [] } }),
 }))
@@ -30,24 +27,17 @@ import NewTeamPage from "./page"
 
 beforeEach(() => vi.clearAllMocks())
 afterEach(cleanup)
-it("keeps seats, API and service preferences through sign-in", async () => {
+it("keeps the chosen service through sign-in", async () => {
   f.session.mockResolvedValue(null)
   await expect(
-    NewTeamPage({
-      searchParams: Promise.resolve({
-        seats: "7",
-        api: "1",
-        service: "public",
-        network: "service-id",
-      }),
-    })
+    NewTeamPage({ searchParams: Promise.resolve({ network: "service-id" }) })
   ).rejects.toThrow("/auth/signin")
   const url = new URL(f.redirect.mock.calls[0]![0], "https://example.test")
   expect(url.searchParams.get("callbackUrl")).toBe(
-    "/staff/teams/new?seats=7&api=1&service=public&network=service-id"
+    "/staff/teams/new?network=service-id"
   )
 })
-it("prefills the authenticated signup while leaving eligibility approval to the server", async () => {
+it("offers free Team creation without seats or payment", async () => {
   f.session.mockResolvedValue({
     user: {
       name: "Person",
@@ -56,22 +46,13 @@ it("prefills the authenticated signup while leaving eligibility approval to the 
       teams: [],
     },
   })
-  render(
-    await NewTeamPage({
-      searchParams: Promise.resolve({
-        seats: "7",
-        api: "1",
-        service: "public",
-      }),
-    })
-  )
-  expect(f.signup.mock.calls[0]![0]).toMatchObject({
-    initialSeats: 7,
-    initialApiAddon: true,
-    initialPublicService: true,
-  })
+  render(await NewTeamPage({ searchParams: Promise.resolve({}) }))
+  const props = f.signup.mock.calls[0]![0]
+  expect(props).toMatchObject({ verified: true })
+  expect(props).not.toHaveProperty("initialSeats")
+  expect(props).not.toHaveProperty("available")
 })
-it("returns an existing Team to billing to resume the selected API journey", async () => {
+it("sends an account that already has a Team to its workspace", async () => {
   f.session.mockResolvedValue({
     user: {
       teams: [
@@ -81,12 +62,11 @@ it("returns an existing Team to billing to resume the selected API journey", asy
           slug: "team",
           role: "organiser",
           libraryCount: 0,
-          status: "lapsed",
         },
       ],
     },
   })
   await expect(
-    NewTeamPage({ searchParams: Promise.resolve({ api: "1" }) })
-  ).rejects.toThrow("/staff/teams/billing?api=1")
+    NewTeamPage({ searchParams: Promise.resolve({}) })
+  ).rejects.toThrow("/staff/teams")
 })

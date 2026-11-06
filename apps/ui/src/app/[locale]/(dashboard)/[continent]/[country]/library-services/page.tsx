@@ -84,7 +84,10 @@ export default async function CountryServices({
           title="Connect your libraries"
           body="Represent a library service, university system or consortium and help keep its member records up to date."
           action={{ href: "/staff/networks", label: "Represent a network" }}
-          secondary={{ href: "/plans#plan-team", label: "Explore Team plans" }}
+          secondary={{
+            href: "/staff/teams",
+            label: "Set up a free team workspace",
+          }}
         />
       }
       navigation={

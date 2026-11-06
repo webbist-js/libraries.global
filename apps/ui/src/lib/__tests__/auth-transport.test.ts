@@ -161,7 +161,10 @@ describe("Strapi auth transport", () => {
     const result = await authGateway.api.getSession({ headers: new Headers() })
     expect(result?.session.expiresAt).toEqual(new Date(date))
     expect(result?.user.createdAt).toEqual(new Date(date))
-    expect(result?.user.teams[0]?.expiresAt).toBe(date)
+    // Nested domain rows keep their wire strings.
+    expect(
+      (result?.user.teams[0] as { expiresAt?: unknown } | undefined)?.expiresAt
+    ).toBe(date)
   })
 
   it("fails closed when the upstream refuses a request", async () => {

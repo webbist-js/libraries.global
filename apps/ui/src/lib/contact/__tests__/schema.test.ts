@@ -71,3 +71,33 @@ describe("Atlas feedback validation", () => {
     })
   })
 })
+
+describe("sponsorship enquiries", () => {
+  const enquiry = {
+    mode: "contact",
+    type: "sponsorship",
+    name: "Grace Hopper",
+    email: "Grace@Example.org",
+    message: "We would like to discuss a Service sponsorship for 2027.",
+    context: { page: "/sponsor", locale: "en" },
+  }
+
+  it("accepts the sponsorship reason through the existing contact route schema", () => {
+    expect(contactSubmissionSchema.parse(enquiry)).toMatchObject({
+      mode: "contact",
+      type: "sponsorship",
+      email: "grace@example.org",
+      context: { page: "/sponsor" },
+    })
+  })
+
+  it("still requires a reply address and rejects unknown reasons", () => {
+    expect(
+      contactSubmissionSchema.safeParse({ ...enquiry, email: "" }).success
+    ).toBe(false)
+    expect(
+      contactSubmissionSchema.safeParse({ ...enquiry, type: "donation" })
+        .success
+    ).toBe(false)
+  })
+})

@@ -157,10 +157,13 @@ export function TypeBadge({ group }: { readonly group: TypeGroupKey }) {
   )
 }
 
-export function ProChip({
+/** A small tag on a locked tool, naming what unlocks it ("Sign in", "Contributor"). */
+export function AccessChip({
+  children,
   locked = true,
   soft = false,
 }: {
+  readonly children: React.ReactNode
   readonly locked?: boolean
   readonly soft?: boolean
 }) {
@@ -174,7 +177,7 @@ export function ProChip({
       }
     >
       {locked ? <Icon name="lock" size={11} stroke={2.4} /> : null}
-      Pro
+      {children}
     </span>
   )
 }
@@ -248,7 +251,7 @@ export function Chip({
   )
 }
 
-/** Accessible switch; `locked` renders the dashed Pro variant. */
+/** Accessible switch; `locked` renders the dashed variant for a locked tool. */
 export function Switch({
   checked,
   onChange,

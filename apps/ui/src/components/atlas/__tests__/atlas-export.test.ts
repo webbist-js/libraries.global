@@ -20,9 +20,10 @@ Object.assign(globalThis, { React })
 
 let features: string[] = []
 let ready = true
+let signedIn = true
 vi.mock("@/lib/access-client", () => ({
   useEntitlements: () => ({
-    plan: features.length > 0 ? "pro" : "free",
+    signedIn,
     can: (f: string) => features.includes(f),
     ready,
   }),
@@ -45,6 +46,7 @@ const csvResponse = () =>
 beforeEach(() => {
   features = []
   ready = true
+  signedIn = true
   downloads.length = 0
   fetchMock.mockReset()
   vi.stubGlobal("fetch", fetchMock)
@@ -111,7 +113,7 @@ describe("useAtlasExport", () => {
     expect(result.current.busy).toBe(false)
   })
 
-  it("opens the plans sheet when the server says Pro is needed", async () => {
+  it("opens the access sheet when the server refuses the export", async () => {
     fetchMock.mockResolvedValue(Response.json({}, { status: 402 }))
     const onUpgrade = vi.fn()
     const { result } = renderHook(() => useAtlasExport(onUpgrade))
@@ -162,27 +164,45 @@ describe("useAtlasExport", () => {
 describe("AtlasExportButton", () => {
   const libs = [{ id: "a" }, { id: "b" }] as AtlasLibrary[]
 
-  it("without Pro, reads Export · Membership, explains why in visible text and opens the plans sheet", () => {
+  it("signed out, reads Export · Sign in, explains the free account limits and asks the visitor to sign in", () => {
+    signedIn = false
     const onSeePlans = vi.fn()
-    render(createElement(AtlasExportButton, { libraries: libs, onSeePlans }))
+    const onSignIn = vi.fn()
+    render(
+      createElement(AtlasExportButton, {
+        libraries: libs,
+        onSeePlans,
+        onSignIn,
+      })
+    )
 
-    const button = screen.getByRole("button", { name: "Export · Membership" })
+    const button = screen.getByRole("button", { name: "Export · Sign in" })
     const note = screen.getByText(
-      "Supporter exports up to 500 libraries per download; Pro exports up to 10,000."
+      "Exports are free with an account: up to 10,000 libraries per download, 20 downloads a day."
     )
     expect(note.className).not.toContain("sr-only")
     expect(button.getAttribute("aria-describedby")).toBe(note.id)
+    expect(screen.queryByText(/Pro|Supporter|Membership/)).toBeNull()
     fireEvent.click(button)
 
-    expect(onSeePlans).toHaveBeenCalledTimes(1)
+    expect(onSignIn).toHaveBeenCalledTimes(1)
+    expect(onSeePlans).not.toHaveBeenCalled()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it("without the export feature and no sign-in handler, opens the access sheet", () => {
+    const onSeePlans = vi.fn()
+    render(createElement(AtlasExportButton, { libraries: libs, onSeePlans }))
+    fireEvent.click(screen.getByRole("button", { name: "Export · Sign in" }))
+
+    expect(onSeePlans).toHaveBeenCalledTimes(1)
+  })
+
   it.each([
-    ["a Pro member", ["atlas.export"]],
+    ["a signed-in Explorer", ["atlas.export"]],
     ["everyone else", []],
   ])(
-    "while the session loads, shows %s a disabled Export with no Pro lock",
+    "while the session loads, shows %s a disabled Export with no lock",
     (_label, can) => {
       ready = false
       features = can
@@ -192,14 +212,14 @@ describe("AtlasExportButton", () => {
       const button = screen.getByRole("button", { name: "Export" })
       expect(button.hasAttribute("disabled")).toBe(true)
       expect(button.hasAttribute("aria-haspopup")).toBe(false)
-      expect(screen.queryByText(/Pro/)).toBeNull()
+      expect(screen.queryByText(/Sign in/)).toBeNull()
       fireEvent.click(button)
 
       expect(onSeePlans).not.toHaveBeenCalled()
     }
   )
 
-  it("with Pro, is a menu button, disabled when nothing is listed", () => {
+  it("with the export feature, is a menu button, disabled when nothing is listed", () => {
     features = ["atlas.export"]
     const { rerender } = render(
       createElement(AtlasExportButton, { libraries: libs, onSeePlans: vi.fn() })
@@ -207,7 +227,7 @@ describe("AtlasExportButton", () => {
 
     const button = screen.getByRole("button", { name: /export/i })
     expect(button.getAttribute("aria-haspopup")).toBe("menu")
-    expect(button.textContent).not.toContain("Pro")
+    expect(button.textContent).not.toContain("Sign in")
     expect(button.hasAttribute("disabled")).toBe(false)
 
     rerender(
@@ -216,7 +236,7 @@ describe("AtlasExportButton", () => {
     expect(button.hasAttribute("disabled")).toBe(true)
   })
 
-  it("with Pro, marks the button aria-busy while the export runs", async () => {
+  it("with the export feature, marks the button aria-busy while the export runs", async () => {
     features = ["atlas.export"]
     let finish!: (r: Response) => void
     fetchMock.mockReturnValue(

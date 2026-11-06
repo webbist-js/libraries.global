@@ -76,7 +76,7 @@ export function SupporterPreferences({
       />
       {compact ? (
         <GlobalLink
-          href="/profile/membership#recognition"
+          href="/profile/settings#privacy"
           className="inline-flex min-h-13 items-center rounded-full border px-5 py-2.5 text-sm font-semibold no-underline"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >

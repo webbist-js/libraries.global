@@ -2,6 +2,7 @@ import { parseAtlasReachResult } from "@repo/shared-data"
 
 import { requireEntitlement } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
+import { spendExport } from "@/lib/export-allowance"
 
 import { POST as reach } from "../route"
 
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
   const user = (await auth.api.getSession({ headers: req.headers }))?.user
   const denied =
     requireEntitlement(user, "atlas.export") ||
-    requireEntitlement(user, "atlas.analysis")
+    requireEntitlement(user, "atlas.reach")
   if (denied) return denied
   const format = new URL(req.url).searchParams.get("format")
   if (format !== "csv" && format !== "geojson")
@@ -30,6 +31,8 @@ export async function POST(req: Request) {
       { status: 409 }
     )
   const result = parseAtlasReachResult(value)
+  const spent = await spendExport(user!)
+  if (spent) return spent
   const metadata = {
     libraryId: result.libraryId,
     coordinateHash: result.coordinateHash,

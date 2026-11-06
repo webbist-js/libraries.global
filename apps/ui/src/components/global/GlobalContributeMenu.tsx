@@ -19,7 +19,7 @@ import { Drawer } from "@/components/ds/Drawer"
 import {
   CardMonogram,
   LibrarySelect,
-  PlanPill,
+  StandingPill,
 } from "@/components/global/ContributeMenuParts"
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -365,11 +365,9 @@ export function ContributeMenuPanel({
         <CardMonogram icon="mdi:heart-outline" tint="accent" size={30} />
         <span>
           <strong>{ui(menu.plan ? "membership" : "plans_and_pricing")}</strong>
-          <small>
-            {menu.plan === "pro" ? t("earnedPro") : t("freeContribution")}
-          </small>
+          <small>{t("freeContribution")}</small>
         </span>
-        {menu.plan ? <PlanPill plan={menu.plan} /> : null}
+        {menu.plan ? <StandingPill standing={menu.plan} /> : null}
         <ChevronRight size={16} aria-hidden />
       </GlobalLink>
     </nav>

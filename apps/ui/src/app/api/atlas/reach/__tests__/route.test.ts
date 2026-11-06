@@ -1,4 +1,4 @@
-import { resolveEntitlements, type EntitlementInput } from "@repo/access"
+import { buildSessionAccess, type SessionProfile } from "@repo/access"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 const { session } = vi.hoisted(() => ({ session: vi.fn() }))
@@ -17,6 +17,25 @@ const request = (extra = {}) =>
       ...extra,
     }),
   })
+const NOW = new Date("2026-10-24T12:00:00Z")
+const PROFILE: SessionProfile = {
+  contributorRole: "contributor",
+  username: "x",
+  tier: null,
+  claims: [],
+  staff: [],
+  roleGrants: [],
+  dismissedPrompts: [],
+  teams: [],
+}
+/** A session user as the bridge resolves it, from profile facts. */
+const userFrom = (id: string, profile: Partial<SessionProfile>) => ({
+  id,
+  ...buildSessionAccess({ ...PROFILE, ...profile }, NOW),
+})
+const contributorUser = (id: string) =>
+  userFrom(id, { acceptedContributions: 1 })
+const PAID = "2026-11-24T12:00:00Z"
 const fetcher = vi.fn()
 beforeEach(() => {
   vi.stubGlobal("fetch", fetcher)
@@ -24,13 +43,7 @@ beforeEach(() => {
   vi.stubEnv("STRAPI_URL", "http://strapi.test")
   vi.stubEnv("STRAPI_BRIDGE_SECRET", "private-test-bridge")
   vi.stubEnv("ATLAS_SERVICE_TOKEN", "private-test-token")
-  session.mockResolvedValue({
-    user: {
-      id: "private-user",
-      features: ["atlas.analysis", "atlas.export"],
-      limits: { analysisRunsPerHour: 20 },
-    },
-  })
+  session.mockResolvedValue({ user: contributorUser("private-user") })
 })
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -38,13 +51,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-it("checks analysis and export entitlements before any cached backend request", async () => {
+it("checks Reach and export entitlements before any cached backend request", async () => {
   session.mockResolvedValue(null)
   expect((await POST(request())).status).toBe(401)
-  session.mockResolvedValue({ user: { id: "free", features: [] } })
+  // Explorer has context analysis but not Reach.
+  session.mockResolvedValue({ user: userFrom("explorer", {}) })
   expect((await POST(request())).status).toBe(402)
   session.mockResolvedValue({
-    user: { id: "analysis-only", features: ["atlas.analysis"] },
+    user: { id: "reach-only", features: ["atlas.reach"] },
   })
   expect((await exportReach(request())).status).toBe(402)
   expect(fetcher).not.toHaveBeenCalled()
@@ -52,115 +66,83 @@ it("checks analysis and export entitlements before any cached backend request", 
 
 it.each<{
   label: string
-  input: Omit<EntitlementInput, "now"> & { now?: Date }
+  profile: Partial<SessionProfile> | null
   status: number
-  allowance: number
+  allowance: Record<string, unknown> | null
 }>([
+  { label: "signed out", profile: null, status: 401, allowance: null },
+  { label: "Explorer", profile: {}, status: 402, allowance: null },
   {
-    label: "signed out",
-    input: { signedIn: false },
-    status: 401,
-    allowance: 0,
+    label: "a Contributor",
+    profile: { acceptedContributions: 1 },
+    status: 202,
+    allowance: { kind: "contributor", weekly: 2 },
   },
-  { label: "Free", input: { signedIn: true }, status: 402, allowance: 0 },
   {
-    label: "Supporter, including its export permission",
-    input: {
-      signedIn: true,
-      subscription: { plan: "supporter", status: "active" },
+    label: "a Supporter, with the same Contributor allowance",
+    profile: { acceptedContributions: 150 },
+    status: 202,
+    allowance: { kind: "contributor", weekly: 2 },
+  },
+  {
+    label: "revoked recognition",
+    profile: { acceptedContributions: 150, recognitionRevoked: true },
+    status: 402,
+    allowance: null,
+  },
+  {
+    label: "a covered API organiser",
+    profile: {
+      apiAccounts: [{ teamId: "team-a", role: "organiser", paidThrough: PAID }],
+    },
+    status: 202,
+    allowance: { kind: "api", hourly: 20, daily: 100 },
+  },
+  {
+    label: "a member of a covered API account",
+    profile: {
+      apiAccounts: [{ teamId: "team-a", role: "member", paidThrough: PAID }],
     },
     status: 402,
-    allowance: 0,
+    allowance: null,
   },
   {
-    label: "Pro",
-    input: { signedIn: true, subscription: { plan: "pro", status: "active" } },
-    status: 202,
-    allowance: 20,
-  },
-  {
-    label: "Team",
-    input: { signedIn: true, grants: [{ plan: "team", expiresAt: null }] },
-    status: 202,
-    allowance: 100,
-  },
-  {
-    label: "an active Team seat with Team analysis capacity",
-    input: {
-      signedIn: true,
-      teams: [
-        { status: "active", expiresAt: null, libraryDocumentIds: ["one"] },
-      ],
-    },
-    status: 202,
-    allowance: 100,
-  },
-  {
-    label: "a lapsed Team member with independent Pro access",
-    input: {
-      signedIn: true,
-      teams: [
-        { status: "lapsed", expiresAt: null, libraryDocumentIds: ["one"] },
-      ],
-      grants: [{ plan: "pro", expiresAt: null }],
-    },
-    status: 202,
-    allowance: 20,
-  },
-  {
-    label: "an expired Team member with independent Pro access",
-    input: {
-      signedIn: true,
-      teams: [
+    label: "a lapsed API organiser",
+    profile: {
+      apiAccounts: [
         {
-          status: "active",
-          expiresAt: "2026-10-23T12:00:00Z",
-          libraryDocumentIds: ["one"],
+          teamId: "team-a",
+          role: "organiser",
+          paidThrough: "2026-10-23T12:00:00Z",
         },
       ],
-      grants: [{ plan: "pro", expiresAt: null }],
-    },
-    status: 202,
-    allowance: 20,
-  },
-  {
-    label: "expired Pro",
-    input: {
-      signedIn: true,
-      now: new Date("2026-10-24T12:00:00Z"),
-      grants: [{ plan: "pro", expiresAt: "2026-10-23T12:00:00Z" }],
     },
     status: 402,
-    allowance: 0,
+    allowance: null,
   },
   {
-    label: "a lapsed Team member",
-    input: {
-      signedIn: true,
+    label: "a staff workspace organiser",
+    profile: {
       teams: [
-        { status: "lapsed", expiresAt: null, libraryDocumentIds: ["one"] },
+        {
+          id: "team-a",
+          name: "Kent",
+          slug: "kent",
+          role: "organiser",
+          libraryCount: 1,
+          libraryDocumentIds: ["one"],
+          organiserName: null,
+        },
       ],
     },
     status: 402,
-    allowance: 0,
+    allowance: null,
   },
 ])(
   "gates calculations and exports for $label before contacting the backend",
-  async ({ input, status, allowance }) => {
-    const entitlements = resolveEntitlements({
-      now: new Date("2026-10-24T12:00:00Z"),
-      ...input,
-    })
+  async ({ label, profile, status, allowance }) => {
     session.mockResolvedValue(
-      input.signedIn
-        ? {
-            user: {
-              id: `reach-plan-${entitlements.plan}-${status}`,
-              features: [...entitlements.features],
-              limits: entitlements.limits,
-            },
-          }
-        : null
+      profile ? { user: userFrom(`reach-${label}`, profile) } : null
     )
     fetcher.mockImplementation(async () =>
       Response.json(
@@ -179,11 +161,41 @@ it.each<{
     if (!allowance) expect(fetcher).not.toHaveBeenCalled()
     else {
       expect(fetcher).toHaveBeenCalledTimes(2)
-      for (const [, init] of fetcher.mock.calls)
-        expect(JSON.parse(init.body).hourlyLimit).toBe(allowance)
+      for (const [, init] of fetcher.mock.calls) {
+        const sent = JSON.parse(init.body)
+        expect(Object.keys(sent).sort()).toEqual([
+          "allowance",
+          "request",
+          "userKey",
+        ])
+        expect(sent.allowance).toMatchObject(allowance)
+        if (allowance.kind === "api") {
+          expect(sent.allowance.accountKey).toMatch(/^[a-f0-9]{64}$/)
+          expect(JSON.stringify(sent)).not.toContain("team-a")
+        }
+      }
     }
   }
 )
+
+it("relays the bridge's allowance code without its text", async () => {
+  fetcher.mockResolvedValue(
+    Response.json(
+      { error: "<b>internal</b>", code: "REACH_WEEKLY_LIMIT" },
+      { status: 429 }
+    )
+  )
+  const response = await POST(request())
+  expect(response.status).toBe(429)
+  const body = await response.json()
+  expect(body.code).toBe("REACH_WEEKLY_LIMIT")
+  expect(body.error).toMatch(/^Weekly Reach allowance reached/)
+  fetcher.mockResolvedValue(
+    Response.json({ error: "x", code: "SOMETHING_ELSE" }, { status: 429 })
+  )
+  expect((await (await POST(request())).json()).code).toBe("REACH_LIMIT")
+})
+
 it("rejects arbitrary origins and passes only a hashed user identity and trusted allowance", async () => {
   expect((await POST(request({ lat: 51 }))).status).toBe(400)
   expect(fetcher).not.toHaveBeenCalled()
@@ -204,11 +216,11 @@ it("rejects arbitrary origins and passes only a hashed user identity and trusted
   const body = JSON.parse(fetcher.mock.calls[0]![1].body)
   expect(body.userKey).toMatch(/^[a-f0-9]{64}$/)
   expect(JSON.stringify(body)).not.toContain("private-user")
-  expect(body.hourlyLimit).toBe(20)
+  expect(body.allowance).toEqual({ kind: "contributor", weekly: 2 })
   expect(response.headers.get("cache-control")).toBe("no-store")
 })
 it("refuses absent allowances and mismatched job identities", async () => {
-  session.mockResolvedValueOnce({ user: { features: ["atlas.analysis"] } })
+  session.mockResolvedValueOnce({ user: { features: ["atlas.reach"] } })
   expect((await POST(request())).status).toBe(503)
   expect(fetcher).not.toHaveBeenCalled()
   fetcher.mockResolvedValue(
@@ -294,13 +306,7 @@ it("exports all bands with provenance and assumptions while preserving unknown p
 })
 
 it("throttles repeated result checks before they can overload the CMS", async () => {
-  session.mockResolvedValue({
-    user: {
-      id: "reach-request-burst",
-      features: ["atlas.analysis"],
-      limits: { analysisRunsPerHour: 20 },
-    },
-  })
+  session.mockResolvedValue({ user: contributorUser("reach-request-burst") })
   fetcher.mockImplementation(async () =>
     Response.json(
       {

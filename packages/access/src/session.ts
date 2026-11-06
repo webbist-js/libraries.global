@@ -1,21 +1,21 @@
 import type { DismissiblePrompt } from "@repo/shared-data"
 
 import {
+  type AccessFact,
+  type AccessStanding,
+  type ApiAccountInput,
   type Capability,
   type ContributorRole,
   type Feature,
   isContributorRole,
+  isRecentlyActive,
   type Limit,
   type ModerationScope,
-  type PlanKey,
-  type PlanSource,
   resolveCapabilities,
   resolveEntitlements,
   toSessionCapabilities,
-  paidMembershipInput,
   type RoleGrant,
   type StaffClaim,
-  type PaidMembership,
   type StaffRole,
 } from "./index"
 
@@ -34,54 +34,48 @@ export type StaffLibrarySummary = {
   role: StaffRole
   canGoLive: boolean
 }
+/**
+ * A free staff workspace (organisation) the user belongs to. Membership is an
+ * administrative container: it never grants library editing authority, which
+ * comes only from the user's own verified staff claims.
+ */
 export type SessionTeam = {
   id: string
   name: string
   slug: string
   role: "organiser" | "member"
   libraryCount: number
-  selfService?: boolean
-  status?: "active" | "lapsed"
-  expiresAt?: string | null
 }
-export type SessionGrant = {
-  plan: "supporter" | "pro" | "team"
-  expiresAt: string | null
-}
-export type SessionVerification = { expiresAt: string | null }
-/** A Team the user is an active member of, as the local session projection reports it. */
-export type SessionProfileTeam = {
-  id: string
-  name: string
-  slug: string
-  role: "organiser" | "member"
-  libraryCount: number
+export type SessionProfileTeam = SessionTeam & {
   libraryDocumentIds: string[]
-  expiresAt: string | null
-  status: "active" | "lapsed"
   organiserName: string | null
-  selfService?: boolean
+}
+/** An API account the user belongs to, with its settled paid coverage. */
+export type SessionApiAccount = ApiAccountInput & {
+  /** The organisation that owns the API account. */
+  teamId: string
 }
 
 export type SessionProfile = {
   compositionPreferences?: CompositionPreferences
-  paidMembership?: PaidMembership | null
   staff: (StaffClaim & { name: string; slug: string; libraryType: string })[]
   contributorRole: ContributorRole
   username: string | null
   tier: string | null
   claims: string[]
-  /** Plan grants (entitlements). Never feeds capabilities. */
-  grants: SessionGrant[]
   /** Contributor Role grants (capabilities). */
   roleGrants: RoleGrant[]
-  verifications: SessionVerification[]
   rewardsPoints?: number
-  earnedProUntil: string | null
+  /** Distinct accepted, substantive contributions (recognition). */
+  acceptedContributions?: number
+  lastContributionAt?: string | null
+  recognitionRevoked?: boolean
   /** Prompts the user has hidden in their settings. */
   dismissedPrompts: DismissiblePrompt[]
-  /** Teams (entitlements: Pro personally, Team on their libraries). */
+  /** Free staff workspaces; never a source of authority. */
   teams: SessionProfileTeam[]
+  /** API accounts (entitlements: the organiser Reach bonus and key tools). */
+  apiAccounts?: SessionApiAccount[]
 }
 
 export type SessionAccess = {
@@ -96,16 +90,25 @@ export type SessionAccess = {
   staffLibraries: StaffLibrarySummary[]
   moderationScopes: ModerationScope[]
   editorLocales: { docs: "all" | string[]; journal: "all" | string[] }
-  plan: PlanKey
-  planSource: PlanSource
+  /** Free standing for display: explorer, contributor or supporter. */
+  standing: AccessStanding
+  /** Independent access facts (`explorer`, `contributor`, `supporter`, `apiCustomer`). */
+  facts: AccessFact[]
+  /** A recent accepted contribution; display only, never an entitlement. */
+  recentlyActive: boolean
+  acceptedContributions: number
   features: Feature[]
   limits: Record<Limit, number>
   /** Prompts hidden in the user's settings (`lib/dismissed-prompts.ts`). */
   dismissedPrompts: DismissiblePrompt[]
-  /** Teams the user belongs to (summary; the organiser page loads detail). */
+  /** Staff workspaces the user belongs to (summary; the organiser page loads detail). */
   teams: SessionTeam[]
-  /** Libraries of their active Teams: `canForLibrary` for Team features. */
-  teamLibraryIds: string[]
+  /** API accounts the user belongs to (by owning organisation). */
+  apiAccounts: {
+    teamId: string
+    role: "organiser" | "member"
+    active: boolean
+  }[]
 }
 
 /**
@@ -130,20 +133,13 @@ export function buildSessionAccess(
         claims: profile.staff ?? [],
       })
     : null
+  const apiAccounts = profile?.apiAccounts ?? []
   const ent = resolveEntitlements({
     signedIn: true,
     now,
-    subscription: paidMembershipInput(profile?.paidMembership),
-    grants: profile?.grants ?? [],
-    verifications: profile?.verifications ?? [],
-    rewardsTier: profile?.tier ?? null,
-    rewardsPoints: profile?.rewardsPoints ?? 0,
-    earnedProUntil: profile?.earnedProUntil ?? null,
-    teams: (profile?.teams ?? []).map((t) => ({
-      libraryDocumentIds: t.libraryDocumentIds,
-      expiresAt: t.expiresAt,
-      status: t.status,
-    })),
+    acceptedContributions: profile?.acceptedContributions ?? 0,
+    recognitionRevoked: profile?.recognitionRevoked ?? false,
+    apiAccounts,
   })
 
   return {
@@ -162,7 +158,10 @@ export function buildSessionAccess(
           moderationScopes: [],
           editorLocales: { docs: [], journal: [] },
         }),
-    plan: ent.plan,
+    standing: ent.standing,
+    facts: [...ent.facts],
+    recentlyActive: isRecentlyActive(profile?.lastContributionAt, now),
+    acceptedContributions: profile?.acceptedContributions ?? 0,
     claimedLibraryIds: profile?.claims ?? [],
     staffLibraries: (profile?.staff ?? []).map(
       ({
@@ -181,7 +180,6 @@ export function buildSessionAccess(
         libraryType,
       })
     ),
-    planSource: ent.source,
     features: [...ent.features],
     limits: { ...ent.limits },
     dismissedPrompts: profile?.dismissedPrompts ?? [],
@@ -191,10 +189,14 @@ export function buildSessionAccess(
       slug: t.slug,
       role: t.role,
       libraryCount: t.libraryCount,
-      ...(t.selfService ? { selfService: true } : {}),
-      status: t.status,
-      expiresAt: t.expiresAt,
     })),
-    teamLibraryIds: [...ent.teamLibraryIds],
+    apiAccounts: apiAccounts.map((a) => ({
+      teamId: a.teamId,
+      role: a.role,
+      active:
+        !a.revoked &&
+        typeof a.paidThrough === "string" &&
+        Date.parse(a.paidThrough) > now.getTime(),
+    })),
   }
 }

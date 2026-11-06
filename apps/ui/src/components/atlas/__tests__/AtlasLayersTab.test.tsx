@@ -58,12 +58,12 @@ it("organises every layer by purpose and keeps unbuilt layers disabled on every 
   expect(
     within(
       screen.getByRole("region", { name: "Access and coverage" })
-    ).getByRole("switch", { name: "Library access (Pro)" })
+    ).getByRole("switch", { name: "Library access (sign in to use)" })
   ).toBeTruthy()
   expect(
     screen.getByRole("region", { name: "Reference geography" })
   ).toBeTruthy()
-  for (const tier of ["public", "free", "pro"] as const) {
+  for (const tier of ["public", "free", "explorer", "reach"] as const) {
     rerender(<AtlasLayersTab {...sidebar} tier={tier} />)
     for (const def of LAYERS.filter((layer) => !layer.ready)) {
       const group = LAYER_GROUPS.find((item) => item.id === def.group)!
@@ -81,19 +81,19 @@ it("organises every layer by purpose and keeps unbuilt layers disabled on every 
   expect(sidebar.onSignIn).not.toHaveBeenCalled()
   expect(sidebar.onSeePlans).not.toHaveBeenCalled()
 })
-it("shows Coming soon without account badges or suggesting an upgrade can unlock it", () => {
-  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+it("shows Coming soon without account badges or suggesting access can unlock it", () => {
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
   expect(screen.queryByText(/Planned layers/)).toBeNull()
   for (const def of LAYERS.filter((layer) => !layer.ready)) {
     const item = screen
       .getByRole("switch", { name: def.name })
       .closest("[data-layer]")! as HTMLElement
     expect(within(item).getByText("Coming soon")).toBeTruthy()
-    if (def.tier === "pro") expect(within(item).getByText("Pro")).toBeTruthy()
+    expect(within(item).queryByText("Account")).toBeNull()
     expect(within(item).queryByText("Free account")).toBeNull()
   }
-  expect(screen.getByText(/Library facts are always free/)).toBeTruthy()
-  fireEvent.click(screen.getByRole("button", { name: "Compare plans" }))
+  expect(screen.getByText(/Library facts are free for everyone/)).toBeTruthy()
+  fireEvent.click(screen.getByRole("button", { name: "How access works" }))
   expect(sidebar.onSeePlans).toHaveBeenCalledOnce()
 })
 it("keeps location pins on and locks both controls while a marker layer needs them", () => {
@@ -166,7 +166,7 @@ it("opens an active layer from its label while keeping its explanation and switc
   render(
     <AtlasLayersTab
       {...sidebar}
-      tier="pro"
+      tier="explorer"
       active={["pins", "population"]}
       onInspect={onInspect}
       summaries={{ population: "United Kingdom · GHS-POP 2020 · R2023A" }}
@@ -438,7 +438,7 @@ it("uses one active state for quick disable, catalogue switches and exclusive vi
 })
 
 it("provides expandable help for the available Reach layer", () => {
-  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
   const about = screen.getByRole("button", { name: "About Travel-time reach" })
   expect(about.getAttribute("aria-expanded")).toBe("false")
   fireEvent.click(about)
@@ -446,4 +446,48 @@ it("provides expandable help for the available Reach layer", () => {
   expect(
     screen.getByText(/A service uses its mapped reporting area automatically/)
   ).toBeTruthy()
+})
+it("explains how a contribution unlocks Reach in a dialog, with API Access as the other route", async () => {
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
+  const locked = screen.getByRole("switch", {
+    name: "Travel-time reach (locked)",
+  })
+  locked.focus()
+  fireEvent.click(locked)
+  const dialog = screen.getByRole("dialog", {
+    name: "Unlock travel-time Reach",
+  })
+  expect(
+    within(dialog).getByText(
+      /first accepted contribution unlocks two new Reach calculations a week/
+    )
+  ).toBeTruthy()
+  expect(
+    within(dialog)
+      .getByRole("link", { name: "Make your first contribution" })
+      .getAttribute("href")
+  ).toMatch(/\/contribute$/)
+  expect(
+    within(dialog)
+      .getByRole("link", { name: "See API Access" })
+      .getAttribute("href")
+  ).toMatch(/\/developers$/)
+  expect(within(dialog).queryByText(/Pro|Team|plan/)).toBeNull()
+  expect(within(dialog).queryByText(/free account/)).toBeNull()
+  expect(screen.queryByRole("status")).toBeNull()
+  expect(sidebar.onToggle).not.toHaveBeenCalled()
+  fireEvent.click(within(dialog).getByRole("button", { name: "Not now" }))
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  await waitFor(() => expect(document.activeElement).toBe(locked))
+})
+it("asks signed-out visitors to sign in before contributing for Reach", () => {
+  render(<AtlasLayersTab {...sidebar} tier="public" />)
+  fireEvent.click(
+    screen.getByRole("switch", { name: "Travel-time reach (locked)" })
+  )
+  const dialog = screen.getByRole("dialog", {
+    name: "Unlock travel-time Reach",
+  })
+  fireEvent.click(within(dialog).getByRole("button", { name: "Sign in" }))
+  expect(sidebar.onSignIn).toHaveBeenCalledOnce()
 })

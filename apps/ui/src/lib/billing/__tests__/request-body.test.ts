@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { readBillingJson } from "../request-body"
 
 const request = (body: string, length?: string) =>
-  new Request("https://libraries.global/api/billing/checkout", {
+  new Request("https://libraries.global/api/billing/api/checkout", {
     method: "POST",
     body,
     headers: length ? { "Content-Length": length } : {},
@@ -11,8 +11,8 @@ const request = (body: string, length?: string) =>
 
 describe("bounded billing selections", () => {
   it("reads a small JSON selection", async () => {
-    expect(await readBillingJson(request('{"plan":"pro"}'))).toEqual({
-      plan: "pro",
+    expect(await readBillingJson(request('{"action":"checkout"}'))).toEqual({
+      action: "checkout",
     })
   })
   it("refuses oversized bodies even when the claimed size is smaller", async () => {

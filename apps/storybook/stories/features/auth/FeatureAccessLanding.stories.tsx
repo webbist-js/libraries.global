@@ -27,5 +27,5 @@ export const TeamMembershipRequired: Story = {
   },
 }
 export const ApiMembershipRequired: Story = {
-  args: { feature: "api", signedIn: true, returnTo: "/staff/teams/api" },
+  args: { feature: "api", signedIn: true, returnTo: "/developers" },
 }

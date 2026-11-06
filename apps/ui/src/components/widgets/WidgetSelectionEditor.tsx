@@ -239,7 +239,7 @@ export function WidgetSelectionEditor({
       {!team.active ? (
         <Notice
           tone="warn"
-          title="Team inactive — selection is read only"
+          title="Workspace closed — selection is read only"
           icon="mdi:pause-circle-outline"
         />
       ) : null}

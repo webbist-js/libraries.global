@@ -1,14 +1,11 @@
 import {
-  Box,
   Button,
   Checkbox,
   Combobox,
   ComboboxOption,
-  DatePicker,
   Field,
   Flex,
   Modal,
-  NumberInput,
   Tag,
   Textarea,
   TextInput,
@@ -19,14 +16,11 @@ import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 import { apiError, type Team, type TeamLibrary } from "./teamsMeta"
-import {
-  PluginModalContent,
-  FormGrid,
-} from "../../../../../admin/components/PluginUI"
+import { PluginModalContent } from "../../../../../admin/components/PluginUI"
 
 /**
- * Create or edit a Team: name, seats, the libraries it covers (search by
- * name), verified, expiry and notes. Verifying is the act of trust: it
+ * Create or edit a Team: name, the libraries it covers (search by
+ * name), verified and notes. Verifying is the act of trust: it
  * lets the organiser create staff access without a Moderator.
  */
 export function TeamModal({
@@ -41,7 +35,6 @@ export function TeamModal({
   const { get, post, put } = useFetchClient()
   const { toggleNotification } = useNotification()
   const [name, setName] = useState(team?.name ?? "")
-  const [seats, setSeats] = useState<number>(team?.seats ?? 5)
   const [libraries, setLibraries] = useState<TeamLibrary[]>(
     team?.libraries ?? []
   )
@@ -49,16 +42,9 @@ export function TeamModal({
     team?.widgetBranding === true
   )
   const [verified, setVerified] = useState(!!team?.verifiedAt)
-  const [lapsed, setLapsed] = useState(
-    team?.source === "checkout"
-      ? team.billingSuspended === true
-      : team?.status === "lapsed"
-  )
+  const [lapsed, setLapsed] = useState(team?.status === "lapsed")
   const [publicServiceApproved, setPublicServiceApproved] = useState(
     team?.publicServiceApproved === true
-  )
-  const [expires, setExpires] = useState<Date | undefined>(
-    team?.expiresAt ? new Date(team.expiresAt) : undefined
   )
   const [notes, setNotes] = useState(team?.notes ?? "")
   const [query, setQuery] = useState("")
@@ -108,9 +94,6 @@ export function TeamModal({
     setError(null)
     const body = {
       name: name.trim(),
-      ...(team?.source === "checkout"
-        ? {}
-        : { seats, expiresAt: expires ? expires.toISOString() : null }),
       libraryDocumentIds: libraries.map((l) => l.documentId),
       publicServiceApproved,
       notes: notes.trim() || null,
@@ -150,9 +133,6 @@ export function TeamModal({
     }
   }
 
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
       <PluginModalContent>
@@ -172,38 +152,6 @@ export function TeamModal({
                 placeholder="e.g. Devon Libraries"
               />
             </Field.Root>
-            <FormGrid>
-              <Box style={{ flex: "1 1 240px", minWidth: 0 }}>
-                <Field.Root
-                  name="seats"
-                  required
-                  hint="Active and invited members together."
-                >
-                  <Field.Label>Seats</Field.Label>
-                  <NumberInput
-                    disabled={team?.source === "checkout"}
-                    value={seats}
-                    onValueChange={(v?: number) => setSeats(v ?? 1)}
-                    step={1}
-                  />
-                  <Field.Hint />
-                </Field.Root>
-              </Box>
-              <Box style={{ flex: "1 1 240px", minWidth: 0 }}>
-                <Field.Root name="expiresAt" hint="Leave empty for no end.">
-                  <Field.Label>Expires (optional)</Field.Label>
-                  <DatePicker
-                    disabled={team?.source === "checkout"}
-                    value={expires}
-                    onChange={(d: Date | undefined) => setExpires(d)}
-                    onClear={() => setExpires(undefined)}
-                    clearLabel="Clear the expiry"
-                    minDate={tomorrow}
-                  />
-                  <Field.Hint />
-                </Field.Root>
-              </Box>
-            </FormGrid>
             <Field.Root
               name="libraries"
               hint="The libraries the organiser may assign staff to. Removing one ends every Team-created staff row at it."
@@ -267,9 +215,7 @@ export function TeamModal({
                     setLapsed(v === true)
                   }
                 >
-                  {team.source === "checkout"
-                    ? "Suspend Team access independently of billing"
-                    : "Lapsed: members keep their rows but lose Pro and Team"}
+                  Lapsed: the workspace is paused; members keep their rows
                 </Checkbox>
               )}
             </Flex>

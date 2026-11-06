@@ -467,7 +467,7 @@ export interface RoadmapFeature extends Struct.ComponentSchema {
 export interface RoadmapPlan extends Struct.ComponentSchema {
   collectionName: "components_roadmap_plans"
   info: {
-    description: 'A plan a feature is intended to land in, with an optional allowance such as "3 saved".'
+    description: 'The offer a feature is intended for (Explorer, Contributor, Verified Staff or API), with an optional allowance such as "3 saved".'
     displayName: "Roadmap plan"
     icon: "priceTag"
   }
@@ -477,7 +477,7 @@ export interface RoadmapPlan extends Struct.ComponentSchema {
         maxLength: 40
       }>
     plan: Schema.Attribute.Enumeration<
-      ["free", "supporter", "pro", "team", "api"]
+      ["free", "contributor", "staff", "api"]
     > &
       Schema.Attribute.Required
   }

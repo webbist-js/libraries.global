@@ -1,10 +1,9 @@
 import { z } from "zod"
 
-import { authDbPool } from "@/lib/auth"
 import { BillingError } from "@/lib/billing/config"
 import { billingFailure, billingJson, billingUser } from "@/lib/billing/http"
 import { readBillingJson } from "@/lib/billing/request-body"
-import { createSelfServiceTeam } from "@/lib/team-billing/billing"
+import { createApiOrganisation } from "@/lib/team-api/cms"
 
 export const runtime = "nodejs"
 const Signup = z
@@ -19,18 +18,28 @@ const Signup = z
       .array(z.string().regex(/^[a-z0-9]{20,32}$/))
       .max(2000)
       .optional(),
-    publicServiceRequested: z.boolean().optional(),
   })
-  .strict()
+  .strip()
 
+/**
+ * Create a free organisation (staff workspace container) with the caller as
+ * organiser. Creating one is free; library assignments remain claims until
+ * verified authority is reviewed.
+ */
 export async function POST(req: Request) {
   try {
     const user = await billingUser(req, true)
     const parsed = Signup.safeParse(await readBillingJson(req))
     if (!parsed.success) throw new BillingError("invalid_team_signup", 400)
-    const result = await createSelfServiceTeam(authDbPool, user, parsed.data)
+    const teamId = await createApiOrganisation({
+      requestId: parsed.data.requestId,
+      user,
+      name: parsed.data.name,
+      primaryNetworkId: parsed.data.primaryNetworkId,
+      libraryDocumentIds: parsed.data.libraryDocumentIds,
+    })
 
-    return billingJson(result, 201)
+    return billingJson({ teamId }, 201)
   } catch (error) {
     return billingFailure(error)
   }

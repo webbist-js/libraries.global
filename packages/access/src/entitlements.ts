@@ -1,18 +1,35 @@
-import { hasEarnedPro } from "./earned-pro"
+import { type Recognition, recognitionOf } from "./recognition"
 
-export type PlanKey = "public" | "free" | "supporter" | "pro" | "team"
-export type PlanSource =
-  | "none"
-  | "paid"
-  | "team"
-  | "grant"
-  | "verified"
-  | "earned"
+/**
+ * Entitlements: the tools and limits an account may use. They come from
+ * independent facts, never a ranked plan:
+ *
+ * - `explorer`: any signed-in account (free).
+ * - `contributor` / `supporter`: earned recognition from accepted contributions.
+ * - `apiCustomer`: organiser of an API account with settled paid coverage.
+ *
+ * Verified staff tools are capabilities (`canStaff`), not entitlements:
+ * authority comes from roles and library affiliations, and payment,
+ * sponsorship or recognition never grants it.
+ */
+export type AccessFact =
+  | "explorer"
+  | "contributor"
+  | "supporter"
+  | "apiCustomer"
+
+/** Display label for the account's free standing. */
+export type AccessStanding = "public" | "explorer" | Recognition
+
 export type Feature =
   | "atlas.contextLayers"
   | "atlas.analysis"
   | "atlas.export"
   | "atlas.compare"
+  /** One-library Reach (Contributor allowance or API customer bonus). */
+  | "atlas.reach"
+  /** Service and network Reach (API customer bonus only). */
+  | "atlas.serviceReach"
   | "index.export"
   | "index.alerts"
   | "index.compare"
@@ -22,295 +39,165 @@ export type Feature =
   | "data.benchmark"
   | "data.explorerExport"
   | "events.personalFeed"
-  | "team.workspace"
-  | "team.bulkUpload"
-  | "team.embed"
+  /** Create and manage machine API keys for an API account. */
   | "api.key"
-  | "library.team"
-  | "library.traffic"
+
 export type Limit =
   | "savedViews"
   | "savedSearches"
   | "exportRows"
+  | "exportsPerDay"
+  /** New one-library Reach calculations per rolling seven days. */
+  | "reachRunsPerWeek"
+  /** New Reach calculations per hour (API customer bonus). */
   | "analysisRunsPerHour"
+  /** Pooled new browser Reach calculations per API customer per day. */
+  | "analysisRunsPerDay"
+  /** 0 = no Reach; 1 = the standard geographic envelopes. */
   | "analysisAreaMultiplier"
+  /** Most eligible libraries in a service Reach calculation. */
+  | "analysisServiceLibraries"
 
 export interface Entitlements {
-  plan: PlanKey
-  source: PlanSource
+  signedIn: boolean
+  standing: AccessStanding
+  facts: ReadonlySet<AccessFact>
   features: ReadonlySet<Feature>
   limits: Readonly<Record<Limit, number>>
-  /** Libraries of the user's active, unexpired Teams (`canForLibrary`). */
-  teamLibraryIds: ReadonlySet<string>
 }
 
-/** A Team the user is an active member of, as the session bridge sends it. */
-export interface TeamInput {
-  libraryDocumentIds: string[]
-  expiresAt: string | null
-  status: "active" | "lapsed"
+/** An API account the user belongs to, as the session bridge sends it. */
+export interface ApiAccountInput {
+  /** Organisers manage billing and keys and receive the browser Reach bonus. */
+  role: "organiser" | "member"
+  /** End of settled paid coverage; null or past means no coverage. */
+  paidThrough: string | null
+  revoked?: boolean
 }
 
 export interface EntitlementInput {
   signedIn: boolean
   now: Date
-  /** Better Auth `subscription` row (P-D). */
-  subscription?: {
-    plan: string
-    status: string
-    periodEnd?: string | null
-    pastDueSince?: string | null
-    /** Verified paid period; supplied by billing, never inferred from status. */
-    paidThrough?: string | null
-  } | null
-  /** Strapi `entitlement-grant` rows (P-D). Unknown plans are ignored. */
-  grants?: { plan: string; expiresAt: string | null }[]
-  /** Free-Pro verifications (C5, P-D). */
-  verifications?: { expiresAt: string | null }[]
-  rewardsTier?: string | null
-  rewardsPoints?: number | null
-  /** Thirty days after the latest accepted contribution. */
-  earnedProUntil?: string | null
-  /**
-   * Teams the user is an active member of (R2-B). An active, unexpired Team
-   * gives Pro personally and Team features on its libraries only.
-   */
-  teams?: TeamInput[]
+  /** Distinct accepted, substantive contributions. */
+  acceptedContributions?: number | null
+  recognitionRevoked?: boolean | null
+  /** API accounts the user belongs to. */
+  apiAccounts?: ApiAccountInput[]
 }
 
-const SUPPORTER_FEATURES: readonly Feature[] = [
-  "atlas.export",
-  "library.history",
-]
-
-const PRO_FEATURES: readonly Feature[] = [
-  ...SUPPORTER_FEATURES,
+export const EXPLORER_FEATURES: readonly Feature[] = [
   "atlas.contextLayers",
   "atlas.analysis",
+  "atlas.export",
   "atlas.compare",
   "index.export",
   "index.alerts",
   "index.compare",
   "library.watch",
   "library.notes",
+  "library.history",
   "data.benchmark",
   "data.explorerExport",
   "events.personalFeed",
 ]
-
-export const TEAM_ONLY_FEATURES: readonly Feature[] = [
-  "team.workspace",
-  "team.bulkUpload",
-  "team.embed",
+export const CONTRIBUTOR_FEATURES: readonly Feature[] = ["atlas.reach"]
+export const API_CUSTOMER_FEATURES: readonly Feature[] = [
   "api.key",
-  "library.team",
-  "library.traffic",
+  "atlas.reach",
+  "atlas.serviceReach",
 ]
-export const TEAM_FEATURES: readonly Feature[] = [
-  ...PRO_FEATURES,
-  ...TEAM_ONLY_FEATURES,
-]
-
-export const FEATURES: readonly Feature[] = TEAM_FEATURES
-
-/**
- * Features that belong to a library, not a person: unlocked only on the
- * libraries of an active Team (`canForLibrary`). A personal `team` plan
- * grant alone never unlocks them.
- */
-export const LIBRARY_SCOPED_FEATURES: readonly Feature[] = [
-  "library.team",
-  "library.traffic",
+export const FEATURES: readonly Feature[] = [
+  ...EXPLORER_FEATURES,
+  "atlas.reach",
+  "atlas.serviceReach",
+  "api.key",
 ]
 
-const PLAN_FEATURES: Record<PlanKey, readonly Feature[]> = {
-  public: [],
-  free: [],
-  supporter: SUPPORTER_FEATURES,
-  pro: PRO_FEATURES,
-  team: TEAM_FEATURES,
+const NO_LIMITS: Record<Limit, number> = {
+  savedViews: 0,
+  savedSearches: 0,
+  exportRows: 0,
+  exportsPerDay: 0,
+  reachRunsPerWeek: 0,
+  analysisRunsPerHour: 0,
+  analysisRunsPerDay: 0,
+  analysisAreaMultiplier: 0,
+  analysisServiceLibraries: 0,
 }
 
-const PLAN_LIMITS: Record<PlanKey, Record<Limit, number>> = {
-  public: {
-    analysisAreaMultiplier: 0,
-    analysisRunsPerHour: 0,
-    savedViews: 0,
-    savedSearches: 0,
-    exportRows: 0,
-  },
-  free: {
-    analysisAreaMultiplier: 0,
-    analysisRunsPerHour: 0,
-    savedViews: 3,
-    savedSearches: 3,
-    exportRows: 0,
-  },
-  supporter: {
-    analysisAreaMultiplier: 0,
-    analysisRunsPerHour: 0,
-    savedViews: 3,
-    savedSearches: 3,
-    exportRows: 500,
-  },
-  pro: {
-    analysisAreaMultiplier: 1,
-    analysisRunsPerHour: 20,
-    savedViews: 1000,
-    savedSearches: 1000,
-    exportRows: 10_000,
-  },
-  team: {
-    analysisAreaMultiplier: 2,
-    analysisRunsPerHour: 100,
-    savedViews: 1000,
-    savedSearches: 1000,
-    exportRows: 50_000,
-  },
+/** Fair-use limits for every signed-in account. */
+export const EXPLORER_LIMITS: Readonly<Record<Limit, number>> = {
+  ...NO_LIMITS,
+  savedViews: 1000,
+  savedSearches: 1000,
+  exportRows: 10_000,
+  exportsPerDay: 20,
 }
 
-const PAST_DUE_GRACE_MS = 7 * 86_400_000
-
-const PLAN_RANK: Record<PlanKey, number> = {
-  public: 0,
-  free: 1,
-  supporter: 2,
-  pro: 3,
-  team: 4,
-}
-
-// At equal plan, the earlier source wins.
-export const SOURCE_ORDER: readonly PlanSource[] = [
-  "paid",
-  "team",
-  "grant",
-  "verified",
-  "earned",
-]
+/** Contributor Reach: two new one-library calculations per rolling week. */
+export const CONTRIBUTOR_REACH_PER_WEEK = 2
+/** API customer browser Reach bonus. */
+export const API_REACH_PER_HOUR = 20
+export const API_REACH_PER_DAY = 100
+export const API_REACH_SERVICE_LIBRARIES = 50
 
 const notExpired = (iso: string | null | undefined, now: Date) =>
-  iso === null || (iso !== undefined && Date.parse(iso) > now.getTime())
+  typeof iso === "string" && Date.parse(iso) > now.getTime()
 
-function paidPlan(
-  s: EntitlementInput["subscription"],
-  now: Date
-): PlanKey | null {
-  if (!s || !isSupporterPlan(s.plan)) return null
-  const plan = s.plan
-  switch (s.status) {
-    case "active":
-    case "trialing":
-      return s.paidThrough !== undefined && !notExpired(s.paidThrough, now)
-        ? null
-        : plan
-    case "past_due":
-      return s.pastDueSince &&
-        now.getTime() - Date.parse(s.pastDueSince) <= PAST_DUE_GRACE_MS
-        ? plan
-        : null
-    case "canceled":
-      return s.periodEnd && Date.parse(s.periodEnd) > now.getTime()
-        ? plan
-        : null
-
-    default:
-      return null
-  }
-}
-
-function build(
-  plan: PlanKey,
-  source: PlanSource,
-  teamLibraryIds: ReadonlySet<string> = new Set(),
-  activeTeam = false
-): Entitlements {
-  return {
-    plan,
-    source,
-    features: new Set(PLAN_FEATURES[plan]),
-    limits: {
-      ...PLAN_LIMITS[plan],
-      ...(activeTeam
-        ? {
-            analysisAreaMultiplier: 2,
-            analysisRunsPerHour: PLAN_LIMITS.team.analysisRunsPerHour,
-          }
-        : {}),
-    },
-    teamLibraryIds,
-  }
-}
-
-/** The libraries of every active, unexpired Team in the input. */
-function activeTeamLibraries(
-  teams: TeamInput[] | undefined,
-  now: Date
-): Set<string> {
-  const ids = new Set<string>()
-  for (const t of teams ?? []) {
-    if (t.status !== "active" || !notExpired(t.expiresAt, now)) continue
-    for (const id of t.libraryDocumentIds) ids.add(id)
-  }
-
-  return ids
+export function hasApiCoverage(
+  accounts: ApiAccountInput[] | undefined,
+  now: Date,
+  role?: ApiAccountInput["role"]
+): boolean {
+  return (accounts ?? []).some(
+    (a) =>
+      !a.revoked &&
+      (role === undefined || a.role === role) &&
+      notExpired(a.paidThrough, now)
+  )
 }
 
 export function resolveEntitlements(i: EntitlementInput): Entitlements {
-  if (!i.signedIn) return build("public", "none")
+  if (!i.signedIn)
+    return {
+      signedIn: false,
+      standing: "public",
+      facts: new Set(),
+      features: new Set(),
+      limits: { ...NO_LIMITS },
+    }
 
-  const candidates: { plan: PlanKey; source: PlanSource }[] = []
-  const paid = paidPlan(i.subscription, i.now)
-  if (paid) candidates.push({ plan: paid, source: "paid" })
-  const teamLibraryIds = activeTeamLibraries(i.teams, i.now)
-  const activeTeam = (i.teams ?? []).some(
-    (t) => t.status === "active" && notExpired(t.expiresAt, i.now)
-  )
-  if (activeTeam) candidates.push({ plan: "pro", source: "team" })
-  for (const g of i.grants ?? [])
-    if (isSupporterPlan(g.plan) && notExpired(g.expiresAt, i.now))
-      candidates.push({ plan: g.plan, source: "grant" })
-  if ((i.verifications ?? []).some((v) => notExpired(v.expiresAt, i.now)))
-    candidates.push({ plan: "pro", source: "verified" })
-  if (hasEarnedPro(i.rewardsPoints, i.earnedProUntil, i.now))
-    candidates.push({ plan: "pro", source: "earned" })
+  const facts = new Set<AccessFact>(["explorer"])
+  const features = new Set<Feature>(EXPLORER_FEATURES)
+  const limits: Record<Limit, number> = { ...EXPLORER_LIMITS }
+  const recognition = recognitionOf(i)
+  if (recognition !== "none") {
+    facts.add("contributor")
+    if (recognition === "supporter") facts.add("supporter")
+    for (const f of CONTRIBUTOR_FEATURES) features.add(f)
+    limits.reachRunsPerWeek = CONTRIBUTOR_REACH_PER_WEEK
+    limits.analysisAreaMultiplier = 1
+  }
+  // The browser bonus is personal to organisers of a covered API account;
+  // other members of the customer's organisation do not inherit it.
+  if (hasApiCoverage(i.apiAccounts, i.now, "organiser")) {
+    facts.add("apiCustomer")
+    for (const f of API_CUSTOMER_FEATURES) features.add(f)
+    limits.analysisRunsPerHour = API_REACH_PER_HOUR
+    limits.analysisRunsPerDay = API_REACH_PER_DAY
+    limits.analysisAreaMultiplier = 1
+    limits.analysisServiceLibraries = API_REACH_SERVICE_LIBRARIES
+  }
 
-  if (candidates.length === 0) return build("free", "none", teamLibraryIds)
-
-  const best = candidates.reduce(
-    (a, b) =>
-      PLAN_RANK[b.plan] > PLAN_RANK[a.plan] ||
-      (PLAN_RANK[b.plan] === PLAN_RANK[a.plan] &&
-        SOURCE_ORDER.indexOf(b.source) < SOURCE_ORDER.indexOf(a.source))
-        ? b
-        : a,
-    candidates[0]
-  )
-
-  return build(best.plan, best.source, teamLibraryIds, activeTeam)
+  return {
+    signedIn: true,
+    standing: recognition === "none" ? "explorer" : recognition,
+    facts,
+    features,
+    limits,
+  }
 }
 
 export const can = (e: Entitlements, f: Feature): boolean => e.features.has(f)
-
-/**
- * Whether `feature` is unlocked for one library. A library-scoped feature
- * (`LIBRARY_SCOPED_FEATURES`) is on only when an active Team of the user's
- * covers that library; every other feature is the personal check.
- */
-export function canForLibrary(
-  e: Entitlements,
-  f: Feature,
-  libraryDocumentId: string
-): boolean {
-  if (LIBRARY_SCOPED_FEATURES.includes(f))
-    return e.teamLibraryIds.has(libraryDocumentId)
-
-  return can(e, f)
-}
+export const has = (e: Entitlements, f: AccessFact): boolean => e.facts.has(f)
 export const limitOf = (e: Entitlements, l: Limit): number => e.limits[l]
-
-/** Plans with optional public recognition; never a contribution capability. */
-export function isSupporterPlan(
-  plan: unknown
-): plan is "supporter" | "pro" | "team" {
-  return plan === "supporter" || plan === "pro" || plan === "team"
-}

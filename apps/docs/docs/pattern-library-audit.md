@@ -48,11 +48,11 @@ The generated structural findings include further candidates in moderation appli
 
 ## Staff-area follow-up
 
-The staff normalisation added direct stories for the shared page header, panels, library-access badges, Team-status badges, seat usage, claim steps and request summaries. `Features/Staff/Access overview` shows an active, unverified Team alongside pending personal library access. A draft never becomes “awaiting review”, and missing Team details do not become an inactive or unverified state.
+The staff normalisation added direct stories for the shared page header, panels, library-access badges, Team-status badges, claim steps and request summaries. `Features/Staff/Access overview` shows an active, unverified Team alongside pending personal library access. A draft never becomes “awaiting review”, and missing Team details do not become an inactive or unverified state.
 
 `DashboardOverlayContext` was separated from `DashboardFrame` so rendering a header does not import authentication, history effects or drawer stores. The stories use the real provider for the navigation-ownership case. The existing browser seams are unchanged.
 
-Narrow French labels, Czech claim guidance, long library names, full/over-capacity seats and unavailable requests have explicit examples. These are presentation checks. Full staff routes, service-management workflows, widget publication, billing and API-key mutations still need their application tests and authenticated browser review; the catalogue does not claim to exercise them.
+Narrow French labels, Czech claim guidance, long library names and unavailable requests have explicit examples. These are presentation checks. Full staff routes, service-management workflows, widget publication, API billing and API-key mutations still need their application tests and authenticated browser review; the catalogue does not claim to exercise them.
 
 The widget overview also has typed draft/published, empty, inactive-Team, member and narrow examples. Its source-guidance interaction checks the distinction between selecting public data and gaining staff authority. Catalogue searches and writes remain behind the preview’s service-request guard.
 

@@ -19,7 +19,7 @@ import {
   CardMonogram,
   CountPill,
   LibrarySelect,
-  PlanPill,
+  StandingPill,
 } from "./ContributeMenuParts"
 
 function MobileLink({ link }: { readonly link: ContributorLink }) {
@@ -155,7 +155,7 @@ function MobileShortcuts() {
         {tUi(menu.plan ? "membership" : "plans_and_pricing")}{" "}
         {menu.plan ? (
           <span className="ml-auto">
-            <PlanPill plan={menu.plan} />
+            <StandingPill standing={menu.plan} />
           </span>
         ) : null}
       </GlobalLink>

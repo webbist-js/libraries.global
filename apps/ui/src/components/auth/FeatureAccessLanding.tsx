@@ -12,13 +12,19 @@ import { cn } from "@/lib/styles"
 const PUBLIC_DESTINATIONS: Record<AccessFeature, string> = {
   networks: "/library-networks",
   teams: "/library-networks",
-  widgets: "/plans#plan-team",
+  widgets: "/libraries",
   api: "/developers/reference",
   claim: "/libraries",
   index: "/libraries",
   add: "/libraries",
   writing: "/journal",
   roles: "/knowledge",
+}
+
+function requirementKey(feature: AccessFeature, teamFeature: boolean) {
+  if (feature === "api") return "apiRequired"
+
+  return teamFeature ? "teamRequired" : "freeAccount"
 }
 
 /** Only explanatory product copy reaches this view; no workspace data is loaded. */
@@ -46,7 +52,18 @@ export async function FeatureAccessLanding({
     signInHref,
     featureSignInHref(feature, locale, returnTo)
   )
-  const primaryHref = needsTeam ? "/plans#plan-team" : signIn
+  // Workspaces are free: a signed-in member without one is offered to
+  // create one or claim a library, never a plan. API access lives on /developers.
+  const primary = !needsTeam
+    ? { href: signIn, label: t(`${feature}.action`) }
+    : feature === "api"
+      ? { href: "/developers", label: t("openDevelopers") }
+      : { href: "/staff/teams/new", label: t("setUpTeam") }
+  const secondary = !needsTeam
+    ? { href: "/auth/register", label: t("createAccount") }
+    : feature === "api"
+      ? null
+      : { href: "/staff/claim", label: t("claimLibrary") }
 
   return (
     <>
@@ -100,13 +117,7 @@ export async function FeatureAccessLanding({
           aria-labelledby="feature-next-step"
         >
           <p className="m-0 mb-4 inline-flex rounded-full bg-(--t-bg-deep) px-3 py-1 text-sm font-semibold text-(--t-accent-primary)">
-            {t(
-              feature === "api"
-                ? "apiRequired"
-                : memberTitleKey
-                  ? "teamRequired"
-                  : "freeAccount"
-            )}
+            {t(requirementKey(feature, memberTitleKey !== null))}
           </p>
           <h2 id="feature-next-step" className="type-h2 m-0">
             {t(needsTeam ? "teamTitle" : "accountTitle")}
@@ -116,23 +127,25 @@ export async function FeatureAccessLanding({
           </p>
           <div className="flex flex-col items-start gap-3">
             <GlobalLink
-              href={primaryHref}
+              href={primary.href}
               className={cn(
                 buttonVariants({ variant: "primary", size: "pill" }),
                 "h-auto max-w-full text-center whitespace-normal"
               )}
             >
-              {t(needsTeam ? "teamPlans" : `${feature}.action`)}
+              {primary.label}
             </GlobalLink>
-            <GlobalLink
-              href={needsTeam ? "/staff/teams/new" : "/auth/register"}
-              className={cn(
-                buttonVariants({ variant: "surface", size: "pill" }),
-                "h-auto max-w-full text-center whitespace-normal"
-              )}
-            >
-              {t(needsTeam ? "setUpTeam" : "createAccount")}
-            </GlobalLink>
+            {secondary ? (
+              <GlobalLink
+                href={secondary.href}
+                className={cn(
+                  buttonVariants({ variant: "surface", size: "pill" }),
+                  "h-auto max-w-full text-center whitespace-normal"
+                )}
+              >
+                {secondary.label}
+              </GlobalLink>
+            ) : null}
           </div>
           <GlobalLink
             href={PUBLIC_DESTINATIONS[feature]}

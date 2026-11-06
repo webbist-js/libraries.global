@@ -47,6 +47,7 @@ export function AtlasListView({
   selectedId,
   onShowMap,
   onSeePlans,
+  onSignIn,
   notice,
   compact = false,
   accessibility,
@@ -62,8 +63,10 @@ export function AtlasListView({
   readonly onSelect: LibrarySelect
   readonly selectedId?: string | null
   readonly onShowMap: () => void
-  /** Opens the plans sheet from the Pro-locked export button. */
+  /** Opens the access sheet from the locked export button. */
   readonly onSeePlans: () => void
+  /** Signs a visitor in from the locked export button (exports are free). */
+  readonly onSignIn?: () => void
   /** Data notices (offline, load errors) shown above the table. */
   readonly notice?: React.ReactNode
   readonly compact?: boolean
@@ -238,6 +241,7 @@ export function AtlasListView({
         <AtlasExportButton
           libraries={sorted}
           onSeePlans={onSeePlans}
+          onSignIn={onSignIn}
           total={total}
           request={
             remoteScope

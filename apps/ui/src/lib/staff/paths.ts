@@ -17,17 +17,3 @@ export function staffLibraryHref(
 ): string {
   return slug ? `/staff/${encodeURIComponent(slug)}${suffix}` : "/staff"
 }
-
-/** Canonical workspace return path; only billing continuation parameters survive. */
-export function teamWorkspaceHref(
-  section: "" | "/api" | "/billing",
-  locale: string,
-  query: { payment?: string; seats?: string; setup?: string } = {}
-): string {
-  const clean = new URLSearchParams()
-  if (query.payment) clean.set("payment", query.payment)
-  if (query.seats) clean.set("seats", query.seats)
-  if (section === "/api" && query.setup === "1") clean.set("setup", "1")
-
-  return `${locale === "en" ? "" : `/${locale}`}${section === "/api" ? "/developers" : `/staff/teams${section}`}${clean.size ? `?${clean}` : ""}`
-}

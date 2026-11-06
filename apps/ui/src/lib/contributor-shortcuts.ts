@@ -185,6 +185,7 @@ function librariesCard(
 function teamCard(teams: readonly ShortcutTeam[]): ContributorCard {
   const team = teams[0]!
   const organiser = team.role === "organiser"
+  // Workspaces are free; API access is bought separately on /developers.
 
   return {
     key: "team",
@@ -195,9 +196,6 @@ function teamCard(teams: readonly ShortcutTeam[]): ContributorCard {
     links: [
       { label: "Members & libraries", href: "/staff/teams" },
       { label: "API access", href: "/developers" },
-      ...(organiser
-        ? [{ label: "Billing & seats", href: "/staff/teams/billing" }]
-        : []),
     ],
   }
 }

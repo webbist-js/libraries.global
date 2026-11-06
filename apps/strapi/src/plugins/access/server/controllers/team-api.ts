@@ -86,7 +86,7 @@ export default ({ strapi }: { strapi: any }) => {
     })),
 
     // POST /teams/:id/invites  { email, teamRole?, preassign? }
-    // → 201 { member, emailSent }: the seat is held even when no email
+    // → 201 { member, emailSent }: the invitation is held even when no email
     // provider is configured (the page then says so).
     invite: wrap(
       (ctx, user) =>

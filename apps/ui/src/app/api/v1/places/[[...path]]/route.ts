@@ -1,16 +1,29 @@
-import { authDbPool } from "@/lib/auth"
 import { BillingError } from "@/lib/billing/config"
 import {
   apiFailure,
   apiLibraries,
   apiPlaces,
-  serveTeamApi,
+  withApiRequest,
 } from "@/lib/team-api/gateway"
 import { teamApiPlaceRoute } from "@/lib/team-api/paths"
 
 export const runtime = "nodejs"
 
 type Ctx = { params: Promise<{ path?: string[] }> }
+
+const places = withApiRequest<{ country?: string; region?: string }>(
+  { scope: "libraries:read", endpoint: "places.list" },
+  ({ request, maximum }, place) => apiPlaces(request, maximum, place)
+)
+const libraries = withApiRequest<{
+  country: string
+  region?: string
+  area?: string
+}>(
+  { scope: "libraries:read", endpoint: "places.libraries" },
+  ({ request, maximum }, place) =>
+    apiLibraries(request, maximum, undefined, place)
+)
 
 /**
  * GET /api/v1/places                          countries with libraries
@@ -21,20 +34,8 @@ type Ctx = { params: Promise<{ path?: string[] }> }
 export async function GET(request: Request, { params }: Ctx) {
   const route = teamApiPlaceRoute((await params).path ?? [])
   if (!route) return apiFailure(new BillingError("record_not_found", 404))
-  if (route.kind === "places")
-    return serveTeamApi(
-      authDbPool,
-      request,
-      "libraries:read",
-      "places.list",
-      (maximum) => apiPlaces(request, maximum, route)
-    )
 
-  return serveTeamApi(
-    authDbPool,
-    request,
-    "libraries:read",
-    "places.libraries",
-    (maximum) => apiLibraries(request, maximum, undefined, route)
-  )
+  return route.kind === "places"
+    ? places(request, route)
+    : libraries(request, route)
 }

@@ -176,8 +176,8 @@ export function RoleApplicationAside({
           className="mt-4 mb-0 text-sm leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
-          Roles are never bought or earned through points. Paid membership
-          doesn’t affect your application.
+          Roles are never bought or earned through points. API Access and
+          sponsorship don’t affect your application.
         </p>
       </section>
 

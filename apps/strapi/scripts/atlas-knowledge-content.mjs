@@ -1,4 +1,8 @@
-/** Reviewed Atlas guides. Expanded capacity copy is staged until its code release. */
+/**
+ * Reviewed Atlas guides. Reach allowances follow the sponsored-access model;
+ * the export guide ("exporting-from-the-atlas") and the plans guides are owned
+ * by update-sponsored-access-content.mjs and are not written here.
+ */
 const text = (value) => ({ type: "text", text: value })
 
 export const atlasRich = (markdown) => ({
@@ -28,20 +32,17 @@ const related = () => ({
       "Population, deprivation and Library access",
       "/knowledge/data-api/atlas-population-and-context"
     ),
-    atlasLink("Plans and Pro", "/knowledge/governance/plans-and-pro"),
+    atlasLink("Plans and pricing", "/knowledge/governance/plans-and-pricing"),
   ],
 })
 
-export function reachAllowanceCopy(expanded) {
-  return expanded
-    ? `Smaller services include 5, 10, 15 and 30 minutes in one calculation. Larger services generate only the selected time. Change the time, then choose Calculate coverage again; the previous result is cleared while your selection differs. An identical saved calculation may be reused.
+/** One allowance description for both current and staged copy. */
+export function reachAllowanceCopy() {
+  return `Service Reach admits up to 50 eligible libraries. Smaller services include 5, 10, 15 and 30 minutes in one calculation, inside a 2,500 km² envelope and a 75 km maximum span. For one selected time, the limits rise to 20,000 km² and 200 km. Change the time, then choose Calculate coverage again; an identical saved calculation may be reused. Both the service’s library locations and its full reporting boundary must fit. These are conservative bounding boxes, not measurements of land area.
 
-Pro allows up to 50 eligible libraries, with all four times inside a 2,500 km² envelope and 75 km maximum span. For one selected time, the limits rise to 20,000 km² and 200 km. Active Team seats allow up to 100 libraries, a 5,000 km² / 150 km envelope for all four times, or 40,000 km² / 400 km for one time. Both the service’s library locations and its full reporting boundary must fit. These are conservative bounding boxes, not measurements of land area.
-
-Pro allows 20 new calculations per hour; active Team seats allow 100. Returning a saved identical result does not use a new calculation. Limits also apply to raster cells, the shared queue and calculation time, so a request within the geographic allowance can still be unavailable. Team capacity is bounded; it does not enable an arbitrary national calculation. Buying membership does not grant Library editing authority.`
-    : `Service Reach currently supports up to 50 eligible libraries, a 75 km maximum span and a 2,500 km² envelope covering both the library locations and the full reporting area. A larger rural service can exceed this allowance even with relatively few branches. Use one-library Reach to inspect a branch locally. Zooming does not shrink a service’s reporting boundary. One-library Reach requires a local map view, at zoom 11 or closer with no more than 100 matching libraries in view.`
+New calculations have their own allowances. Contributors can run two new one-library calculations in any rolling seven days, without service Reach. Organisers of an API account with settled coverage can run 20 new calculations an hour, including service Reach, within a combined daily ceiling for the API account. Returning a saved identical result does not use a new calculation. Limits also apply to raster cells, the shared queue and calculation time, so a request within the geographic allowance can still be unavailable. Paying for API access does not grant Library editing authority. [Atlas exports and Reach limits](/knowledge/data-api/exporting-from-the-atlas) explains who can run Reach.`
 }
-export function atlasKnowledgeArticles(sectionId, expanded = false) {
+export function atlasKnowledgeArticles(sectionId) {
   const article = (title, slug, summary, copy) => ({
     title,
     slug,
@@ -79,7 +80,7 @@ Mobile libraries, permanently closed libraries and records without usable mapped
 
 ## Larger services and calculation limits
 
-${reachAllowanceCopy(expanded)}
+${reachAllowanceCopy()}
 
 ## Sources and practical limits
 
@@ -166,7 +167,7 @@ Choose every feature you require: the Services & accessibility filter requires a
 
 Library locations, mobile routes and stops, library density, opening-hours styling and permanent closures are public. A free account adds recorded Accessibility, event-feed density, Record completeness and Population density. Accessibility offers Matches, Compare and Data gaps; the last two help distinguish confirmed features from incomplete records.
 
-Pro adds UK walking/cycling Reach, Library access with population comparisons, deprivation and households without a car where the required data is installed. Transit, founded-year styling and other unfinished layers remain marked Coming soon. Membership does not fill gaps in the source data.
+A free account also adds Library access with population comparisons, deprivation and households without a car where the required data is installed. UK walking/cycling Reach is available to Contributors and API account organisers within their allowances. Transit, founded-year styling and other unfinished layers remain marked Coming soon. No account type fills gaps in the source data.
 
 ## Use the data drawers
 
@@ -179,25 +180,7 @@ Reach settings stay visible. Choose the service or library and mode, then Calcul
 The bottom bar counts matching libraries in the current view and switches between Map and List. The list supports sorting and paging. Moving the map changes the visible selection; a service Reach reporting boundary stays tied to its service. On a phone, the workspace uses sheets with controls to resize or switch views. Keyboard users can navigate the controls and list without relying on map colours.`),
   related(),
 ]
-export const atlasExportBody = [
-  atlasRich(`Supporter, Pro and Team members can export a filtered Atlas library selection as CSV or GeoJSON. Individual library record downloads remain public. Exporting records and downloading a Reach analysis are separate actions.
-
-## Export the library selection
-
-Narrow the selection with filters or the map, switch to List and choose Export. CSV suits spreadsheets; GeoJSON retains map geometry. Supporter allows up to 500 libraries per download, Pro 10,000 and Team 50,000. If the selection exceeds the allowance, narrow it before exporting. These are per-download limits, not claims that the directory is complete.
-
-## Retain source and scope
-
-The export carries library identifiers, available visiting/contact details, location and source information. Keep the public source records, attribution, licences and retrieval dates with the data. Empty fields mean the record lacks that value; they should not be converted into a negative answer. A record without a usable location cannot supply a map point.
-
-## Download Reach results
-
-Use Downloads in the Reach drawer for coverage CSV, display GeoJSON or Analysis JSON. The analysis file includes the selected libraries, filters, source editions and unrounded results. CSV rows represent the generated travel times; cumulative counts overlap and must not be added together. Display polygons are simplified. They are useful for presentation, but the resident calculation uses full analytical geometry.
-
-Share the source year, reporting geography, selected service and mode with a figure. Modelled proximity is not observed use, guaranteed admission or step-free access. Keep partial-data warnings with the exported result.`),
-  related(),
-]
-export function atlasJournal(expanded = false) {
+export function atlasJournal() {
   return {
     title: "What the Atlas can tell us about library reach",
     slug: "atlas-library-reach-and-population",
@@ -240,7 +223,7 @@ When all four times are available, Distinct bands places each resident in one in
 
 ## Bigger rural services need a bounded calculation
 
-${reachAllowanceCopy(expanded)}
+${reachAllowanceCopy()}
 
 ## More records, with the gaps visible
 
@@ -254,23 +237,19 @@ These tools can help a library service or council ask where recorded provision a
   }
 }
 
-/** Existing translated guides must not keep describing shipped layers as planned. */
+/**
+ * Translated Atlas exploring guides. Plans, pricing and the export guide are
+ * owned by update-sponsored-access-content.mjs.
+ */
 export const atlasLocalizedCorrections = {
   fr: {
-    priceOld:
-      "lorsque les outils Reach seront disponibles ; il n’est pas proposé avant leur disponibilité.",
-    priceNew:
-      "lorsque cette offre distincte sera introduite ; elle n’est pas proposée actuellement. La disponibilité de Reach ne modifie pas le prix d’un abonnement existant.",
-    deliveredHeading: "Outils Atlas disponibles",
-    delivered:
-      "Pro comprend la portée à pied et à vélo au Royaume-Uni, Library access avec comparaison de deux territoires, ainsi que la défavorisation et les ménages sans voiture dans les zones couvertes. La densité de population est disponible avec un compte gratuit. Les transports, les analyses comparatives de services, les espaces d’analyse partagés et les rapports de fréquentation restent prévus. Importer des bibliothèques ne fournit pas automatiquement les données locales de population ou de routage.",
     exploring: `L’Atlas affiche les bibliothèques publiées dont la localisation est exploitable. Les fiches sans coordonnées restent consultables dans l’annuaire.
 
 ## Recherche, filtres et couches
 
 Recherchez une bibliothèque ou un lieu. Les filtres limitent les fiches par service, type, horaires et caractéristiques renseignées. Le sélecteur de service se réduit par pays, région et nom ; le choix recentre la carte sur ses bibliothèques. Chaque caractéristique choisie doit être confirmée dans la fiche. Une réponse manquante ne signifie pas Non. Les filtres d’ouverture nécessitent des horaires connus.
 
-Les localisations, itinéraires mobiles, densité de bibliothèques, ouvertures tardives et fermetures sont publics. Un compte gratuit ajoute Accessibilité, densité des flux d’événements, complétude des fiches et densité de population. Accessibilité distingue les correspondances confirmées des lacunes dans les fiches. Pro ajoute Reach, Library access et les couches de contexte disponibles. Les couches non achevées restent signalées À venir.
+Les localisations, itinéraires mobiles, densité de bibliothèques, ouvertures tardives et fermetures sont publics. Un compte gratuit ajoute Accessibilité, densité des flux d’événements, complétude des fiches et densité de population. Accessibilité distingue les correspondances confirmées des lacunes dans les fiches. Il donne aussi accès à Library access et aux couches de contexte disponibles. Reach est réservé aux contributeurs et aux organisateurs d’un compte API, dans la limite de leurs quotas. Les couches non achevées restent signalées À venir.
 
 ## Lire les résultats
 
@@ -281,34 +260,15 @@ Dans Reach, choisissez une bibliothèque ou un service, le mode de déplacement 
 ## Carte, liste et téléphone
 
 La barre inférieure compte les bibliothèques correspondantes dans la vue et permet de passer à la liste, avec tri et pagination. Sur téléphone, les commandes et les données utilisent des panneaux redimensionnables. Les contrôles et la liste sont utilisables au clavier.`,
-    exporting: `Les membres Supporter, Pro et Team peuvent exporter une sélection de bibliothèques de l’Atlas en CSV ou GeoJSON. Le téléchargement d’une fiche individuelle reste public.
-
-## Exporter la sélection
-
-Appliquez les filtres ou déplacez la carte, ouvrez la liste et choisissez Exporter. Le CSV convient aux tableaux ; le GeoJSON conserve les points cartographiques. La limite par téléchargement est de 500 bibliothèques pour Supporter, 10 000 pour Pro et 50 000 pour Team. Réduisez une sélection qui dépasse cette limite.
-
-## Garder les sources
-
-Conservez les identifiants, références publiques, licences, crédits et dates de collecte. Une valeur vide indique une information inconnue, pas une réponse négative. Une fiche sans localisation exploitable ne peut pas fournir de point cartographique.
-
-## Télécharger une analyse Reach
-
-Le panneau Reach propose CSV, GeoJSON d’affichage et JSON d’analyse. Ce dernier conserve la sélection, les filtres, les éditions des sources et les valeurs non arrondies. Les totaux cumulatifs se recoupent : ne les additionnez pas. Les polygones affichés sont simplifiés ; le calcul utilise les contours analytiques complets. Publiez l’année, le territoire, le service et le mode avec vos résultats. Les avertissements de données partielles doivent accompagner le fichier.`,
   },
   cs: {
-    priceOld: "po zpřístupnění nástrojů Reach; předtím se nenabízí.",
-    priceNew:
-      "po samostatném zavedení této nabídky; nyní se nenabízí. Zpřístupnění Reach nemění cenu stávajícího předplatného.",
-    deliveredHeading: "Dostupné nástroje Atlasu",
-    delivered:
-      "Pro zahrnuje pěší a cyklistický Reach ve Spojeném království, Library access s porovnáním dvou oblastí a vrstvy deprivace a domácností bez auta tam, kde jsou dostupná potřebná data. Hustota obyvatelstva je dostupná s bezplatným účtem. Veřejná doprava, porovnávání knihovních sítí, sdílené analytické prostory a návštěvnost zůstávají plánované. Import knihoven sám neposkytuje místní populační rastr ani směrovací graf.",
     exploring: `Atlas zobrazuje zveřejněné knihovny s použitelnou polohou. Záznamy bez souřadnic lze stále najít v adresáři.
 
 ## Hledání, filtry a vrstvy
 
 Vyhledejte knihovnu nebo místo. Filtry omezují záznamy podle sítě, typu, otevírací doby a zaznamenaných vlastností. Výběr sítě lze zúžit podle země, regionu a názvu; výběr zaměří mapu na její knihovny. Každá zvolená vlastnost musí být v záznamu potvrzená. Chybějící odpověď neznamená Ne. Filtry otevření vyžadují známou otevírací dobu.
 
-Polohy, mobilní trasy, hustota knihoven, večerní otevření a trvalá uzavření jsou veřejné. Bezplatný účet přidává přístupnost, hustotu událostí, úplnost záznamů a hustotu obyvatelstva. Vrstva přístupnosti rozlišuje potvrzené shody od chybějících údajů. Pro přidává Reach, Library access a dostupné kontextové vrstvy. Nedokončené vrstvy jsou označené Připravujeme.
+Polohy, mobilní trasy, hustota knihoven, večerní otevření a trvalá uzavření jsou veřejné. Bezplatný účet přidává přístupnost, hustotu událostí, úplnost záznamů a hustotu obyvatelstva. Vrstva přístupnosti rozlišuje potvrzené shody od chybějících údajů. Zahrnuje také Library access a dostupné kontextové vrstvy. Reach mohou v rámci svých přídělů používat uživatelé se statusem Contributor a organizátoři účtu API. Nedokončené vrstvy jsou označené Připravujeme.
 
 ## Čtení výsledků
 
@@ -319,18 +279,5 @@ V Reach zvolte knihovnu nebo síť, způsob dopravy a čas a spusťte výpočet.
 ## Mapa, seznam a telefon
 
 Dolní lišta počítá odpovídající knihovny v aktuálním výřezu a přepíná mapu a seznam s řazením a stránkováním. Na telefonu se ovládání a data otevírají v upravitelných panelech. Ovládací prvky a seznam lze používat klávesnicí.`,
-    exporting: `Členové Supporter, Pro a Team mohou vybranou sadu knihoven z Atlasu exportovat do CSV nebo GeoJSON. Stažení jednotlivého záznamu zůstává veřejné.
-
-## Export výběru
-
-Použijte filtry nebo posuňte mapu, otevřete seznam a zvolte Export. CSV je vhodné pro tabulky, GeoJSON zachovává mapové body. Limit na stažení je 500 knihoven pro Supporter, 10 000 pro Pro a 50 000 pro Team. Větší výběr nejprve zúžte.
-
-## Zachování zdrojů
-
-Ponechte identifikátory, veřejné odkazy, licence, uvedení zdrojů a data získání. Prázdná hodnota znamená neznámý údaj, nikoli zápornou odpověď. Záznam bez použitelné polohy nemůže poskytnout mapový bod.
-
-## Stažení analýzy Reach
-
-Panel Reach nabízí CSV, zobrazovací GeoJSON a analytický JSON. Analytický soubor zachovává výběr, filtry, verze zdrojů a nezaokrouhlené hodnoty. Kumulativní součty se překrývají: nesčítejte je. Zobrazované polygony jsou zjednodušené; výpočet používá úplnou analytickou geometrii. Uveďte rok, oblast, síť a způsob dopravy. U částečných výsledků zachovejte upozornění na chybějící data.`,
   },
 }

@@ -325,7 +325,7 @@ export function PlaceContributionCard({
               className={LINK}
               style={{ color: T.accent.primary }}
             >
-              How to earn Pro free
+              What contributing unlocks
             </GlobalLink>
           </p>
         </nav>
@@ -336,7 +336,7 @@ export function PlaceContributionCard({
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            How to earn Pro free
+            What contributing unlocks
           </GlobalLink>
         </p>
       )}

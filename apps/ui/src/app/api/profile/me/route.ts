@@ -227,12 +227,12 @@ export async function DELETE(req: Request) {
   } catch (error) {
     if (
       error instanceof BillingError &&
-      error.code === "transfer_team_before_deletion"
+      error.code === "transfer_api_account_before_deletion"
     )
       return NextResponse.json(
         {
           error:
-            "Make another active member a Team Organiser before deleting your account. You can discard an unused Team from Team billing.",
+            "Make another active member an Organiser of your organisation before deleting your account, so its API access can continue.",
         },
         { status: 409 }
       )
@@ -240,7 +240,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't stop future membership payments. Please retry before deleting your account.",
+          "We couldn't stop future API Access payments. Please retry before deleting your account.",
       },
       { status: 503 }
     )

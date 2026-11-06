@@ -1,9 +1,9 @@
+import apiAccounts from "./api-accounts"
 import apiData from "./api-data"
+import apiResources from "./api-resources"
 import networks from "./networks"
 import people from "./people"
-import plans from "./plans"
 import teamApi from "./team-api"
-import teamBilling from "./team-billing"
 import teams from "./teams"
 import widgets from "./widgets"
 
@@ -12,8 +12,8 @@ export default {
   widgets,
   people,
   teams,
-  plans,
   "team-api": teamApi,
   "api-data": apiData,
-  "team-billing": teamBilling,
+  "api-accounts": apiAccounts,
+  "api-resources": apiResources,
 }

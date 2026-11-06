@@ -32,12 +32,6 @@ export default {
     },
     {
       method: "POST",
-      path: "/atlas/plans/sync",
-      handler: "atlas.syncPlanCopy",
-      config: { auth: false },
-    },
-    {
-      method: "POST",
       path: "/atlas/population/local/import",
       handler: "atlas.ingestLocalPopulation",
       config: { auth: false },

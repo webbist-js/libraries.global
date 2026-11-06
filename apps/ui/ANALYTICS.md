@@ -1,6 +1,6 @@
 # Platform analytics
 
-GA4 measures consented public-site and workspace activity. It does not represent all visitors, verified newsletter members, published contributions or paid memberships. Application records remain the source for operational and financial totals.
+GA4 measures consented public-site and workspace activity. It does not represent all visitors, verified newsletter members, published contributions or API Access subscriptions. Application records remain the source for operational and financial totals.
 
 The measurement ID is `G-8M465CHXJ6`, hardcoded in `src/lib/google-analytics.ts`. The existing production gate requires `NODE_ENV=production`, `APP_ENV=production`, `APP_PUBLIC_URL=https://libraries.global` and the exact browser origin. Local and preview builds do not install the controller or click listeners.
 
@@ -45,7 +45,7 @@ Atlas typing/autocomplete, passive camera movements, automatic view fallbacks an
 The homepage search and Near me controls retain their `home` attribution and
 existing consent-aware request/completion handling. Moving the pricing section
 does not retire its interest metric: the closing Plans link and the staff
-section’s Team-plan link emit `membership_interest` with `home_plans` and
+section’s plans link emit `membership_interest` with `home_plans` and
 `action_type=compare`. Published pillar, Journal, event and drive links use
 `select_content` with public IDs; public section links use `navigation_action`
 with `interaction_source=home`. Each link has one delegated analytics marker.
@@ -118,21 +118,19 @@ the configuration record and production verification still required after deploy
 
 `CHECKOUT_ANALYTICS_ENABLED=true` enables a separate `lg_checkout` data-layer channel. It defaults off. The existing production origin/build gates and explicit analytics consent still apply. Before enabling it, publish the matching cookie/privacy disclosures and reviewed GTM configuration. The regular public channel continues to exclude private page views and Staff activity.
 
-Only `/plans`, `/staff/teams/new`, `/staff/teams/billing`, `/developers`, `/developers/keys`, `/developers/usage`, the legacy `/staff/teams/api` entry and `/contribute/membership/checkout` can emit these checkout events, with locale prefixes handled. Pricing actions are restricted to `/plans`. Checkout context uses the virtual location `/checkout`, a categorical title and an empty referrer. Actual private routes, queries, Team names/IDs, account IDs, email, provider/session IDs, form values, seat counts and amounts are excluded.
+Only `/plans`, `/developers`, `/developers/keys` and `/developers/usage` can emit these checkout events, with locale prefixes handled. API Access is the only purchase. Checkout context uses the virtual location `/checkout`, a categorical title and an empty referrer. Actual private routes, queries, Team names/IDs, account IDs, email, provider/session IDs, form values and amounts are excluded.
 
-| Event              | Trigger                                                                                                   |
-| ------------------ | --------------------------------------------------------------------------------------------------------- |
-| `pricing_action`   | Explicit billing-period, Team-open/close, service-type, API selection or continue action                  |
-| `begin_checkout`   | Personal checkout starts, annual Team review opens, or API consent review opens                           |
-| `checkout_step`    | Personal billing review opens, Team creation succeeds or the organiser explicitly continues to API review |
-| `checkout_handoff` | A successful checkout response is about to navigate to Stripe                                             |
-| `checkout_error`   | Checkout fails; no error message or provider detail is sent                                               |
+| Event              | Trigger                                                       |
+| ------------------ | ------------------------------------------------------------- |
+| `begin_checkout`   | The API Access consent review opens                           |
+| `checkout_handoff` | A successful checkout response is about to navigate to Stripe |
+| `checkout_error`   | Checkout fails; no error message or provider detail is sent   |
 
-Fields are fixed `product`, `billing_interval`, optional `api_addon`, `billing_mode`, `action_type` and `checkout_step`. `billing_mode` is included where the caller has an authoritative mode; otherwise it is omitted. `begin_checkout` also carries public product IDs in `analytics.items`. Handoffs and errors use the same captured-consent rules as other async events. A handoff does not mean payment succeeded.
+Fields are fixed: `product` (`team_api`), `billing_interval` (`month`) and optional `billing_mode`. `billing_mode` is included where the caller has an authoritative mode; otherwise it is omitted. `begin_checkout` also carries public product IDs in `analytics.items`. Handoffs and errors use the same captured-consent rules as other async events. A handoff does not mean payment succeeded.
 
-GTM must handle `lg_checkout` separately, require analytics consent, schema version 1, transport `gtm` and the exact production hostname, and allowlist only these five names. Map `analytics.event_name` to the GA4 event name, map the fixed fields above, and map `analytics.items` to the `items` event parameter. Keep automatic tracking disabled. Preview refused consent, withdrawal, private-route exclusions and duplicate prevention before publishing. Register product/interval/add-on/mode/step dimensions only if needed for reports.
+GTM must handle `lg_checkout` separately, require analytics consent, schema version 1, transport `gtm` and the exact production hostname, and allowlist only these three names. Map `analytics.event_name` to the GA4 event name, map the fixed fields above, and map `analytics.items` to the `items` event parameter. Keep automatic tracking disabled. Preview refused consent, withdrawal, private-route exclusions and duplicate prevention before publishing. Register product/interval/mode dimensions only if needed for reports.
 
-There is deliberately no `purchase` or `refund` emission. Those need a settled invoice, a stable transaction identifier and deduplication, including consent handling across provider returns. Never emit `purchase` from a return URL, an already-active membership, a checkout click or a subscription renewal snapshot. Google documents the recommended ecommerce events and transaction fields in [Measure ecommerce](https://developers.google.com/analytics/devguides/collection/ga4/ecommerce?client_type=gtm). Application and Stripe records remain the financial source of truth.
+There is deliberately no `purchase` or `refund` emission. Those need a settled invoice, a stable transaction identifier and deduplication, including consent handling across provider returns. Never emit `purchase` from a return URL, an already-active subscription, a checkout click or a subscription renewal snapshot. Google documents the recommended ecommerce events and transaction fields in [Measure ecommerce](https://developers.google.com/analytics/devguides/collection/ga4/ecommerce?client_type=gtm). Application and Stripe records remain the financial source of truth.
 
 ## Reports and acceptance
 
@@ -152,7 +150,7 @@ A Team-covered library's Staff **Traffic** tab (`/staff/<slug>/traffic`) reads G
 - **Honesty.** Zero traffic shows as zeros. Missing configuration, an unpublished page, quota exhaustion and provider failures each show their own message, never numbers. Thresholding, sampling or an `(other)` row flag the report as a minimum. The page says only consenting visitors are counted. "Searches that found you" needs Search Console and isn't shown.
 - **Limits.** Reports are cached in memory for 30 minutes per property, library, range and path (up to 500 entries), with 10-second timeouts. A library that moved region loses the views recorded under its old path. Exact-path filtering is the agreed first adapter; durable reporting at full catalogue scale needs a raw-event source such as the BigQuery export.
 
-Configure with `GA4_PROPERTY_ID` (`558992450`) and either `GA4_CREDENTIALS_JSON` (a service-account key, raw or base64) or `GA4_CREDENTIALS_FILE`. Grant the service account **Viewer** on the property only. An `authorized_user` ADC file also works for local checks. Without configuration the tab says reporting isn't connected. The Team plan copy (`PRO_FEATURE_COPY["library.traffic"]`) stays "soon" until a production report has been accepted against DebugView.
+Configure with `GA4_PROPERTY_ID` (`558992450`) and either `GA4_CREDENTIALS_JSON` (a service-account key, raw or base64) or `GA4_CREDENTIALS_FILE`. Grant the service account **Viewer** on the property only. An `authorized_user` ADC file also works for local checks. Without configuration the tab says reporting isn't connected. The Verified Staff traffic item on the plans page (`soon("traffic")` in `src/lib/plans.ts`) stays "soon" until a production report has been accepted against DebugView.
 
 ## Beta release sequence
 

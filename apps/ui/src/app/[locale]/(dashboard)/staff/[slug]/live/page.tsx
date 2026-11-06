@@ -11,7 +11,7 @@ import {
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
-import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { canStaffTool } from "@/lib/access-server"
 import { mobileConsoleHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { loadStaffPage } from "@/lib/staff/server"
@@ -60,9 +60,7 @@ export default async function LiveSettingsPage({
     <LiveSettings
       initial={settings.body}
       owner={overview.role === "owner"}
-      team={
-        requireEntitlementForLibrary(user, "library.team", documentId) === null
-      }
+      team={canStaffTool(user, "seeTeam", documentId)}
       members={team.body}
       logs={log.body?.sessions ?? []}
       locale={locale}

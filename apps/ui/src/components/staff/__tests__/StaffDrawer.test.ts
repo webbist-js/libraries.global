@@ -29,7 +29,7 @@ const state = vi.hoisted(() => ({
   push: vi.fn(),
   /** Teams the viewer belongs to (a `role: "organiser"` row shows the organiser tile). */
   teams: [] as { id: string; role: "organiser" | "member" }[],
-  /** `feature:libraryId` pairs an active Team covers. */
+  /** `action:libraryId` staff-tool pairs the viewer's own claim unlocks. */
   covered: new Set<string>(),
   /** What the library-name search answers for the page's library. */
   pageHit: null as { documentId: string; name: string; slug: string } | null,
@@ -48,14 +48,14 @@ vi.mock("@/lib/access-client", () => ({
     can: (action: string, id: string) =>
       action === "goLive"
         ? state.libraries.some((l) => l.id === id && l.canGoLive)
-        : state.libraries.some((l) => l.id === id),
+        : action === "seeTeam" || action === "traffic"
+          ? state.covered.has(`${action}:${id}`)
+          : state.libraries.some((l) => l.id === id),
   }),
   useEntitlements: () => ({
     plan: "free",
     ready: true,
     can: () => false,
-    canForLibrary: (feature: string, id: string) =>
-      state.covered.has(`${feature}:${id}`),
   }),
 }))
 vi.mock("@/lib/staff/current-library", () => ({
@@ -181,7 +181,8 @@ describe("StaffDrawer", () => {
     data.set(PUBLIC.id, payload(PUBLIC))
     render(createElement(StaffDrawer))
     expect(screen.getByRole("dialog", { name: "Central Library" })).toBeTruthy()
-    expect(screen.getByText("Verified staff")).toBeTruthy()
+    // The header pill, plus the lock tags on the Team and Traffic tiles.
+    expect(screen.getAllByText("Verified staff")).toHaveLength(3)
     expect(screen.getByText("Library owner")).toBeTruthy()
     expect(screen.queryByRole("combobox", { name: "Library" })).toBeNull()
     const base = `/staff/${PUBLIC.slug}`
@@ -399,7 +400,7 @@ describe("StaffDrawer", () => {
     expect(screen.getByTestId("drawer-open").textContent).toBe("false")
   })
 
-  it("locks the Team and Traffic tiles until a Team covers the library", () => {
+  it("locks the Team and Traffic tiles unless the viewer's own staff claim unlocks them", () => {
     state.libraries = [PUBLIC]
     data.set(PUBLIC.id, payload(PUBLIC))
     const { unmount } = render(createElement(StaffDrawer))
@@ -410,16 +411,14 @@ describe("StaffDrawer", () => {
       expect(tile.querySelector<HTMLElement>("[data-icon]")?.dataset.icon).toBe(
         "mdi:lock-outline"
       )
-      // The tag reads "Team" (on the Team tile that's the label and the tag).
-      expect(within(tile).getAllByText("Team").length).toBe(
-        label === "Team" ? 2 : 1
-      )
+      // The lock tag names what unlocks the tile: a verified staff claim.
+      expect(within(tile).getByText("Verified staff")).toBeTruthy()
     }
     expect(screen.queryByRole("link", { name: /Team organiser/ })).toBeNull()
     unmount()
 
-    state.covered.add(`library.team:${PUBLIC.id}`)
-    state.covered.add(`library.traffic:${PUBLIC.id}`)
+    state.covered.add(`seeTeam:${PUBLIC.id}`)
+    state.covered.add(`traffic:${PUBLIC.id}`)
     state.teams = [{ id: "t1", role: "organiser" }]
     render(createElement(StaffDrawer))
     const team = screen.getByRole("link", { name: /^Team$/ })

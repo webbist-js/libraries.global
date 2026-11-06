@@ -20,11 +20,9 @@ const entry = (username: string): SupporterEntry => ({
   initials: "LG",
   city: null,
   country: null,
-  since: "2026-10-01",
 })
 const data = (extra: Partial<SupportersResponse> = {}): SupportersResponse => ({
   entries: [entry("first")],
-  newThisMonth: [],
   total: 4,
   listed: 3,
   unlisted: 1,
@@ -87,7 +85,22 @@ describe("supporters directory", () => {
         .disabled
     ).toBe(false)
   })
-  it("submits search and sort together, resets pagination and preserves the region", async () => {
+  it("names each listed person a Supporter, with no derived since date or monthly newcomers", () => {
+    render(
+      React.createElement(SupportersDirectory, {
+        data: data(),
+        query: {},
+        locale: "en",
+      })
+    )
+    expect(screen.getByRole("link", { name: /first/ }).textContent).toContain(
+      "Supporter"
+    )
+    expect(screen.queryByText(/since/i)).toBeNull()
+    expect(screen.queryByText(/New this month/)).toBeNull()
+    expect(screen.queryByRole("combobox", { name: "Sort" })).toBeNull()
+  })
+  it("submits search alphabetically, resets pagination and preserves the region", async () => {
     render(
       React.createElement(SupportersDirectory, {
         data: data(),
@@ -104,5 +117,8 @@ describe("supporters directory", () => {
       expect.stringContaining("region=asia")
     )
     expect(mocks.push).toHaveBeenCalledWith(expect.stringContaining("page=1"))
+    expect(mocks.push).toHaveBeenCalledWith(
+      expect.stringContaining("sort=name")
+    )
   })
 })

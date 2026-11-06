@@ -18,7 +18,7 @@ import {
 } from "@/lib/saved-views"
 import { cn } from "@/lib/styles"
 
-/** Pro and Team allow 1,000 of each, shown as unlimited. */
+/** Every signed-in account keeps up to 1,000 of each; the count drops the cap. */
 const UNLIMITED = 1000
 
 type SavedViewsNotice = { text: string; failed: boolean }
@@ -263,12 +263,6 @@ export function SavedViewsButton({ kind }: { readonly kind: SavedViewKind }) {
               {atLimit ? (
                 <div className="flex flex-col items-start gap-2 rounded-2xl bg-(--t-accent-chip) p-4 text-base leading-relaxed">
                   <p className="m-0">{t(`atLimit.${kind}`, { limit })}</p>
-                  <GlobalLink
-                    href="/plans"
-                    className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
-                  >
-                    {t("seePlans")}
-                  </GlobalLink>
                 </div>
               ) : (
                 <form className="flex flex-col gap-2" onSubmit={save}>

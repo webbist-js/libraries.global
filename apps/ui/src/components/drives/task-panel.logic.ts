@@ -4,10 +4,9 @@
  * whole-record drive's checklist of the library's own gaps), the
  * /api/submissions bodies it sends (the existing editors' own payloads,
  * tagged with the drive), the "Where did you find this?" rule, the
- * session's skip list, picking the next library, and the quota and
- * earned-Pro lines of "Your part". No React, so it's unit-testable.
+ * session's skip list, picking the next library, and the quota line
+ * of "Your part". No React, so it's unit-testable.
  */
-import { EARNED_PRO_POINTS } from "@repo/access"
 import {
   COMPLETENESS_GAP_KEYS,
   type DriveFocus,
@@ -486,28 +485,6 @@ export function quotaReason(q: PendingQuota | null): string | null {
 
   return `You have ${fmt(q.pendingCount)} changes waiting for review, the most you can have at once. Send more once some are reviewed.`
 }
-
-/** The parts of `/api/contribute/standing`'s rewards standing read here. */
-export type StandingTier = {
-  totalPoints?: number | null
-  tier?: {
-    name?: string | null
-    nextName?: string | null
-    nextThreshold?: number | null
-  } | null
-}
-
-/** Remaining points for earned Pro; activity is required even above the threshold. */
-export function pointsToEarnedPro(s: StandingTier | null): number | null {
-  if (s?.totalPoints == null) return null
-
-  return Math.max(0, EARNED_PRO_POINTS - s.totalPoints)
-}
-
-export const earnedProLine = (points: number) =>
-  points > 0
-    ? `Drive work counts toward earned Pro: ${fmt(points)} points to 5,000. Keep contributing at least once every 30 days to retain it.`
-    : "You have enough points for earned Pro. An accepted contribution renews access for 30 days."
 
 // ── Place and search ─────────────────────────────────────────────────────
 

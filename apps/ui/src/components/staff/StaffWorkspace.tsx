@@ -60,9 +60,13 @@ export function StaffWorkspace({
         ...tab,
         badge:
           currentRecord &&
-          !currentRecord.teamCovered &&
+          !currentRecord.canSeeTeam &&
           ["traffic", "team"].includes(tab.id) ? (
-            <Badge label="Team" color="aurora" icon="mdi:lock-outline" />
+            <Badge
+              label={ui("verified_staff")}
+              color="aurora"
+              icon="mdi:lock-outline"
+            />
           ) : undefined,
       }))
     : staffAreaTabs(t, teamId, adding)

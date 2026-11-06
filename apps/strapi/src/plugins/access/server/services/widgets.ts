@@ -148,7 +148,7 @@ export default ({ strapi }: { strapi: WidgetStrapi }) => {
         primaryNetwork: { fields: ["name", "kind"] },
       },
     })
-    if (!team || team.billingArchived) throw new AccessError(404, "not_found")
+    if (!team) throw new AccessError(404, "not_found")
     if (organiser && member.teamRole !== "organiser")
       throw new AccessError(403, "organiser_required")
     if (write && !teamIsActive(team))
@@ -1044,8 +1044,7 @@ export default ({ strapi }: { strapi: WidgetStrapi }) => {
         !row ||
         row.state !== "live" ||
         !row.publishedRelease ||
-        !teamIsActive(row.team) ||
-        row.team.billingArchived
+        !teamIsActive(row.team)
       )
         throw new AccessError(404, "widget_unavailable")
       if (count || blocked) {

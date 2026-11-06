@@ -1,3 +1,4 @@
+import apiProposal from "./api-proposal"
 import moderation from "./moderation"
 import optionSuggestion from "./option-suggestion"
 import staff from "./staff"
@@ -10,4 +11,5 @@ export default {
   upload,
   "option-suggestion": optionSuggestion,
   moderation,
+  "api-proposal": apiProposal,
 }

@@ -2,17 +2,18 @@ import { canDirectEdit } from "@repo/access"
 import { describe, expect, it } from "vitest"
 
 import {
+  apiAccountsOf,
+  bonusApiAccountOf,
+  canStaffTool,
   hasCapability,
-  hasEntitlementForLibrary,
+  hasFact,
   requireCapability,
   requireEntitlement,
-  requireEntitlementForLibrary,
   requireStaff,
   sessionCapabilities,
   sessionTeamsOf,
   preferredTeams,
   staffLibrariesOf,
-  teamLibraryIdsOf,
 } from "../access-server"
 
 describe("access-server", () => {
@@ -45,7 +46,7 @@ describe("access-server", () => {
     const r = requireEntitlement({ features: [] }, "atlas.export")
     expect(r?.status).toBe(402)
     expect(await r?.json()).toEqual({
-      error: "Upgrade required",
+      error: "This feature is not available on this account",
       feature: "atlas.export",
       upgradeUrl: "/plans",
     })
@@ -127,7 +128,7 @@ describe("access-server", () => {
     expect(staffLibrariesOf(null)).toEqual([])
   })
 
-  it("sessionTeamsOf and teamLibraryIdsOf fail closed on malformed fields", () => {
+  it("sessionTeamsOf fails closed on malformed fields and keeps only workspace fields", () => {
     const team = {
       id: "t1",
       name: "Kent",
@@ -135,49 +136,78 @@ describe("access-server", () => {
       role: "organiser",
       libraryCount: 2,
     }
-    expect(sessionTeamsOf({ teams: [team, { id: "x" }, "y"] })).toEqual([team])
+    expect(
+      sessionTeamsOf({
+        teams: [
+          { ...team, status: "lapsed", expiresAt: null },
+          { id: "x" },
+          "y",
+        ],
+      })
+    ).toEqual([team])
     expect(sessionTeamsOf({})).toEqual([])
-    expect(teamLibraryIdsOf({ teamLibraryIds: ["libA", 7, "libB"] })).toEqual([
-      "libA",
-      "libB",
-    ])
-    expect(teamLibraryIdsOf("nope")).toEqual([])
   })
 
-  it("library-scoped features need the library in teamLibraryIds; others stay personal", () => {
+  it("apiAccountsOf fails closed; only an active organiser account gives the bonus", () => {
     const user = {
-      features: ["library.team", "atlas.export"],
-      teamLibraryIds: ["libA"],
+      apiAccounts: [
+        { teamId: "t1", role: "member", active: true },
+        { teamId: "t2", role: "organiser", active: false },
+        { teamId: "t3", role: "organiser", active: true },
+        { teamId: 4, role: "organiser", active: true },
+        { teamId: "t5", role: "owner", active: true },
+      ],
     }
-    expect(hasEntitlementForLibrary(user, "library.team", "libA")).toBe(true)
-    expect(hasEntitlementForLibrary(user, "library.team", "libB")).toBe(false)
-    expect(hasEntitlementForLibrary(user, "library.traffic", "libA")).toBe(true)
-    expect(hasEntitlementForLibrary(user, "atlas.export", "libB")).toBe(true)
-    expect(hasEntitlementForLibrary(null, "atlas.export", "libA")).toBe(false)
+    expect(apiAccountsOf(user).map((a) => a.teamId)).toEqual(["t1", "t2", "t3"])
+    expect(bonusApiAccountOf(user)?.teamId).toBe("t3")
+    expect(
+      bonusApiAccountOf({
+        apiAccounts: [{ teamId: "t1", role: "member", active: true }],
+      })
+    ).toBeNull()
+    expect(apiAccountsOf({ apiAccounts: "nope" })).toEqual([])
   })
 
-  it("requireEntitlementForLibrary returns 401, 402 with the upgrade payload, or null", async () => {
-    expect(
-      requireEntitlementForLibrary(null, "library.team", "libA")?.status
-    ).toBe(401)
-    const r = requireEntitlementForLibrary(
-      { features: ["library.team"], teamLibraryIds: [] } as never,
-      "library.team",
-      "libA"
+  it("hasFact reads only a list of facts", () => {
+    expect(hasFact({ facts: ["explorer", "supporter"] }, "supporter")).toBe(
+      true
     )
-    expect(r?.status).toBe(402)
-    expect(await r?.json()).toEqual({
-      error: "Upgrade required",
-      feature: "library.team",
-      upgradeUrl: "/plans",
-    })
+    expect(hasFact({ facts: "supporter" }, "supporter")).toBe(false)
+    expect(hasFact(null, "explorer")).toBe(false)
+  })
+
+  it("staff tools follow the viewer's own claim, never Team membership, payment or recognition", () => {
+    const outsider = {
+      capabilities: ["staff.area"],
+      staffLibraries: [{ id: "libA", role: "editor", canGoLive: false }],
+      teams: [
+        {
+          id: "t1",
+          name: "Kent",
+          slug: "kent",
+          role: "organiser",
+          libraryCount: 1,
+        },
+      ],
+      facts: ["explorer", "supporter", "apiCustomer"],
+      features: ["api.key", "atlas.serviceReach"],
+      apiAccounts: [{ teamId: "t1", role: "organiser", active: true }],
+    }
+    for (const action of [
+      "embed",
+      "bulkUpload",
+      "traffic",
+      "seeTeam",
+    ] as const) {
+      expect(canStaffTool(outsider, action, "libA")).toBe(true)
+      expect(canStaffTool(outsider, action, "libB")).toBe(false)
+    }
+    expect(canStaffTool(outsider, "manageTeam", "libA")).toBe(false)
+    // Without the staff area capability nothing is unlocked.
     expect(
-      requireEntitlementForLibrary(
-        { features: [], teamLibraryIds: ["libA"] } as never,
-        "library.team",
-        "libA"
-      )
-    ).toBeNull()
+      canStaffTool({ staffLibraries: outsider.staffLibraries }, "embed", "libA")
+    ).toBe(false)
+    expect(canStaffTool(null, "embed", "libA")).toBe(false)
   })
 
   it("requireStaff answers 401, 404 for a library outside the session's staff, 403 beyond the level, or null", () => {
@@ -196,41 +226,17 @@ describe("access-server", () => {
   })
 })
 
-it("prefers a paid current Team over an earlier unfinished signup", () => {
-  const unfinished = {
-    id: "draft",
+it("lists organised workspaces first, otherwise keeping the session's order", () => {
+  const member = {
+    id: "m",
     name: "Team",
     slug: "team",
-    role: "organiser" as const,
+    role: "member" as const,
     libraryCount: 0,
-    status: "lapsed" as const,
-    expiresAt: null,
   }
-  const active = { ...unfinished, id: "paid", status: "active" as const }
-  expect(preferredTeams([unfinished, active]).map((team) => team.id)).toEqual([
-    "paid",
-    "draft",
-  ])
-  const expired = {
-    ...active,
-    id: "expired",
-    expiresAt: "2020-01-01T00:00:00Z",
-  }
-  expect(preferredTeams([expired, active])[0]?.id).toBe("paid")
-})
-
-it("prefers active self-service Teams to legacy test agreements", () => {
-  const legacy = {
-    id: "legacy",
-    name: "Team",
-    slug: "team",
-    role: "organiser" as const,
-    libraryCount: 0,
-    status: "active" as const,
-  }
-  const paid = { ...legacy, id: "paid", selfService: true }
-  expect(preferredTeams([legacy, paid])[0]?.id).toBe("paid")
-  expect(preferredTeams([{ ...paid, status: "lapsed" }, legacy])[0]?.id).toBe(
-    "legacy"
-  )
+  const organiser = { ...member, id: "o", role: "organiser" as const }
+  const other = { ...member, id: "m2" }
+  expect(
+    preferredTeams([member, organiser, other]).map((team) => team.id)
+  ).toEqual(["o", "m", "m2"])
 })

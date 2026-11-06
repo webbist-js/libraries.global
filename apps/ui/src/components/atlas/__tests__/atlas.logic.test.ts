@@ -17,7 +17,7 @@ import {
   mergeRanges,
   pinDependentLayers,
   parseUrlState,
-  tierForPlan,
+  tierForAccess,
   toggleLayer,
   toUrlParams,
   typeGroupOf,
@@ -162,17 +162,20 @@ describe("layers", () => {
     expect(layerAccess(layerDef("density"), "public")).toBe("available")
     expect(layerAccess(layerDef("complete"), "public")).toBe("signin")
     expect(layerAccess(layerDef("complete"), "free")).toBe("available")
-    expect(layerAccess(layerDef("deprivation"), "free")).toBe("pro")
-    expect(layerAccess(layerDef("carAccess"), "pro")).toBe("available")
+    expect(layerAccess(layerDef("deprivation"), "free")).toBe("locked")
+    expect(layerAccess(layerDef("carAccess"), "explorer")).toBe("available")
     expect(layerAccess(layerDef("mobile"), "public")).toBe("available")
     expect(layerAccess(layerDef("population"), "public")).toBe("signin")
     expect(layerAccess(layerDef("population"), "free")).toBe("available")
-    expect(layerAccess(layerDef("reach"), "public")).toBe("pro")
-    expect(layerAccess(layerDef("reach"), "free")).toBe("pro")
-    expect(layerAccess(layerDef("reach"), "pro")).toBe("available")
+    expect(layerAccess(layerDef("reach"), "public")).toBe("locked")
+    expect(layerAccess(layerDef("reach"), "free")).toBe("locked")
+    expect(layerAccess(layerDef("reach"), "explorer")).toBe("locked")
+    expect(layerAccess(layerDef("reach"), "reach")).toBe("available")
+    // Explorer layers are free with an account: a visitor signs in.
+    expect(layerAccess(layerDef("deprivation"), "public")).toBe("signin")
     // Readiness wins, so no plan can unlock an unbuilt layer.
     expect(layerAccess(layerDef("transit"), "free")).toBe("soon")
-    expect(layerAccess(layerDef("transit"), "pro")).toBe("soon")
+    expect(layerAccess(layerDef("transit"), "explorer")).toBe("soon")
   })
 
   it("replaces a layer in the same exclusive group", () => {
@@ -234,7 +237,7 @@ describe("layers", () => {
     expect(withRequiredLibraryLocations(overlays)).toEqual(overlays)
     for (const [id, tier] of [
       ["access", "public"],
-      ["founded", "pro"],
+      ["founded", "explorer"],
     ] as [LayerId, Tier][]) {
       const available = [id].filter(
         (layer) => layerAccess(layerDef(layer), tier) === "available"
@@ -293,14 +296,23 @@ describe("url state", () => {
   })
 })
 
-describe("tierForPlan", () => {
-  it("maps known plans and fails closed on anything else", () => {
-    expect(tierForPlan("public")).toBe("public")
-    expect(tierForPlan("free")).toBe("free")
-    expect(tierForPlan("pro")).toBe("pro")
-    expect(tierForPlan("team")).toBe("pro")
-    for (const plan of ["platinum", "PRO", "", null, undefined])
-      expect(tierForPlan(plan)).toBe("free")
+const access = (signedIn: boolean, features: string[]) => ({
+  signedIn,
+  can: (f: string) => features.includes(f),
+})
+
+describe("tierForAccess", () => {
+  it("maps entitlements to a tier and fails closed", () => {
+    expect(tierForAccess(access(false, ["atlas.reach"]))).toBe("public")
+    expect(tierForAccess(access(true, []))).toBe("free")
+    expect(tierForAccess(access(true, ["atlas.contextLayers"]))).toBe(
+      "explorer"
+    )
+    expect(
+      tierForAccess(access(true, ["atlas.contextLayers", "atlas.reach"]))
+    ).toBe("reach")
+    // Reach alone, without the Explorer tools, unlocks nothing.
+    expect(tierForAccess(access(true, ["atlas.reach"]))).toBe("free")
   })
 })
 

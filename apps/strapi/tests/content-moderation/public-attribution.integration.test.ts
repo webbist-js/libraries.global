@@ -9,8 +9,6 @@ const PROFILE = "api::user-profile.user-profile"
 const SUBMISSION = "plugin::content-moderation.submission"
 const CHANGE = "api::article-change.article-change"
 const ROLE = "api::role-grant.role-grant"
-const PLAN = "api::entitlement-grant.entitlement-grant"
-const VERIFY = "api::pro-verification.pro-verification"
 const suffix = randomUUID().replaceAll("-", "").slice(0, 12)
 const articleDocumentId = randomUUID().replaceAll("-", "").slice(0, 24)
 const identities = ["public", "limited", "private", "hidden"].map(
@@ -116,12 +114,7 @@ describe.skipIf(process.env.COMMUNITY_ATTRIBUTION_INTEGRATION !== "1")(
         await strapi.db
           .query(SUBMISSION)
           .deleteMany({ where: { submittedByUserId: { $in: users } } })
-        for (const uid of [
-          ROLE,
-          PLAN,
-          VERIFY,
-          "api::notification.notification",
-        ])
+        for (const uid of [ROLE, "api::notification.notification"])
           await strapi.db
             .query(uid as any)
             .deleteMany({ where: { baUserId: { $in: users } } })
@@ -213,7 +206,7 @@ describe.skipIf(process.env.COMMUNITY_ATTRIBUTION_INTEGRATION !== "1")(
       }
     })
 
-    it("resolves the admin role and plan rosters from trusted private profile identities", async () => {
+    it("resolves the admin role roster from trusted private profile identities", async () => {
       const profile = identities[0]
       await strapi.documents(ROLE).create({
         data: {
@@ -223,12 +216,6 @@ describe.skipIf(process.env.COMMUNITY_ATTRIBUTION_INTEGRATION !== "1")(
           source: "migration",
         },
       })
-      await strapi.documents(PLAN).create({
-        data: { baUserId: profile.baUserId, plan: "pro", source: "admin" },
-      })
-      await strapi
-        .documents(VERIFY)
-        .create({ data: { baUserId: profile.baUserId, kind: "library_staff" } })
       const people = strapi.plugin("access").service("people")
       expect(await people.namesOf([profile.baUserId])).toEqual(
         new Map([[profile.baUserId, `@${profile.username}`]])
@@ -245,13 +232,6 @@ describe.skipIf(process.env.COMMUNITY_ATTRIBUTION_INTEGRATION !== "1")(
         username: profile.username,
         grants: [{ role: "wiki_editor", status: "active" }],
       })
-      const plans = strapi.plugin("access").service("plans")
-      expect(await plans.listGrants(profile.baUserId)).toMatchObject([
-        { baUserId: profile.baUserId, plan: "pro" },
-      ])
-      expect(await plans.listVerifications(profile.baUserId)).toMatchObject([
-        { baUserId: profile.baUserId, kind: "library_staff" },
-      ])
     })
   }
 )

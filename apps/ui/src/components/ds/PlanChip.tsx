@@ -1,29 +1,31 @@
-import type { PlanKey } from "@repo/access"
-import { useTranslations as useUiTranslations } from "next-intl"
+"use client"
+
+import type { AccessStanding } from "@repo/access"
+import { useTranslations } from "next-intl"
+
+import { useEntitlements } from "@/lib/access-client"
 
 import { Badge } from "./Badge"
 
 /**
- * The plan behind a staff area: "Team plan" (indigo) when the library is
- * covered by a Team, else "Staff access · free" (neutral). `covered` wins
- * over `plan`, so a library-scoped check can drive it. Neither carries an
- * icon: the lock belongs to the gated tabs' "Team" tags, not the plan.
+ * The viewer's free standing: Explorer, Contributor or Supporter, and
+ * nothing when signed out. It labels recognition only: staff authority comes
+ * from verified claims, and nothing here is bought. Pass `standing` to show
+ * a fixed value (stories, server-known profiles).
  */
-export function PlanChip({
-  plan,
-  covered,
-}: {
-  readonly plan: PlanKey
-  readonly covered?: boolean
-}) {
-  const tUi = useUiTranslations("ui")
+export function PlanChip({ standing }: { readonly standing?: AccessStanding }) {
+  const t = useTranslations("accessLocks.standing")
+  const viewer = useEntitlements()
+  const shown = standing ?? (viewer.ready ? viewer.standing : "public")
 
-  const team = covered ?? plan === "team"
+  if (shown !== "explorer" && shown !== "contributor" && shown !== "supporter")
+    return null
 
   return (
     <Badge
-      label={team ? tUi("team_plan") : "Staff access · free"}
-      color={team ? "aurora" : "dim"}
+      label={t(shown)}
+      color={shown === "supporter" ? "aurora" : "dim"}
+      icon={shown === "supporter" ? "mdi:heart-outline" : undefined}
     />
   )
 }

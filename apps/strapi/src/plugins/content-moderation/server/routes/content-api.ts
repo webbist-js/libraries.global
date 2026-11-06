@@ -1,6 +1,19 @@
 const MODERATION_POLICY = "global::moderation"
 
 export default [
+  // Machine API proposal intake (bridge secret only; controllers/api-proposal).
+  {
+    method: "POST",
+    path: "/api/proposals",
+    handler: "api-proposal.create",
+    config: { auth: false, policies: [] },
+  },
+  {
+    method: "GET",
+    path: "/api/proposals/:id",
+    handler: "api-proposal.status",
+    config: { auth: false, policies: [] },
+  },
   {
     method: "GET",
     path: "/option-catalogue",

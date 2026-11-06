@@ -334,8 +334,8 @@ export default ({ strapi }: { strapi: any }) => ({
   },
 
   // GET /api/content-moderation/libraries/:documentId/history  (content-api route, public)
-  // A library's published Change Batches, newest first. Field values (a Pro
-  // feature, spec §9.1) only with `values=1`, the bridge secret and an
+  // A library's published Change Batches, newest first. Field values (an
+  // Explorer feature for signed-in accounts) only with `values=1`, the bridge secret and an
   // `X-Ba-User-Id` whose Entitlements, resolved here, include
   // `library.history`; everyone else gets field names.
   async libraryHistory(ctx: any) {

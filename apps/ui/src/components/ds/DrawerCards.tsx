@@ -60,6 +60,7 @@ export function DrawerAction({
   label,
   description,
   tag,
+  lockedBy,
   count,
   onClick,
 }: {
@@ -67,7 +68,9 @@ export function DrawerAction({
   readonly icon: string
   readonly label: string
   readonly description?: string
-  readonly tag?: "Mobile" | "Team"
+  readonly tag?: "Mobile"
+  /** A gated tile: the lock replaces its icon and this tag names what unlocks it. */
+  readonly lockedBy?: string
   readonly count?: ReactNode
   readonly onClick?: () => void
 }) {
@@ -83,7 +86,7 @@ export function DrawerAction({
           aria-hidden
           height={17}
           width={17}
-          icon={tag === "Team" ? "mdi:lock-outline" : icon}
+          icon={lockedBy ? "mdi:lock-outline" : icon}
         />
       </span>
       <span className="min-w-0 flex-1">
@@ -96,8 +99,10 @@ export function DrawerAction({
           </span>
         ) : null}
       </span>
-      {tag ? (
-        <Badge label={tag} color={tag === "Mobile" ? "ok" : "aurora"} />
+      {lockedBy ? (
+        <Badge label={lockedBy} color="aurora" />
+      ) : tag ? (
+        <Badge label={tag} color="ok" />
       ) : null}
       {count !== undefined ? (
         <span
@@ -156,12 +161,15 @@ export function DrawerTile({
   icon,
   label,
   tag,
+  lockedBy,
 }: {
   readonly href: string
   readonly icon: string
   readonly label: string
-  /** "Mobile": a green tag. "Team": a lock and an indigo tag (not covered). */
-  readonly tag?: "Mobile" | "Team"
+  /** "Mobile": a green tag. */
+  readonly tag?: "Mobile"
+  /** A gated tile: a lock and an indigo tag naming what unlocks it. */
+  readonly lockedBy?: string
 }) {
   return (
     <Link
@@ -179,12 +187,14 @@ export function DrawerTile({
           aria-hidden="true"
           className="shrink-0"
           height={20}
-          icon={tag === "Team" ? "mdi:lock-outline" : icon}
+          icon={lockedBy ? "mdi:lock-outline" : icon}
           style={{ color: T.accent.primary }}
           width={20}
         />
-        {tag ? (
-          <Badge label={tag} color={tag === "Mobile" ? "ok" : "aurora"} />
+        {lockedBy ? (
+          <Badge label={lockedBy} color="aurora" />
+        ) : tag ? (
+          <Badge label={tag} color="ok" />
         ) : null}
       </span>
       <span className="w-full">{label}</span>

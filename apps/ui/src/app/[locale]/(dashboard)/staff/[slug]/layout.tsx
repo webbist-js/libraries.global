@@ -1,6 +1,6 @@
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { Container } from "@/components/elementary/Container"
-import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { canStaffTool } from "@/lib/access-server"
 import { fetchStaffLibraryMeta, loadStaffPage } from "@/lib/staff/server"
 
 import { StaffShell } from "./_components/StaffShell"
@@ -18,8 +18,8 @@ export default async function StaffLibraryLayout({
     await staffPathname()
   )
   const meta = await fetchStaffLibraryMeta(documentId)
-  const teamCovered =
-    requireEntitlementForLibrary(user, "library.team", documentId) === null
+  // Staff tools are free: the viewer's own verified claim decides.
+  const canSeeTeam = canStaffTool(user, "seeTeam", documentId)
 
   return (
     <>
@@ -27,8 +27,7 @@ export default async function StaffLibraryLayout({
         overview={overview}
         libraries={libraries}
         meta={meta}
-        plan={user.plan ?? "free"}
-        teamCovered={teamCovered}
+        canSeeTeam={canSeeTeam}
       />
       <Container className="py-8 sm:py-12">{children}</Container>
     </>

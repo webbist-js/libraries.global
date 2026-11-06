@@ -83,7 +83,10 @@ export default async function NetworkPage({
           title="Work for this network?"
           body="Verify your employment or request responsibility for a reviewed group of libraries."
           action={{ href: claim, label: "Represent this network" }}
-          secondary={{ href: "/plans#plan-team", label: "Explore Team plans" }}
+          secondary={{
+            href: "/staff/teams",
+            label: "Set up a free team workspace",
+          }}
         />
       }
       navigation={
@@ -224,10 +227,11 @@ export default async function NetworkPage({
               <h2 className="type-small-heading m-0">Work for this service?</h2>
               <p>
                 Verify your affiliation or request management of a reviewed
-                group of libraries. Team membership and billing are separate.
+                group of libraries. A team workspace is free and separate from
+                staff verification.
               </p>
               <nav
-                aria-label="Service and Team access"
+                aria-label="Service and team access"
                 className="network-service-links"
               >
                 <Link href={claim}>
@@ -235,7 +239,7 @@ export default async function NetworkPage({
                   <ArrowUpRight size={16} aria-hidden />
                 </Link>
                 <Link href={`/staff/teams/new?network=${network.documentId}`}>
-                  Set up a Team
+                  Set up a team workspace
                   <ArrowUpRight size={16} aria-hidden />
                 </Link>
                 <Link

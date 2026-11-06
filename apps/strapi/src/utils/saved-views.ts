@@ -1,7 +1,7 @@
 export const SAVED_VIEW_UID = "api::saved-view.saved-view"
 export const SAVED_VIEW_KINDS = ["view", "search"] as const
 export type SavedViewKind = (typeof SAVED_VIEW_KINDS)[number]
-/** Pro and Team allow 1,000 of each; nothing above that is accepted. */
+/** Explorer allows 1,000 of each; nothing above that is accepted. */
 export const MAX_SAVED_LIMIT = 1000
 export const MAX_QUERY_LENGTH = 2000
 const MAX_PARAMS = 60
@@ -45,7 +45,7 @@ export function savedViewInput(body: unknown): SavedViewInput | null {
   return { kind, name: cleanName, query: cleanQuery }
 }
 
-/** The plan limit Next.js sends for this kind; anything malformed is 0. */
+/** The account limit Next.js sends for this kind; anything malformed is 0. */
 export function savedLimitOf(header: unknown): number {
   const value = typeof header === "string" ? Number(header) : Number.NaN
 

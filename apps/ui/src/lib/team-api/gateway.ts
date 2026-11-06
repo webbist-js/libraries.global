@@ -13,8 +13,9 @@ import {
 import { LIVE_LOCALES } from "@/lib/live-locales"
 import { clientIp, createRateLimiter } from "@/lib/rate-limit"
 
-import { apiMonth } from "./config"
+import { API_OFFER_LIMITS } from "./config"
 import {
+  ApiRefusal,
   findApiKey,
   reserveApiRequest,
   finishApiRequest,
@@ -35,7 +36,7 @@ const Search = z
   .object({
     q: z.string().max(512).default(""),
     locale: z.enum(SUPPORTED_LOCALES).default("en"),
-    limit: z.number().int().min(1).max(100).default(20),
+    limit: z.number().int().min(1).max(API_OFFER_LIMITS.pageSize).default(20),
     offset: z.number().int().min(0).max(10_000).default(0),
     country: z
       .string()
@@ -87,37 +88,51 @@ const headers = {
   Vary: "Authorization",
 }
 
+/** Stable 429 codes; `Retry-After` is set whenever a retry can succeed. */
+export const API_QUOTA_CODES = [
+  "quota_requests",
+  "quota_bytes",
+  "quota_analysis",
+  "overage_cap",
+  "rate_limit",
+  "concurrency_limit",
+] as const
+
 export function apiFailure(error: unknown) {
   const known = error instanceof BillingError
   const status = known ? error.status : 503
-  const quota =
+  if (!known) console.error("[api] request failed")
+  const refusal = error instanceof ApiRefusal ? error : null
+
+  // A refusal may carry safe, documented detail (a field name or the
+  // caller's own ids); see submissions.ts.
+  const detail =
     known &&
-    [
-      "api_request_allowance_exhausted",
-      "api_byte_allowance_exhausted",
-    ].includes(error.code)
-  const reset = apiMonth().end
-  if (!known) console.error("[team-api] request failed")
+    "detail" in error &&
+    error.detail &&
+    typeof error.detail === "object"
+      ? (error.detail as Record<string, unknown>)
+      : {}
 
   return Response.json(
-    { error: { code: known ? error.code : "api_temporarily_unavailable" } },
+    {
+      error: {
+        ...detail,
+        code: known ? error.code : "api_temporarily_unavailable",
+      },
+    },
     {
       status,
       headers: {
         ...headers,
-        ...(status === 429
-          ? {
-              "Retry-After": quota
-                ? String(
-                    Math.max(
-                      1,
-                      Math.ceil((reset.getTime() - Date.now()) / 1000)
-                    )
-                  )
-                : "60",
-            }
+        ...(refusal?.retryAfter
+          ? { "Retry-After": String(refusal.retryAfter) }
+          : status === 429
+            ? { "Retry-After": "60" }
+            : {}),
+        ...(refusal?.resetsAt
+          ? { "X-API-Quota-Reset": new Date(refusal.resetsAt).toISOString() }
           : {}),
-        ...(quota ? { "X-API-Quota-Reset": reset.toISOString() } : {}),
       },
     }
   )
@@ -273,7 +288,11 @@ export async function apiLibraries(
   if (!LIVE_LOCALES.includes(locale))
     throw new BillingError("locale_unavailable", 400)
   const limit = incoming.get("limit") ?? "50"
-  if (!/^\d{1,3}$/.test(limit) || Number(limit) < 1 || Number(limit) > 100)
+  if (
+    !/^\d{1,3}$/.test(limit) ||
+    Number(limit) < 1 ||
+    Number(limit) > API_OFFER_LIMITS.pageSize
+  )
     throw new BillingError("invalid_limit", 400)
   const after = incoming.get("after")
   if (after && !isDocumentIdParam(after))
@@ -337,63 +356,200 @@ async function authorizeKeyOwner(pool: Pool, key: KeyRow) {
   } catch (error) {
     if (error instanceof BillingError && error.code === "api_key_owner_removed")
       await pool.query(
-        "update team_api_keys set revoked_at=coalesce(revoked_at,now()) where team_id=$1 and created_by=$2",
+        "update api_keys set revoked_at=coalesce(revoked_at,now()) where team_id=$1 and created_by=$2",
         [key.team_id, key.created_by]
       )
     throw error
   }
 }
 
-export async function serveTeamApi(
+const RESULT = Symbol("api-result")
+type ApiResultBody = {
+  [RESULT]: true
+  body: unknown
+  status: 200 | 201 | 202
+  credits?: number
+}
+
+/**
+ * Wrap a handler's body to set a 201/202 status or settle fewer analysis
+ * credits than reserved (for example a cached result: delivery units only).
+ */
+export function apiResult(
+  body: unknown,
+  options: { status?: 200 | 201 | 202; credits?: number } = {}
+): ApiResultBody {
+  return {
+    [RESULT]: true,
+    body,
+    status: options.status ?? 200,
+    credits: options.credits,
+  }
+}
+const isResult = (value: unknown): value is ApiResultBody =>
+  typeof value === "object" && value !== null && RESULT in value
+
+export type ApiRequestOptions = {
+  /** Key scope the route requires. */
+  scope: ApiScope
+  /** Usage label recorded per request, for example `services.list`. */
+  endpoint: string
+  /**
+   * Analysis credits a synchronous operation may spend. Reserved with the
+   * request under the same account/period lock and settled after success
+   * (use `apiResult(body, { credits })` to settle fewer). Asynchronous jobs
+   * use `reserveAnalysis` from `./analysis` instead.
+   */
+  analysisCredits?: number
+}
+
+export type ApiRequestContext = {
+  request: Request
+  /** Most UTF-8 JSON bytes the response may use (never above 128 KiB). */
+  maximum: number
+  /** The authenticated API account; never a signed-in user identity. */
+  account: { teamId: string; keyId: string }
+  /** Stable for this request; use it as a job or proposal idempotency suffix. */
+  requestId: string
+  /** Analysis credits reserved for this request. */
+  credits: number
+}
+
+/**
+ * The machine API pipeline: key authentication, current organiser check,
+ * paid coverage, scope, per-minute and concurrency limits, then a ledger
+ * reservation (1 request + max response bytes + analysis credits) before the
+ * handler runs. Successful usage settles before the payload is returned; a
+ * failure or oversized response refunds the reservation and delivers nothing.
+ */
+export async function serveApiRequest(
   pool: Pool,
   request: Request,
-  scope: ApiScope,
-  endpoint: string,
-  work: (maximum: number) => Promise<unknown>
+  options: ApiRequestOptions,
+  work: (context: ApiRequestContext) => Promise<unknown>
 ) {
   const started = Date.now()
   let reservation: ApiReservation | undefined
   try {
     if (!(await preauth.check(clientIp(request))).ok)
-      throw new BillingError("api_rate_limit", 429)
+      throw new ApiRefusal("rate_limit", 429, 60)
     const authorization = request.headers.get("authorization") ?? ""
     if (!/^Bearer lg_api_[\w-]{43}$/.test(authorization))
       throw new BillingError("invalid_api_key", 401)
     const secret = authorization.slice(7)
     const key = await findApiKey(pool, secret)
     await authorizeKeyOwner(pool, key)
-    reservation = await reserveApiRequest(pool, key, secret, scope, endpoint)
-    const body = JSON.stringify(await work(reservation.budget))
+    reservation = await reserveApiRequest(
+      pool,
+      key,
+      secret,
+      options.scope,
+      options.endpoint,
+      { analysisCredits: options.analysisCredits }
+    )
+    const output = await work({
+      request,
+      maximum: reservation.budget,
+      account: { teamId: key.team_id, keyId: key.id },
+      requestId: reservation.id,
+      credits: reservation.credits,
+    })
+    const result = isResult(output) ? output : apiResult(output)
+    const credits = result.credits ?? reservation.credits
+    if (
+      !Number.isSafeInteger(credits) ||
+      credits < 0 ||
+      credits > reservation.credits
+    )
+      throw new BillingError("api_operation_invalid", 500)
+    const body = JSON.stringify(result.body)
     const bytes = Buffer.byteLength(body)
     if (bytes > reservation.budget)
       throw new BillingError("api_response_too_large", 502)
     // Commit successful usage before exposing the payload. A failed write cannot
-    // deliver an unmetered response; its reservation is recovered by maintenance.
-    await finishApiRequest(pool, reservation, 200, bytes, Date.now() - started)
+    // deliver an unmetered response; maintenance recovers its reservation.
+    await finishApiRequest(pool, reservation, {
+      status: result.status,
+      bytes,
+      credits,
+      duration: Date.now() - started,
+    })
+    const remaining = reservation.remaining
 
     return new Response(body, {
+      status: result.status,
       headers: {
         ...headers,
         "X-Request-Id": reservation.id,
-        "X-API-Requests-Remaining": String(reservation.remaining),
+        "X-API-Requests-Remaining": String(remaining.requests),
+        "X-API-Bytes-Remaining": String(
+          remaining.bytes +
+            (reservation.budget - Math.min(bytes, reservation.budget))
+        ),
+        "X-API-Analysis-Credits-Remaining": String(
+          remaining.credits + (reservation.credits - credits)
+        ),
         "X-API-Quota-Reset": reservation.resetsAt,
       },
     })
   } catch (error) {
     if (reservation) {
       try {
-        await finishApiRequest(
-          pool,
-          reservation,
-          error instanceof BillingError ? error.status : 503,
-          0,
-          Date.now() - started
-        )
+        await finishApiRequest(pool, reservation, {
+          status: error instanceof BillingError ? error.status : 503,
+          bytes: 0,
+          duration: Date.now() - started,
+        })
       } catch {
-        console.error("[team-api] accounting awaits reconciliation")
+        console.error("[api] accounting awaits reconciliation")
       }
     }
 
     return apiFailure(error)
+  }
+}
+
+/** @deprecated Use `withApiRequest`. Kept for the existing read routes. */
+export function serveTeamApi(
+  pool: Pool,
+  request: Request,
+  scope: ApiScope,
+  endpoint: string,
+  work: (maximum: number) => Promise<unknown>
+) {
+  return serveApiRequest(pool, request, { scope, endpoint }, (context) =>
+    work(context.maximum)
+  )
+}
+
+/**
+ * Route helper for `/api/v1` handlers. Every route gets the same key
+ * authentication, coverage, scope, rate/concurrency limits and ledger:
+ *
+ * ```ts
+ * export const GET = withApiRequest(
+ *   { scope: "services:read", endpoint: "services.list" },
+ *   async ({ request, maximum, account }) => listServices(request, maximum)
+ * )
+ * export const POST = withApiRequest(
+ *   { scope: "analysis:run", endpoint: "analysis.summary", analysisCredits: 5 },
+ *   async ({ request, maximum }) => apiResult(await summary(request, maximum), { credits: 1 })
+ * )
+ * ```
+ *
+ * The handler returns a JSON-serialisable body (or `apiResult(...)`); throw
+ * `BillingError(code, status)` for documented errors. Never read session
+ * cookies or call session-only browser routes from a handler.
+ */
+export function withApiRequest<RouteContext = unknown>(
+  options: ApiRequestOptions,
+  handler: (context: ApiRequestContext, route: RouteContext) => Promise<unknown>
+) {
+  return async (request: Request, route: RouteContext) => {
+    const { authDbPool } = await import("@/lib/auth")
+
+    return serveApiRequest(authDbPool, request, options, (context) =>
+      handler(context, route)
+    )
   }
 }

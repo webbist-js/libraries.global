@@ -125,7 +125,7 @@ function show(
 }
 
 describe("LibraryChangesSection", () => {
-  it("shows credits once and keeps import-only records free of a chart, duplicate timeline and Pro upsell", () => {
+  it("shows credits once and keeps import-only records free of a chart, duplicate timeline and history sign-in prompt", () => {
     const { container } = show(page([imported]))
     expect(screen.getAllByText(credit.attribution!)).toHaveLength(1)
     expect(screen.getAllByText("Imported Oct 4, 2026")).toHaveLength(1)
@@ -136,7 +136,7 @@ describe("LibraryChangesSection", () => {
     expect(screen.queryByText("Recent changes")).toBeNull()
     expect(
       screen.queryByText(
-        "See what changed, field by field, with Supporter or Pro."
+        "Sign in to see what changed, field by field. It's free."
       )
     ).toBeNull()
     expect(container.querySelector('svg[role="img"]')).toBeNull()

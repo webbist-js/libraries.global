@@ -77,7 +77,6 @@ const teamRows = (user: string) => {
     documentId: TEAM,
     name: "Central Libraries",
     slug: "central-libraries",
-    seats: 5,
     status: "active",
     verifiedAt: "2026-01-01T00:00:00.000Z",
     expiresAt: null,
@@ -259,7 +258,7 @@ describe("staff overview health rows", () => {
 })
 
 describe("staff team tab", () => {
-  it("names the covering Team's organiser for staff outside it, and nothing else", async () => {
+  it("names the covering Team's organiser for staff outside it, without sharing its invites", async () => {
     const { staff, services } = setup()
     services["access.teams"].forLibrary.mockResolvedValue({
       documentId: TEAM,
@@ -287,13 +286,11 @@ describe("staff team tab", () => {
       viewerIsMember: false,
     })
     expect(tab.team).toBeNull()
-    expect(tab.covered).toBe(false)
+    // Staff tools come from the viewer's own claim: verified staff see levels
+    // whether or not a Team covers the library. Team invites stay private.
+    expect(tab.covered).toBe(true)
     expect(tab.invites).toEqual([])
-    // Uncovered: names only, no levels or dates.
-    expect(tab.members.map((m: any) => Object.keys(m).sort())).toEqual([
-      ["affiliationDocumentId", "initials", "isYou", "name"],
-      ["affiliationDocumentId", "initials", "isYou", "name"],
-    ])
+    expect(tab.members.every((m: any) => "staffRole" in m)).toBe(true)
   })
 
   it("shows a member their Team and its invites here, with no covering Team line", async () => {

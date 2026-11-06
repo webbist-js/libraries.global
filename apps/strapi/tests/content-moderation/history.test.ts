@@ -577,36 +577,19 @@ describe("history routes and controller", () => {
     ...over,
   })
 
-  it("clamps page size and only honours values for a bridged user entitled to library.history", async () => {
+  it("clamps page size and honours values only for a bridged signed-in user (Explorer library.history)", async () => {
     process.env.STRAPI_BRIDGE_SECRET = "sekrit"
     const { strapi, history } = setup([], {
       [PROFILE]: [
-        { documentId: "pp", baUserId: "pro", tier: "Reader" },
+        { documentId: "pp", baUserId: "explorer", tier: "Reader" },
         {
           documentId: "pa",
-          baUserId: "archivist",
+          baUserId: "contributor",
           tier: "Archivist",
           points: 5000,
-          earnedProUntil: "2099-01-01T00:00:00.000Z",
-        },
-        { documentId: "pf", baUserId: "free", tier: "Reader" },
-        {
-          documentId: "pe",
-          baUserId: "expired",
-          tier: "Reader",
-          earnedProUntil: "2020-01-01T00:00:00.000Z",
+          acceptedContributions: 12,
         },
       ],
-      "api::entitlement-grant.entitlement-grant": [
-        { documentId: "g1", baUserId: "pro", plan: "pro", expiresAt: null },
-        {
-          documentId: "g2",
-          baUserId: "free",
-          plan: "pro",
-          expiresAt: "2020-01-01T00:00:00.000Z",
-        },
-      ],
-      "api::pro-verification.pro-verification": [],
     })
     const spy = vi.spyOn(history, "libraryHistory")
     const c = createController({ strapi })
@@ -625,18 +608,16 @@ describe("history routes and controller", () => {
       )
     const lastValues = () => (spy.mock.lastCall![1] as any).values
 
-    // The secret alone is not enough: values are a Pro feature.
+    // The secret alone is not enough: values need a signed-in account.
     await asUser({ "x-service-secret": "sekrit" })
     expect(lastValues()).toBe(false)
     // A user id without the secret is not trusted.
-    await asUser({ "x-ba-user-id": "pro" })
+    await asUser({ "x-ba-user-id": "explorer" })
     expect(lastValues()).toBe(false)
+    // History values are an Explorer feature: every bridged account has it.
     for (const [user, allowed] of [
-      ["pro", true], // a plan grant
-      ["archivist", true], // earned Pro
-      ["free", false], // an expired grant
-      ["expired", false], // an earned-Pro hold that ended
-      ["nobody", false], // no profile at all
+      ["explorer", true],
+      ["contributor", true],
     ] as const) {
       await asUser({ "x-service-secret": "sekrit", "x-ba-user-id": user })
       expect(lastValues()).toBe(allowed)
@@ -644,7 +625,7 @@ describe("history routes and controller", () => {
     expect(spy).toHaveBeenLastCalledWith(LIB, {
       page: 2,
       pageSize: 20,
-      values: false,
+      values: true,
     })
     await c.libraryHistory(ctxFor({ query: { pageSize: "0" } }))
     expect(spy).toHaveBeenLastCalledWith(LIB, {

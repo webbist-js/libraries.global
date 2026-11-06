@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Libraries Global Team API",
-    "version": "1.0.0",
-    "description": "Read-only search and retrieval of published public Library records. Requires a Team-owned API key, an active Team and active API add-on coverage. Keys grant no user session, Staff access or protected data. Only English content is currently live. Default shared Team allowances are 100,000 successful requests and 10 GiB of uncompressed JSON per calendar month, 60 authenticated attempts per minute, five concurrent requests and 256 KiB per response. Subscription-specific saved limits take precedence. Successful responses, including repeated reads, consume allowance; errors do not consume monthly request or byte allowance. There are no automatic overage charges. Availability and purchasing restrictions are described in the current Knowledge access guide. Browser beta and Basic Auth cookies are unnecessary for the three machine routes; discovery files and website pages retain their beta and staging gates. Other website APIs and proposed resources are outside this contract. Preserve attribution and source-specific licences; missing data does not prove a service is unavailable. Infrastructure or access-gate failures can return non-JSON responses.",
+    "version": "2.1.0",
+    "description": "Read-only search and retrieval of published public Library records. Requires an API key belonging to an API account (an organisation or individual) with settled paid coverage. Keys grant no user session, Staff access or protected data. Only English content is currently live. The £100 monthly offer includes, per paid billing period, 10,000 successful requests, 262,144,000 bytes (250 MiB) of uncompressed JSON and 100 analysis credits, pooled across every key, with 30 attempts per minute, two concurrent requests, 128 KiB per response and 50 records per page. The billing period is the settled Stripe subscription period [start, end); a new allowance opens only once the next period is paid. Purchase-time limits take precedence. Successful responses, including repeated reads, consume allowance; failed, refused and timed-out requests do not. Overage is off unless an organiser opts in with a monthly cap before tax (1p per extra request, 10p per extra MiB measured from total excess bytes, 50p per extra analysis credit). Requests that would cross an exhausted allowance or the cap are refused with 429. Availability and purchasing restrictions are described in the current Knowledge access guide. Browser beta and Basic Auth cookies are unnecessary for the machine routes; discovery files and website pages retain their beta and staging gates. Other website APIs and proposed resources are outside this contract. Preserve attribution and source-specific licences; missing data does not prove a service is unavailable. Infrastructure or access-gate failures can return non-JSON responses. Version 2.1 adds staged service, submission and analysis resources. Each is marked x-feature-flag and is switched on by the operator in stages; while its flag is off a route answers 404 resource_not_enabled before any key or accounting work. A flag never bypasses authentication, scopes, limits or accounting.",
     "contact": {
       "name": "Libraries Global",
       "email": "info@libraries.global",
@@ -33,13 +33,27 @@
     {
       "name": "Places",
       "description": "Countries, regions and areas with published Libraries, and the Libraries in each."
+    },
+    {
+      "name": "Services",
+      "description": "Published library services, university systems and consortia, and their member Libraries. Staged: API_SERVICE_READS_ENABLED."
+    },
+    {
+      "name": "Submissions",
+      "description": "Untrusted data proposals for moderator review. Staged: API_SUBMISSIONS_ENABLED."
+    },
+    {
+      "name": "Analysis",
+      "description": "Bounded summary and Reach analysis on published references, spending analysis credits. Staged: API_ANALYSIS_ENABLED (network Reach also API_NETWORK_REACH_ENABLED)."
     }
   ],
   "paths": {
     "/api/v1/search/libraries": {
       "post": {
         "operationId": "searchLibraries",
-        "tags": ["Libraries"],
+        "tags": [
+          "Libraries"
+        ],
         "summary": "Search published Libraries",
         "description": "Requires the search:read key scope. Search uses offset pagination. Increment offset by limit; stop on an empty or short page. Use the cursor-based Library list for longer sequential extraction. Retrieve a full record for source credits.",
         "requestBody": {
@@ -74,14 +88,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -123,7 +151,9 @@
     "/api/v1/libraries": {
       "get": {
         "operationId": "listLibraries",
-        "tags": ["Libraries"],
+        "tags": [
+          "Libraries"
+        ],
         "summary": "List published Libraries",
         "description": "Requires the libraries:read key scope. Unknown and repeated query parameters are rejected. Records are ordered by document identifier. Follow meta.nextCursor using after until it is null. This is not a frozen snapshot; published records can change during pagination.",
         "parameters": [
@@ -157,14 +187,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -203,7 +247,9 @@
     "/api/v1/libraries/{entityRef}": {
       "get": {
         "operationId": "getLibrary",
-        "tags": ["Libraries"],
+        "tags": [
+          "Libraries"
+        ],
         "summary": "Retrieve one published Library",
         "description": "Requires the libraries:read key scope. Take entityRef from a search or list result and URL-encode it as a single path segment. A reference may change after a rename or geographic move. Returns an object in data, not an array.",
         "parameters": [
@@ -225,14 +271,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -274,7 +334,9 @@
     "/api/v1/places": {
       "get": {
         "operationId": "listCountries",
-        "tags": ["Places"],
+        "tags": [
+          "Places"
+        ],
         "summary": "List countries with published Libraries",
         "description": "Requires the libraries:read key scope. Countries with at least one published Library, with counts and ISO codes, by name. Only locale is accepted as a query parameter.",
         "parameters": [
@@ -293,14 +355,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -342,7 +418,9 @@
     "/api/v1/places/{country}": {
       "get": {
         "operationId": "listRegions",
-        "tags": ["Places"],
+        "tags": [
+          "Places"
+        ],
         "summary": "List a country's regions",
         "description": "Requires the libraries:read key scope. Regions of the country with at least one published Library, with counts. Only locale is accepted as a query parameter.",
         "parameters": [
@@ -364,14 +442,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -413,7 +505,9 @@
     "/api/v1/places/{country}/{region}": {
       "get": {
         "operationId": "listAreas",
-        "tags": ["Places"],
+        "tags": [
+          "Places"
+        ],
         "summary": "List a region's areas",
         "description": "Requires the libraries:read key scope. Areas of the region with at least one published Library, with counts. Only locale is accepted as a query parameter.",
         "parameters": [
@@ -438,14 +532,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -487,7 +595,10 @@
     "/api/v1/places/{country}/libraries": {
       "get": {
         "operationId": "listCountryLibraries",
-        "tags": ["Places", "Libraries"],
+        "tags": [
+          "Places",
+          "Libraries"
+        ],
         "summary": "List the Libraries in a country",
         "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
         "parameters": [
@@ -515,14 +626,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -564,7 +689,10 @@
     "/api/v1/places/{country}/{region}/libraries": {
       "get": {
         "operationId": "listRegionLibraries",
-        "tags": ["Places", "Libraries"],
+        "tags": [
+          "Places",
+          "Libraries"
+        ],
         "summary": "List the Libraries in a region",
         "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
         "parameters": [
@@ -595,14 +723,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -644,7 +786,10 @@
     "/api/v1/places/{country}/{region}/{area}/libraries": {
       "get": {
         "operationId": "listAreaLibraries",
-        "tags": ["Places", "Libraries"],
+        "tags": [
+          "Places",
+          "Libraries"
+        ],
         "summary": "List the Libraries in an area",
         "description": "Requires the libraries:read key scope. The same records, fields and cursor pagination as GET /api/v1/libraries. Place filters come from the path; country, region and area query parameters are rejected here.",
         "parameters": [
@@ -678,14 +823,28 @@
                 }
               },
               "X-API-Requests-Remaining": {
-                "description": "Remaining shared monthly Team requests after this reservation; other in-flight requests can change it.",
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
                 "schema": {
                   "type": "integer",
                   "minimum": 0
                 }
               },
               "X-API-Quota-Reset": {
-                "description": "Next calendar-month reset, at 00:00 UTC on the first day.",
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
                 "schema": {
                   "type": "string",
                   "format": "date-time"
@@ -723,6 +882,1141 @@
           }
         }
       }
+    },
+    "/api/v1/services": {
+      "get": {
+        "operationId": "listServices",
+        "tags": [
+          "Services"
+        ],
+        "summary": "List published services and networks",
+        "description": "Requires services:read. Public, reviewed services ordered by ref; follow meta.nextCursor using after. Each record states its serviceType; not every service is a public-library service.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/ServiceType"
+          },
+          {
+            "$ref": "#/components/parameters/Country"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published services.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SERVICE_READS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/services/{ref}": {
+      "get": {
+        "operationId": "getService",
+        "tags": [
+          "Services"
+        ],
+        "summary": "Read one published service",
+        "description": "Requires services:read. Unknown and private refs return 404.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceRef"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One published service with coverage metadata.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SERVICE_READS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/services/{ref}/libraries": {
+      "get": {
+        "operationId": "listServiceLibraries",
+        "tags": [
+          "Services"
+        ],
+        "summary": "List a service's published member Libraries",
+        "description": "Requires services:read. Membership comes from the CMS, never from the caller. Same record projection and cursor as GET /api/v1/libraries.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ServiceRef"
+          },
+          {
+            "$ref": "#/components/parameters/Locale"
+          },
+          {
+            "$ref": "#/components/parameters/Limit"
+          },
+          {
+            "$ref": "#/components/parameters/After"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published member Libraries.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceLibrariesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SERVICE_READS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/submissions/libraries": {
+      "post": {
+        "operationId": "proposeLibrary",
+        "tags": [
+          "Submissions"
+        ],
+        "summary": "Propose a new Library",
+        "description": "Propose a Library that is not yet in the index. Requires submissions:write. The body is at most 16 KiB. Proposals are untrusted: they enter the moderation queue, are never published directly, cannot assert staff identity and earn no contribution rewards. The API account, key, source licence and idempotency key are recorded with the proposal. A published Library with the same name in the same country and city is refused as possible_duplicate.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryProposalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Filed for review.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "A replay of an earlier request with the same Idempotency-Key and payload; nothing new was filed.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SUBMISSIONS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/submissions/corrections": {
+      "post": {
+        "operationId": "proposeCorrection",
+        "tags": [
+          "Submissions"
+        ],
+        "summary": "Propose corrections to a published Library",
+        "description": "Field-scoped corrections against a published entityRef. Requires submissions:write. The body is at most 16 KiB. Proposals are untrusted: they enter the moderation queue, are never published directly, cannot assert staff identity and earn no contribution rewards. The API account, key, source licence and idempotency key are recorded with the proposal.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectionProposalRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Filed for review.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "A replay of an earlier request with the same Idempotency-Key and payload; nothing new was filed.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SUBMISSIONS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/submissions/{id}": {
+      "get": {
+        "operationId": "getProposal",
+        "tags": [
+          "Submissions"
+        ],
+        "summary": "Read a proposal's status",
+        "description": "Requires submissions:write. Only the submitting API account can read a proposal; any other id returns 404. Reviewer notes and identities are never returned.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProposalId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Safe proposal status.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_SUBMISSIONS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analysis/summary": {
+      "post": {
+        "operationId": "runSummary",
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Summarise a published service or place",
+        "description": "Requires analysis:run. Synchronous counted aggregates over published records; returns the completed result with its job. Credits are reserved at acceptance under the account's ledger lock, settled once when a result completes and refunded on failure, cancellation or expiry. A cached identical result spends no credit; the request and response bytes are still metered. Retries with identical input reuse the open job, so a replay cannot start a second charged job. The worst-case credits must be available (or fit the overage cap) to start a job. Identical input within 15 minutes returns the stored result.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SummaryRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Completed summary.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_ANALYSIS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analysis/reach": {
+      "post": {
+        "operationId": "runReach",
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Start or reuse a Reach analysis",
+        "description": "Requires analysis:run. Returns 202 with a job to poll, or 200 with a cached or finished result. Uses the CMS and native analysis admission, canonical service membership and dataset coverage. At most five open jobs per account; jobs expire after 30 minutes. Credits are reserved at acceptance under the account's ledger lock, settled once when a result completes and refunded on failure, cancellation or expiry. A cached identical result spends no credit; the request and response bytes are still metered. Retries with identical input reuse the open job, so a replay cannot start a second charged job. The worst-case credits must be available (or fit the overage cap) to start a job. Results below 128 KiB; geometry is omitted (geometry: unavailable) when it would be large.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReachRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cached or finished result.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultResponse"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted; poll the job.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "413": {
+            "$ref": "#/components/responses/TooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "422": {
+            "$ref": "#/components/responses/AnalysisUnavailable"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_ANALYSIS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analysis/jobs/{id}": {
+      "get": {
+        "operationId": "getAnalysisJob",
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Read an analysis job",
+        "description": "Requires analysis:run. Only the account's own jobs; others return 404. Poll no faster than job.retryAfter; the CMS is re-checked at most every 3 seconds per job.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/JobId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job state, expiry and credit status.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_ANALYSIS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
+    },
+    "/api/v1/analysis/jobs/{id}/result": {
+      "get": {
+        "operationId": "getAnalysisResult",
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Fetch a completed analysis result",
+        "description": "Requires analysis:run. Paid coverage and key scope are rechecked on every fetch. Spends one request and its bytes, never a second credit. Results keep their routing, population and boundary source licences.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/JobId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The completed result.",
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request identifier for support and accounting.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-API-Requests-Remaining": {
+                "description": "Included successful requests left in this billing period after this request; other in-flight requests can change it. Overage is not counted.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Bytes-Remaining": {
+                "description": "Included response bytes left in this billing period after this response.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Analysis-Credits-Remaining": {
+                "description": "Included analysis credits left in this billing period.",
+                "schema": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "X-API-Quota-Reset": {
+                "description": "End of the current paid billing period (UTC). A new allowance starts only when the next period is paid.",
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisResultResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "410": {
+            "$ref": "#/components/responses/Gone"
+          },
+          "429": {
+            "$ref": "#/components/responses/RateLimited"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamUnavailable"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "x-feature-flag": "API_ANALYSIS_ENABLED",
+        "x-status": "staged",
+        "security": [
+          {
+            "TeamApiKey": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -731,7 +2025,7 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "lg_api_*",
-        "description": "Team API key, not a user JWT or CMS token. Send Authorization: Bearer YOUR_API_KEY. Search requires search:read; list/detail require libraries:read. Keep keys on your server."
+        "description": "API key, not a user JWT or CMS token. Send Authorization: Bearer YOUR_API_KEY. Scopes: search:read (search), libraries:read (records and places), services:read (services), submissions:write (proposals and their status), analysis:run (summary, Reach and jobs). New keys default to the read scopes; submissions:write and analysis:run need explicit confirmation at creation. A key authenticates software for an API account, never a person or staff member. Keep keys on your server."
       }
     },
     "parameters": {
@@ -741,7 +2035,9 @@
         "description": "Content locale. Only English is currently live.",
         "schema": {
           "type": "string",
-          "enum": ["en"],
+          "enum": [
+            "en"
+          ],
           "default": "en"
         }
       },
@@ -752,7 +2048,7 @@
         "schema": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 100,
+          "maximum": 50,
           "default": 50
         }
       },
@@ -834,6 +2130,54 @@
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]{0,99}$"
         }
+      },
+      "ServiceRef": {
+        "name": "ref",
+        "in": "path",
+        "required": true,
+        "description": "A service's stable ref from GET /api/v1/services. Refs do not change when a service is renamed; slugs can.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{20,32}$"
+        }
+      },
+      "ServiceType": {
+        "name": "serviceType",
+        "in": "query",
+        "description": "Filter by service type.",
+        "schema": {
+          "$ref": "#/components/schemas/ServiceType"
+        }
+      },
+      "JobId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Job id from an analysis response.",
+        "schema": {
+          "type": "string",
+          "pattern": "^(reach|summary):[A-Za-z0-9_-]{22}$"
+        }
+      },
+      "ProposalId": {
+        "name": "id",
+        "in": "path",
+        "required": true,
+        "description": "Proposal id from a submissions response.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{20,32}$"
+        }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "Required client key, unique per proposal. A retry with the same key and payload returns the original proposal (meta.replayed true) without filing another.",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{8,64}$"
+        }
       }
     },
     "schemas": {
@@ -849,14 +2193,16 @@
           },
           "locale": {
             "type": "string",
-            "enum": ["en"],
+            "enum": [
+              "en"
+            ],
             "default": "en",
             "description": "Only live content locales are accepted."
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 100,
+            "maximum": 50,
             "default": 20
           },
           "offset": {
@@ -888,7 +2234,11 @@
           "near": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["lat", "lng", "radius"],
+            "required": [
+              "lat",
+              "lng",
+              "radius"
+            ],
             "properties": {
               "lat": {
                 "type": "number",
@@ -920,49 +2270,94 @@
         "description": "Search summary; fields absent from the index may be omitted. Retrieve the full Library record for its source credits.",
         "properties": {
           "documentId": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "name": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "slug": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "entityRef": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "shortName": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "summary": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "libraryType": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "operationalStatus": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "city": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "continent_slug": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "country_slug": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "country_name": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "region_slug": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "region_name": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "_geo": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
               "lat": {
                 "type": "number"
@@ -982,7 +2377,10 @@
       },
       "SearchResponse": {
         "type": "object",
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "properties": {
           "data": {
             "type": "array",
@@ -1010,7 +2408,10 @@
                 "type": "integer"
               },
               "estimatedTotal": {
-                "type": ["integer", "null"],
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "description": "Search estimate, not a guaranteed complete catalogue count."
               },
               "attribution": {
@@ -1022,7 +2423,10 @@
       },
       "LibraryRecord": {
         "type": "object",
-        "required": ["documentId", "sourceRecords"],
+        "required": [
+          "documentId",
+          "sourceRecords"
+        ],
         "description": "Explicit public record projection. Null means information is not recorded. These routes do not include opening times, facility relations, Events, verification dates or every field shown on the website.",
         "properties": {
           "documentId": {
@@ -1030,95 +2434,179 @@
             "description": "Strapi document identifier; not accepted by the entityRef detail route."
           },
           "name": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "slug": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "entityRef": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "shortName": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "summary": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "operationalStatus": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "operatorType": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "streetAddress": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "city": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "postalCode": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "timezone": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "website": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "phone": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "email": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "catalogueUrl": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "libraryType": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "location": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "description": "Stored coordinates; older records may contain numeric strings.",
             "properties": {
               "lat": {
-                "type": ["number", "string"]
+                "type": [
+                  "number",
+                  "string"
+                ]
               },
               "lng": {
-                "type": ["number", "string"]
+                "type": [
+                  "number",
+                  "string"
+                ]
               },
               "address": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
           "updatedAt": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date-time",
             "description": "Record modification time, not a verification date."
           },
           "country": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
               "name": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "slug": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "iso2": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
           "region": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
               "name": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "slug": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
@@ -1129,7 +2617,10 @@
             }
           },
           "area": {
-            "type": ["object", "null"],
+            "type": [
+              "object",
+              "null"
+            ],
             "properties": {
               "name": {
                 "type": "string"
@@ -1145,24 +2636,46 @@
         "type": "object",
         "properties": {
           "dataset": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "recordId": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "retrievedAt": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "date"
           },
           "url": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "label": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "role": {
-            "type": ["string", "null"],
-            "enum": ["origin", "reference", null]
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "origin",
+              "reference",
+              null
+            ]
           },
           "fields": {
             "description": "Source field associations as stored JSON, or null when unspecified."
@@ -1173,26 +2686,47 @@
         }
       },
       "DatasetCredit": {
-        "type": ["object", "null"],
+        "type": [
+          "object",
+          "null"
+        ],
         "description": "Source-specific credits. A missing credit or unconfirmed licence does not establish redistribution permission. API access does not replace source terms.",
         "properties": {
           "key": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "publisher": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "licence": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "licenceUrl": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "attribution": {
-            "type": ["string", "null"]
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "redistribution": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "permitted",
               "permitted_with_attribution",
@@ -1202,7 +2736,10 @@
             ]
           },
           "licenceStatus": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "enum": [
               "confirmed_in_writing",
               "stated_by_publisher",
@@ -1214,13 +2751,20 @@
       },
       "RecordMeta": {
         "type": "object",
-        "required": ["locale", "nextCursor", "attribution"],
+        "required": [
+          "locale",
+          "nextCursor",
+          "attribution"
+        ],
         "properties": {
           "locale": {
             "type": "string"
           },
           "nextCursor": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Opaque cursor for the next list page, or null at the end and for a detail response."
           },
           "attribution": {
@@ -1231,7 +2775,10 @@
       },
       "LibraryListResponse": {
         "type": "object",
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "properties": {
           "data": {
             "type": "array",
@@ -1246,7 +2793,10 @@
       },
       "LibraryDetailResponse": {
         "type": "object",
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "properties": {
           "data": {
             "$ref": "#/components/schemas/LibraryRecord"
@@ -1258,11 +2808,15 @@
       },
       "Error": {
         "type": "object",
-        "required": ["error"],
+        "required": [
+          "error"
+        ],
         "properties": {
           "error": {
             "type": "object",
-            "required": ["code"],
+            "required": [
+              "code"
+            ],
             "properties": {
               "code": {
                 "type": "string",
@@ -1274,7 +2828,11 @@
       },
       "Place": {
         "type": "object",
-        "required": ["name", "slug", "libraryCount"],
+        "required": [
+          "name",
+          "slug",
+          "libraryCount"
+        ],
         "properties": {
           "name": {
             "type": "string"
@@ -1289,22 +2847,34 @@
             "description": "Published Libraries in this place."
           },
           "iso2": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Countries only: ISO 3166-1 alpha-2 (ISO 3166-2 for the UK's nations)."
           },
           "iso3": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Countries only: ISO 3166-1 alpha-3."
           },
           "continent": {
-            "type": ["string", "null"],
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "Countries only: continent slug."
           }
         }
       },
       "PlaceListResponse": {
         "type": "object",
-        "required": ["data", "meta"],
+        "required": [
+          "data",
+          "meta"
+        ],
         "properties": {
           "data": {
             "type": "array",
@@ -1320,7 +2890,11 @@
               },
               "level": {
                 "type": "string",
-                "enum": ["country", "region", "area"]
+                "enum": [
+                  "country",
+                  "region",
+                  "area"
+                ]
               },
               "country": {
                 "type": "string"
@@ -1331,6 +2905,828 @@
             }
           }
         }
+      },
+      "ServiceType": {
+        "type": "string",
+        "enum": [
+          "library_service",
+          "university_system",
+          "consortium"
+        ],
+        "description": "library_service: a library authority or service operating its member libraries. university_system: academic libraries of one university or system. consortium: a cooperative of independently run libraries. Not every service is a public-library service."
+      },
+      "Service": {
+        "type": "object",
+        "required": [
+          "ref",
+          "slug",
+          "name",
+          "serviceType",
+          "countries",
+          "source"
+        ],
+        "properties": {
+          "ref": {
+            "type": "string",
+            "description": "Stable public reference."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Display slug; can change."
+          },
+          "name": {
+            "type": "string"
+          },
+          "serviceType": {
+            "$ref": "#/components/schemas/ServiceType"
+          },
+          "description": {
+            "type": "string"
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "countries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "iso2": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lastVerifiedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "coverage": {
+            "type": "object",
+            "description": "Detail responses only.",
+            "properties": {
+              "libraryCount": {
+                "type": "integer"
+              },
+              "countries": {
+                "type": "integer"
+              },
+              "lastVerifiedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "ServiceMeta": {
+        "type": "object",
+        "required": [
+          "locale",
+          "semantics",
+          "attribution"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string"
+              },
+              "serviceType": {
+                "$ref": "#/components/schemas/ServiceType"
+              }
+            }
+          },
+          "semantics": {
+            "type": "object",
+            "description": "What serviceType and membership mean. Membership is not staff authority and does not imply public access or a shared catalogue.",
+            "properties": {
+              "serviceType": {
+                "type": "string"
+              },
+              "membership": {
+                "type": "string"
+              }
+            }
+          },
+          "attribution": {
+            "type": "string"
+          }
+        }
+      },
+      "ServiceListResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Service"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ServiceMeta"
+          }
+        }
+      },
+      "ServiceDetailResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Service"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ServiceMeta"
+          }
+        }
+      },
+      "ServiceLibrariesResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LibraryRecord"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ServiceMeta"
+          }
+        }
+      },
+      "ProposalFields": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Whitelisted fields only. Any other field (relations, slugs, entityRef, source records, staff, verification or media fields) or a dotted path is refused with field_not_allowed or field_path_refused. lat and lng go together. Values cannot be empty.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "shortName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "streetAddress": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "city": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "district": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "postalCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500
+          },
+          "catalogueUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 500
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "phone": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "operationalStatus": {
+            "type": "string",
+            "enum": [
+              "open",
+              "temporarily_closed",
+              "permanently_closed",
+              "seasonal",
+              "appointment_only",
+              "planned",
+              "unknown"
+            ]
+          },
+          "operatorType": {
+            "type": "string",
+            "enum": [
+              "National Government",
+              "Regional Government",
+              "Municipality",
+              "University",
+              "Religious Institution",
+              "Private Foundation",
+              "Independent",
+              "Volunteer Managed",
+              "Community Managed",
+              "Other"
+            ]
+          },
+          "closureReason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "lat": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+          }
+        }
+      },
+      "ProposalEvidence": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "url",
+          "licence",
+          "sourceName"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "institutional_url",
+              "press_release",
+              "other"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "maxLength": 500
+          },
+          "licence": {
+            "type": "string",
+            "enum": [
+              "CC0-1.0",
+              "CC-BY-4.0",
+              "CC-BY-SA-4.0",
+              "ODbL-1.0",
+              "OGL-UK-3.0",
+              "PDDL-1.0",
+              "public-domain",
+              "facts-only",
+              "own-publication"
+            ],
+            "description": "Licence of the source the proposal is based on; recorded with the proposal for review."
+          },
+          "sourceName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "attribution": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "LibraryProposalRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "library",
+          "place",
+          "evidence"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en"
+            ],
+            "default": "en"
+          },
+          "library": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProposalFields"
+              }
+            ],
+            "properties": {
+              "libraryType": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "description": "ProposalFields plus libraryType (an existing Library type name)."
+          },
+          "place": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "country"
+            ],
+            "properties": {
+              "country": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "area": {
+                "type": "string",
+                "description": "Requires region."
+              }
+            }
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/ProposalEvidence"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      },
+      "CorrectionProposalRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "changes",
+          "evidence"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en"
+            ],
+            "default": "en"
+          },
+          "target": {
+            "type": "string",
+            "description": "entityRef of a published Library."
+          },
+          "changes": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProposalFields"
+              }
+            ],
+            "minProperties": 1,
+            "maxProperties": 10,
+            "description": "Field-scoped proposed values. The live values are recorded with the proposal so moderators can review conflicts."
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/ProposalEvidence"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      },
+      "Proposal": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "library",
+              "correction"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "received",
+              "in_review",
+              "needs_information",
+              "accepted",
+              "declined"
+            ],
+            "description": "Safe status only: reviewer notes and identities are never returned."
+          },
+          "locale": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "result": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "entityRef": {
+                "type": "string"
+              }
+            },
+            "description": "The published Library after acceptance, once it is public."
+          }
+        }
+      },
+      "ProposalResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Proposal"
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "replayed": {
+                "type": "boolean"
+              },
+              "trust": {
+                "type": "string",
+                "enum": [
+                  "untrusted_proposal"
+                ]
+              },
+              "notice": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "ProposalStatusResponse": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Proposal"
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "operation",
+          "state",
+          "credits",
+          "expiresAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "summary",
+              "reach"
+            ]
+          },
+          "operation": {
+            "type": "string",
+            "examples": [
+              "reach.library",
+              "summary.service.profile"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "complete",
+              "failed",
+              "expired"
+            ]
+          },
+          "cached": {
+            "type": "boolean",
+            "description": "True when an identical result already existed; no credit was spent."
+          },
+          "credits": {
+            "type": "object",
+            "properties": {
+              "reserved": {
+                "type": "integer"
+              },
+              "spent": {
+                "type": "integer"
+              },
+              "charge": {
+                "type": "string",
+                "enum": [
+                  "reserved",
+                  "settled",
+                  "refunded"
+                ]
+              }
+            }
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "A pending job not completed by then expires and its credits are refunded."
+          },
+          "resultExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "resultAvailable": {
+            "type": "boolean"
+          },
+          "retryAfter": {
+            "type": "integer",
+            "description": "Seconds before polling again (pending jobs)."
+          },
+          "links": {
+            "type": "object",
+            "properties": {
+              "self": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "JobResponse": {
+        "type": "object",
+        "required": [
+          "job"
+        ],
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        }
+      },
+      "AnalysisResultResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "description": "SummaryResult or ReachResult."
+          },
+          "meta": {
+            "type": "object",
+            "properties": {
+              "jobId": {
+                "type": "string"
+              },
+              "operation": {
+                "type": "string"
+              },
+              "cached": {
+                "type": "boolean"
+              },
+              "resultExpiresAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "attribution": {
+                "type": "string"
+              }
+            }
+          },
+          "job": {
+            "$ref": "#/components/schemas/Job"
+          }
+        }
+      },
+      "SummaryRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation"
+        ],
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "service.profile",
+              "service.coverage",
+              "place.profile",
+              "place.coverage"
+            ],
+            "description": "service.profile and place.profile (1 credit): library counts by operational status and Library type. service.coverage and place.coverage (5 credits, richer joins): the profile plus completeness (website, opening hours, contact, location, catalogue), records verified within 365 days and per-Dataset source and licence counts."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Service ref; service operations only."
+          },
+          "place": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "country"
+            ],
+            "properties": {
+              "country": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "area": {
+                "type": "string"
+              }
+            },
+            "description": "Place operations only."
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "en"
+            ],
+            "default": "en"
+          }
+        }
+      },
+      "ReachRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "ref",
+          "travelMode"
+        ],
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "library",
+              "service",
+              "network"
+            ],
+            "description": "library (5 credits): one published Library by entityRef. service (20 credits): one reporting area (areaCode) of a published service. network (40 credits): the whole service across its reporting areas; only when API_NETWORK_REACH_ENABLED is on, else 404 analysis_mode_unavailable."
+          },
+          "ref": {
+            "type": "string",
+            "description": "Library entityRef (library mode) or service ref."
+          },
+          "travelMode": {
+            "type": "string",
+            "enum": [
+              "walking",
+              "cycling"
+            ]
+          },
+          "minutes": {
+            "type": "integer",
+            "enum": [
+              5,
+              10,
+              15,
+              30
+            ],
+            "description": "Optional single travel-time band. Library mode returns all four bands when omitted."
+          },
+          "areaCode": {
+            "type": "string",
+            "pattern": "^[EWSN]\\d{8}$",
+            "description": "Reporting area; service mode only and required there."
+          }
+        },
+        "description": "Inputs are published references and enumerated options only. Polygons, coordinates, client-chosen memberships, upstream URLs and batches are not accepted."
       }
     },
     "responses": {
@@ -1383,6 +3779,83 @@
                     "code": "locale_unavailable"
                   }
                 }
+              },
+              "invalid_service_type": {
+                "value": {
+                  "error": {
+                    "code": "invalid_service_type"
+                  }
+                }
+              },
+              "idempotency_key_required": {
+                "value": {
+                  "error": {
+                    "code": "idempotency_key_required"
+                  }
+                }
+              },
+              "invalid_proposal": {
+                "value": {
+                  "error": {
+                    "code": "invalid_proposal"
+                  }
+                }
+              },
+              "field_not_allowed": {
+                "value": {
+                  "error": {
+                    "code": "field_not_allowed"
+                  }
+                }
+              },
+              "field_path_refused": {
+                "value": {
+                  "error": {
+                    "code": "field_path_refused"
+                  }
+                }
+              },
+              "invalid_field_value": {
+                "value": {
+                  "error": {
+                    "code": "invalid_field_value"
+                  }
+                }
+              },
+              "invalid_evidence": {
+                "value": {
+                  "error": {
+                    "code": "invalid_evidence"
+                  }
+                }
+              },
+              "unknown_place": {
+                "value": {
+                  "error": {
+                    "code": "unknown_place"
+                  }
+                }
+              },
+              "unsafe_content": {
+                "value": {
+                  "error": {
+                    "code": "unsafe_content"
+                  }
+                }
+              },
+              "invalid_analysis": {
+                "value": {
+                  "error": {
+                    "code": "invalid_analysis"
+                  }
+                }
+              },
+              "area_required": {
+                "value": {
+                  "error": {
+                    "code": "area_required"
+                  }
+                }
               }
             }
           }
@@ -1408,7 +3881,7 @@
         }
       },
       "Forbidden": {
-        "description": "The key lacks the required scope, the Team is inactive, or API add-on coverage is inactive.",
+        "description": "The key lacks the required scope, or the API account's paid coverage or organisation is inactive.",
         "content": {
           "application/json": {
             "schema": {
@@ -1422,17 +3895,17 @@
                   }
                 }
               },
+              "api_access_inactive": {
+                "value": {
+                  "error": {
+                    "code": "api_access_inactive"
+                  }
+                }
+              },
               "team_inactive": {
                 "value": {
                   "error": {
                     "code": "team_inactive"
-                  }
-                }
-              },
-              "api_addon_inactive": {
-                "value": {
-                  "error": {
-                    "code": "api_addon_inactive"
                   }
                 }
               }
@@ -1441,7 +3914,7 @@
         }
       },
       "NotFound": {
-        "description": "No published Library resolves for this entity reference.",
+        "description": "No published record resolves for this reference, the resource's flag is off (resource_not_enabled), or the job or proposal is not this account's. Unknown, private and foreign references get the same answer.",
         "content": {
           "application/json": {
             "schema": {
@@ -1452,6 +3925,13 @@
                 "value": {
                   "error": {
                     "code": "record_not_found"
+                  }
+                }
+              },
+              "resource_not_enabled": {
+                "value": {
+                  "error": {
+                    "code": "resource_not_enabled"
                   }
                 }
               }
@@ -1479,38 +3959,73 @@
         }
       },
       "RateLimited": {
-        "description": "Rate, concurrency or monthly allowance exceeded. Respect Retry-After. Monthly quotas reset at the next calendar month in UTC.",
+        "description": "Refused before any work. quota_requests, quota_bytes and quota_analysis: an included allowance is used up and overage is off. overage_cap: the work would cross the organiser's overage cap. rate_limit: more than 30 attempts a minute. concurrency_limit: two requests already in flight. Respect Retry-After. Analysis also uses analysis_queue_full (five open jobs per account) and analysis_capacity (native capacity); submissions use proposal_rate_limit (30 proposals an hour per key, 200 a day per account).",
         "content": {
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/Error"
             },
             "examples": {
-              "api_rate_limit": {
+              "quota_requests": {
                 "value": {
                   "error": {
-                    "code": "api_rate_limit"
+                    "code": "quota_requests"
                   }
                 }
               },
-              "api_concurrency_limit": {
+              "quota_bytes": {
                 "value": {
                   "error": {
-                    "code": "api_concurrency_limit"
+                    "code": "quota_bytes"
                   }
                 }
               },
-              "api_request_allowance_exhausted": {
+              "quota_analysis": {
                 "value": {
                   "error": {
-                    "code": "api_request_allowance_exhausted"
+                    "code": "quota_analysis"
                   }
                 }
               },
-              "api_byte_allowance_exhausted": {
+              "overage_cap": {
                 "value": {
                   "error": {
-                    "code": "api_byte_allowance_exhausted"
+                    "code": "overage_cap"
+                  }
+                }
+              },
+              "rate_limit": {
+                "value": {
+                  "error": {
+                    "code": "rate_limit"
+                  }
+                }
+              },
+              "concurrency_limit": {
+                "value": {
+                  "error": {
+                    "code": "concurrency_limit"
+                  }
+                }
+              },
+              "analysis_queue_full": {
+                "value": {
+                  "error": {
+                    "code": "analysis_queue_full"
+                  }
+                }
+              },
+              "analysis_capacity": {
+                "value": {
+                  "error": {
+                    "code": "analysis_capacity"
+                  }
+                }
+              },
+              "proposal_rate_limit": {
+                "value": {
+                  "error": {
+                    "code": "proposal_rate_limit"
                   }
                 }
               }
@@ -1526,7 +4041,7 @@
             }
           },
           "X-API-Quota-Reset": {
-            "description": "Present when a monthly request or byte allowance is exhausted.",
+            "description": "End of the current paid billing period, present for quota and overage-cap refusals.",
             "schema": {
               "type": "string",
               "format": "date-time"
@@ -1600,6 +4115,152 @@
                 "value": {
                   "error": {
                     "code": "api_configuration_invalid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "The request conflicts with existing work. idempotency_conflict: the Idempotency-Key was used with a different payload. duplicate_proposal: this account already has the same proposal open (error.proposalId). possible_duplicate: a published Library already matches (error.existing lists entityRefs; propose a correction instead). no_change: the correction matches the live values. job_not_complete, job_failed: the job has no result yet or failed. analysis_in_progress: an identical summary is running.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "idempotency_conflict": {
+                "value": {
+                  "error": {
+                    "code": "idempotency_conflict"
+                  }
+                }
+              },
+              "duplicate_proposal": {
+                "value": {
+                  "error": {
+                    "code": "duplicate_proposal"
+                  }
+                }
+              },
+              "possible_duplicate": {
+                "value": {
+                  "error": {
+                    "code": "possible_duplicate"
+                  }
+                }
+              },
+              "no_change": {
+                "value": {
+                  "error": {
+                    "code": "no_change"
+                  }
+                }
+              },
+              "job_not_complete": {
+                "value": {
+                  "error": {
+                    "code": "job_not_complete"
+                  }
+                }
+              },
+              "job_failed": {
+                "value": {
+                  "error": {
+                    "code": "job_failed"
+                  }
+                }
+              },
+              "analysis_in_progress": {
+                "value": {
+                  "error": {
+                    "code": "analysis_in_progress"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "Gone": {
+        "description": "The job's result has expired and was deleted (job_result_expired). Results are kept 24 hours for Reach and 15 minutes for summaries.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "job_result_expired": {
+                "value": {
+                  "error": {
+                    "code": "job_result_expired"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Send Content-Type: application/json.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "invalid_proposal": {
+                "value": {
+                  "error": {
+                    "code": "invalid_proposal"
+                  }
+                }
+              },
+              "invalid_analysis": {
+                "value": {
+                  "error": {
+                    "code": "invalid_analysis"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "AnalysisUnavailable": {
+        "description": "The analysis cannot be produced for this reference (for example no routing or population coverage, an unroutable or unmapped Library). The reserved credits were refunded. error.job describes the closed job.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "analysis_unsupported": {
+                "value": {
+                  "error": {
+                    "code": "analysis_unsupported"
+                  }
+                }
+              },
+              "analysis_unroutable": {
+                "value": {
+                  "error": {
+                    "code": "analysis_unroutable"
+                  }
+                }
+              },
+              "analysis_missing_population": {
+                "value": {
+                  "error": {
+                    "code": "analysis_missing_population"
+                  }
+                }
+              },
+              "analysis_failed": {
+                "value": {
+                  "error": {
+                    "code": "analysis_failed"
                   }
                 }
               }
