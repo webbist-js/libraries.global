@@ -8,7 +8,7 @@ This guide describes implementation and repeatable checks. Provider account read
 
 Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. Supporter includes detailed history and exports up to 500 libraries; Pro includes delivered analysis and 10,000-row exports. Team's library-scoped tools have a 50,000-row cap. Do not sell unfinished features or silently replace founding Price IDs.
 
-Personal membership, [Team seats](TEAM-BILLING.md) and the separate [Team API add-on](TEAM-API.md) have independent customer bindings, attempts and paid projections. Settled payment, rather than an optimistic checkout return, activates access.
+The [API account](TEAM-API.md) is the paid product; personal memberships and [Team seats](TEAM-BILLING.md) were retired in the November 2026 beta reset (see [PRICING.md](PRICING.md)). Settled payment, rather than an optimistic checkout return, activates access.
 
 ## Checkout and plan changes
 

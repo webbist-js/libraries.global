@@ -5,7 +5,9 @@ description: Team-owned library selections, widget publication, public rendering
 
 # Team widgets
 
-The staff section at `/staff/teams/widgets` lets active Team members create library finders, directories, comparison charts and statistic cards. Widgets use published platform records; uploads and arbitrary user datasets are outside this release. The Team API add-on is not required.
+The staff section at `/staff/teams/widgets` lets workspace members create library finders, directories, comparison charts and statistic cards. Widgets use published platform records; uploads and arbitrary user datasets are outside this release. No payment or API account is required.
+
+Since the November 2026 beta reset, staff workspaces are free and have no seats or paid expiry. Embed tools follow verified staff access (`canStaff`) on the libraries concerned, not workspace payment. Where this page mentions an inactive Team or Team expiry, read it as a workspace whose members no longer hold the required staff access.
 
 ## Ownership and source selection
 

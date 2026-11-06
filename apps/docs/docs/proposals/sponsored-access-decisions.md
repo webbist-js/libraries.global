@@ -79,3 +79,4 @@ Sponsor records never feed entitlements, capabilities, ranking or moderation.
 - Knowledge and legal copy is prepared as preview-by-default content scripts that stage drafts. Nothing is published by a code build.
 - Legal revisions are new versions. Historical versions are not overwritten.
 - Production Knowledge inventory and publication remain operator steps.
+- Review copies of the legal drafts: [API purchase terms](legal-drafts/membership.md), [cancellation and refunds](legal-drafts/cancellation-refunds.md), [terms](legal-drafts/terms.md), [privacy](legal-drafts/privacy.md), [data licence](legal-drafts/data-licence.md).

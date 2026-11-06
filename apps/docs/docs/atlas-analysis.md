@@ -95,10 +95,10 @@ Default limits are deliberate:
 - One native calculation at a time; a 256 MiB routing cache and windowed raster reads. Catalogue and cached-result reads can proceed while a calculation runs.
 - Network jobs allow four minutes of native execution with a lease thirty seconds longer; the UI checks for up to five minutes before offering a progress retry. Individual-library jobs retain their ninety-second execution limit.
 - Four fixed time bands, at most 2 million candidate population cells per individual catchment or 1 million per network reporting-area integration, and a 2 MiB result budget.
-- One-library Reach requires zoom 11 or closer and at most 100 matching libraries in view. Named service calculations use canonical service and reporting bounds independently of camera zoom. Pro allows 50 eligible libraries, a 2,500 km² envelope / 75 km span for all four times, or 20,000 km² / 200 km for the selected time only. Active Team seats allow 100 libraries and double those area/span allowances. Both origin and reporting envelopes must fit. Changing a larger service’s time clears stale results and requires another explicit calculation. CMS and native admission independently enforce the budget before work or cache access.
+- One-library Reach requires zoom 11 or closer and at most 100 matching libraries in view. Named service calculations use canonical service and reporting bounds independently of camera zoom. Service Reach allows 50 eligible libraries, a 2,500 km² envelope / 75 km span for all four times, or 20,000 km² / 200 km for the selected time only. There is no larger tier. Both origin and reporting envelopes must fit. Changing a larger service’s time clears stale results and requires another explicit calculation. CMS and native admission independently enforce the budget before work or cache access.
 - At most 10,000 job metadata rows. Jobs expire after seven days; account admission counters expire after two days.
 - Compressed route and result files target a shared 256 MiB, seven-day cache and 20,000 artifacts. Pruning runs at startup and at most once per minute during calculations; provision headroom for intervening writes. Each artifact is limited to 2 MiB. After pruning, full-precision route reuse occupies at most one quarter of the cache budget and yields to user-visible results. Evicted results are calculated again when admitted; abandoned temporary writes are pruned.
-- Pro permits 20 new calculations per hour; Team permits 100. Entitlements are checked before cached results and exports. Existing calculated results do not consume another run.
+- New calculations follow the account's Access Facts: Explorer accounts have no Reach; Contributors get 2 new one-library calculations per rolling 7 days and no service or network Reach; organisers of an API account with settled coverage get 20 new calculations an hour, pooled 100 a day per API account. Entitlements are checked before cached results and exports. Existing calculated results do not consume another run.
 - Result checks and density requests also have a 60-per-minute account limit per UI process. This protects the CMS from repeated polling; the durable compute allowance remains independent. Density coalesces requests into three shared, one-minute cache entries, checked only after authentication.
 - Coordinate, operating-status, type and publication changes invalidate analytical work through the map projection. The request also rechecks the current published CMS record before reading its cache.
 
@@ -236,7 +236,7 @@ raster. Zoomed-out tiles average source cells for display. Point inspection uses
 the native cell value and equal-area cell size. Display tiles never feed an
 analytical resident count. The prepared extent can include neighbouring land.
 
-Deprivation is a Pro/Team background layer with four separate national releases:
+Deprivation is a context background layer for every signed-in (Explorer) account, with four separate national releases:
 
 | Nation           | Edition                      | Statistical areas     |
 | ---------------- | ---------------------------- | --------------------- |
@@ -251,7 +251,7 @@ from ranks, with 89 SOAs per decile. Do not compare ranks between nations or
 interpret them as individual circumstances. The source edition, boundary year,
 licence and attribution accompany every release.
 
-Households without a car is a second Pro/Team background, using ONS/Nomis Census
+Households without a car is a second Explorer context background, using ONS/Nomis Census
 2021 TS045 for England and Wales. Its denominator is **households**, not people.
 The percentage is households with no car or van available divided by all
 households. Each release must match every source LSOA code before publication.
@@ -534,10 +534,10 @@ legacy CSV/versioned export behaviour. Ignored acceptance records are saved in
 
 ## Selected-time capacity and admission
 
-The UI reads `analysisAreaMultiplier` from the authenticated session. Active Team seats receive multiplier 2 and 100 new analyses per hour; Pro receives multiplier 1 and 20. Team seating does not change the personal Pro plan or Library staff permissions. The Next bridge forwards this trusted multiplier separately from the public request. Browser capacity, members and arbitrary shapes are rejected. CMS derives current members and reporting geography before checking cache/admission; native validation independently checks count and both geographic envelopes.
+The UI reads `analysisAreaMultiplier`, `reachRunsPerWeek`, `analysisRunsPerHour`, `analysisRunsPerDay` and `analysisServiceLibraries` from the authenticated session. Contributors and API organisers both receive multiplier 1; there is no multiplier 2. Staff verification and workspace membership do not change Reach allowances. The Next bridge forwards these trusted limits separately from the public request. The machine API's `POST /api/v1/analysis/reach` uses analysis credits instead and never calls the browser's session routes. Browser capacity, members and arbitrary shapes are rejected. CMS derives current members and reporting geography before checking cache/admission; native validation independently checks count and both geographic envelopes.
 
 Ordinary jobs request four contours. Expanded jobs require `minutes` (5, 10, 15 or 30), pass just that contour to Valhalla and count only that catchment. Their results include `requestedMinutes`; parsers require exactly the matching contour. Changing time changes the draft/job/routing key, hides stale map geometry and exports, and requires another explicit action. Distinct interval distributions and additional-time insights are unavailable from one generated time. Optional community categories reconcile against the single matching base contour.
 
-The native raster reader retains 256 × 256 chunks. Ordinary network jobs allow 1 million candidate cells per integration for Pro, 2 million for Team; selected-time jobs allow 3 million / 6 million. There are five base integrations for four times, or two for one time, before denominator cache reuse. Optional community integration has a separate total 12 million / 24 million candidate-cell budget; exceeding it returns insufficient context while preserving valid base Reach. Existing job timeout, single compute slot, queue cap, 2 MiB result cap and 256 MiB / seven-day shared artifact cache remain. Geographic admission is not a guarantee that every graph or raster job completes inside its budget.
+The native raster reader retains 256 × 256 chunks. Ordinary network jobs allow 1 million candidate cells per integration; selected-time jobs allow 3 million. There are five base integrations for four times, or two for one time, before denominator cache reuse. Optional community integration has a separate total 12 million candidate-cell budget; exceeding it returns insufficient context while preserving valid base Reach. Existing job timeout, single compute slot, queue cap, 2 MiB result cap and 256 MiB / seven-day shared artifact cache remain. Geographic admission is not a guarantee that every graph or raster job completes inside its budget.
 
 Country averages, grid density, library-directory completeness and Reach availability remain separate. New country records never imply that its population/routing pack is installed. See the production Knowledge guides on Reach, population/context and partial records. The Atlas content updater publishes corrections for already-deployed features separately from staging expanded-capacity descriptions; do not publish staged capacity claims before release acceptance.

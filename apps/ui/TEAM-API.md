@@ -1,22 +1,32 @@
-# Team API add-on
+# API accounts
 
-The add-on belongs to a Team, separately from personal memberships and Team Seats. Team Organisers buy and manage it at `/developers`; members can inspect usage. Payment never grants staff authority or access to personal or protected data.
+The paid API gives software versioned access to published public library information. It is the only paid product besides sponsorship. Prices, allowances and flags are in [PRICING.md](PRICING.md); this page covers the account model, requests, accounting and the developer workspace. The module still lives under `src/lib/team-api/` while it is renamed in a compatibility-safe sequence.
 
-Create a new Team through the [self-service annual Team flow](TEAM-BILLING.md) when enabled. Team Checkout activates seats after payment confirmation; it does not purchase the separate API add-on. Existing invoice Teams retain their agreed terms.
+## Accounts and roles
 
-## Price and allowances
+- An API account belongs to an organisation, which is the existing Team record and is now a free workspace container. An individual buyer gets a single-member organisation, created at API checkout.
+- Any verified-email account can create an organisation free of charge. Covering a library still needs verified owner authority on that library.
+- Organisers own billing, keys and overage settings. Members can view usage. Separate billing-manager and key-manager roles are deferred.
+- An organisation has one active API subscription at a time.
+- A staff workspace does not include API access, and an API account never grants staff verification, library editing, moderation or access to protected data. Keys never become user sessions.
 
-The proposed monthly price is £15, tax-inclusive in the base GBP catalogue. The actual displayed and charged price comes from the configured Stripe Price. The default offer includes 100,000 successful requests, 10 GiB of uncompressed response data, 60 attempts per minute shared across the Team, five concurrent requests and unlimited API keys. Each response is capped at 256 KiB and lists at 100 records. The 100,000 requests and 10 GiB are one monthly pool for the whole Team, across every key and application, rather than allowances per key, person or seat. Adding or regenerating keys never increases or resets the pool. There are no automatic overage charges.
-
-At 100,000 requests per month, average API demand is about 0.039 requests/second. A sizing assumption of 50 ms of total CPU work per request would consume about 1.39 CPU-hours per month; this is not a measured benchmark. £15 is a starting commercial estimate. Monitor latency, database size, retained usage history and peak capacity before raising allowances. The operator's hosting costs and capacity records are private.
-
-Limits are saved with the checkout attempt and subscription. Changing environment defaults affects new purchases, not existing paid allowances. The calendar-month allowance resets on the first day at 00:00 UTC, independently of the subscription's payment anniversary. A purchase partway through the month gets the full current allowance. Key creation and regeneration never reset usage.
+Organisers manage everything from `/developers` (overview, keys, usage, reference and playground). The former `/staff/teams/api` URL redirects there.
 
 ## Requests
 
-The machine-readable API description is the static `public/openapi.json`. `/llms.txt` is generated from the published Knowledge catalogue, linking every supported language variant to its full `.md` representation. Both discovery routes keep their root paths without locale rewrites and remain behind the existing beta and staging gates. Update the OpenAPI description and the introduction in `src/lib/agent-discovery.ts` alongside changes to the versioned routes, their public field projections, limits or live content locales. Proposed resources are excluded from the OpenAPI paths until they are callable.
+The machine-readable description is the static `public/openapi.json`; `/llms.txt` is generated from the published Knowledge catalogue. Update both, and the introduction in `src/lib/agent-discovery.ts`, alongside changes to versioned routes, projections, limits or live content locales. Routes behind a disabled flag stay out of the OpenAPI paths until they are callable.
 
-Send `Authorization: Bearer YOUR_API_KEY`. Machine routes authenticate keys directly and do not require browser beta or Basic Auth cookies. Staff management routes still require a verified session, same-origin mutations and current Team membership. The CMS and Meilisearch remain private.
+Send `Authorization: Bearer YOUR_API_KEY`. Machine routes authenticate keys directly and do not need browser beta or Basic Auth cookies. The CMS, Meilisearch and the native analysis service stay private behind the bridge.
+
+| Scope | Routes | Flag |
+| --- | --- | --- |
+| `search:read` | `POST /api/v1/search/libraries` | — |
+| `libraries:read` | `GET /api/v1/libraries`, `GET /api/v1/libraries/{entityRef}`, `GET /api/v1/places/...` | — |
+| `services:read` | `GET /api/v1/services`, `/services/{ref}`, `/services/{ref}/libraries` | `API_SERVICE_READS_ENABLED` |
+| `submissions:write` | `POST /api/v1/submissions/libraries`, `POST /api/v1/submissions/corrections`, `GET /api/v1/submissions/{id}` | `API_SUBMISSIONS_ENABLED` |
+| `analysis:run` | `POST /api/v1/analysis/summary`, `POST /api/v1/analysis/reach`, `GET /api/v1/analysis/jobs/{id}` and `/result` | `API_ANALYSIS_ENABLED` (network mode also `API_NETWORK_REACH_ENABLED`) |
+
+New keys default to the read scopes; `analysis:run` and `submissions:write` need explicit confirmation.
 
 ```sh
 curl -X POST https://libraries.global/api/v1/search/libraries \
@@ -28,79 +38,44 @@ curl 'https://libraries.global/api/v1/libraries?locale=en&limit=50' \
   -H "Authorization: Bearer $LIBRARIES_API_KEY"
 ```
 
-Search accepts `q`, `locale`, `limit`, `offset`, `country`, `region`, `area`, `libraryType`, `operationalStatus` and `near: { lat, lng, radius }` (metres). A region requires its country and an area its region. The gateway queries only the public Library index and returns documented attributes. Raw Meilisearch filters, multi-search, settings and administrative operations are unavailable.
+Search, list, detail and place routes keep their existing cursor, filter, projection and attribution contracts, now with at most 50 records a page. Follow `meta.nextCursor` as `after` and treat it as opaque. Encode `entityRef` as one path segment. Only live content locales are accepted. Source records carry each Dataset's licence, redistribution and attribution metadata.
 
-`GET /api/v1/libraries` accepts `locale`, `limit`, `after`, `country`, `region` and `area` (each place needing the one above it). Follow `meta.nextCursor` by passing it as `after`; treat that cursor as opaque. `GET /api/v1/libraries/{entityRef}` returns one published record by its exact entity reference. Take `entityRef` from search or list results and encode it as a single URL path segment (`encodeURIComponent(entityRef)` in JavaScript). For example, `europe:united-kingdom:scotland:national-library-of-scotland` becomes `/api/v1/libraries/europe%3Aunited-kingdom%3Ascotland%3Anational-library-of-scotland`. The detail endpoint does not accept Strapi document IDs. Unknown references return 404. Only live content locales are accepted; English is currently live. Both routes use explicit published-field projections. Source records include the Dataset's licence, redistribution and attribution metadata; preserve these credits. The add-on supplies a managed integration service over public facts, which remain available through existing public site routes.
+Service routes return published services and networks with a stable public ref, their kind and member libraries from the CMS, never caller-supplied memberships. Service membership is not staff authority.
 
-Places browse the index by geography, with the same `libraries:read` scope, metering and errors:
+Submissions are untrusted proposals. They enter the Content Moderation queue through a dedicated private route that whitelists fields and records the submitting API account, source licence, idempotency key and review history. They never publish directly, cannot assert staff identity and earn no points for the key. Protected fields and arbitrary CMS paths are rejected.
 
-- `GET /api/v1/places` lists countries with published Libraries: name, slug, ISO codes, continent and library count.
-- `GET /api/v1/places/{country}` lists that country's regions, and `GET /api/v1/places/{country}/{region}` that region's areas, each with a library count. Only places with at least one published Library are listed.
-- `GET /api/v1/places/{country}/libraries`, `…/{country}/{region}/libraries` and `…/{country}/{region}/{area}/libraries` return the same records and cursor pagination as the list route for that place. They accept `locale`, `limit` and `after`; place query parameters are rejected because the path names the place.
+Analysis jobs use the existing CMS and native admission checks, canonical service membership and country dataset coverage. Inputs are bounded: no arbitrary polygons, coordinate arrays, client-selected memberships, upstream URLs or unbounded batches. Results stay below 128 KiB. API jobs never call the browser's session-only Atlas routes.
 
-Region slugs are unique within their country and area slugs within their region, so place paths always nest. A trailing `libraries` segment selects the list. Unknown places return 404. Usage is recorded as `places.list` and `places.libraries`.
+Errors use `{ "error": { "code": "..." } }`. 401 is an invalid, revoked or expired key; 403 a missing scope or no settled coverage; 429 a refusal with a stable code (`quota_requests`, `quota_bytes`, `quota_analysis`, `overage_cap`, `rate_limit`, `concurrency_limit`) and `Retry-After` where meaningful; 502/503 an upstream, response-size or accounting failure. Successful responses include `X-Request-Id` and remaining-allowance and reset headers.
 
-Successful responses, including cache hits, count towards the monthly allowance. Bytes are the UTF-8 JSON payload produced before compression, not the hosting provider's egress figure or proof that a client received every byte. Separate media and CDN downloads are excluded. Failed responses release their reservation but still affect request rate. Responses cannot be shared-cached across keys.
+## Accounting
 
-Errors use `{ "error": { "code": "..." } }`. A 401 means an invalid, revoked or expired key; 403 means insufficient scope or inactive Team/add-on; 429 means rate, concurrency or quota refusal. Successful responses include `X-Request-Id`, `X-API-Requests-Remaining` and `X-API-Quota-Reset`. A 502/503 indicates upstream, response-size or accounting failure; retry with backoff or reduce the requested page size.
+The gateway checks paid coverage, key scope, request shape, per-minute and concurrency budgets, request/byte/credit allowance and the spend cap before dispatch.
 
-## Keys and accounting
+- PostgreSQL transactions reserve one request, the maximum response bytes and the operation's credits under one account/period lock. Actual successful bytes and completed credits are settled, and unused reservations are released. Failed accounting never delivers an unmetered payload.
+- Async jobs reserve credits at acceptance, settle once on a completed result and refund on failure, cancellation or expiry. A stable job ID across retries prevents two charged jobs. A result fetch spends requests and bytes, never a second credit.
+- Every settled request and completed job writes an immutable usage event. Meter delivery to Stripe is idempotent on the ledger event ID, with bounded retries, a dead-letter state and reconciliation by account, period and dimension. A period is reconciled only when Stripe's invoiced quantities match the ledger.
+- With overage off, or when the worst-case reservation would cross the cap, the request or job is refused. Lowering the cap or switching overage off stops further paid usage without erasing accrued charges. Changes are versioned and audited.
+- Warnings go out at 50%, 80% and 100% of each allowance and of the cap.
+- Abandoned reservations are recovered by the existing billing maintenance worker.
 
-Keys contain 256 bits of randomness. Only a SHA-256 digest and display prefix are persisted. Full keys appear once after creation or regeneration and are never logged, stored in the session or sent to Stripe. Regeneration changes the digest under the same key id, invalidates the old value immediately and preserves usage history. Revocation remains available when a Team lapses so an organiser can contain a leaked key.
+Usage records hold the account and key reference, endpoint category, time, outcome, response bytes and credits. Detailed records are kept for 90 days; period totals and key audit events for longer. No query text, request body, IP address or raw credential is retained in usage records or product analytics.
 
-The application rechecks Team activity through a bridge-secret-only CMS route on every machine request. Paid access is checked from its own durable Team API subscription projection. Keys do not become user sessions. Team verification and staff permissions are independent of this add-on.
+## Keys
 
-PostgreSQL transactions serialize reservations on the Team account. A request reserves one request and a bounded response-byte budget, checks the shared rate and concurrency limits, then reconciles actual bytes. Successful accounting commits before returning data. Failed accounting cannot deliver an unmetered payload. Reservations abandoned for more than two minutes are refunded by the existing billing maintenance job. Refused limits are recorded as errors; totals never go below zero or double-charge an accounting retry.
+Keys contain 256 bits of randomness. Only a SHA-256 digest and display prefix are stored. Full keys appear once, after creation or regeneration, and are never logged, kept in the session or sent to Stripe. Regeneration replaces the digest under the same key id and invalidates the old value immediately. Key count is unlimited, with the existing key-mutation rate limiter, and every key shares the account's allowances. Revocation stays available after coverage lapses.
 
-The staff dashboard shows live monthly counters, 30 UTC days of request/error/byte history, per-key and per-API totals, last use, expiry, payment status and 80% allowance warnings. In-flight reservations can temporarily increase the counters. Detailed request records are retained for 90 days, monthly totals and key audit events longer. No query text, body, IP address or raw credential is retained in usage records.
+## Billing
 
-## Billing and operation
+Checkout, settlement, renewal, payment failure, cancellation, refund and dispute holds use the existing signed webhook and billing worker. Checkout completion or subscription status alone grants nothing: settled invoice lines bound to the correct Price and customer open paid access, and replays cannot clear a reversal hold. A past-due grace period never authorises unbilled overage. Cancellation keeps settled access to the paid end unless a full refund or dispute removes it. Account deletion cancels billing first and is refused while the user is the only organiser others rely on.
 
-The Git-ignored local sandbox catalogue `scripts/team-api-sandbox-catalogue.json` contains the prepared £15 monthly Price and Portal ids. The product uses Stripe's supported SaaS business-use category `txcd_10103001`; review that classification for live activation against [Managed Payments eligibility](https://docs.stripe.com/payments/managed-payments/eligibility). Catalogue creation does not enable purchases or create payments.
+1. Run `pnpm --filter @repo/ui billing:migrate` to install the API billing, usage-event and overage tables.
+2. Prepare the sandbox catalogue (the £100 monthly Price, metered overage Prices and the API portal) and set `STRIPE_PRICE_API_MONTHLY`, `STRIPE_PORTAL_CONFIGURATION_API` and the overage meter bindings in the private runtime environment.
+3. Stage the API purchase terms and Knowledge guides with `apps/strapi/scripts/update-sponsored-access-content.mjs`, then publish them after legal review and release acceptance.
+4. Enable `API_ENABLED` (and `API_OVERAGE_ENABLED` or the feature flags as each slice passes acceptance) only in the intended environment, with the billing timer running.
 
-Team API customers, attempts and subscription projections are separate from personal billing. A durable attempt and idempotency key precede provider calls. The existing signed webhook and billing worker handle Team subscriptions, renewals, payment failures, cancellation and current-period refund/dispute holds. Checkout completion or subscription status alone grants nothing: matched settled invoice lines must prove paid coverage. Replays cannot clear a reversal hold. Payment recovery continues when new purchases are disabled. A lapsed Team stops API requests but does not automatically cancel its separate API subscription; organisers can still open Manage API billing.
+`pnpm --filter @repo/ui billing:db:test` runs concurrency and settlement tests in generated local schemas and refuses remote databases. A source or fixture test is not evidence of a settled Stripe payment.
 
-1. Run `pnpm --filter @repo/ui billing:migrate`. This transaction installs personal, Team API and Team seat billing tables in the auth/application PostgreSQL database. Deploy the matching CMS access-plugin routes and Next.js application together. Self-service annual Teams also require the private CMS Team schema additions described in [Team billing](TEAM-BILLING.md).
-2. Confirm the product tax classification for this Team API service and set `TEAM_API_STRIPE_TAX_CODE` in the private runtime environment. `pnpm --filter @repo/ui team-api:check` is read-only. `team-api:setup` creates or reuses the product, proposed £15 monthly Price and a Portal configuration with cancellation/recovery controls. `TEAM_API_PRICE_PENCE` changes the proposed price for a new catalogue entry. Live writes additionally require `--live`; these commands never enable purchases or store credentials.
-3. Set the returned `STRIPE_PRICE_TEAM_API_MONTHLY` and `STRIPE_PORTAL_CONFIGURATION_TEAM_API`, then enable `TEAM_API_ENABLED=true` with the existing matching-mode Stripe and Managed Payments configuration. The default limits are in `.env.local.example`. Do not substitute live credentials in sandbox databases.
-4. Publish the updated membership terms from `apps/strapi/scripts/billing-content.mjs` before enabling purchases. The API consent version is `1.1`. No CMS content is published by a code build.
-5. Keep the existing authenticated minute billing timer running. Confirm an actual owned sandbox checkout, settlement, cancellation and Portal recovery before live activation. A successful fixture test does not confirm a provider payment or its eligibility.
+## Playground
 
-`pnpm --filter @repo/ui billing:db:test` runs personal, Team API and Team seat concurrency/settlement tests sequentially in generated local schemas and removes them afterward; it refuses remote databases. Unit and component coverage is under `src/lib/team-api`, `src/components/staff/__tests__/TeamApiDashboard.test.tsx` and `apps/strapi/tests/access/api-data.test.ts`.
-
-## Public workspace and playground
-
-The API workspace lives at `/developers`, with separate keys, usage, request
-reference and playground pages. Teams and the main menu link to it. The former
-`/staff/teams/api` URL redirects there and preserves checkout/setup continuation.
-Docs do not require an account; private controls require a server-verified Team
-membership. Existing beta and staging gates still apply.
-
-The playground requires an active Team and API add-on. Users enter an existing
-Team API key, kept only in page memory. Requests call the `/api/v1` routes
-directly and use their existing authentication, scopes, Team rate/concurrency
-limits, quota reservations and accounting. Successful requests and response
-bytes count toward the key’s Team allowance, including “Read this record” actions.
-Errors do not consume monthly allowance. The page states this before the form
-and beside the Run button. Requests are never run automatically on page load.
-
-A usage reminder opens each time a Team member visits the playground. Closing
-it only acknowledges that visit. “Don’t show this again” saves the private
-`api-playground-usage` prompt preference to their profile. Active Team members
-can re-enable it under Settings → Notifications → Prompts; other accounts do
-not see that switch. The inline allowance notice remains visible either way.
-
-“Browse places” starts from every country and drills down to regions and areas;
-“Libraries in a place” lists a country's, region's or area's records, which keep
-their “Read this record” actions. Each step is an ordinary metered request.
-
-All playground traffic uses the authenticated versioned API. There is no
-alternate unmetered preview endpoint or geographic restriction. Search and list
-results retain their “Read this record” actions. Access remains subject to the
-normal paid entitlement and scoped-key checks.
-
-## API credentials and planned resources
-
-Key count is unlimited. Purchase snapshots created before this change may contain a numeric `limits.keys`; the server upgrades that field to `null` on read without changing stored payment evidence or usage limits. Key creation and regeneration retain the shared server-side mutation rate limiter. Key management lists 50 rows per page, returns the total active count separately and never truncates access to older keys. Usage, rate and concurrency limits are enforced per Team across keys and instances.
-
-“Coming soon” in the dashboard describes proposals, not callable routes or included subscription features. The proposed GET resources are Library opening hours for a date/time zone, public Events filtered by place and date, a cursor-based feed of published Library changes/removals, and stable facility/service filter metadata with translations. See `src/lib/team-api/roadmap.ts`. Public data, bounded pagination and separate read scopes must be defined before any endpoint is enabled; no delivery date is promised.
+The playground at `/developers/playground` requires settled coverage and an existing key, kept only in page memory. Requests call the production `/api/v1` routes with the normal authentication, scopes, limits, reservations and accounting; there is no private unmetered path. Successful requests and bytes count, analysis jobs spend credits, and errors do not consume allowances. The page says so before the form and beside the Run button, and nothing runs on page load. The usage reminder and its `api-playground-usage` prompt preference work as before.

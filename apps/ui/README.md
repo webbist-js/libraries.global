@@ -67,7 +67,7 @@ CMS preview uses the existing preview route and shared preview secret. Keep draf
 | Area                         | Reference                                                                                               |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Membership and catalogue     | [Pricing](PRICING.md), [billing implementation](BILLING.md), [local acceptance](BILLING-LOCAL-TESTS.md) |
-| Team seats and API           | [Team billing](TEAM-BILLING.md), [Team API](TEAM-API.md)                                                |
+| API accounts                 | [API accounts](TEAM-API.md), [retired seat billing](TEAM-BILLING.md)                                    |
 | Beta and legal pages         | [Beta legal](BETA-LEGAL.md), [invitations](../strapi/BETA-INVITES.md)                                   |
 | Analytics and consent        | [Analytics](ANALYTICS.md), [disclosures](ANALYTICS-NOTICE.md)                                           |
 | Notifications and mail       | [Notifications](../strapi/NOTIFICATIONS.md)                                                             |
