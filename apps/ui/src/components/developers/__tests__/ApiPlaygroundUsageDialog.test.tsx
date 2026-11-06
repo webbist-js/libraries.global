@@ -46,7 +46,7 @@ it("saves only the explicit opt-out and keeps the inline notice visible", async 
     })
   )
   expect(
-    screen.getByText("This playground uses your Team’s API allowance.")
+    screen.getByText("This playground uses your API account’s allowance.")
   ).toBeTruthy()
 })
 
@@ -78,6 +78,6 @@ it("leaves the inline notice visible when the saved preference hides the modal",
   render(<ApiPlayground teamName="Library service" showUsageWarning={false} />)
   expect(screen.queryByRole("dialog")).toBeNull()
   expect(
-    screen.getByText("This playground uses your Team’s API allowance.")
+    screen.getByText("This playground uses your API account’s allowance.")
   ).toBeTruthy()
 })

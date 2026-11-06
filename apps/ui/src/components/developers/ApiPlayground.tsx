@@ -654,7 +654,8 @@ export function ApiPlayground({
                 </span>
               </div>
               <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-                Each request you make from here uses your API account’s allowance.
+                Each request you make from here uses your API account’s
+                allowance.
               </p>
             </div>
             <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
@@ -935,8 +936,8 @@ function PlaygroundResponse({
         </>
       ) : (
         <p className="m-0 p-5 text-sm opacity-75 sm:p-7">
-          Run a request to retrieve real published Library data using your
-          API account’s allowance. Search or list records first to find a Library’s
+          Run a request to retrieve real published Library data using your API
+          account’s allowance. Search or list records first to find a Library’s
           complete entity reference.
         </p>
       )}

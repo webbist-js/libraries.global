@@ -181,7 +181,9 @@ it("clears stale responses and warns that a timed-out request might still consum
   fireEvent.click(screen.getByRole("button", { name: "Run request" }))
   expect(await screen.findByRole("alert")).toHaveProperty(
     "textContent",
-    expect.stringContaining("may still count toward your API account’s allowance")
+    expect.stringContaining(
+      "may still count toward your API account’s allowance"
+    )
   )
 })
 
