@@ -36,7 +36,6 @@ import {
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
 import { DashboardContextTransition } from "@/components/dashboard/DashboardRouteTransition"
 import { SelectField } from "@/components/ds/SelectField"
-import GlobalLink from "@/components/global/GlobalLink"
 import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import { useEntitlements } from "@/lib/access-client"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
@@ -138,6 +137,7 @@ import {
   type AtlasPopulationDetail,
 } from "./AtlasPopulationDensity"
 import { AtlasReachAnalysis, useAtlasReach } from "./AtlasReach"
+import { AtlasReachLockDialog } from "./AtlasReachLockDialog"
 import {
   AtlasSearchTab,
   buildPlaces,
@@ -146,6 +146,7 @@ import {
 } from "./AtlasSearchTab"
 import { AtlasStopPanel } from "./AtlasStopPanel"
 import { useAtlasData, useAtlasRequest } from "./useAtlasData"
+import { useAtlasDataGapPrompt } from "./useAtlasDataGapPrompt"
 import { useAtlasDrawerSummaries } from "./useAtlasDrawerSummaries"
 import { useAtlasMotion } from "./useAtlasMotion"
 import { useMobileAtlas } from "./useMobileAtlas"
@@ -328,6 +329,8 @@ export function AtlasExplorer({
     setGapEncounter((n) => n + 1)
     setExplicitGap(null)
   }, [])
+  const gapPrompt = useAtlasDataGapPrompt()
+  const handleHideGapPrompt = gapPrompt.hide
   const tNetwork = useUiTranslations("atlasNetwork")
   const tLock = useUiTranslations("accessLocks")
   const tDrawers = useUiTranslations("atlasDrawers")
@@ -511,6 +514,14 @@ export function AtlasExplorer({
   const [mobileRouteLines, setMobileRouteLines] = useState(true)
   const [mobileOpacity, setMobileOpacity] = useState(1)
   const [plansOpen, setPlansOpen] = useState(false)
+  const [reachLockOpen, setReachLockOpen] = useState(false)
+  const [reachLockScope, setReachLockScope] = useState<"library" | "service">(
+    "library"
+  )
+  const openReachLock = (scope: "library" | "service") => {
+    setReachLockScope(scope)
+    setReachLockOpen(true)
+  }
   const [replaced, setReplaced] = useState<{
     removed: LayerId
     added: LayerId
@@ -1628,7 +1639,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
     setReachScope("library")
     if (layerAccess(layerDef("reach"), tier) !== "available") {
-      setPlansOpen(true)
+      openReachLock("library")
 
       return
     }
@@ -1706,7 +1717,7 @@ export function AtlasExplorer({
   }
   const openContextReach = () => {
     if (layerAccess(layerDef("reach"), tier) !== "available") {
-      setPlansOpen(true)
+      openReachLock("library")
 
       return
     }
@@ -1812,12 +1823,13 @@ export function AtlasExplorer({
               {entitlementsReady && !canServiceReach ? (
                 <p className="m-0 text-xs text-(--t-ink-dim)">
                   {tLock("serviceReachApi")}{" "}
-                  <GlobalLink
-                    href="/developers"
+                  <button
+                    type="button"
+                    onClick={() => openReachLock("service")}
                     className="font-semibold text-(--t-accent-primary) underline underline-offset-2"
                   >
                     {tLock("aboutApiAccess")}
-                  </GlobalLink>
+                  </button>
                 </p>
               ) : null}
             </div>
@@ -3258,12 +3270,15 @@ export function AtlasExplorer({
           : tGaps("scope"))
   const notices = (
     <>
-      {currentGap && (gapLayer || explicitGap) ? (
+      {currentGap && (gapLayer || explicitGap) && gapPrompt.ready ? (
         <AtlasDataGapNotice
           key={`${gapLayer}:${currentGap.id}:${gapEncounter}:${gapScope}:${gapLayer === "reach" ? `${reachScope}:${networkSelection.selected?.documentId ?? selectedId}:${reachMode}:${reachMinutes}` : ""}`}
           gap={currentGap}
           layer={layerDef(explicitGap ? "population" : gapLayer!).name}
           scope={gapScope}
+          hidden={gapPrompt.hidden}
+          signedIn={gapPrompt.signedIn}
+          onHide={handleHideGapPrompt}
         />
       ) : null}
       {overlays}
@@ -3396,12 +3411,21 @@ export function AtlasExplorer({
     </div>
   )
   const plans = (
-    <AtlasPlansSheet
-      open={plansOpen}
-      tier={tier}
-      signInHref={signInHref}
-      onClose={() => setPlansOpen(false)}
-    />
+    <>
+      <AtlasPlansSheet
+        open={plansOpen}
+        tier={tier}
+        signInHref={signInHref}
+        onClose={() => setPlansOpen(false)}
+      />
+      <AtlasReachLockDialog
+        open={reachLockOpen}
+        onOpenChange={setReachLockOpen}
+        scope={reachLockScope}
+        signedIn={tier !== "public"}
+        onSignIn={signIn}
+      />
+    </>
   )
 
   if (isMobile) {

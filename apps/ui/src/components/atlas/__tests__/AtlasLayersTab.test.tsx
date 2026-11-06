@@ -447,27 +447,47 @@ it("provides expandable help for the available Reach layer", () => {
     screen.getByText(/A service uses its mapped reporting area automatically/)
   ).toBeTruthy()
 })
-it("explains how a contribution unlocks Reach, with the API allowance as the other route", () => {
+it("explains how a contribution unlocks Reach in a dialog, with API Access as the other route", async () => {
   render(<AtlasLayersTab {...sidebar} tier="pro" />)
-  fireEvent.click(
-    screen.getByRole("switch", { name: "Travel-time reach (locked)" })
-  )
-  const status = screen.getByRole("status")
+  const locked = screen.getByRole("switch", {
+    name: "Travel-time reach (locked)",
+  })
+  locked.focus()
+  fireEvent.click(locked)
+  const dialog = screen.getByRole("dialog", {
+    name: "Unlock travel-time Reach",
+  })
   expect(
-    within(status).getByText(
-      /Contribute once to unlock two Reach calculations a week/
+    within(dialog).getByText(
+      /first accepted contribution unlocks two new Reach calculations a week/
     )
   ).toBeTruthy()
   expect(
-    within(status)
-      .getByRole("link", { name: "How to contribute" })
+    within(dialog)
+      .getByRole("link", { name: "Make your first contribution" })
       .getAttribute("href")
   ).toMatch(/\/contribute$/)
   expect(
-    within(status)
-      .getByRole("link", { name: "About API Access" })
+    within(dialog)
+      .getByRole("link", { name: "See API Access" })
       .getAttribute("href")
   ).toMatch(/\/developers$/)
-  expect(within(status).queryByText(/Pro|Team|plan/)).toBeNull()
+  expect(within(dialog).queryByText(/Pro|Team|plan/)).toBeNull()
+  expect(within(dialog).queryByText(/free account/)).toBeNull()
+  expect(screen.queryByRole("status")).toBeNull()
   expect(sidebar.onToggle).not.toHaveBeenCalled()
+  fireEvent.click(within(dialog).getByRole("button", { name: "Not now" }))
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  await waitFor(() => expect(document.activeElement).toBe(locked))
+})
+it("asks signed-out visitors to sign in before contributing for Reach", () => {
+  render(<AtlasLayersTab {...sidebar} tier="public" />)
+  fireEvent.click(
+    screen.getByRole("switch", { name: "Travel-time reach (locked)" })
+  )
+  const dialog = screen.getByRole("dialog", {
+    name: "Unlock travel-time Reach",
+  })
+  fireEvent.click(within(dialog).getByRole("button", { name: "Sign in" }))
+  expect(sidebar.onSignIn).toHaveBeenCalledOnce()
 })

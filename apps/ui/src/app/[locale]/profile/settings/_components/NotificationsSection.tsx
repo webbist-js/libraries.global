@@ -86,8 +86,14 @@ const SITE_NOTIFS: NotificationItem[] = [
   },
 ]
 
-/** Every prompt a reader can hide (`DismissiblePrompt`); on means shown. */
-const PROMPTS: Record<DismissiblePrompt, ToggleItem<DismissiblePrompt>> = {
+/**
+ * Every prompt a reader can hide (`DismissiblePrompt`); on means shown.
+ * `atlas-data-gap` is translated, so the section builds it.
+ */
+const PROMPTS: Record<
+  Exclude<DismissiblePrompt, "atlas-data-gap">,
+  ToggleItem<DismissiblePrompt>
+> = {
   "find-contribute": {
     key: "find-contribute",
     label: "Invitation to contribute on Find libraries",
@@ -170,6 +176,7 @@ export function NotificationsSection({
   hasTeam?: boolean
 }) {
   const tUi = useUiTranslations("ui")
+  const tGaps = useUiTranslations("atlasDataGaps")
 
   const { updateNotifications, saving } = useProfile()
   const { refresh, previewSound } = useNotifications()
@@ -280,8 +287,16 @@ export function NotificationsSection({
 
       <NotifGroup
         title={tUi("prompts")}
-        items={Object.values(PROMPTS).filter(
-          (item) => hasTeam || item.key !== "api-playground-usage"
+        items={DISMISSIBLE_PROMPTS.filter(
+          (key) => hasTeam || key !== "api-playground-usage"
+        ).map((key) =>
+          key === "atlas-data-gap"
+            ? {
+                key,
+                label: tGaps("settingLabel"),
+                desc: tGaps("settingDesc", { button: tGaps("details") }),
+              }
+            : PROMPTS[key]
         )}
         prefs={shownPrompts}
         onToggle={togglePrompt}

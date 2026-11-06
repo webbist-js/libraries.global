@@ -22,3 +22,8 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
+
+/** Atlas data gap explanations hidden from the Atlas dialog; the switch turns them back on. */
+export const AtlasDataGapHidden: Story = {
+  args: { profile: { ...profile, dismissedPrompts: ["atlas-data-gap"] } },
+}

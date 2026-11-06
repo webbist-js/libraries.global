@@ -21,6 +21,7 @@ const observed = vi.hoisted(() => ({
   fitBounds: vi.fn(),
 }))
 vi.mock("@/lib/access-client", () => ({
+  useHydratedSession: () => ({ data: null, isPending: false, error: null }),
   useEntitlements: () => ({
     signedIn: observed.plan !== "public",
     ready: true,

@@ -1,6 +1,5 @@
 "use client"
 
-import { CONTRIBUTOR_REACH_PER_WEEK } from "@repo/access"
 import {
   useTranslations,
   useTranslations as useUiTranslations,
@@ -29,12 +28,12 @@ import {
   type LibraryAccessControlsProps,
 } from "@/components/atlas/AtlasPerCapita"
 import { T } from "@/lib/design-tokens"
-import { Link } from "@/lib/navigation"
 
 import {
   AtlasPopulationDensityControls,
   type PopulationControlsProps,
 } from "./AtlasPopulationDensity"
+import { AtlasReachLockDialog } from "./AtlasReachLockDialog"
 
 export const ABOUT: Record<LayerId, string> = {
   pins: "Library locations recorded in the index. The library-type key in Filters controls which types are shown.",
@@ -125,6 +124,7 @@ export function AtlasLayersTab({
   const tLock = useTranslations("accessLocks")
 
   const [upsell, setUpsell] = useState<LayerId | null>(null),
+    [reachLocked, setReachLocked] = useState(false),
     [localSettings, setLocalSettings] = useState<LayerId | null>(null)
   const settingsRef = useRef<HTMLElement>(null),
     upsellRef = useRef<HTMLDivElement>(null)
@@ -154,10 +154,9 @@ export function AtlasLayersTab({
         break
 
       case "pro":
-        {
-          setUpsell(upsell === def.id ? null : def.id)
-          // No default
-        }
+        // Reach is earned or bought: explain both routes in a dialog.
+        if (def.tier === "reach") setReachLocked(true)
+        else setUpsell(upsell === def.id ? null : def.id)
         break
     }
   }
@@ -451,45 +450,17 @@ export function AtlasLayersTab({
                 className="mt-2 rounded-xl p-3 text-sm"
                 style={{ background: T.accent.chip }}
               >
-                {layerDef(upsell).tier === "reach" ? (
-                  <>
-                    <p className="mt-0 mb-1 font-semibold">
-                      {tLock("reachLocked", {
-                        count: CONTRIBUTOR_REACH_PER_WEEK,
-                      })}
-                    </p>
-                    <p className="mt-0 mb-2">{tLock("reachApi")}</p>
-                  </>
-                ) : (
-                  <p className="mt-0 mb-2">
-                    {tLock("layerIncluded", { name: layerDef(upsell).name })}
-                  </p>
-                )}
+                <p className="mt-0 mb-2">
+                  {tLock("layerIncluded", { name: layerDef(upsell).name })}
+                </p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {layerDef(upsell).tier === "reach" ? (
-                    <>
-                      <Link
-                        href="/contribute"
-                        className="inline-flex min-h-11 items-center font-semibold underline"
-                      >
-                        {tLock("howToContribute")}
-                      </Link>
-                      <Link
-                        href="/developers"
-                        className="inline-flex min-h-11 items-center font-semibold underline"
-                      >
-                        {tLock("aboutApiAccess")}
-                      </Link>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={onSeePlans}
-                      className="min-h-11 font-semibold underline"
-                    >
-                      {tLock("howAccessWorks")}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={onSeePlans}
+                    className="min-h-11 font-semibold underline"
+                  >
+                    {tLock("howAccessWorks")}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setUpsell(null)}
@@ -503,6 +474,12 @@ export function AtlasLayersTab({
           </section>
         )
       })}
+      <AtlasReachLockDialog
+        open={reachLocked}
+        onOpenChange={setReachLocked}
+        signedIn={tier !== "public"}
+        onSignIn={onSignIn}
+      />
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
         {tLock("layersFooter")}{" "}
         <button

@@ -8,6 +8,7 @@ export const DISMISSIBLE_PROMPTS = [
   "find-contribute",
   "atlas-contribute",
   "api-playground-usage",
+  "atlas-data-gap",
 ] as const
 
 export type DismissiblePrompt = (typeof DISMISSIBLE_PROMPTS)[number]
