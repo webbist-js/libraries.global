@@ -152,7 +152,7 @@ export function AtlasDataGapNotice({
           type="button"
           disabled={saving}
           onClick={() => void acknowledge()}
-          className="min-h-11 rounded-xl bg-(--t-accent-primary) px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) disabled:opacity-60"
         >
           {saving ? t("saving") : t("continue")}
         </button>
