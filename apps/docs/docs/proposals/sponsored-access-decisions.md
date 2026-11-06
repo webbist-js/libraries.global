@@ -80,3 +80,61 @@ Sponsor records never feed entitlements, capabilities, ranking or moderation.
 - Legal revisions are new versions. Historical versions are not overwritten.
 - Production Knowledge inventory and publication remain operator steps.
 - Review copies of the legal drafts: [API purchase terms](legal-drafts/membership.md), [cancellation and refunds](legal-drafts/cancellation-refunds.md), [terms](legal-drafts/terms.md), [privacy](legal-drafts/privacy.md), [data licence](legal-drafts/data-licence.md).
+
+## Decisions made during implementation
+
+Recorded 6 November 2026 for review. Each can be changed without reworking the model.
+
+### Access and Reach
+
+- The pooled daily browser Reach allowance (100) is keyed on an HMAC of the API account's organisation ID. The hourly allowance (20) is per organiser.
+- The Explorer limit of 20 exports a day is a per-process fair-use counter, like the other route limiters. It is not a billing meter.
+- A visitor who is not signed in is asked to sign in for Explorer context layers. Reach stays locked without Contributor or API customer coverage.
+- Detailed library change history is available to every signed-in account.
+- The Supporter directory is sorted by name and shows no "since" date, because no record keeps when 100 accepted contributions was reached.
+- Workspaces have a fixed limit of 500 members for abuse control, refused with 409 `member_limit`. There are no seats.
+
+### API billing
+
+- Overage Prices are tax-exclusive, so the cap is a pre-tax amount. The £100 base Price is tax-inclusive.
+- Byte overage is metered in whole KiB of total excess, at 0.009765625p per KiB. A half-penny guard keeps the rounded bill within the cap.
+- Turning `API_OVERAGE_ENABLED` off stops paid overage, not just new opt-ins.
+- Overage requires an `active` subscription.
+- Metered overage items are added to the subscription at opt-in, not at checkout.
+- Abandoned reservations are refunded after 2 minutes for requests and 1 hour for analysis.
+- Existing routes' 429 responses use the new stable codes.
+- **Unverified:** whether Stripe Managed Payments accepts metered subscription items. Confirm this before enabling overage in live mode.
+
+### Machine API resources
+
+- The stable public service reference is the network's documentId, so no new ref field.
+- Reach modes:
+  - `service` is one reporting area within a service (`areaCode`).
+  - `network` is the whole service, behind `API_NETWORK_REACH_ENABLED`.
+- Summary variants:
+  - `service.profile` and `place.profile` cost 1 credit.
+  - `service.coverage` and `place.coverage` cost 5 credits.
+- A result that is already cached when the job is accepted settles 0 credits.
+- Retention:
+  - Pending jobs expire after 30 minutes.
+  - Results are kept for 24 hours for Reach and 15 minutes for summaries.
+  - Job rows are kept for 30 days.
+- Queue limits:
+  - 5 open jobs per account and 100 overall.
+  - Machine jobs use their own CMS allowance of 60 an hour and 500 a day.
+- Proposals:
+  - Limits are 30 an hour per key and 200 a day per account.
+  - The submitter ID is `api:<account>`.
+  - Rewards ignore `api:` submitters.
+  - Proposals carry no proposer affiliation or email.
+- While a flag is off, its routes answer 404 `resource_not_enabled` before any key or ledger work.
+- The playground offers only status lookup for proposals, so nobody fills the moderation queue by accident.
+
+### Pages and copy
+
+- The comparison table's columns are independent offers, not tiers. The Verified Staff column has the Explorer tools without Reach.
+- The sponsor enquiry is a contact link with a "sponsorship" topic.
+- Spanish "Supporter" is "Colaborador destacado", because "Patrocinador" now means Sponsor.
+- **Needs review:**
+  - Every fr, cs and es string needs native-speaker review.
+  - The French word "mécénat" implies a tax-deductible donation and needs legal review.
