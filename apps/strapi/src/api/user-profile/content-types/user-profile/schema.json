@@ -165,7 +165,15 @@
       "type": "string",
       "default": "Reader"
     },
-    "earnedProUntil": {
+    "acceptedContributions": {
+      "type": "integer",
+      "default": 0,
+      "min": 0
+    },
+    "lastContributionAt": {
+      "type": "datetime"
+    },
+    "recognitionRevokedAt": {
       "type": "datetime",
       "private": true
     },

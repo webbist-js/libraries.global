@@ -1,7 +1,6 @@
 import { expect, it } from "vitest"
 
 import peopleService from "../../src/plugins/access/server/services/people"
-import plansService from "../../src/plugins/access/server/services/plans"
 import { makeFakeStrapi } from "../helpers/fake-strapi"
 
 const AUTH = "plugin::better-auth.user"
@@ -72,30 +71,4 @@ it("resolves only current verified emails and never a historical or unverified m
   expect(await people.baUserIdByEmail(" OWNER@EXAMPLE.TEST ")).toBe("7")
   expect(await people.baUserIdByEmail("pending@example.test")).toBeNull()
   expect(await people.baUserIdByEmail("retired@example.test")).toBeNull()
-})
-
-it("grants a plan to the verified account rather than the historical email author", async () => {
-  const { strapi } = fixture()
-  const plans = plansService({ strapi })
-  const grant = await plans.createGrant(
-    {
-      person: "owner@example.test",
-      plan: "team",
-      reason: "Owner-approved complimentary access",
-      expiresAt: null,
-    },
-    1
-  )
-  expect(grant.baUserId).toBe("7")
-  await expect(
-    plans.createGrant(
-      {
-        person: "pending@example.test",
-        plan: "team",
-        reason: "Test",
-        expiresAt: null,
-      },
-      1
-    )
-  ).rejects.toMatchObject({ status: 404 })
 })

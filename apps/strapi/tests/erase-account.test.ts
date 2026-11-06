@@ -12,8 +12,6 @@ const UPLOAD = "plugin::content-moderation.submission-upload"
 const VOTE = "plugin::content-moderation.option-vote"
 const AFF = "api::library-affiliation.library-affiliation"
 const SAVED = "api::saved-event.saved-event"
-const GRANT = "api::entitlement-grant.entitlement-grant"
-const VERIFY = "api::pro-verification.pro-verification"
 const ROLE_GRANT = "api::role-grant.role-grant"
 const SUBSCRIBER = "api::subscriber.subscriber"
 const POINTS = "plugin::rewards.point-event"
@@ -54,7 +52,9 @@ function seed() {
         points: 120,
         streak: 3,
         lastActivityDate: "2026-09-26",
-        earnedProUntil: "2099-01-01T00:00:00.000Z",
+        acceptedContributions: 120,
+        lastContributionAt: "2026-10-01T00:00:00.000Z",
+        recognitionRevokedAt: "2026-10-02T00:00:00.000Z",
       },
       { documentId: "p2", id: 2, baUserId: "u2", username: "bob" },
     ],
@@ -170,11 +170,6 @@ function seed() {
     [SAVED]: [
       { documentId: "e1", baUserId: "u1", eventDocumentId: "ev1" },
       { documentId: "e2", baUserId: "u2", eventDocumentId: "ev1" },
-    ],
-    [GRANT]: [{ documentId: "g1", baUserId: "u1", plan: "pro" }],
-    [VERIFY]: [
-      { documentId: "pv1", baUserId: "u1", kind: "student" },
-      { documentId: "pv2", baUserId: "u2", kind: "student" },
     ],
     [ROLE_GRANT]: [
       { documentId: "rg1", baUserId: "u1", role: "verified_librarian" },
@@ -326,7 +321,9 @@ describe("eraseAccount", () => {
       points: 0,
       streak: 0,
       lastActivityDate: null,
-      earnedProUntil: null,
+      acceptedContributions: 0,
+      lastContributionAt: null,
+      recognitionRevokedAt: null,
     })
   })
 
@@ -379,8 +376,6 @@ describe("eraseAccount", () => {
     expect(store[AFF]).toEqual([])
     expect(store[UPLOAD]).toEqual([])
     expect(store[VOTE].map((v) => v.documentId)).toEqual(["v2"])
-    expect(store[GRANT]).toEqual([])
-    expect(store[VERIFY].map((v) => v.documentId)).toEqual(["pv2"])
     expect(store[SUBSCRIBER].map((n) => n.documentId)).toEqual(["n2"])
     expect(store[PROFILE][0].authUser).toBeNull()
   })

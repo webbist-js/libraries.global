@@ -4732,6 +4732,61 @@ export interface ApiSiteConfigSiteConfig extends Struct.SingleTypeSchema {
   }
 }
 
+export interface ApiSponsorSponsor extends Struct.CollectionTypeSchema {
+  collectionName: "sponsors"
+  info: {
+    description: "Sponsor agreements and the public acknowledgement on /sponsor. Sponsor records never feed entitlements, capabilities, ranking, verification or moderation."
+    displayName: "Sponsor"
+    pluralName: "sponsors"
+    singularName: "sponsor"
+  }
+  options: {
+    draftAndPublish: true
+  }
+  attributes: {
+    acknowledgement: Schema.Attribute.Text &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500
+      }>
+    createdAt: Schema.Attribute.DateTime
+    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    locale: Schema.Attribute.String & Schema.Attribute.Private
+    localizations: Schema.Attribute.Relation<
+      "oneToMany",
+      "api::sponsor.sponsor"
+    > &
+      Schema.Attribute.Private
+    logo: Schema.Attribute.Media<"images">
+    organisationName: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 160
+      }>
+    publishedAt: Schema.Attribute.DateTime
+    recognitionConsent: Schema.Attribute.Boolean &
+      Schema.Attribute.DefaultTo<false>
+    strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
+    strapi_stage: Schema.Attribute.Relation<
+      "oneToOne",
+      "plugin::review-workflows.workflow-stage"
+    >
+    termEnd: Schema.Attribute.Date
+    termStart: Schema.Attribute.Date
+    tier: Schema.Attribute.Enumeration<
+      ["community", "service", "founding", "custom"]
+    > &
+      Schema.Attribute.Required
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
+    website: Schema.Attribute.String &
+      Schema.Attribute.SetMinMaxLength<{
+        maxLength: 500
+      }>
+  }
+}
+
 export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
   collectionName: "subscribers"
   info: {
@@ -4868,6 +4923,14 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     draftAndPublish: false
   }
   attributes: {
+    acceptedContributions: Schema.Attribute.Integer &
+      Schema.Attribute.SetMinMax<
+        {
+          min: 0
+        },
+        number
+      > &
+      Schema.Attribute.DefaultTo<0>
     affiliation: Schema.Attribute.String
     affiliationType: Schema.Attribute.Enumeration<
       ["reader", "librarian", "researcher", "archivist", "educator", "other"]
@@ -4907,7 +4970,6 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     dismissedPrompts: Schema.Attribute.JSON & Schema.Attribute.Private
-    earnedProUntil: Schema.Attribute.DateTime & Schema.Attribute.Private
     firstName: Schema.Attribute.String
     followedDrives: Schema.Attribute.Relation<"manyToMany", "api::drive.drive">
     followedLibraries: Schema.Attribute.Relation<
@@ -4924,6 +4986,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     jobTitle: Schema.Attribute.String
     languages: Schema.Attribute.Component<"profile.language-entry", true>
     lastActivityDate: Schema.Attribute.String
+    lastContributionAt: Schema.Attribute.DateTime
     lastName: Schema.Attribute.String
     linkedin: Schema.Attribute.String
     locale: Schema.Attribute.String & Schema.Attribute.Private
@@ -4960,6 +5023,7 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     >
     publicPrefs: Schema.Attribute.JSON
     publishedAt: Schema.Attribute.DateTime
+    recognitionRevokedAt: Schema.Attribute.DateTime & Schema.Attribute.Private
     strapi_assignee: Schema.Attribute.Relation<"oneToOne", "admin::user">
     strapi_stage: Schema.Attribute.Relation<
       "oneToOne",
@@ -5589,7 +5653,7 @@ export interface PluginAccessNetworkMandateEvent
 export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
   collectionName: "teams"
   info: {
-    description: "A Team organisation: a library service's organiser and members. Active membership gives Pro personally and Team features on the Team's libraries only. Edited from the access plugin's Teams page."
+    description: "A Team organisation: a free workspace and API account container with organisers and members. Membership never grants library editing, staff tools or paid access; staff tools come from verified staff claims. Edited from the access plugin's Teams page."
     displayName: "Team"
     pluralName: "teams"
     singularName: "team"
@@ -5609,18 +5673,6 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     billingAccountId: Schema.Attribute.String &
       Schema.Attribute.Private &
       Schema.Attribute.Unique
-    billingArchived: Schema.Attribute.Boolean &
-      Schema.Attribute.Private &
-      Schema.Attribute.DefaultTo<false>
-    billingMembership: Schema.Attribute.JSON & Schema.Attribute.Private
-    billingMode: Schema.Attribute.Enumeration<["sandbox", "live"]> &
-      Schema.Attribute.Private
-    billingRevision: Schema.Attribute.Integer &
-      Schema.Attribute.Private &
-      Schema.Attribute.DefaultTo<0>
-    billingSuspended: Schema.Attribute.Boolean &
-      Schema.Attribute.Private &
-      Schema.Attribute.DefaultTo<false>
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -5635,13 +5687,6 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
     notes: Schema.Attribute.Text & Schema.Attribute.Private
-    pendingSeats: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1
-        },
-        number
-      >
     primaryNetwork: Schema.Attribute.Relation<
       "manyToOne",
       "api::library-network.library-network"
@@ -5649,14 +5694,6 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     publicServiceApproved: Schema.Attribute.Boolean &
       Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
-    seats: Schema.Attribute.Integer &
-      Schema.Attribute.SetMinMax<
-        {
-          min: 1
-        },
-        number
-      > &
-      Schema.Attribute.DefaultTo<5>
     slug: Schema.Attribute.UID<"name">
     source: Schema.Attribute.Enumeration<["admin", "checkout"]> &
       Schema.Attribute.DefaultTo<"admin">
@@ -5675,7 +5712,7 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
 export interface PluginAccessTeamMember extends Struct.CollectionTypeSchema {
   collectionName: "team_members"
   info: {
-    description: "A person's seat on a Team: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
+    description: "A person's membership of a Team workspace: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
     displayName: "Team Member"
     pluralName: "team-members"
     singularName: "team-member"
@@ -6706,6 +6743,8 @@ export interface PluginContentModerationSubmission
     }
   }
   attributes: {
+    apiAccountId: Schema.Attribute.String & Schema.Attribute.Private
+    apiKeyId: Schema.Attribute.String & Schema.Attribute.Private
     contentLocale: Schema.Attribute.String & Schema.Attribute.DefaultTo<"en">
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
@@ -6729,6 +6768,7 @@ export interface PluginContentModerationSubmission
     >
     evidenceUrl: Schema.Attribute.String
     fields: Schema.Attribute.JSON
+    idempotencyKey: Schema.Attribute.String & Schema.Attribute.Private
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -6743,6 +6783,8 @@ export interface PluginContentModerationSubmission
     reviewedByUserId: Schema.Attribute.String
     reviewerAssignedTo: Schema.Attribute.String
     reviewNote: Schema.Attribute.Text
+    sourceAttribution: Schema.Attribute.String
+    sourceLicence: Schema.Attribute.String
     status: Schema.Attribute.Enumeration<
       ["draft", "pending", "approved", "rejected", "needs_info"]
     > &
@@ -8917,6 +8959,7 @@ declare module "@strapi/strapi" {
       "api::saved-view.saved-view": ApiSavedViewSavedView
       "api::service.service": ApiServiceService
       "api::site-config.site-config": ApiSiteConfigSiteConfig
+      "api::sponsor.sponsor": ApiSponsorSponsor
       "api::subscriber.subscriber": ApiSubscriberSubscriber
       "api::topic.topic": ApiTopicTopic
       "api::user-profile.user-profile": ApiUserProfileUserProfile

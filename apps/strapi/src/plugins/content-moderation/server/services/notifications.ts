@@ -6,6 +6,7 @@ import {
 } from "@repo/shared-data"
 
 import { verifiedEmailMap } from "../../../../utils/email-recipients"
+import { isApiSubmitter } from "../utils/api-proposals"
 import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
@@ -213,6 +214,8 @@ export default ({ strapi }: { strapi: any }) => {
 
     async submissionDecided(s: SubmissionRow, status: Decision): Promise<void> {
       const what = `the ${status} email for ${s.documentId}`
+      // API proposals have no person to tell; the account polls its status.
+      if (isApiSubmitter(s.submittedByUserId)) return
       try {
         const to = text(s.submittedByEmail, 320) ?? ""
         if (!to && !s.submittedByUserId) {

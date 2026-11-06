@@ -93,7 +93,7 @@ export const LEGAL_SEED: SeedDocument[] = [
           "Anyone can browse, search and read every record, with or without an account.",
         body: [
           p(
-            "You may browse, search and read the index without creating an account. Some features, such as following libraries or suggesting edits, need a free account. Analysis tools in the atlas are part of the optional Pro plan."
+            "You may browse, search and read the index without creating an account. Some features, such as following libraries or suggesting edits, need a free account. Some atlas analysis, such as Reach, has its own allowances for contributors and API customers."
           ),
           p(
             "Library facts, including names, locations, opening hours and accessibility details, will always be free to view."

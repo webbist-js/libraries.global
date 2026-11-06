@@ -159,8 +159,6 @@ export async function applyCleanup(knex: any, email: string) {
       if (await trx.schema.hasTable(table)) await trx(table).delete()
     for (const table of [
       "role_grants",
-      "entitlement_grants",
-      "pro_verifications",
       "library_affiliations",
       "team_members",
       "saved_events",

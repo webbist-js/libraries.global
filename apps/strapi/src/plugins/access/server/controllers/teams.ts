@@ -8,7 +8,8 @@ import { AccessError, adminOf, fail, isDocumentId } from "../utils/admin"
 
 const CODE_MESSAGES: Record<string, string> = {
   not_found: "Team not found.",
-  no_seats: "The team has no free seats.",
+  member_limit:
+    "The team has reached its member limit. Remove a member or invitation first.",
   already_member: "They are already on the team.",
   invite_already_pending: "An invite for that email is already pending.",
   invalid_email: "Enter a valid email address.",

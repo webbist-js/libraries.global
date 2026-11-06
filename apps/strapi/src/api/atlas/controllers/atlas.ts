@@ -5,6 +5,8 @@ import type { Core } from "@strapi/strapi"
 
 import {
   analysisService,
+  isReachUserKey,
+  parseReachAllowance,
   requestAtlasReach,
 } from "../../../utils/atlas-analysis"
 import { atlasJson } from "../../../utils/atlas-json"
@@ -122,15 +124,15 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async reach(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
+    // The site resolves the allowance from the user's entitlements: weekly
+    // for a Contributor, hourly plus pooled daily for an API organiser.
+    const allowance = parseReachAllowance(body.allowance)
     if (
       Object.keys(body).some(
-        (key) => !["request", "userKey", "hourlyLimit"].includes(key)
+        (key) => !["request", "userKey", "allowance"].includes(key)
       ) ||
-      typeof body.userKey !== "string" ||
-      !/^[a-f0-9]{64}$/.test(body.userKey) ||
-      !Number.isInteger(body.hourlyLimit) ||
-      body.hourlyLimit < 1 ||
-      body.hourlyLimit > 100
+      !isReachUserKey(body.userKey) ||
+      !allowance
     ) {
       return ctx.badRequest("Invalid analysis request")
     }
@@ -139,7 +141,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         strapi,
         body.request,
         body.userKey,
-        body.hourlyLimit
+        allowance
       )
       ctx.status = result.status
       ctx.body = result.body
@@ -154,19 +156,14 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async networkReach(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
+    // Service Reach is an API organiser allowance only.
+    const allowance = parseReachAllowance(body.allowance, ["api"])
     if (
       Object.keys(body).some(
-        (key) =>
-          !["request", "userKey", "hourlyLimit", "capacity"].includes(key)
+        (key) => !["request", "userKey", "allowance"].includes(key)
       ) ||
-      typeof body.userKey !== "string" ||
-      !/^[a-f0-9]{64}$/.test(body.userKey) ||
-      !Number.isInteger(body.hourlyLimit) ||
-      body.hourlyLimit < 1 ||
-      body.hourlyLimit > 100 ||
-      (body.capacity !== undefined &&
-        body.capacity !== 1 &&
-        body.capacity !== 2)
+      !isReachUserKey(body.userKey) ||
+      !allowance
     ) {
       return ctx.badRequest("Invalid analysis request")
     }
@@ -175,8 +172,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         strapi,
         body.request,
         body.userKey,
-        body.hourlyLimit,
-        body.capacity ?? 1
+        allowance
       )
       ctx.status = result.status
       ctx.body = result.body

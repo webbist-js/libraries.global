@@ -46,6 +46,10 @@
             {
               "uid": "api::roadmap-vote.roadmap-vote",
               "type": "contentType"
+            },
+            {
+              "uid": "api::sponsor.sponsor",
+              "type": "contentType"
             }
           ]
         },
@@ -205,19 +209,7 @@
               "type": "contentType"
             },
             {
-              "uid": "api::entitlement-grant.entitlement-grant",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::pro-verification.pro-verification",
-              "type": "contentType"
-            },
-            {
               "uid": "api::library-affiliation.library-affiliation",
-              "type": "contentType"
-            },
-            {
-              "uid": "api::paid-membership.paid-membership",
               "type": "contentType"
             },
             {

@@ -28,7 +28,6 @@ it("loads membership and invitation projections through Strapi's real nested-que
     expiresAt: null,
     notes: "Private administrator notes",
     source: "checkout",
-    billingMode: process.env.BILLING_ENV === "live" ? "live" : "sandbox",
     libraries: [],
   }
   const fake = makeFakeStrapi({
@@ -41,14 +40,13 @@ it("loads membership and invitation projections through Strapi's real nested-que
         team,
       },
       {
-        documentId: "othermode000000000000001",
+        documentId: "othermember0000000000001",
         baUserId: "fixture_user",
         teamRole: "member",
         status: "active",
         team: {
           ...team,
           documentId: "otherteam000000000000001",
-          billingMode: team.billingMode === "live" ? "sandbox" : "live",
         },
       },
       {
@@ -111,8 +109,8 @@ it("loads membership and invitation projections through Strapi's real nested-que
     status: "active",
     teamRole: "organiser",
   })
-  expect(memberships[1]).toMatchObject({ status: "lapsed" })
-  expect(memberships[0]).not.toHaveProperty("billingMode")
+  // A free workspace stays active until an admin lapses it.
+  expect(memberships[1]).toMatchObject({ status: "active" })
   expect(memberships[0]).not.toHaveProperty("notes")
   const teams = createTeams({ strapi: fake.strapi })
 

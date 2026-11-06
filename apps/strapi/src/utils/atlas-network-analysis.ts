@@ -21,7 +21,11 @@ import {
 } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
-import { analysisService } from "./atlas-analysis"
+import {
+  analysisService,
+  type ReachAllowance,
+  spendReachAllowance,
+} from "./atlas-analysis"
 import { atlasJson } from "./atlas-json"
 import {
   networkEligible,
@@ -40,10 +44,12 @@ export async function requestAtlasNetworkReach(
   strapi: Core.Strapi,
   input: unknown,
   userKey: string,
-  hourlyLimit: number,
-  capacity: AtlasReachCapacity = 1
+  allowance: ReachAllowance
 ) {
-  assertCapacity(capacity)
+  if (allowance.kind !== "api")
+    throw new RangeError("Service Reach needs an API account allowance")
+  // One standard envelope for everyone: the doubled Team capacity is gone.
+  const capacity: AtlasReachCapacity = 1
   const request = parseAtlasNetworkReachRequest(input)
   const network = await strapi
     .documents("api::library-network.library-network")
@@ -174,17 +180,12 @@ export async function requestAtlasNetworkReach(
     request,
     payload,
     userKey,
-    hourlyLimit,
+    allowance,
     areaName,
     areaCodes,
     serviceLibraries: rows.length,
     state,
   })
-}
-
-function assertCapacity(capacity: number) {
-  if (capacity !== 1 && capacity !== 2)
-    throw new RangeError("Invalid Reach capacity")
 }
 
 function selectionProblem(
@@ -212,7 +213,7 @@ async function admitNetworkJob(
   db: Core.Strapi["db"]["connection"],
   key: string,
   userKey: string,
-  hourlyLimit: number,
+  allowance: ReachAllowance,
   payload: {
     networkId: string
     selectionHash: string
@@ -227,18 +228,15 @@ async function admitNetworkJob(
       .where("expires_at", ">", new Date())
       .first()
     if (known) return { job: known }
-    const window = new Date(Math.floor(Date.now() / 3600000) * 3600000)
-    const budget = await trx("atlas_analysis_budgets")
-      .where({ key: userKey, window_start: window })
-      .first()
-    if ((budget?.used ?? 0) >= hourlyLimit) return { status: 429 }
     const count = await trx("atlas_analysis_jobs").count("key as n").first()
-    if (Number(count.n) >= 10000) return { status: 503 }
+    if (Number(count.n) >= 10000)
+      return {
+        status: 503,
+        error: "Analysis cache is at capacity. Retry later.",
+      }
+    const refused = await spendReachAllowance(trx, userKey, allowance)
+    if (refused) return refused
     await trx("atlas_analysis_jobs").where({ key }).delete()
-    await trx("atlas_analysis_budgets")
-      .insert({ key: userKey, window_start: window, used: 1 })
-      .onConflict(["key", "window_start"])
-      .merge({ used: trx.raw("atlas_analysis_budgets.used + 1") })
     const jobs = await trx("atlas_analysis_jobs")
       .insert({
         key,
@@ -341,7 +339,7 @@ async function networkJobResponse(
     request,
     payload,
     userKey,
-    hourlyLimit,
+    allowance,
     areaName,
     areaCodes,
     serviceLibraries,
@@ -359,7 +357,7 @@ async function networkJobResponse(
       communityRelease: string | null
     }
     userKey: string
-    hourlyLimit: number
+    allowance: ReachAllowance
     areaName: string
     areaCodes: string[]
     serviceLibraries: number
@@ -426,13 +424,18 @@ async function networkJobResponse(
       db,
       key,
       userKey,
-      hourlyLimit,
+      allowance,
       payload
     )
     if (admission.status)
       return {
         status: admission.status,
-        body: { error: "Network analysis allowance or capacity reached" },
+        body: {
+          error: admission.error,
+          ...("code" in admission && admission.code
+            ? { code: admission.code }
+            : {}),
+        },
       }
     job = admission.job
   }

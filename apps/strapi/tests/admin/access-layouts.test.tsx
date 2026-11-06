@@ -120,8 +120,6 @@ it.each([lightTheme, darkTheme])(
       source: "checkout",
       createdAt: "2026-10-21T00:00:00Z",
       expiresAt: "2027-10-21T00:00:00Z",
-      seats: 5,
-      used: 1,
       libraries: [],
       organiserNames: ["Fixture Organiser"],
       notes: null,

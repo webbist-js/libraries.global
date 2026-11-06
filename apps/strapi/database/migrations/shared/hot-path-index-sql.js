@@ -83,6 +83,10 @@ const HOT_PATH_INDEXES = [
   // Profiles: bridge reads by ba_user_id; leaderboard and country boards.
   index("user_profiles", ["ba_user_id"]),
   index("user_profiles", ["points DESC"], { name: "user_profiles_points_idx" }),
+  // Supporter directory: recognition threshold read by keyset pages on id.
+  index("user_profiles", ["accepted_contributions", "id"], {
+    name: "user_profiles_accepted_contributions_idx",
+  }),
   index("user_profiles", ["country", "points DESC"], {
     name: "user_profiles_country_points_idx",
   }),
@@ -93,6 +97,15 @@ const HOT_PATH_INDEXES = [
   index("cm_submissions", ["submission_type", "status"]),
   // The moderation queue's Drive filter.
   index("cm_submissions", ["drive_document_id", "status"]),
+  // Machine API proposals: idempotency per API account (unique, so a
+  // concurrent replay cannot file two), duplicate and write-rate lookups.
+  // NULL keys never compare equal, so ordinary submissions are untouched.
+  index("cm_submissions", ["api_account_id", "idempotency_key"], {
+    unique: true,
+    before: [dedupe("cm_submissions", ["api_account_id", "idempotency_key"])],
+  }),
+  index("cm_submissions", ["api_account_id", "created_at"]),
+  index("cm_submissions", ["api_key_id", "created_at"]),
 
   // Option votes: one vote per user and suggestion, and the per-suggestion
   // tally. Duplicates (a lost race) keep the earliest vote.

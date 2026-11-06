@@ -49,11 +49,7 @@ export async function resolveStaffLibraryCreation(
     loadStaffClaims(strapi, baUserId),
     loadTeamMemberships(strapi, baUserId),
   ])
-  const active = memberships.filter(
-    (team) =>
-      team.status === "active" &&
-      (!team.expiresAt || Date.parse(team.expiresAt) > Date.now())
-  )
+  const active = memberships.filter((team) => team.status === "active")
   if (!claims.length && !active.some((team) => team.verified))
     throw new AccessError(403, "staff_access_required")
   const team = teamId
@@ -69,7 +65,7 @@ export async function resolveStaffLibraryCreation(
 /**
  * The moderator's approval grants the creator ownership and, when requested,
  * extends their existing Team's coverage. Runs inside the approval transaction.
- * Team coverage is additive; seats, billing and verification are unchanged.
+ * Team coverage is additive; workspace membership and verification are unchanged.
  */
 export async function applyStaffLibraryCreation(
   strapi: any,

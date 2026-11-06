@@ -48,7 +48,6 @@ const teamRows = (user: string) => {
     documentId: TEAM,
     name: "Central Libraries",
     slug: "central-libraries",
-    seats: 5,
     status: "active",
     verifiedAt: "2026-01-01T00:00:00.000Z",
     expiresAt: null,
@@ -216,35 +215,49 @@ describe("library staff authority", () => {
       status: 404,
     })
   })
-  it("refuses editor management and needs a Team covering the library, never a personal plan", async () => {
+  it("refuses editor management and gives staff tools from the verified claim alone, never Team membership", async () => {
     const { staff } = setup()
     await expect(
       staff.changeMember("editor", library.documentId, memberId("owner"), {
         staffRole: "editor",
       })
     ).rejects.toMatchObject({ status: 403 })
+    // No Team at all: the owner's own claim is the whole authority.
     const free = setup(undefined, false)
-    free.store["api::entitlement-grant.entitlement-grant"] = [
-      { documentId: "grant", baUserId: "owner", plan: "team", expiresAt: null },
-    ]
-    await expect(
-      free.staff.changeMember("owner", library.documentId, memberId("editor"), {
-        staffRole: "owner",
-      })
-    ).rejects.toMatchObject({ status: 402, code: "upgrade_required" })
     const view = await free.staff.team("owner", library.documentId)
-    expect(view.covered).toBe(false)
-    expect(
-      view.members.every(
-        (row: any) => row.staffRole === undefined && row.canGoLive === undefined
-      )
-    ).toBe(true)
-    const covered = await staff.team("owner", library.documentId)
-    expect(covered.covered).toBe(true)
-    expect(covered.members.map((row: any) => row.staffRole)).toEqual([
+    expect(view.covered).toBe(true)
+    expect(view.members.map((row: any) => row.staffRole)).toEqual([
       "owner",
       "editor",
     ])
+    await free.staff.changeMember(
+      "owner",
+      library.documentId,
+      memberId("editor"),
+      { canGoLive: false }
+    )
+    // A Team member without a claim on the library gets nothing from the
+    // membership: not the team view, not management.
+    const outsider = setup(undefined, true)
+    outsider.store[TEAM_MEMBER_UID]!.push({
+      documentId: "teammember00000000000002",
+      baUserId: "colleague",
+      email: "colleague@example.org",
+      teamRole: "organiser",
+      status: "active",
+      team: outsider.store[TEAM_UID]![0],
+    })
+    await expect(
+      outsider.staff.team("colleague", library.documentId)
+    ).rejects.toMatchObject({ status: 404 })
+    await expect(
+      outsider.staff.changeMember(
+        "colleague",
+        library.documentId,
+        memberId("editor"),
+        { canGoLive: false }
+      )
+    ).rejects.toMatchObject({ status: 404 })
   })
   it("keeps the last owner when removing or demoting", async () => {
     const { staff, store } = setup()

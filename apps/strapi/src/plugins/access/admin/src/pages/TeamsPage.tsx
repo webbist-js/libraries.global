@@ -36,7 +36,7 @@ import {
 } from "../components/teamsMeta"
 
 /**
- * Teams: every Team organisation, newest first, with its seats, libraries
+ * Teams: every Team organisation, newest first, with its libraries
  * and whether an admin has verified it. Open one to manage its members;
  * create or edit one in the modal.
  */
@@ -98,7 +98,7 @@ export function TeamsPage({
       <Layouts.Root>
         <Layouts.Header
           title="Teams"
-          subtitle="Team organisations: seats, libraries, verification and members."
+          subtitle="Team organisations: libraries, verification and members."
           primaryAction={
             <Flex gap={2}>
               <Button
@@ -167,7 +167,7 @@ export function TeamsPage({
                 }
               />
             ) : (
-              <PluginTable colCount={6} rowCount={rows.length + 1}>
+              <PluginTable colCount={5} rowCount={rows.length + 1}>
                 <Thead>
                   <Tr>
                     <Th>
@@ -175,9 +175,6 @@ export function TeamsPage({
                     </Th>
                     <Th>
                       <Typography variant="sigma">Libraries</Typography>
-                    </Th>
-                    <Th>
-                      <Typography variant="sigma">Seats</Typography>
                     </Th>
                     <Th>
                       <Typography variant="sigma">Status</Typography>
@@ -210,11 +207,6 @@ export function TeamsPage({
                               (t.libraries.length > 3
                                 ? ` +${t.libraries.length - 3}`
                                 : "")}
-                        </Typography>
-                      </Td>
-                      <Td>
-                        <Typography>
-                          {t.used} of {t.seats}
                         </Typography>
                       </Td>
                       <Td>

@@ -41,8 +41,6 @@ export type TeamSummary = {
   documentId: string
   name: string
   slug: string
-  seats: number
-  used: number
   status: "active" | "lapsed"
   source: "admin" | "checkout"
   verifiedAt: string | null
@@ -54,7 +52,6 @@ export type TeamSummary = {
 export type Team = TeamSummary & {
   widgetBranding?: boolean
   publicServiceApproved?: boolean
-  billingSuspended?: boolean
   notes: string | null
   members: TeamMember[]
   organiserNames: string[]

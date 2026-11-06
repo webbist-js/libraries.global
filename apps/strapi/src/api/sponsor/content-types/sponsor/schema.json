@@ -1,0 +1,50 @@
+{
+  "kind": "collectionType",
+  "collectionName": "sponsors",
+  "info": {
+    "singularName": "sponsor",
+    "pluralName": "sponsors",
+    "displayName": "Sponsor",
+    "description": "Sponsor agreements and the public acknowledgement on /sponsor. Sponsor records never feed entitlements, capabilities, ranking, verification or moderation."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "organisationName": {
+      "type": "string",
+      "required": true,
+      "maxLength": 160
+    },
+    "tier": {
+      "type": "enumeration",
+      "enum": ["community", "service", "founding", "custom"],
+      "required": true
+    },
+    "termStart": {
+      "type": "date"
+    },
+    "termEnd": {
+      "type": "date"
+    },
+    "recognitionConsent": {
+      "type": "boolean",
+      "default": false
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "acknowledgement": {
+      "type": "text",
+      "maxLength": 500
+    },
+    "website": {
+      "type": "string",
+      "maxLength": 500,
+      "regex": "^https?://[^\\s]+$"
+    }
+  }
+}

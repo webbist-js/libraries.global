@@ -1,4 +1,4 @@
-import { isSupporterPlan } from "@repo/access"
+import { has } from "@repo/access"
 import { libraryTypeName } from "@repo/shared-data"
 import { factories } from "@strapi/strapi"
 
@@ -150,7 +150,9 @@ const PRIVATE_PROFILE_FIELDS = [
   "appearancePreference",
   "dismissedPrompts",
   "contributorNumber",
-  "earnedProUntil",
+  "acceptedContributions",
+  "lastContributionAt",
+  "recognitionRevokedAt",
   "supporterListed",
   "supporterBadgeVisible",
 ] as const
@@ -362,10 +364,14 @@ async function loadFollows(baUserId: string | null | undefined): Promise<{
 /**
  * Fields kept out of the owner's own view (`findMe`). The owner sees their
  * notification settings and contributor number; the Better Auth id is the
- * key the caller already holds, and earnedProUntil is plan bookkeeping that
- * only the local session projection reads.
+ * key the caller already holds, and recognitionRevokedAt is moderator-only
+ * bookkeeping (the session reads it as a boolean).
  */
-const OWNER_HIDDEN_FIELDS = ["baUserId", "authUser", "earnedProUntil"] as const
+const OWNER_HIDDEN_FIELDS = [
+  "baUserId",
+  "authUser",
+  "recognitionRevokedAt",
+] as const
 
 /**
  * The Better Auth id the bridge vouches for: `X-Ba-User-Id`, trusted only
@@ -565,9 +571,9 @@ export default factories.createCoreController(
         ...profile,
         ...follows,
         followerCount,
-        isSupporter: isSupporterPlan(entitlements.plan),
+        isSupporter: has(entitlements, "supporter"),
         supporterMark:
-          isSupporterPlan(entitlements.plan) &&
+          has(entitlements, "supporter") &&
           profile.supporterBadgeVisible !== false,
         claimedLibraries: toClaimedLibraries(affiliations),
         earnedBadges,

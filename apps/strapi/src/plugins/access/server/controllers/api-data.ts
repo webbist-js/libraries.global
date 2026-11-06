@@ -1,4 +1,4 @@
-import { isLibraryEntityRef, libraryTypeName } from "@repo/shared-data"
+import { isLibraryEntityRef } from "@repo/shared-data"
 
 import {
   areasWithLibraries,
@@ -8,50 +8,15 @@ import {
 } from "../../../../utils/place-catalogue"
 import { isValidServiceSecret } from "../../../../utils/service-secret"
 import { teamIsActive } from "../../../../utils/team-access"
+import {
+  API_LIBRARY_FIELDS,
+  API_LIBRARY_POPULATE,
+  projectApiLibraries,
+} from "../services/api-library-projection"
 import { AccessError, isDocumentId } from "../utils/admin"
 
 // Only the application gateway calls these routes. They never trust a user or
 // token identity supplied by an external caller, or forward arbitrary queries.
-const FIELDS = [
-  "name",
-  "slug",
-  "entityRef",
-  "shortName",
-  "summary",
-  "operationalStatus",
-  "operatorType",
-  "streetAddress",
-  "city",
-  "postalCode",
-  "location",
-  "timezone",
-  "website",
-  "phone",
-  "email",
-  "catalogueUrl",
-  "updatedAt",
-]
-const SOURCE_FIELDS = [
-  "dataset",
-  "recordId",
-  "retrievedAt",
-  "url",
-  "label",
-  "role",
-  "fields",
-]
-const DATASET_FIELDS = [
-  "key",
-  "publisher",
-  "licence",
-  "licenceUrl",
-  "attribution",
-  "redistribution",
-  "licenceStatus",
-]
-const pick = (row: any, fields: string[]) =>
-  Object.fromEntries(fields.map((field) => [field, row?.[field] ?? null]))
-
 export default ({ strapi }: { strapi: any }) => {
   const wrap = (work: (ctx: any) => Promise<unknown>) => async (ctx: any) => {
     if (!isValidServiceSecret(ctx.request.header["x-service-secret"]))
@@ -71,7 +36,7 @@ export default ({ strapi }: { strapi: any }) => {
       if (!isDocumentId(ctx.params.id)) throw new AccessError(404, "not_found")
       const team = await strapi.documents("plugin::access.team").findOne({
         documentId: ctx.params.id,
-        fields: ["status", "expiresAt", "source", "billingMode"],
+        fields: ["status", "expiresAt", "source"],
       })
       if (!team) throw new AccessError(404, "not_found")
 
@@ -149,55 +114,14 @@ export default ({ strapi }: { strapi: any }) => {
         status: "published",
         locale,
         filters,
-        fields: FIELDS,
+        fields: API_LIBRARY_FIELDS,
         sort: "documentId:asc",
         limit: detail ? 1 : limit + 1,
-        populate: {
-          libraryType: { fields: ["name"] },
-          country: { fields: ["name", "slug", "iso2"] },
-          region: { fields: ["name", "slug"] },
-          area: { fields: ["name", "slug"] },
-          sourceRecords: true,
-        },
+        populate: API_LIBRARY_POPULATE,
       })
       if (detail && !rows.length) throw new AccessError(404, "not_found")
       const page = rows.slice(0, limit)
-      const datasetKeys = [
-        ...new Set(
-          page.flatMap((row: any) =>
-            (row.sourceRecords ?? [])
-              .map((source: any) => source.dataset)
-              .filter(Boolean)
-          )
-        ),
-      ]
-      const datasets = datasetKeys.length
-        ? await strapi.documents("api::dataset.dataset").findMany({
-            filters: { key: { $in: datasetKeys } },
-            fields: DATASET_FIELDS,
-            limit: 100,
-          })
-        : []
-      const credits = new Map(
-        datasets.map((dataset: any) => [
-          dataset.key,
-          pick(dataset, DATASET_FIELDS),
-        ])
-      )
-      const records = page.map((row: any) => ({
-        documentId: row.documentId,
-        ...pick(row, FIELDS),
-        libraryType: libraryTypeName(row.libraryType),
-        country: row.country
-          ? pick(row.country, ["name", "slug", "iso2"])
-          : null,
-        region: row.region ? pick(row.region, ["name", "slug"]) : null,
-        area: row.area ? pick(row.area, ["name", "slug"]) : null,
-        sourceRecords: (row.sourceRecords ?? []).map((source: any) => ({
-          ...pick(source, SOURCE_FIELDS),
-          datasetCredit: credits.get(source.dataset) ?? null,
-        })),
-      }))
+      const records = await projectApiLibraries(strapi, page)
 
       return {
         data: detail ? records[0] : records,

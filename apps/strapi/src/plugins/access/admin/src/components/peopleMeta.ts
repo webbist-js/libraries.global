@@ -112,7 +112,6 @@ export function nameOf(p: {
 export const PLUGIN_PATH = "/plugins/access"
 export const PEOPLE_PATH = PLUGIN_PATH
 export const TEAMS_PATH = `${PLUGIN_PATH}/teams`
-export const PLANS_PATH = `${PLUGIN_PATH}/plans`
 /** The moderation queue, filtered to Role Applications (content-moderation). */
 export const APPLICATIONS_QUEUE_PATH =
   "/plugins/content-moderation?type=role_application"
