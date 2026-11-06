@@ -200,7 +200,7 @@ async function sendPlaygroundRequest(
 
 /** Why a request cannot be sent yet, or null when it can. */
 function requestProblem(chosen: PlaygroundInput, token: string) {
-  if (!token.trim()) return "Enter your Team API key before running a request."
+  if (!token.trim()) return "Enter your API key before running a request."
   if (chosen.operation === "placeLibraries" && !chosen.country?.trim())
     return "Enter a country slug, or browse places to choose one."
   if (needsServiceRef(chosen) && !chosen.serviceRef?.trim())
@@ -345,7 +345,7 @@ export function ApiPlayground({
       return body
     } catch {
       setError(
-        "The request could not be completed. Check your connection and try again. A timed-out request may still count toward your Team’s allowance."
+        "The request could not be completed. Check your connection and try again. A timed-out request may still count toward your API account’s allowance."
       )
     } finally {
       clearTimeout(timeout)
@@ -384,7 +384,7 @@ export function ApiPlayground({
         />
       ) : null}
       <p className="m-0 rounded-2xl border border-(--t-border-line) bg-(--t-accent-chip) px-5 py-4 text-sm text-(--t-ink-base)">
-        <strong>This playground uses your Team’s API allowance.</strong>{" "}
+        <strong>This playground uses your API account’s allowance.</strong>{" "}
         Successful requests and response data count toward the shared monthly
         usage for {teamName}. This includes requests made with “Read this
         record”.
@@ -437,7 +437,7 @@ export function ApiPlayground({
         >
           <legend className="sr-only">Request parameters</legend>
           <label className="block font-semibold">
-            Team API key
+            API key
             <input
               type="password"
               name="api-key"
@@ -453,7 +453,7 @@ export function ApiPlayground({
               }}
             />
             <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
-              Use an existing key from your Team with{" "}
+              Use an existing key from your API account with{" "}
               {playgroundScope(operation)} access. The key stays in memory while
               this page is open and is never saved.
             </span>
@@ -654,7 +654,8 @@ export function ApiPlayground({
                 </span>
               </div>
               <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-                Each request you make from here uses your Team’s API allowance.
+                Each request you make from here uses your API account’s
+                allowance.
               </p>
             </div>
             <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
@@ -741,7 +742,7 @@ export function ApiPlayground({
                 </span>
               </div>
               <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-                Each record you read uses your Team’s API allowance.
+                Each record you read uses your API account’s allowance.
               </p>
             </div>
             <ul
@@ -935,8 +936,8 @@ function PlaygroundResponse({
         </>
       ) : (
         <p className="m-0 p-5 text-sm opacity-75 sm:p-7">
-          Run a request to retrieve real published Library data using your
-          Team’s API allowance. Search or list records first to find a Library’s
+          Run a request to retrieve real published Library data using your API
+          account’s allowance. Search or list records first to find a Library’s
           complete entity reference.
         </p>
       )}
@@ -955,7 +956,7 @@ function RequestSubmit({
     <>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p className="m-0 max-w-[65ch] text-sm text-(--t-ink-dim)">
-          Successful requests consume your Team’s shared request and
+          Successful requests consume your API account’s shared request and
           response-data allowance. Errors do not consume monthly allowance.
         </p>
         <Button

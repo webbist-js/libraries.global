@@ -185,7 +185,7 @@ export async function ApiWorkspacePage({
         ) : null}
         {view.conflict ? <TeamMembershipConflict /> : null}
         {view.unavailable ? (
-          <StaffLoadError what="your Team’s API controls" status={503} />
+          <StaffLoadError what="your API account controls" status={503} />
         ) : null}
         {section === "reference" ? <ApiGuidePanel /> : null}
         {view.playground ? (
