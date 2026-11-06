@@ -6,7 +6,6 @@ import {
   formatSponsorAmount,
   normaliseSponsorAcknowledgements,
   SPONSOR_ACKNOWLEDGEMENT_LIMIT,
-  SPONSOR_ANCHORS,
 } from "../acknowledgements"
 
 describe("sponsor acknowledgements", () => {
@@ -68,17 +67,8 @@ describe("sponsor acknowledgements", () => {
     expect(normaliseSponsorAcknowledgements({ data: "x" })).toEqual([])
   })
 
-  it("formats the catalogue anchors as whole pounds per locale", () => {
-    expect(
-      SPONSOR_ANCHORS.map((tier) =>
-        formatSponsorAmount(pricing.sponsor[tier], "en")
-      )
-    ).toEqual(["£2,500", "£5,000", "£10,000"])
-    expect(formatSponsorAmount(pricing.sponsor.community, "fr")).toMatch(
-      /^2\s500\s£$/
-    )
-    expect(formatSponsorAmount(pricing.sponsor.founding, "cs")).toMatch(
-      /^10\s000\s£$/
-    )
+  it("formats whole pounds per locale", () => {
+    expect(formatSponsorAmount(pricing.api.month, "en")).toBe("£100")
+    expect(formatSponsorAmount(250_000, "fr")).toMatch(/^2\s500\s£$/)
   })
 })

@@ -8,9 +8,9 @@ import { Notice } from "@/components/ds/Notice"
 import GlobalLink from "@/components/global/GlobalLink"
 import { CONTACT_EMAIL } from "@/lib/constants"
 import pricing from "@/lib/membership-pricing.json"
+import { SPONSOR_ENQUIRY_HREF } from "@/lib/plans"
 import {
   formatSponsorAmount,
-  SPONSOR_ANCHORS,
   type SponsorAcknowledgement,
   type SponsorAcknowledgements,
 } from "@/lib/sponsor/acknowledgements"
@@ -25,7 +25,7 @@ const PROGRAMMES = [
 ] as const
 
 const RECOGNITION = ["acknowledgement", "entry", "briefings"] as const
-const ANCHOR_TERMS = ["conversation", "contract", "invoice", "tax"] as const
+const AGREEMENT_TERMS = ["contract", "invoice", "tax"] as const
 
 const CARD =
   "rounded-[22px] border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6"
@@ -94,39 +94,6 @@ export function SponsorProgrammes() {
       >
         <p className="m-0">{t("reportingBody")}</p>
       </Notice>
-    </Section>
-  )
-}
-
-/** The three suggested annual anchors, read from the pricing catalogue. */
-export function SponsorAmounts() {
-  const t = useTranslations("sponsorPage.amounts")
-  const locale = useLocale()
-
-  return (
-    <Section id="amounts" title={t("title")} lead={t("lead")}>
-      <ul className="m-0 grid list-none gap-4 p-0 md:grid-cols-3">
-        {SPONSOR_ANCHORS.map((tier) => (
-          <li key={tier} className={`${CARD} flex flex-col gap-1`}>
-            <h3 className="type-h3 m-0">{t(`tiers.${tier}`)}</h3>
-            <p className="m-0 text-base text-(--t-ink-dim)">
-              {t.rich("perYear", {
-                amount: formatSponsorAmount(pricing.sponsor[tier], locale),
-                strong: (chunks) => (
-                  <strong className="type-h2 block font-semibold text-(--t-ink-base)">
-                    {chunks}
-                  </strong>
-                ),
-              })}
-            </p>
-          </li>
-        ))}
-      </ul>
-      <ul className="m-0 flex max-w-3xl list-disc flex-col gap-2 pl-5 text-base leading-[1.6] text-(--t-ink-dim)">
-        {ANCHOR_TERMS.map((key) => (
-          <li key={key}>{t(`terms.${key}`)}</li>
-        ))}
-      </ul>
     </Section>
   )
 }
@@ -268,35 +235,75 @@ export function SponsorAcknowledgementList({
 }
 
 /**
- * The enquiry opens the site contact form with "Sponsorship" chosen
- * (ContactModalProvider handles mailto links carrying data-contact-type);
- * without JavaScript the same link opens an email.
+ * Opens the site contact form with "Sponsorship" chosen (ContactModalProvider
+ * intercepts mailto links carrying data-contact-type); without JavaScript the
+ * same link opens an email.
+ */
+export function SponsorContactButton({ label }: { readonly label: string }) {
+  return (
+    <a
+      href={SPONSOR_ENQUIRY_HREF}
+      data-contact-type="sponsorship"
+      aria-haspopup="dialog"
+      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--t-action-primary) px-6 text-base font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
+    >
+      <Icon
+        aria-hidden="true"
+        height={18}
+        icon="mdi:email-outline"
+        width={18}
+      />
+      {label}
+    </a>
+  )
+}
+
+/**
+ * Sponsorship is a conversation, not a price list: the enquiry panel names
+ * our email in text and offers the contact form, with how agreements work.
  */
 export function SponsorEnquiry() {
   const t = useTranslations("sponsorPage.enquire")
-  const subject = encodeURIComponent(t("subject"))
 
   return (
-    <Section id="enquire" title={t("title")} lead={t("body")}>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
-        <a
-          href={`mailto:${CONTACT_EMAIL}?subject=${subject}`}
-          data-contact-type="sponsorship"
-          aria-haspopup="dialog"
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-(--t-action-primary) px-5 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover) focus-visible:outline-2 focus-visible:outline-offset-4 motion-reduce:transition-none"
-        >
-          <Icon
-            aria-hidden="true"
-            height={18}
-            icon="mdi:email-outline"
-            width={18}
-          />
-          {t("action")}
-        </a>
+    <section
+      id="enquire"
+      aria-labelledby="enquire-title"
+      className="flex scroll-mt-24 flex-col gap-6 rounded-[26px] border border-(--t-accent-primary)/15 bg-(--t-accent-chip) p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12"
+    >
+      <div className="flex max-w-2xl flex-col gap-3">
+        <h2 id="enquire-title" className="type-h2 m-0">
+          {t("title")}
+        </h2>
+        <p className="m-0 text-base leading-[1.6]">{t("body")}</p>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0 text-sm leading-[1.6] text-(--t-ink-dim)">
+          {AGREEMENT_TERMS.map((key) => (
+            <li key={key} className="flex gap-2">
+              <Icon
+                aria-hidden="true"
+                className="mt-1 shrink-0"
+                height={14}
+                icon="mdi:check"
+                width={14}
+              />
+              <span>{t(`terms.${key}`)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex flex-col gap-3 lg:min-w-72 lg:items-stretch">
+        <SponsorContactButton label={t("action")} />
         <p className="m-0 text-sm text-(--t-ink-dim)">
-          {t("email", { email: CONTACT_EMAIL })}
+          {t.rich("email", {
+            email: CONTACT_EMAIL,
+            link: (chunks) => (
+              <a href={`mailto:${CONTACT_EMAIL}`} className={LINK}>
+                {chunks}
+              </a>
+            ),
+          })}
         </p>
       </div>
-    </Section>
+    </section>
   )
 }

@@ -3787,7 +3787,17 @@
       "unconfirmedAccess": "Some library records do not confirm all selected accessibility features. Unconfirmed information does not mean a feature is absent.",
       "unverifiedDirectory": "The library directory has not been verified as complete for this area. Counts and comparisons describe recorded libraries; missing records do not prove that an area has no library.",
       "temporaryFailure": "The data service could not load this result. This is a temporary retrieval failure, not evidence that the location has no data."
-    }
+    },
+    "dontShowAgain": "Don’t show this again",
+    "dontShowAgainVisit": "Don’t show again during this visit",
+    "hideHintSignedIn": "The “{button}” button stays on the map. You can turn these explanations back on in Settings → Notifications → Prompts.",
+    "hideHintSignedOut": "The “{button}” button stays on the map. Sign in to save this choice.",
+    "hiddenSignedIn": "Automatic explanations are off. Turn them back on in Settings → Notifications → Prompts.",
+    "hiddenSignedOut": "Automatic explanations are off until you leave the Atlas.",
+    "saveError": "Couldn’t save your preference. Try again, or uncheck “Don’t show this again” to continue for this visit.",
+    "saving": "Saving…",
+    "settingLabel": "Atlas data gap explanations",
+    "settingDesc": "Open an explanation automatically when a layer or analysis is missing data. The “{button}” button always stays available."
   },
   "roadmap": {
     "title": "Roadmap",
@@ -3960,18 +3970,17 @@
   },
   "sponsorPage": {
     "metaTitle": "Sponsorship",
-    "metaDescription": "Sponsor public access, data quality, translation, geographic coverage or open tooling at Libraries Global. Suggested annual amounts, reporting, recognition and our independence rules.",
+    "metaDescription": "Sponsor public access, data quality, translation, geographic coverage or open tooling at Libraries Global: what sponsorship funds, what sponsors receive and our independence rules. Every sponsorship starts with a conversation.",
     "title": "Sponsorship",
     "eyebrow": "Sponsorship",
     "heroTitle": "Fund an open record of the world’s *libraries*",
     "lead": "Libraries Global is an independent, open index of libraries. Sponsorship pays for specific public work on it, and we report on how the money is used. It never buys influence over the records.",
     "nav": {
       "programmes": "What sponsorship funds",
-      "amounts": "Suggested amounts",
       "recognition": "What sponsors receive",
       "independence": "Independence",
       "sponsors": "Current sponsors",
-      "enquire": "Make an enquiry"
+      "enquire": "Talk to us"
     },
     "programmes": {
       "title": "What sponsorship funds",
@@ -4000,22 +4009,6 @@
       },
       "reportingTitle": "Quarterly and annual reporting",
       "reportingBody": "Every sponsor receives a quarterly activity report and an annual impact report on the programmes they fund."
-    },
-    "amounts": {
-      "title": "Suggested annual amounts",
-      "lead": "Three starting points for a conversation, not packages with fixed benefits.",
-      "tiers": {
-        "community": "Community Sponsor",
-        "service": "Service Sponsor",
-        "founding": "Founding Sponsor"
-      },
-      "perYear": "<strong>{amount}</strong> a year",
-      "terms": {
-        "conversation": "The amounts are suggested starting points, not fixed prices.",
-        "contract": "Each sponsorship is quoted and contracted separately.",
-        "invoice": "Sponsorships are usually invoiced.",
-        "tax": "How tax applies is confirmed in each agreement."
-      }
     },
     "recognition": {
       "title": "What sponsors receive",
@@ -4058,18 +4051,23 @@
       }
     },
     "enquire": {
-      "title": "Make an enquiry",
-      "body": "Tell us about your organisation and the work you’d like to support. We’ll reply by email.",
-      "action": "Start a sponsorship enquiry",
-      "subject": "Sponsorship enquiry",
-      "email": "You can also write to {email}."
+      "title": "Talk to us about sponsorship",
+      "body": "Every sponsorship starts with a conversation: the work you’d like to fund, for how long, and how we report on it. We agree the amount together.",
+      "action": "Talk to us about sponsorship",
+      "email": "Or email us at <link>{email}</link>.",
+      "terms": {
+        "contract": "Each sponsorship is quoted and contracted separately.",
+        "invoice": "Sponsorships are usually invoiced.",
+        "tax": "How tax applies is confirmed in each agreement."
+      }
     },
     "sidebar": {
       "title": "Sponsorship enquiries",
       "body": "Talk to us about funding public access, data quality, translation, coverage or open tooling.",
-      "action": "Make an enquiry",
+      "action": "Talk to us",
       "api": "API access"
-    }
+    },
+    "heroHow": "How sponsorship works"
   },
   "accessLocks": {
     "contributorChip": "Contributor",
@@ -4094,7 +4092,17 @@
       "contributor": "Contributor",
       "supporter": "Supporter"
     },
-    "reachCta": "Make your first contribution"
+    "reachCta": "Make your first contribution",
+    "reachDialogTitle": "Unlock travel-time Reach",
+    "reachDialogLead": "Reach estimates how many people live within a 5, 10, 15 or 30-minute walk or bike ride of a library.",
+    "reachPathContributor": "Contributor",
+    "reachPathContributorBody": "Free. Your first accepted contribution unlocks {count, plural, =2 {two new Reach calculations} one {# new Reach calculation} other {# new Reach calculations}} a week; reopening results is free.",
+    "reachPathApi": "API Access",
+    "reachPathApiBody": "For organisations: {perHour, plural, one {# calculation} other {# calculations}} an hour and Reach for a whole library service of up to {libraries, plural, one {# library} other {# libraries}}.",
+    "reachApiCta": "See API Access",
+    "reachSignInHint": "Contributing needs a free account. <signIn>Sign in</signIn> or <register>create one</register> first.",
+    "serviceReachDialogTitle": "Reach for a whole library service",
+    "serviceReachDialogLead": "Estimate the residents a whole library service reaches, using its mapped reporting area. Overlapping catchments count once."
   },
   "supportersPage": {
     "metaTitle": "Supporters",
@@ -4335,9 +4343,10 @@
       "sponsor": {
         "name": "Sponsor",
         "who": "Organisations that want to fund the public service.",
-        "price": "From {communityPrice} a year",
-        "priceNote": "Suggested amounts of {communityPrice}, {servicePrice} or {foundingPrice} a year, agreed with us in writing.",
+        "price": "By arrangement",
+        "priceNote": "Agreed with you: the work it funds, for how long and how we report on it.",
         "cta": {
+          "contact": "Talk to us about sponsorship",
           "sponsor": "About sponsorship"
         },
         "items": {
@@ -4491,7 +4500,7 @@
       },
       "5": {
         "q": "What does sponsorship include?",
-        "a": "Sponsorship funds a programme of work, such as data quality or translation, with quarterly activity updates and an annual impact report. Suggested amounts are {communityPrice}, {servicePrice} or {foundingPrice} a year. It is not a charitable donation and doesn’t include API Access."
+        "a": "Sponsorship funds a programme of work, such as data quality or translation, with quarterly activity updates and an annual impact report. We agree the amount with each sponsor: email {contactEmail} or use the contact form. It is not a charitable donation and doesn’t include API Access."
       },
       "6": {
         "q": "Can I cancel API Access?",

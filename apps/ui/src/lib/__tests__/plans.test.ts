@@ -15,7 +15,7 @@ import {
   offer,
   offerValues,
   RECOGNITION,
-  SPONSOR_TIERS,
+  SPONSOR_ENQUIRY_HREF,
   standingName,
   standingProgress,
 } from "../plans"
@@ -59,10 +59,10 @@ describe("OFFERS", () => {
       pence: pricing.api.month,
       taxInclusive: true,
     })
-    expect(offer("sponsor").price).toEqual({
-      kind: "yearFrom",
-      pence: pricing.sponsor.community,
-    })
+    // Sponsorship is agreed in conversation; no amount appears on the site.
+    expect(offer("sponsor").price).toEqual({ kind: "conversation" })
+    expect(offer("sponsor").cta.href).toBe(SPONSOR_ENQUIRY_HREF)
+    expect(pricing).not.toHaveProperty("sponsor")
   })
 
   it("reads amounts and allowances from the pricing file and resolver", () => {
@@ -70,9 +70,6 @@ describe("OFFERS", () => {
     expect(API_OFFER.requests).toBe(10_000)
     expect(API_OFFER.mib).toBe(250)
     expect(API_OFFER.analysisCredits).toBe(100)
-    expect(SPONSOR_TIERS.map((t) => t.yearPence)).toEqual([
-      250_000, 500_000, 1_000_000,
-    ])
     expect(RECOGNITION.supporterAt).toBe(SUPPORTER_MIN_ACCEPTED)
     expect(RECOGNITION.reachPerWeek).toBe(CONTRIBUTOR_REACH_PER_WEEK)
   })
@@ -92,8 +89,7 @@ describe("offerValues", () => {
     const en = offerValues("en-GB")
     expect(en.apiPrice).toBe("£100")
     expect(en.requestPrice).toBe("£0.01")
-    expect(en.communityPrice).toBe("£2,500")
-    expect(en.foundingPrice).toBe("£10,000")
+    expect(en.contactEmail).toBe("info@libraries.global")
     expect(en.apiRequests).toBe("10,000")
     expect(en.apiMib).toBe("250")
     expect(en.apiReachPerHour).toBe(API_REACH_PER_HOUR)

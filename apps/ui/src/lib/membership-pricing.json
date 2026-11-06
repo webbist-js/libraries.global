@@ -19,6 +19,5 @@
       "capStepPence": 1000,
       "capDefaultPence": 10000
     }
-  },
-  "sponsor": { "community": 250000, "service": 500000, "founding": 1000000 }
+  }
 }

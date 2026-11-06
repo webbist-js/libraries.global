@@ -28,9 +28,19 @@ it("shows the five offers with prices from the pricing file", () => {
   ])
     expect(screen.getByRole("heading", { name })).toBeTruthy()
   expect(screen.getByText("£100 a month")).toBeTruthy()
-  expect(screen.getByText("From £2,500 a year")).toBeTruthy()
+  // Sponsorship is a conversation: no amount, and the button opens the
+  // sponsorship contact form.
+  expect(screen.getByText("By arrangement")).toBeTruthy()
+  const talk = screen.getByRole("link", {
+    name: /Talk to us about sponsorship/,
+  })
+  expect(talk.dataset.contactType).toBe("sponsorship")
+  expect(talk.getAttribute("href")).toMatch(/^mailto:info@libraries\.global/)
+  expect(
+    screen.getByRole("link", { name: "About sponsorship" }).getAttribute("href")
+  ).toBe("/sponsor")
   expect(document.body.textContent).not.toMatch(
-    /£[358](?![\d,])|£600|seat price/
+    /£[358](?![\d,])|£600|£2,500|£5,000|£10,000|seat price/
   )
   expect(
     screen

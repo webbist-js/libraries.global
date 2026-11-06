@@ -53,7 +53,10 @@ function OfferCard({
 }) {
   const m = useMembershipContent()
   const cta = ctaFor(offer, viewer, held, m)
-  const primary = offer.key === "contributor" || offer.key === "api"
+  const primary =
+    offer.key === "contributor" ||
+    offer.key === "api" ||
+    offer.key === "sponsor"
   const included = offer.items.filter((item) => item.status !== "note")
   const notes = offer.items.filter((item) => item.status === "note")
   const shown = included.slice(0, HIGHLIGHTS)
@@ -136,12 +139,23 @@ function OfferCard({
                 : "border border-(--t-border-hi) bg-(--t-bg-deep) text-(--t-ink-base) hover:bg-(--t-bg-surface)"
             }`}
             href={cta.href}
+            {...(cta.href.startsWith("mailto:")
+              ? {
+                  "data-contact-type": "sponsorship",
+                  "aria-haspopup": "dialog" as const,
+                  target: "_self",
+                }
+              : {})}
           >
             {cta.label}
             <Icon
               aria-hidden="true"
               height={17}
-              icon="mdi:arrow-right"
+              icon={
+                cta.href.startsWith("mailto:")
+                  ? "mdi:email-outline"
+                  : "mdi:arrow-right"
+              }
               width={17}
             />
           </GlobalLink>
@@ -160,6 +174,14 @@ function OfferCard({
             {m("copy.signedIn")}
           </p>
         )}
+        {offer.secondary ? (
+          <GlobalLink
+            href={offer.secondary.href}
+            className="mt-2 flex min-h-11 items-center justify-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          >
+            {offer.secondary.label}
+          </GlobalLink>
+        ) : null}
         {offer.key === "contributor" ? (
           <GlobalLink
             href="/community/supporters"

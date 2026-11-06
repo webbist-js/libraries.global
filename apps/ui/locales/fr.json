@@ -3787,7 +3787,17 @@
       "unconfirmedAccess": "Certaines fiches ne confirment pas toutes les caractéristiques d’accessibilité sélectionnées. Une information non confirmée ne signifie pas qu’une caractéristique est absente.",
       "unverifiedDirectory": "L’exhaustivité de l’annuaire n’a pas été vérifiée pour cette zone. Les nombres et comparaisons portent sur les bibliothèques recensées ; une fiche manquante ne prouve pas l’absence de bibliothèque.",
       "temporaryFailure": "Le service n’a pas pu charger ce résultat. Cet échec de récupération temporaire ne prouve pas l’absence de données pour ce lieu."
-    }
+    },
+    "dontShowAgain": "Ne plus afficher",
+    "dontShowAgainVisit": "Ne plus afficher pendant cette visite",
+    "hideHintSignedIn": "Le bouton « {button} » reste sur la carte. Vous pouvez réactiver ces explications dans Paramètres → Notifications → Invitations.",
+    "hideHintSignedOut": "Le bouton « {button} » reste sur la carte. Connectez-vous pour enregistrer ce choix.",
+    "hiddenSignedIn": "Les explications automatiques sont désactivées. Réactivez-les dans Paramètres → Notifications → Invitations.",
+    "hiddenSignedOut": "Les explications automatiques sont désactivées jusqu’à ce que vous quittiez l’Atlas.",
+    "saveError": "Impossible d’enregistrer votre préférence. Réessayez, ou décochez « Ne plus afficher » pour continuer pendant cette visite.",
+    "saving": "Enregistrement…",
+    "settingLabel": "Explications des données manquantes dans l’Atlas",
+    "settingDesc": "Ouvrir automatiquement une explication lorsqu’il manque des données à une couche ou à une analyse. Le bouton « {button} » reste toujours disponible."
   },
   "roadmap": {
     "title": "Feuille de route",
@@ -3960,14 +3970,13 @@
   },
   "sponsorPage": {
     "metaTitle": "Mécénat",
-    "metaDescription": "Soutenez en tant que mécène l’accès public, la qualité des données, la traduction, la couverture géographique ou les outils ouverts de Libraries Global. Montants annuels indicatifs, rapports, mention des mécènes et règles d’indépendance.",
+    "metaDescription": "Soutenez l’accès public, la qualité des données, la traduction, la couverture géographique ou les outils ouverts de Libraries Global : ce que finance le mécénat, ce que reçoivent les mécènes et nos règles d’indépendance. Chaque mécénat commence par une discussion.",
     "title": "Mécénat",
     "eyebrow": "Mécénat",
     "heroTitle": "Financer un inventaire ouvert des *bibliothèques* du monde",
     "lead": "Libraries Global est un index indépendant et ouvert des bibliothèques. Le mécénat finance des travaux publics précis sur cet index, et nous rendons compte de l’usage des fonds. Il n’achète jamais d’influence sur les fiches.",
     "nav": {
       "programmes": "Ce que finance le mécénat",
-      "amounts": "Montants indicatifs",
       "recognition": "Ce que reçoivent les mécènes",
       "independence": "Indépendance",
       "sponsors": "Mécènes actuels",
@@ -4000,22 +4009,6 @@
       },
       "reportingTitle": "Rapports trimestriels et annuels",
       "reportingBody": "Chaque mécène reçoit un rapport d’activité trimestriel et un rapport d’impact annuel sur les programmes qu’il finance."
-    },
-    "amounts": {
-      "title": "Montants annuels indicatifs",
-      "lead": "Trois points de départ pour en discuter, et non des formules aux avantages fixes.",
-      "tiers": {
-        "community": "Mécène Communauté",
-        "service": "Mécène Service",
-        "founding": "Mécène Fondateur"
-      },
-      "perYear": "<strong>{amount}</strong> par an",
-      "terms": {
-        "conversation": "Ces montants sont des points de départ indicatifs, pas des prix fixes.",
-        "contract": "Chaque accord de mécénat fait l’objet d’un devis et d’un contrat distincts.",
-        "invoice": "Le mécénat est généralement facturé.",
-        "tax": "Le traitement fiscal est précisé dans chaque contrat."
-      }
     },
     "recognition": {
       "title": "Ce que reçoivent les mécènes",
@@ -4058,18 +4051,23 @@
       }
     },
     "enquire": {
-      "title": "Nous contacter",
-      "body": "Présentez-nous votre organisation et le travail que vous aimeriez soutenir. Nous vous répondrons par e-mail.",
-      "action": "Envoyer une demande de mécénat",
-      "subject": "Demande de mécénat",
-      "email": "Vous pouvez aussi écrire à {email}."
+      "title": "Parlons de mécénat",
+      "body": "Chaque mécénat commence par une discussion : le travail que vous souhaitez financer, pour combien de temps et la façon dont nous en rendons compte. Nous convenons du montant ensemble.",
+      "action": "Parlons de mécénat",
+      "email": "Ou écrivez-nous à <link>{email}</link>.",
+      "terms": {
+        "contract": "Chaque accord de mécénat fait l’objet d’un devis et d’un contrat distincts.",
+        "invoice": "Le mécénat est généralement facturé.",
+        "tax": "Le traitement fiscal est précisé dans chaque contrat."
+      }
     },
     "sidebar": {
       "title": "Demandes de mécénat",
       "body": "Parlons du financement de l’accès public, de la qualité des données, de la traduction, de la couverture ou des outils ouverts.",
       "action": "Nous contacter",
       "api": "Accès API"
-    }
+    },
+    "heroHow": "Comment fonctionne le mécénat"
   },
   "accessLocks": {
     "contributorChip": "Contributeur",
@@ -4094,7 +4092,17 @@
       "contributor": "Contributeur",
       "supporter": "Soutien"
     },
-    "reachCta": "Faire ma première contribution"
+    "reachCta": "Faire ma première contribution",
+    "reachDialogTitle": "Débloquer Reach en temps de trajet",
+    "reachDialogLead": "Reach estime combien de personnes vivent à 5, 10, 15 ou 30 minutes à pied ou à vélo d’une bibliothèque.",
+    "reachPathContributor": "Contributeur",
+    "reachPathContributorBody": "Gratuit. Votre première contribution acceptée débloque {count, plural, =2 {deux nouveaux calculs Reach} one {# nouveau calcul Reach} other {# nouveaux calculs Reach}} par semaine ; rouvrir vos résultats reste gratuit.",
+    "reachPathApi": "Accès API",
+    "reachPathApiBody": "Pour les organisations : {perHour, plural, one {# calcul} other {# calculs}} par heure et Reach pour tout un service de bibliothèques, jusqu’à {libraries, plural, one {# bibliothèque} other {# bibliothèques}}.",
+    "reachApiCta": "Voir l’Accès API",
+    "reachSignInHint": "Pour contribuer, il faut un compte gratuit. <signIn>Connectez-vous</signIn> ou <register>créez-en un</register> d’abord.",
+    "serviceReachDialogTitle": "Reach pour tout un service de bibliothèques",
+    "serviceReachDialogLead": "Estimez la population desservie par tout un service de bibliothèques, à partir de sa zone de référence cartographiée. Les zones qui se chevauchent ne sont comptées qu’une fois."
   },
   "supportersPage": {
     "metaTitle": "Soutiens",
@@ -4335,9 +4343,10 @@
       "sponsor": {
         "name": "Mécène",
         "who": "Les organisations qui souhaitent financer le service public.",
-        "price": "À partir de {communityPrice} par an",
-        "priceNote": "Montants indicatifs de {communityPrice}, {servicePrice} ou {foundingPrice} par an, convenus avec nous par écrit.",
+        "price": "Sur accord",
+        "priceNote": "Convenu avec vous : le travail financé, la durée et la façon dont nous en rendons compte.",
         "cta": {
+          "contact": "Parlons de mécénat",
           "sponsor": "En savoir plus sur le mécénat"
         },
         "items": {
@@ -4491,7 +4500,7 @@
       },
       "5": {
         "q": "Que comprend le mécénat ?",
-        "a": "Le mécénat finance un programme de travail, comme la qualité des données ou la traduction, avec des points d’activité trimestriels et un rapport d’impact annuel. Les montants indicatifs sont de {communityPrice}, {servicePrice} ou {foundingPrice} par an. Ce n’est pas un don à une œuvre caritative et il n’inclut pas l’accès API."
+        "a": "Le mécénat finance un programme de travail, comme la qualité des données ou la traduction, avec des points d’activité trimestriels et un rapport d’impact annuel. Nous convenons du montant avec chaque mécène : écrivez à {contactEmail} ou utilisez le formulaire de contact. Ce n’est pas un don à une œuvre caritative et il n’inclut pas l’accès API."
       },
       "6": {
         "q": "Puis-je annuler l’accès API ?",

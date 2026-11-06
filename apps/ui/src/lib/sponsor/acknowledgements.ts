@@ -7,10 +7,6 @@ export const SPONSOR_TIERS = [
 ] as const
 export type SponsorTier = (typeof SPONSOR_TIERS)[number]
 
-/** The three annual conversation anchors priced in membership-pricing.json. */
-export const SPONSOR_ANCHORS = ["community", "service", "founding"] as const
-export type SponsorAnchor = (typeof SPONSOR_ANCHORS)[number]
-
 /** The public cap the CMS route enforces; the page never shows more. */
 export const SPONSOR_ACKNOWLEDGEMENT_LIMIT = 100
 
@@ -97,7 +93,7 @@ export function normaliseSponsorAcknowledgements(
   })
 }
 
-/** Whole pounds in the reader's locale, always with "£" (not "£GB"). */
+/** Whole pounds in the reader's locale, always with "£" (not "£GB"). Used for the API price note. */
 export function formatSponsorAmount(pence: number, locale: string) {
   return new Intl.NumberFormat(locale === "en" ? "en-GB" : locale, {
     style: "currency",

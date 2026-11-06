@@ -6,7 +6,6 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
   SponsorAcknowledgementList,
-  SponsorAmounts,
   SponsorEnquiry,
   SponsorProgrammes,
   SponsorRecognition,
@@ -63,7 +62,6 @@ describe("sponsor page sections", () => {
       messages,
       <>
         <SponsorProgrammes />
-        <SponsorAmounts />
         <SponsorRecognition />
         <SponsorAcknowledgementList
           acknowledgements={{ status: "ok", sponsors: [] }}
@@ -72,27 +70,30 @@ describe("sponsor page sections", () => {
       </>
     )
     expect(errors).toEqual([])
-    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(6)
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(5)
   })
 
-  it("shows the catalogue anchors, the separate API offer and a sponsorship enquiry", () => {
+  it("invites a conversation instead of listing amounts, and keeps the API offer separate", () => {
     renderIn(
       "en",
       en,
       <>
-        <SponsorAmounts />
         <SponsorRecognition />
         <SponsorEnquiry />
       </>
     )
-    for (const amount of ["£2,500", "£5,000", "£10,000"])
-      expect(screen.getByText(amount)).toBeTruthy()
+    expect(document.body.textContent).not.toMatch(/£2,500|£5,000|£10,000/)
+    expect(
+      screen
+        .getByRole("link", { name: "info@libraries.global" })
+        .getAttribute("href")
+    ).toBe("mailto:info@libraries.global")
     expect(
       screen.getByRole("link", { name: "developers page" }).getAttribute("href")
     ).toBe("/developers")
     expect(screen.getByText(/£100 a month/)).toBeTruthy()
     const enquiry = screen.getByRole("link", {
-      name: "Start a sponsorship enquiry",
+      name: "Talk to us about sponsorship",
     })
     expect(enquiry.dataset.contactType).toBe("sponsorship")
     expect(enquiry.getAttribute("href")).toBe(

@@ -451,15 +451,11 @@ Read [Deleting your account](/knowledge/getting-started/deleting-your-account) a
         "How organisations can fund the public service, what sponsors receive, and the independence rules that apply to every sponsorship.",
       body: `Sponsorship funds Libraries Global as free public infrastructure. It pays for programmes such as public access, data quality work, translation, geographic coverage and open tooling.
 
-## Suggested levels
+## Start a conversation
 
-We discuss each sponsorship individually. As a starting point:
+Every sponsorship starts with a conversation about what you would like to fund, for how long, and how we report on it. Write to info@libraries.global, or use the enquiry form on the [sponsorship page](/sponsor).
 
-- Community Sponsor: ${v.sponsorCommunity} a year
-- Service Sponsor: ${v.sponsorService} a year
-- Founding Sponsor: ${v.sponsorFounding} a year
-
-These are suggestions for a conversation, not packages with automatic benefits. Each agreement is quoted and contracted separately, usually by invoice, with its tax treatment confirmed in the agreement.
+Each agreement is quoted and contracted separately, usually by invoice, with its tax treatment confirmed in the agreement.
 
 ## What sponsors receive
 

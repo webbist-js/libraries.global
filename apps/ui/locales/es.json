@@ -3787,7 +3787,17 @@
       "unconfirmedAccess": "Algunos registros de bibliotecas no confirman todas las características de accesibilidad seleccionadas. La información no confirmada no significa que una característica no exista.",
       "unverifiedDirectory": "No se ha verificado que el directorio de bibliotecas esté completo para esta área. Los recuentos y comparaciones describen las bibliotecas registradas; la falta de registros no prueba que un área no tenga biblioteca.",
       "temporaryFailure": "El servicio de datos no pudo cargar este resultado. Se trata de un fallo temporal de recuperación, no de una prueba de que la ubicación carezca de datos."
-    }
+    },
+    "dontShowAgain": "No volver a mostrar",
+    "dontShowAgainVisit": "No volver a mostrar durante esta visita",
+    "hideHintSignedIn": "El botón «{button}» sigue en el mapa. Puede volver a activar estas explicaciones en Ajustes → Notificaciones → Sugerencias.",
+    "hideHintSignedOut": "El botón «{button}» sigue en el mapa. Inicie sesión para guardar esta elección.",
+    "hiddenSignedIn": "Las explicaciones automáticas están desactivadas. Vuelva a activarlas en Ajustes → Notificaciones → Sugerencias.",
+    "hiddenSignedOut": "Las explicaciones automáticas están desactivadas hasta que salga del Atlas.",
+    "saveError": "No se pudo guardar su preferencia. Inténtelo de nuevo o desmarque «No volver a mostrar» para continuar durante esta visita.",
+    "saving": "Guardando…",
+    "settingLabel": "Explicaciones de lagunas de datos en el Atlas",
+    "settingDesc": "Abrir automáticamente una explicación cuando a una capa o un análisis le faltan datos. El botón «{button}» siempre sigue disponible."
   },
   "roadmap": {
     "title": "Hoja de ruta",
@@ -3960,18 +3970,17 @@
   },
   "sponsorPage": {
     "metaTitle": "Patrocinio",
-    "metaDescription": "Patrocine el acceso público, la calidad de los datos, la traducción, la cobertura geográfica o las herramientas abiertas de Libraries Global. Importes anuales orientativos, informes, reconocimiento y nuestras normas de independencia.",
+    "metaDescription": "Patrocine el acceso público, la calidad de los datos, la traducción, la cobertura geográfica o las herramientas abiertas de Libraries Global: qué financia el patrocinio, qué reciben los patrocinadores y nuestras normas de independencia. Cada patrocinio empieza con una conversación.",
     "title": "Patrocinio",
     "eyebrow": "Patrocinio",
     "heroTitle": "Financie un registro abierto de las *bibliotecas* del mundo",
     "lead": "Libraries Global es un índice independiente y abierto de bibliotecas. El patrocinio paga trabajos públicos concretos en él, e informamos de cómo se usa el dinero. Nunca compra influencia sobre los registros.",
     "nav": {
       "programmes": "Qué financia el patrocinio",
-      "amounts": "Importes orientativos",
       "recognition": "Qué reciben los patrocinadores",
       "independence": "Independencia",
       "sponsors": "Patrocinadores actuales",
-      "enquire": "Hacer una consulta"
+      "enquire": "Hable con nosotros"
     },
     "programmes": {
       "title": "Qué financia el patrocinio",
@@ -4000,22 +4009,6 @@
       },
       "reportingTitle": "Informes trimestrales y anuales",
       "reportingBody": "Cada patrocinador recibe un informe trimestral de actividad y un informe anual de impacto sobre los programas que financia."
-    },
-    "amounts": {
-      "title": "Importes anuales orientativos",
-      "lead": "Tres puntos de partida para conversar, no paquetes con ventajas fijas.",
-      "tiers": {
-        "community": "Patrocinador Comunidad",
-        "service": "Patrocinador Servicio",
-        "founding": "Patrocinador Fundador"
-      },
-      "perYear": "<strong>{amount}</strong> al año",
-      "terms": {
-        "conversation": "Los importes son puntos de partida orientativos, no precios fijos.",
-        "contract": "Cada patrocinio se presupuesta y se contrata por separado.",
-        "invoice": "El patrocinio suele facturarse.",
-        "tax": "El tratamiento fiscal se confirma en cada acuerdo."
-      }
     },
     "recognition": {
       "title": "Qué reciben los patrocinadores",
@@ -4058,18 +4051,23 @@
       }
     },
     "enquire": {
-      "title": "Hacer una consulta",
-      "body": "Háblenos de su organización y del trabajo que le gustaría apoyar. Le responderemos por correo electrónico.",
-      "action": "Enviar una consulta de patrocinio",
-      "subject": "Consulta de patrocinio",
-      "email": "También puede escribirnos a {email}."
+      "title": "Hablemos de patrocinio",
+      "body": "Cada patrocinio empieza con una conversación: el trabajo que le gustaría financiar, durante cuánto tiempo y cómo le informaremos. Acordamos el importe juntos.",
+      "action": "Hablemos de patrocinio",
+      "email": "O escríbanos a <link>{email}</link>.",
+      "terms": {
+        "contract": "Cada patrocinio se presupuesta y se contrata por separado.",
+        "invoice": "El patrocinio suele facturarse.",
+        "tax": "El tratamiento fiscal se confirma en cada acuerdo."
+      }
     },
     "sidebar": {
       "title": "Consultas de patrocinio",
       "body": "Hablemos de financiar el acceso público, la calidad de los datos, la traducción, la cobertura o las herramientas abiertas.",
-      "action": "Hacer una consulta",
+      "action": "Hable con nosotros",
       "api": "Acceso a la API"
-    }
+    },
+    "heroHow": "Cómo funciona el patrocinio"
   },
   "accessLocks": {
     "contributorChip": "Colaborador",
@@ -4094,7 +4092,17 @@
       "contributor": "Colaborador",
       "supporter": "Colaborador destacado"
     },
-    "reachCta": "Hacer mi primera contribución"
+    "reachCta": "Hacer mi primera contribución",
+    "reachDialogTitle": "Desbloquee Reach por tiempo de desplazamiento",
+    "reachDialogLead": "Reach estima cuántas personas viven a 5, 10, 15 o 30 minutos a pie o en bicicleta de una biblioteca.",
+    "reachPathContributor": "Colaborador",
+    "reachPathContributorBody": "Gratis. Su primera contribución aceptada desbloquea {count, plural, =2 {dos nuevos cálculos de Reach} one {# nuevo cálculo de Reach} other {# nuevos cálculos de Reach}} por semana; volver a abrir los resultados es gratis.",
+    "reachPathApi": "Acceso a la API",
+    "reachPathApiBody": "Para organizaciones: {perHour, plural, one {# cálculo} other {# cálculos}} por hora y Reach para todo un servicio de bibliotecas de hasta {libraries, plural, one {# biblioteca} other {# bibliotecas}}.",
+    "reachApiCta": "Ver Acceso a la API",
+    "reachSignInHint": "Para contribuir necesita una cuenta gratuita. <signIn>Inicie sesión</signIn> o <register>cree una</register> primero.",
+    "serviceReachDialogTitle": "Reach para todo un servicio de bibliotecas",
+    "serviceReachDialogLead": "Estime la población que alcanza todo un servicio de bibliotecas, a partir de su área de referencia cartografiada. Las áreas de influencia que se solapan se cuentan una sola vez."
   },
   "supportersPage": {
     "metaTitle": "Colaboradores destacados",
@@ -4335,9 +4343,10 @@
       "sponsor": {
         "name": "Patrocinador",
         "who": "Organizaciones que quieren financiar el servicio público.",
-        "price": "Desde {communityPrice} al año",
-        "priceNote": "Importes orientativos de {communityPrice}, {servicePrice} o {foundingPrice} al año, acordados por escrito con nosotros.",
+        "price": "Por acuerdo",
+        "priceNote": "Lo acordamos con usted: el trabajo que financia, durante cuánto tiempo y cómo le informamos.",
         "cta": {
+          "contact": "Hablemos de patrocinio",
           "sponsor": "Sobre el patrocinio"
         },
         "items": {
@@ -4491,7 +4500,7 @@
       },
       "5": {
         "q": "¿Qué incluye el patrocinio?",
-        "a": "El patrocinio financia un programa de trabajo, como la calidad de los datos o la traducción, con informes trimestrales de actividad y un informe anual de impacto. Los importes orientativos son {communityPrice}, {servicePrice} o {foundingPrice} al año. No es una donación benéfica y no incluye el acceso a la API."
+        "a": "El patrocinio financia un programa de trabajo, como la calidad de los datos o la traducción, con informes trimestrales de actividad y un informe anual de impacto. Acordamos el importe con cada patrocinador: escriba a {contactEmail} o utilice el formulario de contacto. No es una donación benéfica y no incluye el acceso a la API."
       },
       "6": {
         "q": "¿Puedo cancelar el acceso a la API?",

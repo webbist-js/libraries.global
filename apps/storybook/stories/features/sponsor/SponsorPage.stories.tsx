@@ -1,7 +1,6 @@
 import { SponsorPage } from "@/components/sponsor/SponsorPage"
 import {
   SponsorAcknowledgementList,
-  SponsorAmounts,
   SponsorEnquiry,
   SponsorProgrammes,
   SponsorRecognition,
@@ -52,7 +51,6 @@ export const Sections: Story = {
   render: (args) => (
     <div className="mx-auto flex max-w-[1100px] flex-col gap-14 p-6">
       <SponsorProgrammes />
-      <SponsorAmounts />
       <SponsorRecognition />
       <SponsorAcknowledgementList acknowledgements={args.acknowledgements} />
       <SponsorEnquiry />

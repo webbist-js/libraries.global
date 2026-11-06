@@ -451,15 +451,11 @@ Přečtěte si [Smazání účtu](/knowledge/getting-started/deleting-your-accou
         "Jak mohou organizace financovat veřejnou službu, co sponzoři dostávají a jaká pravidla nezávislosti platí pro každé sponzorství.",
       body: `Sponzorství financuje Libraries Global jako bezplatnou veřejnou infrastrukturu. Hradí programy, jako je veřejný přístup, práce na kvalitě dat, překlady, geografické pokrytí a otevřené nástroje.
 
-## Doporučené úrovně
+## Začněte rozhovorem
 
-O každém sponzorství jednáme individuálně. Jako výchozí bod nabízíme:
+Každé sponzorství začíná rozhovorem o tom, co chcete podpořit, na jak dlouho a jak vás budeme informovat. Napište na info@libraries.global nebo použijte formulář na [stránce o sponzorství](/sponsor).
 
-- Komunitní sponzor: ${v.sponsorCommunity} ročně
-- Sponzor služby: ${v.sponsorService} ročně
-- Zakládající sponzor: ${v.sponsorFounding} ročně
-
-Jde o návrhy pro společný rozhovor, ne o balíčky s automatickými výhodami. Každá smlouva se nabízí a uzavírá zvlášť, obvykle na fakturu, a její daňové zacházení se potvrdí přímo ve smlouvě.
+Každá smlouva se nabízí a uzavírá zvlášť, obvykle na fakturu, a její daňové zacházení se potvrdí přímo ve smlouvě.
 
 ## Co sponzoři dostávají
 

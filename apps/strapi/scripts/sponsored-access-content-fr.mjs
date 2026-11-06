@@ -451,15 +451,11 @@ Consultez [Supprimer votre compte](/knowledge/getting-started/deleting-your-acco
         "Comment les organisations peuvent financer le service public, ce que reçoivent les sponsors et les règles d’indépendance qui s’appliquent à chaque parrainage.",
       body: `Le parrainage finance Libraries Global en tant qu’infrastructure publique gratuite. Il soutient des programmes comme l’accès public, la qualité des données, la traduction, la couverture géographique et les outils ouverts.
 
-## Niveaux suggérés
+## Commencer la discussion
 
-Nous étudions chaque parrainage au cas par cas. À titre indicatif :
+Chaque parrainage commence par une discussion : ce que vous souhaitez financer, pour combien de temps et comment nous en rendons compte. Écrivez à info@libraries.global ou utilisez le formulaire de la [page Parrainage](/sponsor).
 
-- Sponsor Communauté : ${v.sponsorCommunity} par an
-- Sponsor Service : ${v.sponsorService} par an
-- Sponsor Fondateur : ${v.sponsorFounding} par an
-
-Ce sont des points de départ pour la discussion, et non des formules assorties d’avantages automatiques. Chaque accord fait l’objet d’un devis et d’un contrat distincts, généralement réglés sur facture, et son traitement fiscal est précisé dans l’accord.
+Chaque accord fait l’objet d’un devis et d’un contrat distincts, généralement réglés sur facture, et son traitement fiscal est précisé dans l’accord.
 
 ## Ce que reçoivent les sponsors
 

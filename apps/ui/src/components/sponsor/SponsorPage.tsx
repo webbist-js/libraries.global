@@ -9,7 +9,7 @@ import type { SponsorAcknowledgements } from "@/lib/sponsor/acknowledgements"
 
 import {
   SponsorAcknowledgementList,
-  SponsorAmounts,
+  SponsorContactButton,
   SponsorEnquiry,
   SponsorProgrammes,
   SponsorRecognition,
@@ -32,7 +32,6 @@ export function SponsorPage({
       className="sponsor-page"
       links={[
         { href: "#programmes", label: t("nav.programmes") },
-        { href: "#amounts", label: t("nav.amounts") },
         { href: "#recognition", label: t("nav.recognition") },
         { href: "#independence", label: t("nav.independence") },
         { href: "#sponsors", label: t("nav.sponsors") },
@@ -54,10 +53,19 @@ export function SponsorPage({
           eyebrowIcon="mdi:handshake-outline"
           title={t("heroTitle")}
           lead={t("lead")}
-        />
+        >
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
+            <SponsorContactButton label={t("enquire.action")} />
+            <a
+              href="#enquire"
+              className="inline-flex min-h-11 items-center text-base font-semibold text-(--t-accent-primary) underline underline-offset-4"
+            >
+              {t("heroHow")}
+            </a>
+          </div>
+        </PageHero>
         <Container className="flex flex-col gap-14 py-10 sm:py-14">
           <SponsorProgrammes />
-          <SponsorAmounts />
           <SponsorRecognition />
           <SponsorAcknowledgementList acknowledgements={acknowledgements} />
           <SponsorEnquiry />

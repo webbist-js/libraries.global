@@ -80,11 +80,6 @@ export const ACCESS = {
     pricing.api?.overage?.capDefaultPence,
     "api.overage.capDefaultPence"
   ),
-  sponsor: {
-    community: required(pricing.sponsor?.community, "sponsor.community"),
-    service: required(pricing.sponsor?.service, "sponsor.service"),
-    founding: required(pricing.sponsor?.founding, "sponsor.founding"),
-  },
 }
 
 const TAGS = { en: "en-GB", fr: "fr-FR", cs: "cs-CZ", es: "es-ES" }
@@ -136,9 +131,6 @@ export function accessValues(locale) {
     libraryReachCredits: n(a.credits.library),
     serviceReachCredits: n(a.credits.service),
     networkReachCredits: n(a.credits.network),
-    sponsorCommunity: pounds(a.sponsor.community),
-    sponsorService: pounds(a.sponsor.service),
-    sponsorFounding: pounds(a.sponsor.founding),
   }
 }
 

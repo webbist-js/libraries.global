@@ -26,6 +26,8 @@ import {
   SUPPORTER_MIN_ACCEPTED,
 } from "@repo/access"
 
+import { CONTACT_EMAIL } from "./constants"
+
 import pricing from "./membership-pricing.json"
 
 export type OfferKey = "explorer" | "contributor" | "staff" | "api" | "sponsor"
@@ -50,8 +52,8 @@ export type OfferPrice =
   /** Free, unlocked by accepted contributions. */
   | { kind: "earned" }
   | { kind: "monthly"; pence: number; taxInclusive: true }
-  /** Annual sponsorship, quoted from the lowest suggested anchor. */
-  | { kind: "yearFrom"; pence: number }
+  /** Sponsorship: agreed in conversation, never priced on the site. */
+  | { kind: "conversation" }
 
 export type Offer = {
   key: OfferKey
@@ -59,6 +61,8 @@ export type Offer = {
   price: OfferPrice
   items: readonly OfferItem[]
   cta: { id: string; href: string }
+  /** A quieter second link, such as "About sponsorship". */
+  secondary?: { id: string; href: string }
 }
 
 const live = (id: string): OfferItem => ({ id, status: "live" })
@@ -82,15 +86,12 @@ export const API_OFFER = {
   },
 } as const
 
-export type SponsorTier = "community" | "service" | "founding"
-
-/** Suggested annual amounts for a sponsorship conversation, not entitlements. */
-export const SPONSOR_TIERS: readonly { key: SponsorTier; yearPence: number }[] =
-  [
-    { key: "community", yearPence: pricing.sponsor.community },
-    { key: "service", yearPence: pricing.sponsor.service },
-    { key: "founding", yearPence: pricing.sponsor.founding },
-  ]
+/**
+ * Sponsorship enquiries open the site contact form with "Sponsorship" chosen
+ * (ContactModalProvider intercepts mailto links carrying
+ * data-contact-type); without JavaScript the link opens an email.
+ */
+export const SPONSOR_ENQUIRY_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Sponsorship enquiry")}`
 
 /** Recognition thresholds and the Contributor Reach allowance. */
 export const RECOGNITION = {
@@ -177,14 +178,15 @@ export const OFFERS: readonly Offer[] = [
   {
     key: "sponsor",
     icon: "mdi:handshake-outline",
-    price: { kind: "yearFrom", pence: SPONSOR_TIERS[0]!.yearPence },
+    price: { kind: "conversation" },
     items: [
       live("programmes"),
       live("reporting"),
       live("acknowledgement"),
       note("independence"),
     ],
-    cta: { id: "sponsor", href: "/sponsor" },
+    cta: { id: "contact", href: SPONSOR_ENQUIRY_HREF },
+    secondary: { id: "sponsor", href: "/sponsor" },
   },
 ]
 
@@ -205,9 +207,6 @@ export function offerValues(locale: string) {
       minimumFractionDigits: pence % 100 === 0 ? 0 : 2,
     }).format(pence / 100)
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
-  const sponsor = Object.fromEntries(
-    SPONSOR_TIERS.map((tier) => [`${tier.key}Price`, money(tier.yearPence)])
-  ) as Record<`${SponsorTier}Price`, string>
 
   return {
     savedViews: count(EXPLORER_ALLOWANCES.savedViews),
@@ -230,7 +229,7 @@ export function offerValues(locale: string) {
     apiReachPerHour: API_REACH.perHour,
     apiReachPerDay: API_REACH.perDay,
     apiReachLibraries: API_REACH.serviceLibraries,
-    ...sponsor,
+    contactEmail: CONTACT_EMAIL,
   }
 }
 

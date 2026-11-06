@@ -452,15 +452,11 @@ Consulte [Eliminar su cuenta](/knowledge/getting-started/deleting-your-account) 
         "Cómo pueden las organizaciones financiar el servicio público, qué reciben los patrocinadores y las normas de independencia que se aplican a todo patrocinio.",
       body: `El patrocinio financia Libraries Global como infraestructura pública y gratuita. Sufraga programas como el acceso público, la mejora de la calidad de los datos, la traducción, la cobertura geográfica y las herramientas abiertas.
 
-## Niveles orientativos
+## Empiece una conversación
 
-Hablamos de cada patrocinio de forma individual. Como punto de partida:
+Cada patrocinio empieza con una conversación sobre lo que quiere financiar, durante cuánto tiempo y cómo le informaremos. Escriba a info@libraries.global o utilice el formulario de la [página de patrocinio](/sponsor).
 
-- Patrocinador comunitario: ${v.sponsorCommunity} al año
-- Patrocinador de servicio: ${v.sponsorService} al año
-- Patrocinador fundador: ${v.sponsorFounding} al año
-
-Son propuestas para iniciar una conversación, no paquetes con ventajas automáticas. Cada acuerdo se presupuesta y se contrata por separado, normalmente mediante factura, y su tratamiento fiscal se confirma en el propio acuerdo.
+Cada acuerdo se presupuesta y se contrata por separado, normalmente mediante factura, y su tratamiento fiscal se confirma en el propio acuerdo.
 
 ## Qué reciben los patrocinadores
 

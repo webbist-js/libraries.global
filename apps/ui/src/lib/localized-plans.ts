@@ -35,11 +35,12 @@ export function useOfferValues(): OfferValues {
 export type LocalizedOffer = Omit<Offer, "items" | "cta"> & {
   name: string
   who: string
-  /** "Free", "£100 a month", "From £2,500 a year". */
+  /** "Free", "£100 a month", "By arrangement". */
   priceLabel: string
   priceNote: string
   items: (OfferItem & { text: string })[]
   cta: { id: string; href: string; label: string }
+  secondary?: { id: string; href: string; label: string }
 }
 
 export function useOffer() {
@@ -47,7 +48,7 @@ export function useOffer() {
   const values = useOfferValues()
 
   return (key: OfferKey): LocalizedOffer => {
-    const o = offer(key)
+    const { secondary, ...o } = offer(key)
     const prefix = `offers.${key}`
 
     return {
@@ -57,6 +58,14 @@ export function useOffer() {
       priceLabel: t(`${prefix}.price`, values),
       priceNote: t(`${prefix}.priceNote`, values),
       cta: { ...o.cta, label: t(`${prefix}.cta.${o.cta.id}`) },
+      ...(secondary
+        ? {
+            secondary: {
+              ...secondary,
+              label: t(`${prefix}.cta.${secondary.id}`),
+            },
+          }
+        : {}),
       items: o.items.map((item) => ({
         ...item,
         text: t(`${prefix}.items.${item.id}`, values),
