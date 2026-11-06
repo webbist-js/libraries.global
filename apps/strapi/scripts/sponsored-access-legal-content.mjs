@@ -325,7 +325,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
         section(
           "API submissions and analysis jobs",
           "Proposals join the moderation record; job results expire.",
-          "Proposals sent through the API are stored like other submissions: the proposed data, evidence and sources, the submitting API account, an idempotency key and the review history. They are kept as part of the moderation and change history after a decision. Analysis job inputs and results are kept for [retention period — confirm before publication] after completion and then deleted; job metadata needed for billing and abuse prevention is kept with usage records. Do not include personal data in proposals unless it is the public contact information of a library."
+          "Proposals sent through the API are stored like other submissions: the proposed data, evidence and sources, the submitting API account, an idempotency key and the review history. They are kept as part of the moderation and change history after a decision. Pending analysis jobs expire after 30 minutes. Completed Reach results are kept for 24 hours and summary results for 15 minutes; job inputs and metadata are kept for 30 days, then deleted. Separate billing usage records follow the retention described above. Do not include personal data in proposals unless it is the public contact information of a library."
         ),
         section(
           "Recognition records",
@@ -340,7 +340,7 @@ Points, badges and recognition have no monetary value and cannot be transferred 
         section(
           "Analytics for access and the API",
           "Optional analytics stay optional.",
-          "With your analytics consent, we measure steps such as creating an account, an accepted contribution, staff verification, API checkout, key creation, endpoint use, quota warnings, overage changes and sponsorship enquiries, to understand whether the service works. These measurements never include API keys, request bodies, proposal content or payment details. Without consent, no optional analytics are collected; essential server records described above are separate. [Confirm event list and retention against the cookie policy.]"
+          "With your analytics consent, we measure use of public pages and selected workspace actions, API checkout steps, and successful contact form submissions to understand whether the service works. A contact form event does not identify whether the enquiry concerns sponsorship. These measurements do not include API keys, request bodies, proposal content or payment details. API requests, key activity, quota warnings and overage changes are recorded in essential server records for access and billing, separately from optional analytics. Without consent, no optional analytics are collected. [Confirm retention against the cookie policy.]"
         ),
       ],
     },
