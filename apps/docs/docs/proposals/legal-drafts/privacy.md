@@ -66,3 +66,4 @@ _New section._
 _In short: Optional analytics stay optional._
 
 With your analytics consent, we measure steps such as creating an account, an accepted contribution, staff verification, API checkout, key creation, endpoint use, quota warnings, overage changes and sponsorship enquiries, to understand whether the service works. These measurements never include API keys, request bodies, proposal content or payment details. Without consent, no optional analytics are collected; essential server records described above are separate. [Confirm event list and retention against the cookie policy.]
+

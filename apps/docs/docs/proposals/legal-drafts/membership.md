@@ -152,3 +152,4 @@ Libraries Global is in a closed beta. During the beta, checkout uses Stripe Test
 _In short: New versions are recorded; earlier versions are kept._
 
 We record each version of these terms. If we change them, the version you accepted continues to apply to your current period, and we tell organisers before a change affects a renewal. These terms are governed by the law of England and Wales. If you are a consumer, you keep the protection of mandatory laws where you live, and nothing in these terms limits your statutory rights.
+

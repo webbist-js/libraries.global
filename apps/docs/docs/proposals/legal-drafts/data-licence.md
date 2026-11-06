@@ -50,3 +50,4 @@ _New section._
 _In short: Payment does not change what you may do with the data._
 
 Paying for API access or sponsoring Libraries Global does not change the licence, remove attribution requirements or grant rights that a source does not allow. The API charge is for a managed, metered service, not for the data itself.
+
