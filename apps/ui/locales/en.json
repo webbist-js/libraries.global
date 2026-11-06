@@ -4452,7 +4452,12 @@
       "supporterEyebrow": "Earned, never bought",
       "supporterTitle": "Supporter: {supporterAt} accepted contributions",
       "supporterBody": "Supporter is recognition for people who have had {supporterAt} contributions accepted. It adds a profile mark and optional credit on the supporters page. It adds no tools, quota or authority, and it can’t be bought.",
-      "meetSupporters": "Meet the supporters"
+      "meetSupporters": "Meet the supporters",
+      "freeGroupTitle": "Free for everyone",
+      "freeGroupLead": "No card, no trial. Your tools grow as you take part.",
+      "paidGroupTitle": "For organisations",
+      "paidGroupLead": "The two ways to fund the service.",
+      "moreInComparison": "{count, plural, one {# more} other {# more}} in the comparison"
     },
     "policies": {
       "heading": "Terms and refunds",

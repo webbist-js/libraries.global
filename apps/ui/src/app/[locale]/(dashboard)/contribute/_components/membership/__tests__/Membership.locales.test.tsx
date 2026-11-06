@@ -3,11 +3,9 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, expect, it, vi } from "vitest"
 
-import { LibraryStaffSection } from "../LibraryStaffSection"
 import { OfferCards } from "../OfferCards"
 import { PlanCompareTable } from "../PlanCompareTable"
 import { ProFaq } from "../ProFaq"
-import { SupporterMilestone } from "../SupporterMilestone"
 
 import cs from "../../../../../../../../locales/cs.json"
 import es from "../../../../../../../../locales/es.json"
@@ -65,8 +63,6 @@ it.each([
             hasApi: true,
           }}
         />
-        <SupporterMilestone />
-        <LibraryStaffSection isStaff />
         <PlanCompareTable />
         <ProFaq />
       </NextIntlClientProvider>

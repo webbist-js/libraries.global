@@ -3,12 +3,10 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
-import { LibraryStaffSection } from "@/app/[locale]/(dashboard)/contribute/_components/membership/LibraryStaffSection"
 import { MembershipPolicies } from "@/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPolicies"
 import { OfferCards } from "@/app/[locale]/(dashboard)/contribute/_components/membership/OfferCards"
 import { PlanCompareTable } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareTable"
 import { ProFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/ProFaq"
-import { SupporterMilestone } from "@/app/[locale]/(dashboard)/contribute/_components/membership/SupporterMilestone"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
 import { InformationPage } from "@/components/dashboard/InformationPage"
@@ -150,8 +148,6 @@ export default async function PlansPage({
             <section id="offers" className="scroll-mt-24">
               <OfferCards viewer={viewer} />
             </section>
-            <SupporterMilestone />
-            <LibraryStaffSection isStaff={viewer.isStaff} compact />
             <section id="plan-comparison">
               <PlanCompareTable held={heldColumns} roadmapKeys={roadmapKeys} />
             </section>

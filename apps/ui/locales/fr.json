@@ -4452,7 +4452,12 @@
       "supporterEyebrow": "Mérité, jamais acheté",
       "supporterTitle": "Soutien : {supporterAt} contributions acceptées",
       "supporterBody": "Soutien est une reconnaissance pour les personnes dont {supporterAt} contributions ont été acceptées. Elle ajoute une marque sur le profil et une mention facultative sur la page des soutiens. Elle n’ajoute aucun outil, quota ni autorité, et ne s’achète pas.",
-      "meetSupporters": "Découvrir les soutiens"
+      "meetSupporters": "Découvrir les soutiens",
+      "freeGroupTitle": "Gratuit pour tous",
+      "freeGroupLead": "Sans carte ni période d’essai. Vos outils s’étoffent à mesure que vous participez.",
+      "paidGroupTitle": "Pour les organisations",
+      "paidGroupLead": "Les deux façons de financer le service.",
+      "moreInComparison": "{count, plural, one {# de plus} other {# de plus}} dans le comparatif"
     },
     "policies": {
       "heading": "Conditions et remboursements",

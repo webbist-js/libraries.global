@@ -4452,7 +4452,12 @@
       "supporterEyebrow": "Získané, nikdy koupené",
       "supporterTitle": "Podporovatel: {supporterAt} přijatých příspěvků",
       "supporterBody": "Podporovatel je ocenění pro ty, kterým bylo přijato {supporterAt} příspěvků. Přidává značku na profil a volitelné uvedení na stránce podporovatelů. Nepřidává žádné nástroje, limity ani oprávnění a nelze je koupit.",
-      "meetSupporters": "Poznejte podporovatele"
+      "meetSupporters": "Poznejte podporovatele",
+      "freeGroupTitle": "Zdarma pro všechny",
+      "freeGroupLead": "Bez karty a bez zkušební doby. Nástroje přibývají s tím, jak se zapojujete.",
+      "paidGroupTitle": "Pro organizace",
+      "paidGroupLead": "Dva způsoby, jak službu financovat.",
+      "moreInComparison": "{count, plural, one {Další #} few {Další #} other {Dalších #}} ve srovnání"
     },
     "policies": {
       "heading": "Podmínky a vrácení peněz",

@@ -4452,7 +4452,12 @@
       "supporterEyebrow": "Se gana, nunca se compra",
       "supporterTitle": "Colaborador destacado: {supporterAt} contribuciones aceptadas",
       "supporterBody": "Colaborador destacado es un reconocimiento para quienes han conseguido que se acepten {supporterAt} contribuciones. Añade una marca en el perfil y una mención opcional en la página de colaboradores destacados. No añade herramientas, cupos ni autoridad, y no se puede comprar.",
-      "meetSupporters": "Conocer a los colaboradores destacados"
+      "meetSupporters": "Conocer a los colaboradores destacados",
+      "freeGroupTitle": "Gratis para todos",
+      "freeGroupLead": "Sin tarjeta ni periodo de prueba. Sus herramientas crecen a medida que participa.",
+      "paidGroupTitle": "Para organizaciones",
+      "paidGroupLead": "Las dos formas de financiar el servicio.",
+      "moreInComparison": "{count, plural, one {# más} other {# más}} en la comparación"
     },
     "policies": {
       "heading": "Condiciones y reembolsos",
