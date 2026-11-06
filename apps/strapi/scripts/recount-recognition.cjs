@@ -19,6 +19,65 @@ const path = require("node:path")
 
 const PAGE_SIZE = 500
 
+async function readProfilePage(client, after, size) {
+  return (
+    await client.query(
+      `SELECT id, ba_user_id, accepted_contributions, last_contribution_at
+         FROM user_profiles
+        WHERE id > $1 AND ba_user_id IS NOT NULL
+        ORDER BY id ASC
+        LIMIT $2`,
+      [after, size]
+    )
+  ).rows
+}
+
+async function readTotals(client, page, actions) {
+  return new Map(
+    (
+      await client.query(
+        `SELECT ba_user_id, count(*)::int AS accepted, max(awarded_at) AS last_at
+           FROM rw_point_events
+          WHERE ba_user_id = ANY($1::text[])
+            AND action = ANY($2::text[])
+            AND points > 0
+          GROUP BY ba_user_id`,
+        [page.map((row) => row.ba_user_id), actions]
+      )
+    ).rows.map((row) => [row.ba_user_id, row])
+  )
+}
+
+function isUnchanged(profile, accepted, lastAt) {
+  const currentLast = profile.last_contribution_at
+    ? new Date(profile.last_contribution_at).getTime()
+    : null
+
+  return (
+    Number(profile.accepted_contributions ?? 0) === accepted &&
+    currentLast === (lastAt ? lastAt.getTime() : null)
+  )
+}
+
+async function recountPage(client, page, totals, report, apply) {
+  for (const profile of page) {
+    const total = totals.get(profile.ba_user_id)
+    const accepted = total ? Number(total.accepted) : 0
+    const lastAt = total?.last_at ? new Date(total.last_at) : null
+    if (accepted > 0) report.contributors += 1
+    report.acceptedContributions += accepted
+    if (isUnchanged(profile, accepted, lastAt)) continue
+    report.changed += 1
+    if (apply)
+      await client.query(
+        `UPDATE user_profiles
+            SET accepted_contributions = $2, last_contribution_at = $3
+          WHERE id = $1`,
+        [profile.id, accepted, lastAt]
+      )
+  }
+}
+
 async function recountRecognition(
   client,
   { apply = false, actions, pageSize = PAGE_SIZE } = {}
@@ -38,55 +97,12 @@ async function recountRecognition(
     }
     let after = 0
     for (;;) {
-      const page = (
-        await client.query(
-          `SELECT id, ba_user_id, accepted_contributions, last_contribution_at
-             FROM user_profiles
-            WHERE id > $1 AND ba_user_id IS NOT NULL
-            ORDER BY id ASC
-            LIMIT $2`,
-          [after, size]
-        )
-      ).rows
+      const page = await readProfilePage(client, after, size)
       if (page.length === 0) break
       after = page.at(-1).id
       report.profiles += page.length
-      const totals = new Map(
-        (
-          await client.query(
-            `SELECT ba_user_id, count(*)::int AS accepted, max(awarded_at) AS last_at
-               FROM rw_point_events
-              WHERE ba_user_id = ANY($1::text[])
-                AND action = ANY($2::text[])
-                AND points > 0
-              GROUP BY ba_user_id`,
-            [page.map((row) => row.ba_user_id), actions]
-          )
-        ).rows.map((row) => [row.ba_user_id, row])
-      )
-      for (const profile of page) {
-        const total = totals.get(profile.ba_user_id)
-        const accepted = total ? Number(total.accepted) : 0
-        const lastAt = total?.last_at ? new Date(total.last_at) : null
-        if (accepted > 0) report.contributors += 1
-        report.acceptedContributions += accepted
-        const currentLast = profile.last_contribution_at
-          ? new Date(profile.last_contribution_at).getTime()
-          : null
-        if (
-          Number(profile.accepted_contributions ?? 0) === accepted &&
-          currentLast === (lastAt ? lastAt.getTime() : null)
-        )
-          continue
-        report.changed += 1
-        if (apply)
-          await client.query(
-            `UPDATE user_profiles
-                SET accepted_contributions = $2, last_contribution_at = $3
-              WHERE id = $1`,
-            [profile.id, accepted, lastAt]
-          )
-      }
+      const totals = await readTotals(client, page, actions)
+      await recountPage(client, page, totals, report, apply)
       if (page.length < size) break
     }
     await client.query(apply ? "COMMIT" : "ROLLBACK")

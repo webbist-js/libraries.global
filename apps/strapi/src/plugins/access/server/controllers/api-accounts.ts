@@ -12,6 +12,21 @@ type BridgeContext = {
   status: number
 }
 
+const wrap =
+  (work: (ctx: BridgeContext) => Promise<unknown>) =>
+  async (ctx: BridgeContext) => {
+    if (!isValidServiceSecret(ctx.request.header["x-service-secret"]))
+      return ctx.unauthorized()
+    ctx.set("Cache-Control", "no-store")
+    try {
+      ctx.body = await work(ctx)
+    } catch (error) {
+      if (!(error instanceof AccessError)) throw error
+      ctx.status = error.status
+      ctx.body = { error: { code: error.code } }
+    }
+  }
+
 /**
  * Service-secret routes for the application's API account billing. They
  * never trust a browser identity: the application authenticates the user and
@@ -19,20 +34,6 @@ type BridgeContext = {
  */
 export default ({ strapi }: { strapi: Core.Strapi }) => {
   const service = () => strapi.plugin("access").service("api-accounts")
-  const wrap =
-    (work: (ctx: BridgeContext) => Promise<unknown>) =>
-    async (ctx: BridgeContext) => {
-      if (!isValidServiceSecret(ctx.request.header["x-service-secret"]))
-        return ctx.unauthorized()
-      ctx.set("Cache-Control", "no-store")
-      try {
-        ctx.body = await work(ctx)
-      } catch (error) {
-        if (!(error instanceof AccessError)) throw error
-        ctx.status = error.status
-        ctx.body = { error: { code: error.code } }
-      }
-    }
 
   return {
     organisation: wrap((ctx) =>

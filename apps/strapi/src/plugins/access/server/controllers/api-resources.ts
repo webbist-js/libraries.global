@@ -6,6 +6,7 @@ import {
   isLibraryEntityRef,
   publicSourceUrl,
 } from "@repo/shared-data"
+import type { Core } from "@strapi/strapi"
 
 import {
   requestAtlasReach,
@@ -19,7 +20,10 @@ import {
   API_DATASET_FIELDS,
   API_LIBRARY_FIELDS,
   API_LIBRARY_POPULATE,
+  apiStore,
   projectApiLibraries,
+  type ApiDatasetRow,
+  type ApiLibraryRow,
 } from "../services/api-library-projection"
 import { NETWORK, publicNetworkFilter } from "../services/network-records"
 import { AccessError, isDocumentId } from "../utils/admin"
@@ -63,7 +67,32 @@ const NETWORK_FIELDS = [
   "updatedAt",
 ]
 
-function query(ctx: any, allowed: string[]) {
+type BridgeContext = {
+  request: { header: Record<string, unknown>; body: unknown }
+  query?: Record<string, unknown>
+  params: Record<string, string>
+  unauthorized: (message?: string) => unknown
+  set: (name: string, value: string) => void
+  body: unknown
+  status: number
+}
+
+type ServiceRow = {
+  documentId: string
+  name: string
+  slug: string
+  kind: string
+  description?: string | null
+  website?: string | null
+  sourceUrl?: string | null
+  lastVerifiedAt?: string | null
+  updatedAt?: string | null
+  countries?:
+    | { name?: string | null; slug?: string | null; iso2?: string | null }[]
+    | null
+}
+
+function query(ctx: BridgeContext, allowed: string[]) {
   const q = (ctx.query ?? {}) as Record<string, unknown>
   for (const [key, value] of Object.entries(q))
     if (!allowed.includes(key) || typeof value !== "string")
@@ -90,7 +119,7 @@ function cursor(value: string | undefined) {
   return value
 }
 
-function projectService(row: any) {
+function projectService(row: ServiceRow) {
   return {
     ref: row.documentId,
     slug: row.slug,
@@ -98,7 +127,7 @@ function projectService(row: any) {
     serviceType: row.kind,
     description: row.description ?? "",
     website: publicSourceUrl(row.website),
-    countries: (row.countries ?? []).map((country: any) => ({
+    countries: (row.countries ?? []).map((country) => ({
       name: country.name ?? null,
       slug: country.slug ?? null,
       iso2: country.iso2 ?? null,
@@ -112,9 +141,9 @@ function projectService(row: any) {
 }
 
 /** A public, reviewed service by its stable ref (documentId), or 404. */
-async function publicService(strapi: any, ref: unknown) {
+async function publicService(strapi: Core.Strapi, ref: unknown) {
   if (!isDocumentId(ref)) throw new AccessError(404, "not_found")
-  const rows = await strapi.documents(NETWORK).findMany({
+  const rows = await apiStore<ServiceRow>(strapi, NETWORK).findMany({
     filters: { documentId: { $eq: ref }, ...publicNetworkFilter },
     fields: NETWORK_FIELDS,
     populate: { countries: { fields: ["name", "slug", "iso2"] } },
@@ -130,7 +159,7 @@ const memberFilter = (ref: string) => ({
 })
 
 /** The library filter for a summary scope: a public service or a place. */
-async function scopeFilter(strapi: any, body: Record<string, unknown>) {
+async function scopeFilter(strapi: Core.Strapi, body: Record<string, unknown>) {
   if (body.ref !== undefined) {
     const service = await publicService(strapi, body.ref)
 
@@ -224,7 +253,7 @@ export const SUMMARY_OPERATIONS = {
   "place.coverage": 5,
 } as const
 
-async function summary(strapi: any, body: Record<string, unknown>) {
+async function summary(strapi: Core.Strapi, body: Record<string, unknown>) {
   const operation = body.operation as keyof typeof SUMMARY_OPERATIONS
   if (
     Object.keys(body).some(
@@ -237,23 +266,26 @@ async function summary(strapi: any, body: Record<string, unknown>) {
     throw new AccessError(400, "invalid_operation")
   const lang = locale(body.locale as string | undefined)
   const { filters, scope } = await scopeFilter(strapi, body)
-  const libraries = strapi.documents("api::library.library")
+  const libraries = apiStore<ApiLibraryRow>(strapi, "api::library.library")
   const count = (extra: Record<string, unknown> = {}) =>
     libraries.count({
       status: "published",
       locale: lang,
       filters: { $and: [filters, extra] },
-    }) as Promise<number>
+    })
   const total = await count()
   const types = (
-    await strapi.documents("api::library-type.library-type").findMany({
+    await apiStore<{ name: string }>(
+      strapi,
+      "api::library-type.library-type"
+    ).findMany({
       status: "published",
       locale: "en",
       fields: ["name"],
       sort: "name:asc",
       limit: 100,
     })
-  ).map((row: any) => String(row.name))
+  ).map((row) => String(row.name))
   const [statusCounts, typeCounts] = await Promise.all([
     counted(OPERATIONAL_STATUSES, (status) =>
       count({ operationalStatus: { $eq: status } })
@@ -278,19 +310,22 @@ async function summary(strapi: any, body: Record<string, unknown>) {
       counted(checks, (key) => count(COMPLETENESS[key])),
       count({ lastVerifiedAt: { $gte: since.toISOString() } }),
     ])
-    const datasets = await strapi.documents("api::dataset.dataset").findMany({
+    const datasets = await apiStore<ApiDatasetRow>(
+      strapi,
+      "api::dataset.dataset"
+    ).findMany({
       fields: API_DATASET_FIELDS,
       sort: "key:asc",
       limit: 50,
     })
-    const datasetCounts = await counted(datasets, (dataset: any) =>
+    const datasetCounts = await counted(datasets, (dataset) =>
       count({ sourceRecords: { dataset: { $eq: dataset.key } } })
     )
     result.completeness = Object.fromEntries(
       checks.map((key, i) => [key, completeness[i]])
     )
     result.verifiedWithinDays = { days: VERIFIED_WITHIN_DAYS, count: verified }
-    result.sources = datasets.flatMap((dataset: any, i: number) =>
+    result.sources = datasets.flatMap((dataset, i) =>
       datasetCounts[i]
         ? [
             {
@@ -341,9 +376,34 @@ type Contour = {
   outsideResidents?: number | null
 }
 
+type Provenance = {
+  release?: unknown
+  source?: unknown
+  sourceUrl?: unknown
+  licence?: unknown
+  year?: unknown
+}
+type ReachResult = Record<string, unknown> & {
+  contours?: Contour[]
+  warnings?: unknown[]
+  network?: Provenance | null
+  population?: Provenance | null
+}
+
+const provenance = (p: Provenance | null | undefined) =>
+  p
+    ? {
+        release: p.release,
+        source: p.source,
+        sourceUrl: p.sourceUrl,
+        licence: p.licence,
+        ...(p.year !== undefined ? { year: p.year } : {}),
+      }
+    : null
+
 /** The licensed, published-field projection of a Reach result. */
 export function projectReachResult(
-  result: any,
+  result: ReachResult,
   subject: Record<string, unknown>,
   minutes?: number
 ) {
@@ -359,16 +419,6 @@ export function projectReachResult(
         : {}),
       geometry: c.geometry ?? null,
     }))
-  const provenance = (p: any) =>
-    p
-      ? {
-          release: p.release,
-          source: p.source,
-          sourceUrl: p.sourceUrl,
-          licence: p.licence,
-          ...(p.year !== undefined ? { year: p.year } : {}),
-        }
-      : null
   const projected: Record<string, unknown> = {
     ...subject,
     state: result.state,
@@ -411,87 +461,111 @@ const UNAVAILABLE = new Set([
   "failed",
 ])
 
-async function reach(strapi: any, body: Record<string, unknown>) {
-  const { account, mode, ref, travelMode, minutes, areaCode } = body
+const REACH_KEYS = new Set([
+  "account",
+  "mode",
+  "ref",
+  "travelMode",
+  "minutes",
+  "areaCode",
+])
+
+function isValidReachBody(body: Record<string, unknown>) {
+  const { account, mode, travelMode, minutes, areaCode } = body
+  if (Object.keys(body).some((k) => !REACH_KEYS.has(k))) return false
+  if (!isDocumentId(account)) return false
+  if (!["library", "service", "network"].includes(String(mode))) return false
+  if (!["walking", "cycling"].includes(String(travelMode))) return false
   if (
-    Object.keys(body).some(
-      (k) =>
-        ![
-          "account",
-          "mode",
-          "ref",
-          "travelMode",
-          "minutes",
-          "areaCode",
-        ].includes(k)
-    ) ||
-    !isDocumentId(account) ||
-    !["library", "service", "network"].includes(String(mode)) ||
-    !["walking", "cycling"].includes(String(travelMode)) ||
-    (minutes !== undefined &&
-      !(ATLAS_REACH_MINUTES as readonly unknown[]).includes(minutes)) ||
-    (areaCode !== undefined &&
-      (mode !== "service" ||
-        typeof areaCode !== "string" ||
-        !/^[EWSN]\d{8}$/.test(areaCode))) ||
-    (mode === "network" && areaCode !== undefined)
+    minutes !== undefined &&
+    !(ATLAS_REACH_MINUTES as readonly unknown[]).includes(minutes)
   )
-    throw new AccessError(400, "invalid_analysis")
-  if (!atlasEnabled() || !process.env.ANALYSIS_SERVICE_URL)
-    throw new AccessError(503, "analysis_unavailable")
-  const allowance = machineAllowance(account)
-  const userKey = machineUserKey(account)
-  let outcome: { status: number; body: any }
-  let subject: Record<string, unknown>
-  if (mode === "library") {
-    if (!isLibraryEntityRef(ref)) throw new AccessError(404, "not_found")
-    const rows = await strapi.documents("api::library.library").findMany({
-      status: "published",
-      locale: CANONICAL_LOCALE(),
-      filters: { entityRef: { $eq: ref } },
-      fields: ["entityRef", "name"],
-      limit: 1,
-    })
-    if (!rows[0]) throw new AccessError(404, "not_found")
-    subject = { mode, ref: rows[0].entityRef, name: rows[0].name }
-    outcome = await requestAtlasReach(
-      strapi,
-      {
-        schemaVersion: 1,
-        libraryId: rows[0].documentId,
-        mode: travelMode,
-      },
-      userKey,
-      allowance
-    )
-  } else {
-    const service = await publicService(strapi, ref)
-    // Service mode is one reporting area; network mode the whole service.
-    if (mode === "service" && areaCode === undefined)
-      throw new AccessError(400, "area_required")
-    subject = {
-      mode,
-      ref: service.documentId,
-      name: service.name,
-      serviceType: service.kind,
-    }
-    outcome = await requestAtlasNetworkReach(
-      strapi as any,
-      {
-        schemaVersion: 1,
-        networkId: service.documentId,
-        mode: travelMode,
-        scope: {
-          filters: emptyAtlasFilters(),
-          accessibility: { enabled: false, selected: [], view: "matches" },
-        },
-        ...(areaCode ? { areaCode } : {}),
-        ...(minutes !== undefined ? { minutes } : {}),
-      },
-      userKey,
-      allowance
-    )
+    return false
+  if (areaCode === undefined) return true
+
+  return (
+    mode === "service" &&
+    typeof areaCode === "string" &&
+    /^[EWSN]\d{8}$/.test(areaCode)
+  )
+}
+
+type ReachOutcome = { status: number; body?: unknown }
+type ReachRequest = {
+  account: string
+  mode: string
+  ref: unknown
+  travelMode: unknown
+  minutes: unknown
+  areaCode: unknown
+}
+
+async function reachLibrary(strapi: Core.Strapi, request: ReachRequest) {
+  const { account, mode, ref, travelMode } = request
+  if (!isLibraryEntityRef(ref)) throw new AccessError(404, "not_found")
+  const rows = await apiStore<ApiLibraryRow>(
+    strapi,
+    "api::library.library"
+  ).findMany({
+    status: "published",
+    locale: CANONICAL_LOCALE(),
+    filters: { entityRef: { $eq: ref } },
+    fields: ["entityRef", "name"],
+    limit: 1,
+  })
+  if (!rows[0]) throw new AccessError(404, "not_found")
+  const subject = { mode, ref: rows[0].entityRef, name: rows[0].name }
+  const outcome: ReachOutcome = await requestAtlasReach(
+    strapi,
+    {
+      schemaVersion: 1,
+      libraryId: rows[0].documentId,
+      mode: travelMode,
+    },
+    machineUserKey(account),
+    machineAllowance(account)
+  )
+
+  return { subject, outcome }
+}
+
+async function reachService(strapi: Core.Strapi, request: ReachRequest) {
+  const { account, mode, ref, travelMode, minutes, areaCode } = request
+  const service = await publicService(strapi, ref)
+  // Service mode is one reporting area; network mode the whole service.
+  if (mode === "service" && areaCode === undefined)
+    throw new AccessError(400, "area_required")
+  const subject = {
+    mode,
+    ref: service.documentId,
+    name: service.name,
+    serviceType: service.kind,
   }
+  const outcome: ReachOutcome = await requestAtlasNetworkReach(
+    strapi,
+    {
+      schemaVersion: 1,
+      networkId: service.documentId,
+      mode: travelMode,
+      scope: {
+        filters: emptyAtlasFilters(),
+        accessibility: { enabled: false, selected: [], view: "matches" },
+      },
+      ...(areaCode ? { areaCode } : {}),
+      ...(minutes !== undefined ? { minutes } : {}),
+    },
+    machineUserKey(account),
+    machineAllowance(account)
+  )
+
+  return { subject, outcome }
+}
+
+function reachResponse(
+  outcome: ReachOutcome,
+  subject: Record<string, unknown>,
+  minutes: number | undefined
+) {
   if (outcome.status === 404) throw new AccessError(404, "not_found")
   if (outcome.status === 429)
     return { state: "refused", code: "analysis_capacity" }
@@ -499,23 +573,40 @@ async function reach(strapi: any, body: Record<string, unknown>) {
   if (outcome.status === 202) return { state: "pending", retryAfter: 3 }
   if (outcome.status !== 200 || !outcome.body)
     throw new AccessError(503, "analysis_unavailable")
-  const state = String(outcome.body.state)
+  const result = outcome.body as ReachResult
+  const state = String(result.state)
   if (UNAVAILABLE.has(state)) return { state: "unavailable", reason: state }
   if (state !== "ready" && state !== "partial")
     throw new AccessError(503, "analysis_unavailable")
 
   return {
     state: "ready",
-    result: projectReachResult(
-      outcome.body,
-      subject,
-      mode === "library" ? (minutes as number | undefined) : undefined
-    ),
+    result: projectReachResult(result, subject, minutes),
   }
 }
 
-export default ({ strapi }: { strapi: any }) => {
-  const wrap = (work: (ctx: any) => Promise<unknown>) => async (ctx: any) => {
+async function reach(strapi: Core.Strapi, body: Record<string, unknown>) {
+  if (!isValidReachBody(body)) throw new AccessError(400, "invalid_analysis")
+  if (!atlasEnabled() || !process.env.ANALYSIS_SERVICE_URL)
+    throw new AccessError(503, "analysis_unavailable")
+  const request = body as ReachRequest
+  const { subject, outcome } =
+    request.mode === "library"
+      ? await reachLibrary(strapi, request)
+      : await reachService(strapi, request)
+
+  return reachResponse(
+    outcome,
+    subject,
+    request.mode === "library"
+      ? (request.minutes as number | undefined)
+      : undefined
+  )
+}
+
+const wrap =
+  (work: (ctx: BridgeContext) => Promise<unknown>) =>
+  async (ctx: BridgeContext) => {
     if (!isValidServiceSecret(ctx.request.header["x-service-secret"]))
       return ctx.unauthorized("Invalid service secret")
     ctx.set("Cache-Control", "no-store")
@@ -533,14 +624,16 @@ export default ({ strapi }: { strapi: any }) => {
       ctx.body = { error: { code: error.code } }
     }
   }
-  const body = (ctx: any) => {
-    const value = ctx.request.body
-    if (!value || typeof value !== "object" || Array.isArray(value))
-      throw new AccessError(400, "invalid_body")
 
-    return value as Record<string, unknown>
-  }
+const requestBody = (ctx: BridgeContext) => {
+  const value = ctx.request.body
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw new AccessError(400, "invalid_body")
 
+  return value as Record<string, unknown>
+}
+
+export default ({ strapi }: { strapi: Core.Strapi }) => {
   return {
     /** GET /api/services: public, reviewed services, keyset by ref. */
     services: wrap(async (ctx) => {
@@ -558,7 +651,7 @@ export default ({ strapi }: { strapi: any }) => {
         throw new AccessError(400, "invalid_service_type")
       if (q.country !== undefined && !isPlaceSlug(q.country))
         throw new AccessError(400, "invalid_country")
-      const rows = await strapi.documents(NETWORK).findMany({
+      const rows = await apiStore<ServiceRow>(strapi, NETWORK).findMany({
         filters: {
           ...publicNetworkFilter,
           ...(after ? { documentId: { $gt: after } } : {}),
@@ -588,13 +681,14 @@ export default ({ strapi }: { strapi: any }) => {
       const q = query(ctx, ["locale"])
       const lang = locale(q.locale)
       const row = await publicService(strapi, ctx.params.ref)
-      const libraryCount = await strapi
-        .documents("api::library.library")
-        .count({
-          status: "published",
-          locale: lang,
-          filters: memberFilter(row.documentId),
-        })
+      const libraryCount = await apiStore<ApiLibraryRow>(
+        strapi,
+        "api::library.library"
+      ).count({
+        status: "published",
+        locale: lang,
+        filters: memberFilter(row.documentId),
+      })
 
       return {
         data: {
@@ -619,7 +713,10 @@ export default ({ strapi }: { strapi: any }) => {
       const size = limit(q.limit)
       const after = cursor(q.after)
       const service = await publicService(strapi, ctx.params.ref)
-      const rows = await strapi.documents("api::library.library").findMany({
+      const rows = await apiStore<ApiLibraryRow>(
+        strapi,
+        "api::library.library"
+      ).findMany({
         status: "published",
         locale: lang,
         filters: {
@@ -647,8 +744,8 @@ export default ({ strapi }: { strapi: any }) => {
       }
     }),
     /** POST /api/analysis/summary: counted aggregates over published records. */
-    summary: wrap((ctx) => summary(strapi, body(ctx))),
+    summary: wrap((ctx) => summary(strapi, requestBody(ctx))),
     /** POST /api/analysis/reach: CMS/native admission with a machine pool. */
-    reach: wrap((ctx) => reach(strapi, body(ctx))),
+    reach: wrap((ctx) => reach(strapi, requestBody(ctx))),
   }
 }
