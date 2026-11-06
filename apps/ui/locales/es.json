@@ -4093,7 +4093,8 @@
       "explorer": "Explorador",
       "contributor": "Colaborador",
       "supporter": "Colaborador destacado"
-    }
+    },
+    "reachCta": "Hacer mi primera contribución"
   },
   "supportersPage": {
     "metaTitle": "Colaboradores destacados",

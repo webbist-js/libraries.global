@@ -4093,7 +4093,8 @@
       "explorer": "Průzkumník",
       "contributor": "Přispěvatel",
       "supporter": "Podporovatel"
-    }
+    },
+    "reachCta": "Udělat první příspěvek"
   },
   "supportersPage": {
     "metaTitle": "Podporovatelé",

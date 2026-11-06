@@ -199,15 +199,9 @@ export function LibraryAreaSection({
       )}
 
       {showReach ? (
-        <details
-          className="mt-5 border-t pt-2"
-          style={{ borderColor: T.border.line }}
-        >
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
-            Explore travel-time reach
-          </summary>
+        <div className="mt-5">
           <LibraryReachTeaser libraryId={libraryId} />
-        </details>
+        </div>
       ) : null}
     </LibrarySectionCard>
   )
