@@ -333,3 +333,24 @@ export function standingName(
     ? standing
     : "public"
 }
+
+/** Who is looking at the offers; plain data, usable on the server and client. */
+export type OfferViewer = {
+  readonly signedIn: boolean
+  /** Earned standing: "public", "explorer", "contributor" or "supporter". */
+  readonly standing: string
+  readonly isStaff: boolean
+  readonly hasApi: boolean
+}
+
+/** Which offers the viewer already has. Recognition and authority are separate. */
+export function heldOffers(viewer: OfferViewer): ReadonlySet<OfferKey> {
+  const held = new Set<OfferKey>()
+  if (viewer.signedIn) held.add("explorer")
+  if (viewer.standing === "contributor" || viewer.standing === "supporter")
+    held.add("contributor")
+  if (viewer.isStaff) held.add("staff")
+  if (viewer.hasApi) held.add("api")
+
+  return held
+}

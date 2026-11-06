@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 import { afterEach, expect, it, vi } from "vitest"
 
+import { heldOffers } from "@/lib/plans"
 import { cleanup, render, screen, within } from "@/test/render"
 
-import { heldOffers, OfferCards } from "../OfferCards"
+import { OfferCards } from "../OfferCards"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 

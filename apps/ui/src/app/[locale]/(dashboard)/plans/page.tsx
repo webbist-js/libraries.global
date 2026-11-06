@@ -5,11 +5,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { LibraryStaffSection } from "@/app/[locale]/(dashboard)/contribute/_components/membership/LibraryStaffSection"
 import { MembershipPolicies } from "@/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPolicies"
-import {
-  heldOffers,
-  OfferCards,
-  type OfferViewer,
-} from "@/app/[locale]/(dashboard)/contribute/_components/membership/OfferCards"
+import { OfferCards } from "@/app/[locale]/(dashboard)/contribute/_components/membership/OfferCards"
 import { PlanCompareTable } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareTable"
 import { ProFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/ProFaq"
 import { SupporterMilestone } from "@/app/[locale]/(dashboard)/contribute/_components/membership/SupporterMilestone"
@@ -25,7 +21,7 @@ import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
 import type { CompareColumn } from "@/lib/plan-compare"
-import { offerValues } from "@/lib/plans"
+import { heldOffers, offerValues, type OfferViewer } from "@/lib/plans"
 import { fetchRoadmap } from "@/lib/roadmap-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 

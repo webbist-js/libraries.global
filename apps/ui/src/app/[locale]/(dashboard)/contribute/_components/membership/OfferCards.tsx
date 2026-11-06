@@ -9,32 +9,12 @@ import {
   useMembershipContent,
   useOffer,
 } from "@/lib/localized-plans"
-import { OFFER_KEYS, type OfferKey } from "@/lib/plans"
+import { heldOffers, OFFER_KEYS, type OfferViewer } from "@/lib/plans"
 
 import { CurrentPlanBadge, PlanFeatures, PlanSectionHeader } from "./PlanBits"
 
 const PILL =
   "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-4 text-base font-semibold no-underline transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary) motion-reduce:transition-none"
-
-export type OfferViewer = {
-  readonly signedIn: boolean
-  /** Earned standing: "public", "explorer", "contributor" or "supporter". */
-  readonly standing: string
-  readonly isStaff: boolean
-  readonly hasApi: boolean
-}
-
-/** Which offers the viewer already has. Recognition and authority are separate. */
-export function heldOffers(viewer: OfferViewer): ReadonlySet<OfferKey> {
-  const held = new Set<OfferKey>()
-  if (viewer.signedIn) held.add("explorer")
-  if (viewer.standing === "contributor" || viewer.standing === "supporter")
-    held.add("contributor")
-  if (viewer.isStaff) held.add("staff")
-  if (viewer.hasApi) held.add("api")
-
-  return held
-}
 
 function ctaFor(
   offer: LocalizedOffer,
