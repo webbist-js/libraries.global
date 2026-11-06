@@ -164,6 +164,7 @@ if (!local && new URL(origin).port === "1337")
 const MODELS = {
   article: "api::wiki-article.wiki-article",
   legal: "api::legal-document.legal-document",
+  section: "api::wiki-section.wiki-section",
 }
 const base = (model) => `collection-types/${MODELS[model]}`
 async function api(path, locale, method = "GET", data) {
@@ -294,11 +295,13 @@ const guarded = (doc, fields, entry) => {
 // ---------------------------------------------------------------------------
 // Inventory.
 
-const rows = { article: {}, legal: {} }
+const rows = { article: {}, legal: {}, section: {} }
 for (const locale of LOCALES) {
   rows.article[locale] =
     knowledge || inventoryOnly ? await list("article", locale) : []
   rows.legal[locale] = legal || inventoryOnly ? await list("legal", locale) : []
+  rows.section[locale] =
+    knowledge || inventoryOnly ? await list("section", locale) : []
 }
 const inventory = {
   target,
@@ -396,8 +399,19 @@ const articleRow = (locale, slug) =>
   slugsFor(slug)
     .map((s) => rows.article[locale].find((r) => r.slug === s))
     .find(Boolean)
-const sectionFor = (locale, anchor) =>
-  articleRow(locale, anchor)?.section?.documentId
+const sectionFor = (locale, anchor) => {
+  const existing = articleRow(locale, anchor)?.section?.documentId
+  if (existing) return existing
+
+  // A new article locale cannot point to an anchor article that does not yet
+  // exist. Use the anchor's shared section identity only when that section is
+  // already offered in the requested locale.
+  const anchorSection = articleRow("en", anchor)?.section?.documentId
+
+  return rows.section[locale].some((row) => row.documentId === anchorSection)
+    ? anchorSection
+    : undefined
+}
 
 if (knowledge) {
   for (const spec of KNOWLEDGE_ARTICLES) {
