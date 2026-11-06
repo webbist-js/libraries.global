@@ -3,14 +3,14 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, expect, it, vi } from "vitest"
 
-import { FreePlansCard } from "../FreePlansCard"
 import { LibraryStaffSection } from "../LibraryStaffSection"
-import { MembershipPlans } from "../MembershipPlans"
+import { OfferCards } from "../OfferCards"
 import { PlanCompareTable } from "../PlanCompareTable"
 import { ProFaq } from "../ProFaq"
-import { ProFreeRoutes } from "../ProFreeRoutes"
+import { SupporterMilestone } from "../SupporterMilestone"
 
 import cs from "../../../../../../../../locales/cs.json"
+import es from "../../../../../../../../locales/es.json"
 import fr from "../../../../../../../../locales/fr.json"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
@@ -31,18 +31,24 @@ it.each([
   {
     locale: "fr" as const,
     messages: fr,
-    free: "Compte gratuit",
-    question: "Puis-je annuler ?",
+    explorer: "Explorateur",
+    api: "Accès API",
   },
   {
     locale: "cs" as const,
     messages: cs,
-    free: "Bezplatný účet",
-    question: "Mohu členství zrušit?",
+    explorer: "Průzkumník",
+    api: "Přístup k API",
+  },
+  {
+    locale: "es" as const,
+    messages: es,
+    explorer: "Explorador",
+    api: "Acceso a la API",
   },
 ])(
-  "renders membership content and plan lists in $locale without missing messages",
-  ({ locale, messages, free, question }) => {
+  "renders the offers, comparison and FAQ in $locale without missing messages",
+  ({ locale, messages, explorer, api }) => {
     const errors: Error[] = []
     render(
       <NextIntlClientProvider
@@ -51,19 +57,24 @@ it.each([
         timeZone="UTC"
         onError={(error) => errors.push(error)}
       >
-        <FreePlansCard signedIn={false} />
+        <OfferCards
+          viewer={{
+            signedIn: true,
+            standing: "contributor",
+            isStaff: true,
+            hasApi: true,
+          }}
+        />
+        <SupporterMilestone />
         <LibraryStaffSection isStaff />
-        <MembershipPlans currentPlan="free" />
         <PlanCompareTable />
-        <ProFreeRoutes />
         <ProFaq />
       </NextIntlClientProvider>
     )
     expect(errors).toEqual([])
-    expect(screen.getByRole("heading", { name: free })).toBeTruthy()
-    expect(screen.getByText(question)).toBeTruthy()
-    expect(screen.queryByText("Included now")).toBeNull()
-    if (locale === "cs") expect(screen.queryByText("Questions")).toBeNull()
-    expect(screen.queryByText("Free Pro automatically")).toBeNull()
+    expect(screen.getByRole("heading", { name: explorer })).toBeTruthy()
+    expect(screen.getByRole("heading", { name: api })).toBeTruthy()
+    expect(screen.queryByText("What’s included")).toBeNull()
+    expect(document.body.textContent).not.toMatch(/\bTeam\b|£600/)
   }
 )

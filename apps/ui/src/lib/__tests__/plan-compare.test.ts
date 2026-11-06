@@ -1,185 +1,101 @@
-import { FEATURES } from "@repo/access"
 import { describe, expect, it } from "vitest"
 
 import {
   ATLAS_SHEET_ROW_IDS,
   availableNow,
-  COMPARE_PLANS,
-  compareRowsById,
+  columnHas,
+  COMPARE_COLUMNS,
   compareGroups,
-  type CompareRow,
-  ROADMAP_KEY_FOR_FEATURE,
-  shortPrice,
-  splitPrice,
-  yearlySavingMonths,
+  compareRowIds,
+  compareRowsById,
+  rowMessageKey,
 } from "../plan-compare"
-import { planCard, PRO_FEATURE_COPY } from "../plans"
 
-const rows = () => compareGroups().flatMap((g) => g.rows)
-const row = (id: string): CompareRow => {
-  const found = rows().find((r) => r.id === id)
-  if (!found) throw new Error(`no ${id} row`)
+import cs from "../../../locales/cs.json"
+import en from "../../../locales/en.json"
+import es from "../../../locales/es.json"
+import fr from "../../../locales/fr.json"
 
-  return found
-}
+const row = (id: string) => compareRowsById([id])[0]!
 
 describe("compareGroups", () => {
-  it("has a column for every plan, in plan order", () => {
-    expect(COMPARE_PLANS).toEqual([
+  it("compares the five ways to use Libraries Global", () => {
+    expect(COMPARE_COLUMNS).toEqual([
       "public",
-      "free",
-      "supporter",
-      "pro",
-      "team",
+      "explorer",
+      "contributor",
+      "staff",
+      "api",
     ])
   })
 
-  it("lists every Pro feature exactly once", () => {
-    const ids = rows().map((r) => r.id)
-    for (const f of FEATURES)
-      expect(ids.filter((id) => id === f)).toHaveLength(1)
-  })
-
-  it("never repeats a row label", () => {
-    const labels = rows().map((r) => r.label)
-    expect(labels.filter((l, i) => labels.indexOf(l) !== i)).toEqual([])
-  })
-
-  it("gives row ids that are unique", () => {
-    const ids = rows().map((r) => r.id)
-    expect(new Set(ids).size).toBe(ids.length)
-  })
-
-  it("shows live exports and exact limits for Supporter, Pro and Team", () => {
-    expect(row("atlas.export").cells).toEqual({
+  it("follows the resolver: Explorer tools free when signed in, Reach earned or bought", () => {
+    expect(row("atlas.contextLayers").cells).toEqual({
       public: "no",
-      free: "no",
-      supporter: "yes",
-      pro: "yes",
-      team: "yes",
+      explorer: "yes",
+      contributor: "yes",
+      staff: "yes",
+      api: "yes",
     })
-    expect(row("atlas.export").cellLabels).toEqual({
-      supporter: "500",
-      pro: "10,000",
-      team: "50,000",
+    expect(row("atlas.reach").cells).toMatchObject({
+      explorer: "no",
+      staff: "no",
+      contributor: "yes",
+      api: "yes",
     })
+    expect(row("atlas.reach").cellValues).toEqual({
+      contributor: "reachWeek",
+      api: "reachHour",
+    })
+    expect(row("atlas.serviceReach").cells).toMatchObject({
+      contributor: "no",
+      api: "yes",
+    })
+    expect(columnHas("staff", "atlas.reach")).toBe(false)
   })
 
-  it("never ticks a feature that isn't built", () => {
-    for (const f of FEATURES) {
-      if (PRO_FEATURE_COPY[f].status !== "soon") continue
-      expect(Object.values(row(f).cells)).not.toContain("yes")
+  it("keeps staff tools in the staff column only", () => {
+    for (const id of ["staffWorkspace", "staffEditing", "staffWidgets"])
+      expect(row(id).cells).toEqual({
+        public: "no",
+        explorer: "no",
+        contributor: "no",
+        staff: "yes",
+        api: "no",
+      })
+    expect(row("staffTraffic").cells.staff).toBe("soon")
+  })
+
+  it("never ticks a planned feature and links listed roadmap items", () => {
+    expect(row("index.alerts").cells.explorer).toBe("soon")
+    expect(row("index.alerts").roadmapKey).toBe("search-alerts")
+    const now = availableNow(compareGroups()).flatMap((g) => g.rows)
+    expect(now.some((r) => r.id === "index.alerts")).toBe(false)
+    expect(now.some((r) => r.id === "library.history")).toBe(true)
+  })
+
+  it("finds every Atlas sheet row", () => {
+    expect(compareRowsById(ATLAS_SHEET_ROW_IDS)).toHaveLength(
+      ATLAS_SHEET_ROW_IDS.length
+    )
+  })
+
+  it.each(Object.entries({ en, fr, cs, es }))(
+    "%s has a label for every row, cell value and group",
+    (_, messages) => {
+      const content = messages.membershipContent as unknown as {
+        rows: Record<string, string>
+        cells: Record<string, string>
+        groups: Record<string, string>
+      }
+      for (const id of compareRowIds())
+        expect(content.rows[rowMessageKey(id)], id).toBeTypeOf("string")
+      for (const group of compareGroups()) {
+        expect(content.groups[group.id], group.id).toBeTypeOf("string")
+        for (const r of group.rows)
+          for (const value of Object.values(r.cellValues ?? {}))
+            expect(content.cells[value!], value).toBeTypeOf("string")
+      }
     }
-  })
-
-  it("keeps team-only features out of the Pro column", () => {
-    expect(row("team.workspace").cells.pro).toBe("no")
-    expect(row("team.workspace").cells.team).toBe("soon")
-  })
-
-  it("carries free-tier includes forward to every paid plan", () => {
-    expect(row("follow-libraries-and-save-events").cells).toEqual({
-      public: "no",
-      free: "yes",
-      supporter: "yes",
-      pro: "yes",
-      team: "yes",
-    })
-  })
-
-  it("shows public library record downloads as available for every plan", () => {
-    const downloads = row("library-record-downloads")
-    expect(downloads.label).toBe("Library record downloads")
-    expect(Object.values(downloads.cells)).toEqual(
-      Array.from({ length: 5 }, () => "yes")
-    )
-  })
-
-  it("leaves out pointer lines like 'Everything in Public'", () => {
-    expect(rows().some((r) => r.label.startsWith("Everything in"))).toBe(false)
-    expect(rows().some((r) => r.label === "Pro for every seat")).toBe(false)
-  })
-})
-
-describe("availableNow", () => {
-  it("drops rows no plan has yet, and empty groups", () => {
-    const groups = availableNow(compareGroups())
-    const ids = groups.flatMap((g) => g.rows.map((r) => r.id))
-    expect(ids).toContain("atlas.export")
-    expect(ids).toContain("library-record-downloads")
-    expect(ids).not.toContain("team.workspace")
-    for (const g of groups) expect(g.rows.length).toBeGreaterThan(0)
-  })
-})
-
-describe("compareRowsById", () => {
-  it("finds every row the Atlas sheet asks for, in its order", () => {
-    expect(compareRowsById(ATLAS_SHEET_ROW_IDS).map((r) => r.id)).toEqual([
-      ...ATLAS_SHEET_ROW_IDS,
-    ])
-  })
-})
-
-describe("shortPrice", () => {
-  it("shortens each plan's headline price", () => {
-    expect(shortPrice(planCard("public").price)).toBe("Free")
-    expect(shortPrice(planCard("supporter").price)).toBe("£3/mo")
-    expect(shortPrice(planCard("pro").price)).toBe("£5/mo")
-    expect(shortPrice(planCard("team").price)).toBe("£600/yr")
-  })
-})
-
-describe("yearlySavingMonths", () => {
-  it("counts the months a yearly price saves", () => {
-    expect(
-      yearlySavingMonths({ monthly: "£3/month", yearly: "£30/year" })
-    ).toBe(2)
-    expect(yearlySavingMonths(planCard("pro").price)).toBe(2)
-  })
-
-  it("is null without a monthly and yearly pair, or without a saving", () => {
-    expect(yearlySavingMonths("free")).toBeNull()
-    expect(yearlySavingMonths(planCard("team").price)).toBeNull()
-    expect(
-      yearlySavingMonths({ monthly: "£5/month", yearly: "£60/year" })
-    ).toBeNull()
-  })
-})
-
-describe("splitPrice", () => {
-  it("splits an amount from its period and any suffix", () => {
-    expect(splitPrice("£3/month")).toEqual({
-      amount: "£3",
-      period: "month",
-      suffix: "",
-    })
-    expect(splitPrice("£480/year ex VAT")).toEqual({
-      amount: "£480",
-      period: "year",
-      suffix: " ex VAT",
-    })
-  })
-
-  it("is null for text it can't read", () => {
-    expect(splitPrice(undefined)).toBeNull()
-    expect(splitPrice("Free")).toBeNull()
-  })
-})
-
-describe("roadmap links", () => {
-  const rows = compareGroups().flatMap((g) => g.rows)
-
-  it("points only unbuilt features at a roadmap item", () => {
-    for (const row of rows.filter((r) => r.roadmapKey))
-      expect(Object.values(row.cells)).not.toContain("yes")
-    expect(rows.find((r) => r.id === "index.compare")?.roadmapKey).toBe(
-      "compare-libraries"
-    )
-    expect(rows.find((r) => r.id === "team.embed")?.roadmapKey).toBeUndefined()
-  })
-
-  it("maps every key to a valid roadmap item key", () => {
-    for (const key of Object.values(ROADMAP_KEY_FOR_FEATURE))
-      expect(key).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-  })
+  )
 })

@@ -1,5 +1,6 @@
 "use client"
 
+import { CONTRIBUTOR_REACH_PER_WEEK } from "@repo/access"
 import type { AtlasReachMode } from "@repo/shared-data"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
@@ -18,9 +19,10 @@ export function LibraryReachTeaser({
   readonly libraryId?: string
 }) {
   const t = useTranslations("atlasAnalysis")
+  const tLock = useTranslations("accessLocks")
   const { can, ready } = useEntitlements()
   const [mode, setMode] = useState<AtlasReachMode>("walking")
-  const isPro = ready && can("atlas.analysis")
+  const canReach = ready && can("atlas.reach")
   const params = new URLSearchParams({ layers: "pins,reach", reachMode: mode })
   if (libraryId) params.set("lib", libraryId)
 
@@ -47,7 +49,7 @@ export function LibraryReachTeaser({
         />
       </label>
       <p className="m-0 text-base">{t("reachExplanation")}</p>
-      {isPro ? (
+      {canReach ? (
         <Link
           href={`/map?${params}`}
           className="min-h-11 rounded-full bg-(--t-action-primary) px-4 py-3 text-center text-base font-semibold text-white no-underline"
@@ -56,13 +58,24 @@ export function LibraryReachTeaser({
         </Link>
       ) : (
         <>
-          <p className="m-0 text-base">{t("reachAccessMessage")}</p>
-          <Link
-            href="/plans"
-            className="min-h-11 py-3 text-base font-semibold underline"
-          >
-            {t("seePlans")}
-          </Link>
+          <p className="m-0 text-base font-semibold">
+            {tLock("reachLocked", { count: CONTRIBUTOR_REACH_PER_WEEK })}
+          </p>
+          <p className="m-0 text-base">{tLock("reachApi")}</p>
+          <div className="flex flex-wrap gap-x-5">
+            <Link
+              href="/contribute"
+              className="inline-flex min-h-11 items-center text-base font-semibold underline"
+            >
+              {tLock("howToContribute")}
+            </Link>
+            <Link
+              href="/developers"
+              className="inline-flex min-h-11 items-center text-base font-semibold underline"
+            >
+              {tLock("aboutApiAccess")}
+            </Link>
+          </div>
         </>
       )}
     </div>

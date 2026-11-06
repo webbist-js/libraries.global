@@ -1,5 +1,5 @@
-// "In the area": counted figures, the numbered nearby list and the Pro
-// reach teaser. Every figure here comes from the index (library-area.ts).
+// "In the area": counted figures, the numbered nearby list and the Reach
+// teaser. Every figure here comes from the index (library-area.ts).
 
 import { formatDistance } from "@/components/library/library-page.helpers"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"

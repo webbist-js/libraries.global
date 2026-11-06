@@ -21,6 +21,7 @@ import { FollowingSection } from "@/app/[locale]/profile/[username]/_components/
 import { OverviewSection } from "@/app/[locale]/profile/[username]/_components/sections/OverviewSection"
 import { SettingsShell } from "@/app/[locale]/profile/settings/_components/SettingsShell"
 import { useContactModal } from "@/components/contact/ContactModalProvider"
+import { membershipPropsOf } from "@/components/membership/membership-props"
 import { MembershipDashboard } from "@/components/membership/MembershipDashboard"
 import { NetworkAffiliations } from "@/components/networks/NetworkAffiliations"
 import { NotificationInbox } from "@/components/notifications/NotificationInbox"
@@ -29,7 +30,6 @@ import { ProfileWorkspacePrimaryActions } from "@/components/profile/ProfileWork
 import { StaffDrawerMenuItem } from "@/components/staff/StaffDrawerMenuItem"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
-import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import type { BetterAuthUser } from "@/lib/auth-server"
 import { Link } from "@/lib/navigation"
 import {
@@ -226,7 +226,7 @@ export function ProfileWorkspaceActions({
       role="group"
     >
       <div className="profile-workspace-account-actions">
-        {["supporter", "pro", "team"].includes(user.plan ?? "") ? (
+        {user.facts?.includes("apiCustomer") ? (
           <Button
             variant="surface"
             size="pill"
@@ -310,11 +310,7 @@ function ProfileWorkspaceSection({
       return (
         <MembershipDashboard
           embedded
-          plan={user.plan ?? "free"}
-          source={user.planSource ?? "none"}
-          teams={sessionTeamsOf(user)}
-          asOf={data.asOf}
-          staffCount={staffLibrariesOf(user).length}
+          {...membershipPropsOf(user)}
           recognition={
             profile
               ? {

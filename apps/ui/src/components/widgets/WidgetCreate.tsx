@@ -56,11 +56,12 @@ export function WidgetCreate({ data }: { readonly data: WidgetWorkspace }) {
   if (!data.team.active)
     return (
       <Notice
-        title="Active Team access required"
+        title="This workspace is closed"
         tone="warn"
         icon="mdi:pause-circle-outline"
       >
-        Reactivate your Team from Billing & seats to create widgets.
+        The site team has closed this workspace, so new widgets can’t be
+        created. Contact them through the contact page to reopen it.
       </Notice>
     )
 

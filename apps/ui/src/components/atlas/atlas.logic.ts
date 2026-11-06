@@ -1,5 +1,6 @@
 // Pure logic for the Atlas Explorer map: filtering, facet counts, layer
 // registry and URL state. No React or MapLibre imports — unit-testable.
+import type { Feature } from "@repo/access"
 import {
   ATLAS_TYPE_GROUPS,
   ATLAS_OPERATOR_GROUPS,
@@ -624,16 +625,26 @@ export function loosenSuggestions(
 
 // ── Layers ──────────────────────────────────────────────────────────────────
 
-export type Tier = "public" | "free" | "pro"
+/**
+ * What the viewer may switch on: "public" (no account), "free" (signed in
+ * without the Explorer tools), "pro" (Explorer: every former Pro browse
+ * layer, free when signed in) and "reach" (Explorer plus one-library
+ * Reach, `atlas.reach`).
+ */
+export type Tier = "public" | "free" | "pro" | "reach"
 
 /**
- * The atlas tier for a session plan. Fails closed: only a known paid plan
- * (pro or team) unlocks "pro", and anything unexpected is treated as free.
+ * The atlas tier for the viewer's entitlements. Fails closed: context
+ * layers need `atlas.contextLayers`, Reach needs `atlas.reach`.
  */
-export function tierForPlan(plan: string | null | undefined): Tier {
-  if (plan === "pro" || plan === "team") return "pro"
+export function tierForAccess(access: {
+  signedIn: boolean
+  can: (feature: Feature) => boolean
+}): Tier {
+  if (!access.signedIn) return "public"
+  if (!access.can("atlas.contextLayers")) return "free"
 
-  return plan === "public" ? "public" : "free"
+  return access.can("atlas.reach") ? "reach" : "pro"
 }
 
 export type LayerId =
@@ -781,7 +792,7 @@ export const LAYERS: LayerDef[] = [
     name: "Travel-time reach",
     sub: "Walking and cycling to a library",
     group: "coverage",
-    tier: "pro",
+    tier: "reach",
     ready: true,
     requiresPins: true,
   },
@@ -852,15 +863,18 @@ export function layerDef(id: LayerId): LayerDef {
   return LAYERS.find((l) => l.id === id)!
 }
 
-const RANK: Record<Tier, number> = { public: 0, free: 1, pro: 2 }
+const RANK: Record<Tier, number> = { public: 0, free: 1, pro: 2, reach: 3 }
 
 export type LayerAccess = "available" | "signin" | "pro" | "soon"
 
 export function layerAccess(def: LayerDef, tier: Tier): LayerAccess {
-  // Readiness takes priority for every plan: upgrades cannot unlock a feature
+  // Readiness takes priority for every tier: no access can unlock a feature
   // until its data and renderer exist.
   if (!def.ready) return "soon"
-  if (RANK[tier] < RANK[def.tier]) return def.tier === "pro" ? "pro" : "signin"
+  // Explorer layers are free with an account, so a visitor is asked to sign
+  // in; Reach is earned or bought, so it stays locked below its tier.
+  if (RANK[tier] < RANK[def.tier])
+    return def.tier !== "reach" && tier === "public" ? "signin" : "pro"
 
   return "available"
 }

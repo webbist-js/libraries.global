@@ -37,7 +37,7 @@ export function AtlasSection({
           <p className="home-section-copy">{band.text}</p>
           <ul className="home-atlas-labels">
             <li>UK travel-time analysis</li>
-            <li>Reach · Pro / Team</li>
+            <li>Reach · free for contributors</li>
             <li>Library map · free</li>
           </ul>
           <div className="home-inline-links">

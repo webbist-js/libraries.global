@@ -237,7 +237,7 @@ describe("TeamJoin", () => {
         .getAttribute("href")
     ).toBe("/knowledge/contributing/teams-for-library-services")
     expect(
-      screen.getByText(/API access is an optional Team add-on/)
+      screen.getByText(/API access is bought separately on the Developers page/)
     ).toBeTruthy()
     expect(mocks.request).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole("button", { name: "Join Kent Libraries" }))

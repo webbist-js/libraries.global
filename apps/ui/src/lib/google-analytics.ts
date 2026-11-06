@@ -334,12 +334,9 @@ export function installGoogleAnalytics(
       ? path === "/plans"
       : [
           "/plans",
-          "/staff/teams/new",
-          "/staff/teams/billing",
           "/developers",
           "/developers/keys",
           "/developers/usage",
-          "/staff/teams/api",
           "/contribute/membership/checkout",
         ].includes(path)
   }

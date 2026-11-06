@@ -29,9 +29,8 @@ export const AREA_STYLE: Record<
 
 const PLAN_STYLE: Record<RoadmapPlan, string> = {
   free: "bg-(--tint-public-bg) text-(--tint-public-fg)",
-  supporter: "border border-(--t-border-hi) text-(--t-ink-base)",
-  pro: "bg-(--t-accent-chip) text-(--t-accent-primary)",
-  team: "bg-(--t-bg-inverse) text-(--t-ink-inverse)",
+  contributor: "bg-(--t-accent-chip) text-(--t-accent-primary)",
+  staff: "bg-(--t-bg-inverse) text-(--t-ink-inverse)",
   api: "bg-(--t-bg-surface) text-(--t-accent-primary)",
 }
 

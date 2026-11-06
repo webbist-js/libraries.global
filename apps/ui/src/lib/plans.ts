@@ -1,504 +1,335 @@
 /**
- * The one source of plan copy and prices for the Membership page
- * (/plans), the Atlas plans sheet and the account menu.
- * Individual amounts are the agreed tax-inclusive GBP base prices. Checkout
- * reads the owned Stripe catalogue and confirms the actual recurring charge.
- * No other code may hard-code an amount.
+ * The offers shown on the plans page (/plans), the Atlas plans sheet, the
+ * homepage and the profile standing section: Explorer, Contributor (with the
+ * earned Supporter milestone), Verified Staff, API Access and Sponsor.
+ *
+ * This file holds structure and numbers only. Copy lives in the
+ * `membershipContent` messages, keyed by the ids here. Allowances come from
+ * the access resolver (`@repo/access`) and amounts from
+ * `membership-pricing.json`, so the pages can never promise more than the
+ * code grants. No other code may hard-code a price or allowance.
+ *
+ * Payment, sponsorship and recognition never grant editing authority,
+ * staff verification, ranking or editorial treatment.
  */
-import { type Feature, FEATURES, resolveEntitlements } from "@repo/access"
-
-import { CONTACT_EMAIL } from "./constants"
+import {
+  type AccessStanding,
+  API_REACH_PER_DAY,
+  API_REACH_PER_HOUR,
+  API_REACH_SERVICE_LIBRARIES,
+  CONTRIBUTION_ACTIVITY_DAYS,
+  CONTRIBUTOR_MIN_ACCEPTED,
+  CONTRIBUTOR_REACH_PER_WEEK,
+  EXPLORER_LIMITS,
+  type Feature,
+  recognitionOf,
+  SUPPORTER_MIN_ACCEPTED,
+} from "@repo/access"
 
 import pricing from "./membership-pricing.json"
 
-const pounds = (pence: number) => `£${pence / 100}`
-const publicServiceRate = 1 - pricing.team.publicServiceDiscountPercent / 100
+export type OfferKey = "explorer" | "contributor" | "staff" | "api" | "sponsor"
 
-export type PlanCardKey = "public" | "free" | "supporter" | "pro" | "team"
-export type DigitalPlanKey = "supporter" | "pro" | "team"
-
-export type PlanPrice =
-  | { monthly?: string; yearly?: string; note?: string }
-  | "free"
-
-export type PlanCta = {
-  kind: "none" | "signup" | "soon" | "contact"
-  label: string
-  href?: string
-}
+export const OFFER_KEYS: readonly OfferKey[] = [
+  "explorer",
+  "contributor",
+  "staff",
+  "api",
+  "sponsor",
+]
 
 /**
- * One line of a plan's list. "feature" is built; "soon" isn't yet, and its
- * text says "(coming soon)" so it reads honestly anywhere; "note" is context
- * rather than something the plan includes.
+ * One line of an offer's list, by message id. "live" is built; "soon" is
+ * planned and shows a chip; "note" is context rather than something the
+ * offer includes.
  */
-export type PlanInclude = { text: string; kind: "feature" | "soon" | "note" }
+export type OfferItem = { id: string; status: "live" | "soon" | "note" }
 
-export type PlanCard = {
-  key: PlanCardKey
-  name: string
-  price: PlanPrice
-  who: string
-  includes: PlanInclude[]
-  cta: PlanCta
+export type OfferPrice =
+  | { kind: "free" }
+  /** Free, unlocked by accepted contributions. */
+  | { kind: "earned" }
+  | { kind: "monthly"; pence: number; taxInclusive: true }
+  /** Annual sponsorship, quoted from the lowest suggested anchor. */
+  | { kind: "yearFrom"; pence: number }
+
+export type Offer = {
+  key: OfferKey
+  icon: string
+  price: OfferPrice
+  items: readonly OfferItem[]
+  cta: { id: string; href: string }
 }
 
-export const PRICES_ARE_PLACEHOLDERS = false
+const live = (id: string): OfferItem => ({ id, status: "live" })
+const soon = (id: string): OfferItem => ({ id, status: "soon" })
+const note = (id: string): OfferItem => ({ id, status: "note" })
 
-export const ATLAS_PER_CAPITA_LABEL =
-  "Library access: population comparisons for countries and supported local areas"
-
-/** Pro's price after the founding offer, for the placeholders footnote. */
-export const PRO_STANDARD_PRICE_NOTE = `Pro’s standard price will be ${pounds(pricing.pro.standard.month)}/month or ${pounds(pricing.pro.standard.year)}/year when the standard offer is introduced; it is not currently offered. Founding members keep ${pounds(pricing.pro.founding.month)}.`
-
-/** What each feature does, and whether it's built. Only built ones are "live". */
-export const PRO_FEATURE_COPY: Record<
-  Feature,
-  { label: string; status: "live" | "soon" }
-> = {
-  "library.team": {
-    label: "Team organiser: assign staff to your libraries",
-    status: "live",
+/** The £100 API offer, as sold. */
+export const API_OFFER = {
+  monthPence: pricing.api.month,
+  requests: pricing.api.included.requests,
+  bytes: pricing.api.included.bytes,
+  mib: pricing.api.included.bytes / 1024 ** 2,
+  analysisCredits: pricing.api.included.analysisCredits,
+  overage: {
+    requestPence: pricing.api.overage.requestPence,
+    mibPence: pricing.api.overage.mibPence,
+    creditPence: pricing.api.overage.creditPence,
+    capMinPence: pricing.api.overage.capMinPence,
+    capMaxPence: pricing.api.overage.capMaxPence,
+    capDefaultPence: pricing.api.overage.capDefaultPence,
   },
-  "library.traffic": {
-    label: "Traffic reports",
-    status: "soon",
-  },
-  "atlas.export": {
-    label: "Export Atlas results as CSV or GeoJSON",
-    status: "live",
-  },
-  "atlas.contextLayers": {
-    label: "Deprivation and households without a car in supported UK areas",
-    status: "live",
-  },
-  "atlas.analysis": {
-    label: "Travel-time reach: walking and cycling catchments across the UK",
-    status: "live",
-  },
-  "atlas.compare": {
-    label: "Compare Library access between two areas",
-    status: "live",
-  },
-  "index.export": {
-    label: "Export search results with attribution",
-    status: "soon",
-  },
-  "index.alerts": { label: "Alerts on saved searches", status: "soon" },
-  "index.compare": {
-    label: "Compare up to six libraries side by side",
-    status: "soon",
-  },
-  "library.watch": {
-    label: "Watch a library for changes and closures",
-    status: "soon",
-  },
-  "library.notes": { label: "Private notes on any library", status: "soon" },
-  "library.history": {
-    label: "See every change to a library, field by field",
-    status: "live",
-  },
-  "data.benchmark": {
-    label: "Benchmark a service against similar ones",
-    status: "soon",
-  },
-  "data.explorerExport": { label: "Export derived metrics", status: "soon" },
-  "events.personalFeed": {
-    label: "A personal calendar feed",
-    status: "soon",
-  },
-  "team.workspace": {
-    label: "Shared Atlas analysis workspace",
-    status: "soon",
-  },
-  "team.bulkUpload": {
-    label: "Bulk updates from a spreadsheet",
-    status: "soon",
-  },
-  "team.embed": {
-    label:
-      "Embeddable widgets for your website: a library finder, directory, charts and stats",
-    status: "live",
-  },
-  "api.key": { label: "Higher allowances for the API add-on", status: "soon" },
-}
-
-/**
- * The line under a library's Changes list when values are hidden: the
- * field names are public, previous → next is Pro (`library.history`).
- */
-export const LIBRARY_HISTORY_UPGRADE = {
-  text: "See what changed, field by field, with Supporter or Pro.",
-  href: "/plans",
 } as const
 
-/** A plan's features, read from the resolver so the copy can't drift from it. */
-export function featuresOf(plan: DigitalPlanKey): Feature[] {
-  const { features } = resolveEntitlements({
-    signedIn: true,
-    now: new Date(0),
-    grants: [{ plan, expiresAt: null }],
-  })
+export type SponsorTier = "community" | "service" | "founding"
 
-  return FEATURES.filter((f) => features.has(f))
-}
-
-const feature = (text: string): PlanInclude => ({ text, kind: "feature" })
-
-/** Saved views (and, equally, saved searches) a plan keeps. */
-export function savedViewLimitOf(plan: "free" | "supporter" | "pro" | "team") {
-  return resolveEntitlements({
-    signedIn: true,
-    now: new Date(0),
-    grants: plan === "free" ? [] : [{ plan, expiresAt: null }],
-  }).limits.savedViews
-}
-
-export function exportLimitOf(plan: "supporter" | "pro" | "team") {
-  return resolveEntitlements({
-    signedIn: true,
-    now: new Date(0),
-    grants: [{ plan, expiresAt: null }],
-  }).limits.exportRows
-}
-const soon = (text: string): PlanInclude => ({
-  text: `${text} (coming soon)`,
-  kind: "soon",
-})
-const note = (text: string): PlanInclude => ({ text, kind: "note" })
-
-/** Live features first, listed plainly; the rest flagged "(coming soon)". */
-function featureItems(
-  features: readonly Feature[],
-  plan?: "supporter" | "pro" | "team"
-): PlanInclude[] {
-  const copy = features.map((f) => ({
-    ...PRO_FEATURE_COPY[f],
-    label:
-      f === "atlas.export" && plan
-        ? `${PRO_FEATURE_COPY[f].label} (up to ${exportLimitOf(plan).toLocaleString("en-GB")} libraries per download)`
-        : PRO_FEATURE_COPY[f].label,
-  }))
-
-  return [
-    ...copy.filter((c) => c.status === "live").map((c) => feature(c.label)),
-    ...(features.includes("atlas.analysis")
-      ? [feature(ATLAS_PER_CAPITA_LABEL)]
-      : []),
-    ...copy.filter((c) => c.status === "soon").map((c) => soon(c.label)),
+/** Suggested annual amounts for a sponsorship conversation, not entitlements. */
+export const SPONSOR_TIERS: readonly { key: SponsorTier; yearPence: number }[] =
+  [
+    { key: "community", yearPence: pricing.sponsor.community },
+    { key: "service", yearPence: pricing.sponsor.service },
+    { key: "founding", yearPence: pricing.sponsor.founding },
   ]
-}
 
-const PRO_ONLY = featuresOf("pro")
-const SUPPORTER_ONLY = featuresOf("supporter")
-// Inherited features are covered by "Everything in Supporter". Export stays
-// explicit because Pro raises the per-download limit.
-const PRO_UPGRADES = PRO_ONLY.filter(
-  (feature) => feature === "atlas.export" || !SUPPORTER_ONLY.includes(feature)
-)
-const TEAM_ONLY = featuresOf("team").filter((f) => !PRO_ONLY.includes(f))
-const TEAM_FEATURES = featureItems(TEAM_ONLY)
+/** Recognition thresholds and the Contributor Reach allowance. */
+export const RECOGNITION = {
+  contributorAt: CONTRIBUTOR_MIN_ACCEPTED,
+  supporterAt: SUPPORTER_MIN_ACCEPTED,
+  activityDays: CONTRIBUTION_ACTIVITY_DAYS,
+  reachPerWeek: CONTRIBUTOR_REACH_PER_WEEK,
+} as const
 
-/**
- * Team's list: Pro for every seat, then what the Team organiser and a
- * covered library's owners can do today (`library.team` plus choosing who
- * may go live, which the knowledge base describes as one feature), then
- * what's on the roadmap.
- */
-const TEAM_TRAFFIC = soon(PRO_FEATURE_COPY["library.traffic"].label)
-const TEAM_LIVE = TEAM_FEATURES.filter((i) => i.kind === "feature")
-const ORGANISER = PRO_FEATURE_COPY["library.team"].label
-const TEAM_INCLUDES: PlanInclude[] = [
-  feature("Pro for every seat"),
-  ...TEAM_LIVE.filter((i) => i.text === ORGANISER),
-  feature("Choose who can go live for a mobile library"),
-  ...TEAM_LIVE.filter((i) => i.text !== ORGANISER),
-  feature(
-    "Optional API add-on: search, list and browse libraries by country, region and area, with managed keys and usage reporting"
-  ),
-  feature(
-    "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation"
-  ),
-  TEAM_TRAFFIC,
-  ...TEAM_FEATURES.filter(
-    (i) => i.kind === "soon" && i.text !== TEAM_TRAFFIC.text
-  ),
-  note(
-    "Create your Team online, choose seats and pay yearly through Stripe. Your organiser invites colleagues and assigns Libraries; staff authority is verified separately."
-  ),
-]
+/** Explorer's fair-use limits, from the resolver. */
+export const EXPLORER_ALLOWANCES = {
+  savedViews: EXPLORER_LIMITS.savedViews,
+  exportRows: EXPLORER_LIMITS.exportRows,
+  exportsPerDay: EXPLORER_LIMITS.exportsPerDay,
+} as const
 
-/** Contact for Library verification and existing Team agreements. */
-export const TEAM_CONTACT_HREF = `mailto:${CONTACT_EMAIL}?subject=Team%20plan`
+/** The browser Reach bonus for organisers of a covered API account. */
+export const API_REACH = {
+  perHour: API_REACH_PER_HOUR,
+  perDay: API_REACH_PER_DAY,
+  serviceLibraries: API_REACH_SERVICE_LIBRARIES,
+} as const
 
-export const PLANS: readonly PlanCard[] = [
+export const OFFERS: readonly Offer[] = [
   {
-    key: "public",
-    name: "Public",
-    price: "free",
-    who: "Anyone, no account needed",
-    includes: [
-      feature("Every library record, with hours and services"),
-      feature("Search, the map and lists"),
-      feature(
-        "Read the Journal, Knowledge articles, events, noticeboard and public discussions"
-      ),
-      feature("Browse community drives and library notices and timetables"),
-      feature("Library record downloads"),
+    key: "explorer",
+    icon: "mdi:compass-outline",
+    price: { kind: "free" },
+    items: [
+      live("records"),
+      live("contribute"),
+      live("follow"),
+      live("contextLayers"),
+      live("libraryAccess"),
+      live("history"),
+      live("savedViews"),
+      live("export"),
+      soon("alerts"),
+      soon("notes"),
     ],
-    cta: { kind: "none", label: "No account needed" },
+    cta: { id: "signUp", href: "/auth/register?callbackUrl=/plans" },
   },
   {
-    key: "free",
-    name: "Free account",
-    price: "free",
-    who: "Anyone who signs up",
-    includes: [
-      feature("Everything in Public"),
-      feature("Contribute corrections, photos and new libraries"),
-      feature("Follow libraries and save events"),
-      feature("Start discussions, reply, react and follow conversations"),
-      feature("Join community drives; propose one after 5 accepted changes"),
-      feature("Suggest Knowledge edits and pitch Journal stories"),
-      feature("Apply for Knowledge or Journal editing roles"),
-      feature("Claim your library and use the free staff tools"),
-      feature("3 saved views and 3 saved searches"),
-      feature("An opt-in weekly digest of followed libraries"),
-      feature(
-        "Population density: area averages and supported population grids"
-      ),
+    key: "contributor",
+    icon: "mdi:hand-heart-outline",
+    price: { kind: "earned" },
+    items: [
+      live("everythingExplorer"),
+      live("reach"),
+      live("credit"),
+      live("supporter"),
+      note("noAuthority"),
     ],
-    cta: {
-      kind: "signup",
-      label: "Create a free account",
-      href: "/auth/register?callbackUrl=/plans",
-    },
+    cta: { id: "contribute", href: "/contribute" },
   },
   {
-    key: "supporter",
-    name: "Supporter",
-    price: {
-      monthly: `${pounds(pricing.supporter.month)}/month`,
-      yearly: `${pounds(pricing.supporter.year)}/year`,
-    },
-    who: "People who value the index and want to keep it running",
-    includes: [
-      feature("Everything in Free account"),
-      feature("An optional Supporter mark you can hide"),
-      feature("Optional credit on the supporters page"),
-      ...featureItems(SUPPORTER_ONLY, "supporter"),
-      note(
-        "Payment never changes your community role or how edits are reviewed."
-      ),
-    ],
-    cta: { kind: "soon", label: "Coming soon" },
-  },
-  {
-    key: "pro",
-    name: "Pro",
-    price: {
-      monthly: `${pounds(pricing.pro.founding.month)}/month`,
-      yearly: `${pounds(pricing.pro.founding.year)}/year`,
-      note: "Founding price, held while you stay a member.",
-    },
-    who: "Researchers, journalists, consultants and enthusiasts",
-    includes: [
-      feature("Everything in Supporter"),
-      ...featureItems(PRO_UPGRADES, "pro"),
-      feature(
-        "Service Reach: up to 50 libraries and a 20,000 km² envelope, one travel time for larger areas"
-      ),
-      feature("Unlimited saved views and searches"),
-      soon("Transit stops and lines"),
-    ],
-    cta: { kind: "soon", label: "Coming soon" },
-  },
-  {
-    key: "team",
-    name: "Team",
-    price: {
-      yearly: `${pounds(pricing.team.year)}/year ex VAT`,
-      note: `Includes ${pricing.team.includedSeats} seats; ${pounds(pricing.team.extraSeatYear)}/year per extra seat. Public library services get ${pricing.team.publicServiceDiscountPercent}% off: ${pounds(pricing.team.year * publicServiceRate)}/year and ${pounds(pricing.team.extraSeatYear * publicServiceRate)}/year per extra seat, ex VAT.`,
-    },
-    who: "Library services, councils, universities and consultancies",
-    includes: TEAM_INCLUDES,
-    cta: {
-      kind: "signup",
-      label: "Create your Team",
-      href: "/staff/teams/new",
-    },
-  },
-]
-
-/** Short summaries for the supporters page; planned status follows the plan copy. */
-export const FREE_FEATURE_SUMMARIES = [
-  {
-    title: "Every library record",
+    key: "staff",
     icon: "mdi:bank-outline",
-    description:
-      "Hours, addresses, accessibility and sources, without an account.",
-    include: "Every library record",
+    price: { kind: "free" },
+    items: [
+      live("workspace"),
+      live("editing"),
+      live("organisation"),
+      live("widgets"),
+      soon("traffic"),
+      note("scope"),
+    ],
+    cta: { id: "claim", href: "/contribute/claim" },
   },
   {
-    title: "Library record downloads",
-    icon: "mdi:download",
-    description:
-      "Export from any library page as CSV or JSON, with sources and licence.",
-    include: "Library record downloads",
+    key: "api",
+    icon: "mdi:code-braces",
+    price: { kind: "monthly", pence: API_OFFER.monthPence, taxInclusive: true },
+    items: [
+      live("allowance"),
+      live("keys"),
+      live("overage"),
+      live("reach"),
+      live("noOrganisation"),
+      note("noAuthority"),
+    ],
+    cta: { id: "developers", href: "/developers" },
   },
   {
-    title: "Suggest corrections and add libraries",
-    icon: "mdi:pencil-outline",
-    description: "Every change is reviewed, then credited to you.",
-    include: "Contribute corrections",
-  },
-  {
-    title: "Noticeboard and drives",
-    icon: "mdi:pin-outline",
-    description:
-      "Join community drives, or propose one once you have 5 accepted changes.",
-    include: "Join community drives",
-  },
-  {
-    title: "Knowledge and journal editing",
-    icon: "mdi:file-document-outline",
-    description:
-      "Suggest edits and pitch stories; apply for an editor role to write and review articles.",
-    include: "Apply for Knowledge",
-  },
-  {
-    title: "Saved views and searches",
-    icon: "mdi:bookmark-outline",
-    description: "Keep 3 of each on a free account.",
-    include: "3 saved views",
-  },
-  {
-    title: "Weekly digest",
-    icon: "mdi:email-outline",
-    description:
-      "An opt-in weekly email when libraries you follow have changed.",
-    include: "An opt-in weekly digest",
-  },
-].map(({ include, ...copy }) => ({
-  ...copy,
-  planned:
-    PLANS.filter((plan) => plan.key === "public" || plan.key === "free")
-      .flatMap((plan) => plan.includes)
-      .find((item) => item.text.startsWith(include))?.kind === "soon",
-}))
-
-/**
- * The homepage's short take on each plan: a one-line "who pays" and a
- * sentence on what it's for. Kept here so homepage copy can't drift from
- * the Membership page, and honest about what's built today.
- */
-export const PLAN_TEASERS: readonly {
-  key: Exclude<PlanCardKey, "supporter">
-  tagline: string
-  summary: string
-}[] = [
-  {
-    key: "public",
-    tagline: "Free, no account",
-    summary: "Search, browse and read every library record.",
-  },
-  {
-    key: "free",
-    tagline: "Free",
-    summary: "Contribute, follow libraries and switch on more atlas layers.",
-  },
-  {
-    key: "pro",
-    tagline: "Free for regular contributors",
-    summary:
-      "Compare libraries with population, explore walking and cycling catchments across the UK, and export Atlas results.",
-  },
-  {
-    key: "team",
-    tagline: "For library services",
-    summary:
-      "Library access and the other Pro tools for every seat, plus a team organiser who assigns staff to your libraries.",
+    key: "sponsor",
+    icon: "mdi:handshake-outline",
+    price: { kind: "yearFrom", pence: SPONSOR_TIERS[0]!.yearPence },
+    items: [
+      live("programmes"),
+      live("reporting"),
+      live("acknowledgement"),
+      note("independence"),
+    ],
+    cta: { id: "sponsor", href: "/sponsor" },
   },
 ]
 
-export function planCard(key: PlanCardKey): PlanCard {
-  return PLANS.find((p) => p.key === key)!
+export function offer(key: OfferKey): Offer {
+  return OFFERS.find((o) => o.key === key)!
 }
 
 /**
- * Whether a card shows its call to action, given the viewer's plan key
- * ("public" or undefined for a visitor). Members never see a sign-up prompt,
- * and a plan they already hold shows no "coming soon". Contact calls remain
- * available; membership pages resolve Team management links separately.
+ * Numbers every offer, comparison and FAQ message may interpolate, so the
+ * copy follows the resolver and pricing file. Money is formatted per locale.
  */
-export function showPlanCta(
-  card: PlanCard,
-  currentPlan: string | undefined
-): boolean {
-  const signedIn = currentPlan !== undefined && currentPlan !== "public"
-  if (card.cta.kind === "signup" && signedIn) return false
+export function offerValues(locale: string) {
+  const money = (pence: number) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: pricing.currency.toUpperCase(),
+      maximumFractionDigits: pence % 100 === 0 ? 0 : 2,
+      minimumFractionDigits: pence % 100 === 0 ? 0 : 2,
+    }).format(pence / 100)
+  const count = (n: number) => new Intl.NumberFormat(locale).format(n)
+  const sponsor = Object.fromEntries(
+    SPONSOR_TIERS.map((tier) => [`${tier.key}Price`, money(tier.yearPence)])
+  ) as Record<`${SponsorTier}Price`, string>
 
-  return card.key !== currentPlan || card.cta.kind === "contact"
-}
-
-/** The one-line price: "Free", else the monthly price, else the yearly one. */
-export function priceHeadline(price: PlanPrice): string {
-  if (price === "free") return "Free"
-
-  return price.monthly ?? price.yearly ?? ""
-}
-
-/**
- * The plan's short name for a menu chip: "Free", "Supporter", "Pro" or
- * "Team". A missing or unknown plan reads as Free (missing session fields
- * deny), so the account menu and the Contribute menu never say more than
- * the session does.
- */
-export function planShortName(plan: string | null | undefined): string {
-  switch (plan) {
-    case "team":
-      return "Team"
-    case "pro":
-      return "Pro"
-    case "supporter":
-      return "Supporter"
-
-    default:
-      return "Free"
+  return {
+    savedViews: count(EXPLORER_ALLOWANCES.savedViews),
+    exportRows: count(EXPLORER_ALLOWANCES.exportRows),
+    exportsPerDay: EXPLORER_ALLOWANCES.exportsPerDay,
+    reachPerWeek: RECOGNITION.reachPerWeek,
+    contributorAt: RECOGNITION.contributorAt,
+    supporterAt: RECOGNITION.supporterAt,
+    activityDays: RECOGNITION.activityDays,
+    apiPrice: money(API_OFFER.monthPence),
+    apiRequests: count(API_OFFER.requests),
+    apiMib: count(API_OFFER.mib),
+    apiCredits: count(API_OFFER.analysisCredits),
+    requestPrice: money(API_OFFER.overage.requestPence),
+    mibPrice: money(API_OFFER.overage.mibPence),
+    creditPrice: money(API_OFFER.overage.creditPence),
+    capMin: money(API_OFFER.overage.capMinPence),
+    capMax: money(API_OFFER.overage.capMaxPence),
+    capDefault: money(API_OFFER.overage.capDefaultPence),
+    apiReachPerHour: API_REACH.perHour,
+    apiReachPerDay: API_REACH.perDay,
+    apiReachLibraries: API_REACH.serviceLibraries,
+    ...sponsor,
   }
 }
 
+export type OfferValues = ReturnType<typeof offerValues>
+
+/** The status of each Explorer-or-better tool: only "live" ones are built. */
+export const FEATURE_STATUS: Record<Feature, "live" | "soon"> = {
+  "atlas.contextLayers": "live",
+  "atlas.analysis": "live",
+  "atlas.export": "live",
+  "atlas.compare": "live",
+  "atlas.reach": "live",
+  "atlas.serviceReach": "live",
+  "index.export": "soon",
+  "index.alerts": "soon",
+  "index.compare": "soon",
+  "library.watch": "soon",
+  "library.notes": "soon",
+  "library.history": "live",
+  "data.benchmark": "soon",
+  "data.explorerExport": "soon",
+  "events.personalFeed": "soon",
+  "api.key": "live",
+}
+
 /**
- * One line on how the member holds their plan, or null when there's nothing
- * to say (free, public, or a value we don't recognise).
+ * The line under a library's Changes list when values are hidden: field
+ * names are public, previous → next needs a signed-in (Explorer) account.
  */
-export function planStatusCopy(
-  plan: string | null | undefined,
-  planSource: string | null | undefined
-): string | null {
-  const name =
-    plan === "supporter"
-      ? "Supporter"
-      : plan === "pro"
-        ? "Pro"
-        : plan === "team"
-          ? "Team"
-          : null
-  if (!name) return null
+export const LIBRARY_HISTORY_UPGRADE = {
+  text: "Sign in to see what changed, field by field. It's free.",
+  href: "/auth/signin",
+} as const
 
-  switch (planSource) {
-    case "grant":
-      return `You have ${name}, granted by the libraries.global team.`
-    case "earned":
-      return `You have ${name} for earning 5,000 points and contributing within the last 30 days.`
-    case "verified":
-      return `You have ${name} as verified library staff, student or charity.`
-    case "team":
-      return `You have ${name} through your Team seat.`
-    case "paid":
-      return `You're on ${name}.`
+export type StandingProgress = {
+  /** Earned standing for display; "public" only for a signed-out viewer. */
+  standing: AccessStanding
+  accepted: number
+  /** The next milestone, or null once Supporter is reached. */
+  next: { standing: "contributor" | "supporter"; at: number } | null
+  /** Accepted contributions still needed for the next milestone. */
+  remaining: number
+  /** Progress towards Supporter, 0–100, rounded down. */
+  percent: number
+}
 
-    default:
-      return null
+/**
+ * Where an account stands on the way to Supporter. Recognition is counted
+ * from accepted contributions, never points or payment, and a moderator's
+ * revocation resets it to Explorer.
+ */
+export function standingProgress(input: {
+  signedIn: boolean
+  acceptedContributions?: number | null
+  recognitionRevoked?: boolean | null
+}): StandingProgress {
+  const accepted =
+    Number.isSafeInteger(input.acceptedContributions) &&
+    (input.acceptedContributions as number) > 0
+      ? (input.acceptedContributions as number)
+      : 0
+  if (!input.signedIn)
+    return {
+      standing: "public",
+      accepted: 0,
+      next: { standing: "contributor", at: RECOGNITION.contributorAt },
+      remaining: RECOGNITION.contributorAt,
+      percent: 0,
+    }
+  const recognition = recognitionOf(input)
+  const standing: AccessStanding =
+    recognition === "none" ? "explorer" : recognition
+  const next =
+    standing === "supporter"
+      ? null
+      : standing === "contributor"
+        ? { standing: "supporter" as const, at: RECOGNITION.supporterAt }
+        : { standing: "contributor" as const, at: RECOGNITION.contributorAt }
+  const counted = input.recognitionRevoked ? 0 : accepted
+
+  return {
+    standing,
+    accepted: counted,
+    next,
+    remaining: next ? Math.max(0, next.at - counted) : 0,
+    percent: Math.min(
+      100,
+      Math.floor((counted / RECOGNITION.supporterAt) * 100)
+    ),
   }
+}
+
+/** The standing's message key under `membershipContent.standing`. */
+export function standingName(
+  standing: AccessStanding | string | null | undefined
+) {
+  return standing === "supporter" ||
+    standing === "contributor" ||
+    standing === "explorer"
+    ? standing
+    : "public"
 }

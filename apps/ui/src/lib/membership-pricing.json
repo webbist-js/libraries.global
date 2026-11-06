@@ -1,17 +1,24 @@
 {
-  "version": "2026-10-13",
+  "version": "2026-11-06",
   "currency": "gbp",
-  "supporter": { "month": 300, "year": 3000 },
-  "pro": {
-    "founding": { "month": 500, "year": 5000 },
-    "standard": { "month": 800, "year": 8000 },
-    "standardAvailable": false
+  "api": {
+    "month": 10000,
+    "taxBehavior": "inclusive",
+    "included": {
+      "requests": 10000,
+      "bytes": 262144000,
+      "analysisCredits": 100
+    },
+    "overage": {
+      "requestPence": 1,
+      "mibPence": 10,
+      "creditPence": 50,
+      "taxBehavior": "exclusive",
+      "capMinPence": 1000,
+      "capMaxPence": 50000,
+      "capStepPence": 1000,
+      "capDefaultPence": 10000
+    }
   },
-  "team": {
-    "includedSeats": 5,
-    "year": 60000,
-    "extraSeatYear": 12000,
-    "publicServiceDiscountPercent": 20
-  },
-  "teamApi": { "month": 1500 }
+  "sponsor": { "community": 250000, "service": 500000, "founding": 1000000 }
 }

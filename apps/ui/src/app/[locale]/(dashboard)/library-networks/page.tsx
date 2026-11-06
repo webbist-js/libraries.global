@@ -64,7 +64,10 @@ export default async function NetworksPage({
           title="Connect your libraries"
           body="Work for a service or university system? Request access to manage its library records together."
           action={{ href: "/staff/networks", label: "Represent a network" }}
-          secondary={{ href: "/plans#plan-team", label: "Explore Team plans" }}
+          secondary={{
+            href: "/staff/teams",
+            label: "Set up a free team workspace",
+          }}
         />
       }
       navigation={

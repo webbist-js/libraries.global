@@ -14,7 +14,6 @@ export async function PUT(
     method: "PUT",
     limiter: "write",
     bodyKeys: ["staffRole", "canGoLive"],
-    entitlement: "library.team",
   })
 }
 
@@ -32,6 +31,5 @@ export async function DELETE(
     method: "DELETE",
     limiter: "write",
     bodyKeys: [],
-    entitlement: "library.team",
   })
 }

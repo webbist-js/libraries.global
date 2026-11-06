@@ -19,7 +19,7 @@ const user: BetterAuthUser = {
   createdAt: new Date(),
   updatedAt: new Date(),
   capabilities: [],
-  plan: "free",
+  facts: ["explorer"],
 }
 function State() {
   const state = useProfileDrawer()

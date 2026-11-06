@@ -1,150 +1,179 @@
 import type Stripe from "stripe"
-import { describe, expect, it, vi, afterEach } from "vitest"
+import { describe, expect, it } from "vitest"
 
-import { apiConfig, apiAccessActive, apiMonth } from "../config"
+import { API_OFFER_LIMITS, API_OFFER_RATES } from "../config"
+import { currentPeriod, membershipCovered } from "../period"
 import { projectApiMembership } from "../projection"
+import type { ApiOffer } from "../types"
 
-const subscription = () =>
+const START = 1_793_000_000 // 2026-10-27
+const END = START + 30 * 86_400
+const offer: ApiOffer = {
+  offerVersion: "2026-11-06",
+  priceId: "price_api",
+  taxBehavior: "inclusive",
+  limits: API_OFFER_LIMITS,
+  overageRates: API_OFFER_RATES,
+  overagePrices: { requests: "price_r", bytes: "price_b", credits: "price_c" },
+  consentVersion: "2.0",
+}
+const item = (id: string, price: string, usage: "licensed" | "metered") => ({
+  id,
+  quantity: usage === "licensed" ? 1 : undefined,
+  price: {
+    id: price,
+    unit_amount: usage === "licensed" ? 10000 : null,
+    currency: "gbp",
+    recurring: { interval: "month", interval_count: 1, usage_type: usage },
+  },
+})
+const subscription = (extra: ReturnType<typeof item>[] = []) =>
   ({
     id: "sub_api",
+    customer: "cus_api",
     livemode: false,
     status: "active",
     cancel_at_period_end: false,
-    items: {
-      data: [
-        {
-          quantity: 1,
-          price: {
-            id: "price_api",
-            unit_amount: 1500,
-            currency: "gbp",
-            recurring: { interval: "month", interval_count: 1 },
-          },
-        },
-      ],
-    },
+    items: { data: [item("si_base", "price_api", "licensed"), ...extra] },
   }) as unknown as Stripe.Subscription
-const invoice = () =>
+const invoice = (
+  over: {
+    start?: number
+    end?: number
+    price?: string
+    subscription?: string
+    customer?: string
+    status?: string
+    paidAt?: number
+    proration?: boolean
+  } = {}
+) =>
   ({
-    status: "paid",
-    parent: { subscription_details: { subscription: "sub_api" } },
+    id: "in_api",
+    status: over.status ?? "paid",
+    customer: over.customer ?? "cus_api",
+    status_transitions: { paid_at: over.paidAt ?? (over.start ?? START) + 60 },
+    parent: {
+      subscription_details: { subscription: over.subscription ?? "sub_api" },
+    },
     lines: {
       data: [
         {
-          amount: 1500,
-          period: { end: 2_000_000_000 },
-          pricing: { price_details: { price: "price_api" } },
+          amount: 10000,
+          period: { start: over.start ?? START, end: over.end ?? END },
+          pricing: { price_details: { price: over.price ?? "price_api" } },
           parent: {
             subscription_item_details: {
-              subscription: "sub_api",
-              proration: false,
+              subscription: over.subscription ?? "sub_api",
+              proration: over.proration ?? false,
             },
           },
         },
       ],
     },
   }) as unknown as Stripe.Invoice
-afterEach(() => vi.unstubAllEnvs())
+const iso = (s: number) => new Date(s * 1000).toISOString()
 
-describe("Team API paid coverage", () => {
-  it("starts history at settlement and preserves that first date across renewals", () => {
-    const firstInvoice = invoice()
-    firstInvoice.status_transitions = {
-      paid_at: 1_790_000_000,
-    } as Stripe.Invoice.StatusTransitions
-    const first = projectApiMembership(
-      subscription(),
-      [firstInvoice],
-      null,
-      "price_api",
-      apiConfig().limits
-    )
-    expect(first.startedAt).toBe(new Date(1_790_000_000_000).toISOString())
-    const renewal = invoice()
-    renewal.status_transitions = {
-      paid_at: 1_800_000_000,
-    } as Stripe.Invoice.StatusTransitions
-    const renewed = projectApiMembership(
-      subscription(),
-      [renewal],
-      first,
-      "price_api",
-      first.limits
-    )
-    expect(renewed.startedAt).toBe(first.startedAt)
-    expect(
-      projectApiMembership(subscription(), [], null, "price_api", first.limits)
-        .startedAt
-    ).toBeNull()
+describe("API paid projection and webhook binding", () => {
+  it("stores the settled item period [start, end) and the purchase snapshot", () => {
+    const m = projectApiMembership(subscription(), [invoice()], null, offer)
+    expect(m.period).toEqual({ start: iso(START), end: iso(END) })
+    expect(m.paidThrough).toBe(iso(END))
+    expect(m.offer).toEqual(offer)
+    expect(m.limits).toEqual(API_OFFER_LIMITS)
+    expect(m.startedAt).toBe(iso(START + 60))
   })
-  it("requires settled matching invoice lines and pins the purchased limits", () => {
-    const limits = apiConfig().limits
+  it("grants nothing from status or checkout alone, unpaid or foreign invoices", () => {
     expect(
-      projectApiMembership(subscription(), [], null, "price_api", limits)
-        .paidThrough
+      projectApiMembership(subscription(), [], null, offer).period
     ).toBeNull()
-    const other = invoice()
-    other.parent!.subscription_details!.subscription = "sub_other"
-    expect(
-      projectApiMembership(subscription(), [other], null, "price_api", limits)
-        .paidThrough
-    ).toBeNull()
-    const settled = projectApiMembership(
+    for (const foreign of [
+      invoice({ status: "open" }),
+      invoice({ subscription: "sub_other" }),
+      invoice({ customer: "cus_other" }),
+      invoice({ price: "price_other" }),
+      invoice({ proration: true }),
+    ])
+      expect(
+        projectApiMembership(subscription(), [foreign], null, offer).paidThrough
+      ).toBeNull()
+  })
+  it("is order-independent and opens the next allowance only when it is paid", () => {
+    const first = invoice()
+    const renewal = invoice({ start: END, end: END + 31 * 86_400 })
+    const a = projectApiMembership(
       subscription(),
+      [renewal, first],
+      null,
+      offer
+    )
+    const b = projectApiMembership(
+      subscription(),
+      [first, renewal],
+      null,
+      offer
+    )
+    expect(a).toEqual(b)
+    expect(a.period?.start).toBe(iso(END))
+    // A replayed older event cannot move the period back.
+    const replay = projectApiMembership(subscription(), [first], a, offer)
+    expect(replay.period).toEqual(a.period)
+    // Renewal unpaid: the ended period remains and covers nothing after it.
+    const unpaid = projectApiMembership(subscription(), [first], null, offer)
+    expect(currentPeriod(unpaid, new Date((END + 60) * 1000))).toBeNull()
+    expect(
+      membershipCovered(unpaid, "sandbox", new Date((END + 60) * 1000))
+    ).toBe(false)
+  })
+  it("gives a partial first period its full allowance", () => {
+    const partial = invoice({ start: START, end: START + 3 * 86_400 })
+    const m = projectApiMembership(subscription(), [partial], null, offer)
+    expect(m.limits.requests).toBe(10_000)
+    expect(currentPeriod(m, new Date((START + 86_400) * 1000))).toEqual(
+      m.period
+    )
+  })
+  it("binds metered overage items only to the snapshot's Prices", () => {
+    const m = projectApiMembership(
+      subscription([
+        item("si_r", "price_r", "metered"),
+        item("si_b", "price_b", "metered"),
+        item("si_c", "price_c", "metered"),
+      ]),
       [invoice()],
       null,
-      "price_api",
-      limits
+      offer
     )
-    expect(settled.paidThrough).toBe(new Date(2_000_000_000_000).toISOString())
-    expect(settled.limits).toEqual(limits)
-    expect(apiAccessActive(settled)).toBe(true)
-    expect(apiAccessActive({ ...settled, revoked: true })).toBe(false)
-    expect(apiAccessActive({ ...settled, mode: "live" })).toBe(false)
-    expect(apiAccessActive({ ...settled, status: "paused" })).toBe(false)
-  })
-  it("rejects unrelated prices and extra items", () => {
-    const sub = subscription()
-    sub.items.data[0]!.price.id = "price_other"
+    expect(m.overageItems).toEqual({
+      requests: "si_r",
+      bytes: "si_b",
+      credits: "si_c",
+    })
     expect(() =>
-      projectApiMembership(sub, [], null, "price_api", apiConfig().limits)
-    ).toThrow("api_subscription_catalogue_mismatch")
-    sub.items.data.push(sub.items.data[0]!)
-    expect(() =>
-      projectApiMembership(sub, [], null, "price_other", apiConfig().limits)
-    ).toThrow()
-  })
-  it("preserves reversal holds on replay and never grants an unpaid first purchase", () => {
-    const first = projectApiMembership(
-      subscription(),
-      [],
-      null,
-      "price_api",
-      apiConfig().limits
-    )
-    expect(apiAccessActive(first)).toBe(false)
-    const paid = projectApiMembership(
-      subscription(),
-      [invoice()],
-      null,
-      "price_api",
-      apiConfig().limits
-    )
-    expect(
       projectApiMembership(
-        subscription(),
-        [invoice()],
-        { ...paid, revoked: true },
-        "price_api",
-        paid.limits
-      ).revoked
-    ).toBe(true)
-  })
-  it("uses calendar months in UTC and refuses malformed limits", () => {
-    expect(apiMonth(new Date("2026-12-31T23:59:59Z")).end.toISOString()).toBe(
-      "2027-01-01T00:00:00.000Z"
+        subscription([item("si_x", "price_unknown", "metered")]),
+        [],
+        null,
+        offer
+      )
+    ).toThrow("api_subscription_catalogue_mismatch")
+    const wrongBase = subscription()
+    wrongBase.items.data[0]!.price.id = "price_other"
+    expect(() => projectApiMembership(wrongBase, [], null, offer)).toThrow(
+      "api_subscription_catalogue_mismatch"
     )
-    vi.stubEnv("TEAM_API_MONTHLY_BYTES", "Infinity")
-    expect(() => apiConfig()).toThrow("api_configuration_invalid")
+  })
+  it("keeps a refund or dispute hold across replays", () => {
+    const paid = projectApiMembership(subscription(), [invoice()], null, offer)
+    const held = projectApiMembership(
+      subscription(),
+      [invoice()],
+      { ...paid, revoked: true },
+      offer
+    )
+    expect(held.revoked).toBe(true)
+    expect(
+      membershipCovered(held, "sandbox", new Date((START + 100) * 1000))
+    ).toBe(false)
   })
 })

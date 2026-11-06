@@ -7,13 +7,19 @@ import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import { LIVE_LOCALES } from "@/lib/live-locales"
 import {
+  playgroundJob,
   playgroundPlacePath,
   playgroundPlaces,
   playgroundRequest,
   playgroundRecords,
+  playgroundScope,
+  playgroundServices,
   PLAYGROUND_MAX_RECORDS,
+  PLAYGROUND_RESOURCE_OPERATIONS,
   type PlaygroundInput,
   type PlaygroundOperation,
+  type PlaygroundReachMode,
+  type PlaygroundSummaryOperation,
 } from "@/lib/team-api/playground"
 
 const operations = [
@@ -47,7 +53,71 @@ const operations = [
     method: "GET",
     path: "/api/v1/places/{country}/{region}/{area}/libraries",
   },
+  {
+    id: "services",
+    label: "List services",
+    method: "GET",
+    path: "/api/v1/services",
+  },
+  {
+    id: "service",
+    label: "Read a service",
+    method: "GET",
+    path: "/api/v1/services/{ref}",
+  },
+  {
+    id: "serviceLibraries",
+    label: "Service members",
+    method: "GET",
+    path: "/api/v1/services/{ref}/libraries",
+  },
+  {
+    id: "summary",
+    label: "Summary analysis",
+    method: "POST",
+    path: "/api/v1/analysis/summary",
+  },
+  {
+    id: "reach",
+    label: "Reach analysis",
+    method: "POST",
+    path: "/api/v1/analysis/reach",
+  },
+  {
+    id: "job",
+    label: "Job status",
+    method: "GET",
+    path: "/api/v1/analysis/jobs/{id}",
+  },
+  {
+    id: "jobResult",
+    label: "Job result",
+    method: "GET",
+    path: "/api/v1/analysis/jobs/{id}/result",
+  },
+  {
+    id: "proposal",
+    label: "Proposal status",
+    method: "GET",
+    path: "/api/v1/submissions/{id}",
+  },
 ] as const
+/** Most status checks one "Poll job" press makes (each is a metered request). */
+const POLL_LIMIT = 10
+const SUMMARY_OPERATIONS: {
+  value: PlaygroundSummaryOperation
+  label: string
+}[] = [
+  { value: "service.profile", label: "Service profile (1 credit)" },
+  { value: "service.coverage", label: "Service coverage (5 credits)" },
+  { value: "place.profile", label: "Place profile (1 credit)" },
+  { value: "place.coverage", label: "Place coverage (5 credits)" },
+]
+const REACH_MODES: { value: PlaygroundReachMode; label: string }[] = [
+  { value: "library", label: "One library (5 credits)" },
+  { value: "service", label: "Service reporting area (20 credits)" },
+  { value: "network", label: "Whole service (40 credits, when enabled)" },
+]
 const PLACE_OPERATIONS = new Set<PlaygroundOperation>([
   "places",
   "placeLibraries",
@@ -94,6 +164,38 @@ function requestProblem(chosen: PlaygroundInput, token: string) {
   if (!token.trim()) return "Enter your Team API key before running a request."
   if (chosen.operation === "placeLibraries" && !chosen.country?.trim())
     return "Enter a country slug, or browse places to choose one."
+  const needsService =
+    ["service", "serviceLibraries"].includes(chosen.operation) ||
+    (chosen.operation === "summary" &&
+      chosen.summaryOperation?.startsWith("service.")) ||
+    (chosen.operation === "reach" && chosen.reachMode !== "library")
+  if (needsService && !chosen.serviceRef?.trim())
+    return "Enter a service ref, or list services to choose one."
+  if (
+    chosen.operation === "summary" &&
+    chosen.summaryOperation?.startsWith("place.") &&
+    !chosen.country?.trim()
+  )
+    return "Enter a country slug for a place summary."
+  if (
+    chosen.operation === "reach" &&
+    chosen.reachMode === "library" &&
+    !chosen.entityRef.trim()
+  )
+    return "Enter a Library entityRef, or search to choose one."
+  if (
+    chosen.operation === "reach" &&
+    chosen.reachMode === "service" &&
+    !chosen.areaCode?.trim()
+  )
+    return "Enter the service's reporting area code."
+  if (
+    (chosen.operation === "job" || chosen.operation === "jobResult") &&
+    !chosen.jobId?.trim()
+  )
+    return "Run a summary or Reach request first, or paste a job id."
+  if (chosen.operation === "proposal" && !chosen.proposalId?.trim())
+    return "Paste a proposal id returned by a submissions request."
 
   return null
 }
@@ -127,6 +229,16 @@ export function ApiPlayground({
   const [country, setCountry] = useState("")
   const [region, setRegion] = useState("")
   const [area, setArea] = useState("")
+  const [serviceRef, setServiceRef] = useState("")
+  const [summaryOperation, setSummaryOperation] =
+    useState<PlaygroundSummaryOperation>("service.profile")
+  const [reachMode, setReachMode] = useState<PlaygroundReachMode>("library")
+  const [travelMode, setTravelMode] = useState<"walking" | "cycling">("walking")
+  const [minutes, setMinutes] = useState(0)
+  const [areaCode, setAreaCode] = useState("")
+  const [jobId, setJobId] = useState("")
+  const [proposalId, setProposalId] = useState("")
+  const [polling, setPolling] = useState(false)
   const [token, setToken] = useState("")
   const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
@@ -145,7 +257,19 @@ export function ApiPlayground({
     country,
     region,
     area,
+    serviceRef,
+    summaryOperation,
+    reachMode,
+    travelMode,
+    minutes: minutes || undefined,
+    areaCode,
+    jobId,
+    proposalId,
   }
+  const resourceOperation = PLAYGROUND_RESOURCE_OPERATIONS.includes(operation)
+  const services =
+    operation === "services" ? playgroundServices(result?.body) : []
+  const job = playgroundJob(result?.body)
   const placeOperation = PLACE_OPERATIONS.has(operation)
   const places = result?.request.includes("/libraries")
     ? []
@@ -156,8 +280,8 @@ export function ApiPlayground({
     setError("")
   }
 
-  async function run(chosen: PlaygroundInput) {
-    if (pending || controller.current) return
+  async function run(chosen: PlaygroundInput): Promise<unknown> {
+    if (pending || controller.current) return null
     // Keep the returned list available while inspecting individual records.
     if (chosen.operation === "read") setError("")
     else clear()
@@ -165,7 +289,7 @@ export function ApiPlayground({
     if (invalid) {
       setError(invalid)
 
-      return
+      return null
     }
     const request = playgroundRequest(chosen)
     const description = `${request.method} ${request.path}`
@@ -194,6 +318,10 @@ export function ApiPlayground({
         records:
           chosen.operation === "read" ? records : playgroundRecords(body),
       })
+      const returned = playgroundJob(body)
+      if (returned) setJobId(returned.id)
+
+      return body
     } catch {
       setError(
         "The request could not be completed. Check your connection and try again. A timed-out request may still count toward your Team’s allowance."
@@ -202,6 +330,27 @@ export function ApiPlayground({
       clearTimeout(timeout)
       controller.current = null
       setPending(false)
+    }
+
+    return null
+  }
+
+  /** Poll a pending job a bounded number of times; each check is metered. */
+  async function poll(id: string, firstDelay: number) {
+    if (polling) return
+    setPolling(true)
+    setOperation("job")
+    let delay = firstDelay
+    try {
+      for (let n = 0; n < POLL_LIMIT; n++) {
+        await new Promise((resolve) => setTimeout(resolve, delay * 1000))
+        const body = await run({ ...input, operation: "job", jobId: id })
+        const state = playgroundJob(body)
+        if (!state || state.state !== "pending") break
+        delay = state.retryAfter
+      }
+    } finally {
+      setPolling(false)
     }
   }
 
@@ -284,11 +433,47 @@ export function ApiPlayground({
             />
             <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
               Use an existing key from your Team with{" "}
-              {operation === "search" ? "search:read" : "libraries:read"}{" "}
-              access. The key stays in memory while this page is open and is
-              never saved.
+              {playgroundScope(operation)} access. The key stays in memory while
+              this page is open and is never saved.
             </span>
           </label>
+          {resourceOperation ? (
+            <ResourceFields
+              operation={operation}
+              values={{
+                serviceRef,
+                summaryOperation,
+                reachMode,
+                travelMode,
+                minutes,
+                areaCode,
+                jobId,
+                proposalId,
+                entityRef,
+                country,
+                region,
+                area,
+              }}
+              onChange={(key, value) => {
+                const setters: Record<string, (v: never) => void> = {
+                  serviceRef: setServiceRef,
+                  summaryOperation: setSummaryOperation,
+                  reachMode: setReachMode,
+                  travelMode: setTravelMode,
+                  minutes: setMinutes,
+                  areaCode: setAreaCode,
+                  jobId: setJobId,
+                  proposalId: setProposalId,
+                  entityRef: setEntityRef,
+                  country: setCountry,
+                  region: setRegion,
+                  area: setArea,
+                }
+                setters[key]?.(value as never)
+                clear()
+              }}
+            />
+          ) : null}
           {placeOperation ? (
             <div className="grid gap-5 sm:grid-cols-3">
               {(
@@ -368,6 +553,73 @@ export function ApiPlayground({
         className={`grid min-w-0 gap-5 ${records.length || places.length ? "xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" : ""}`}
       >
         <PlaygroundResponse result={result} pending={pending} />
+        {job?.state === "pending" ? (
+          <section
+            aria-label="Pending job"
+            className="min-w-0 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5"
+          >
+            <h2 className="type-small-heading m-0">Job {job.state}</h2>
+            <p className="m-0 mt-2 font-mono text-xs break-all" translate="no">
+              {job.id}
+            </p>
+            <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
+              Polling checks the job up to {POLL_LIMIT} times, waiting as the
+              API asks between checks. Each check is a metered request; the
+              job&apos;s credits are only spent once it completes.
+            </p>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="mt-4"
+              disabled={pending || polling}
+              aria-busy={polling}
+              onClick={() => void poll(job.id, job.retryAfter)}
+            >
+              {polling ? "Polling…" : "Poll job status"}
+            </Button>
+          </section>
+        ) : null}
+        {services.length ? (
+          <section
+            aria-label="Returned services"
+            className="flex max-h-72 min-w-0 flex-col overflow-hidden rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) xl:max-h-[36rem]"
+          >
+            <h2 className="type-small-heading m-0 border-b border-(--t-border-line) p-5">
+              Returned services
+            </h2>
+            <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
+              {services.map((service) => (
+                <li
+                  key={service.ref}
+                  className="flex min-w-0 flex-wrap items-center gap-2 rounded-2xl px-3 py-2"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-medium [overflow-wrap:anywhere]">
+                      {service.name}
+                    </span>
+                    <span className="block font-mono text-xs text-(--t-ink-dim)">
+                      {service.serviceType} · {service.ref}
+                    </span>
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={pending}
+                    aria-label={`Use ${service.name}`}
+                    onClick={() => {
+                      setServiceRef(service.ref)
+                      setOperation("service")
+                    }}
+                  >
+                    Use
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
         {places.length && operation === "places" ? (
           <section
             aria-label="Returned places"
@@ -546,6 +798,18 @@ function OperationField({
   readonly onEntityRef: (value: string) => void
   readonly onLimit: (value: number) => void
 }) {
+  if (
+    PLAYGROUND_RESOURCE_OPERATIONS.includes(operation) &&
+    operation !== "services" &&
+    operation !== "serviceLibraries"
+  )
+    return (
+      <p className="m-0 self-end text-sm text-(--t-ink-dim)">
+        {operation === "summary" || operation === "reach"
+          ? "Analysis spends credits from your account’s allowance once a result completes. Cached identical results spend none."
+          : "Reading a job, its result or a proposal’s status is a metered request and never spends analysis credits."}
+      </p>
+    )
   if (operation === "places")
     return (
       <p className="m-0 self-end text-sm text-(--t-ink-dim)">
@@ -691,4 +955,140 @@ function RequestSubmit({
       ) : null}
     </>
   )
+}
+
+type ResourceValues = {
+  serviceRef: string
+  summaryOperation: PlaygroundSummaryOperation
+  reachMode: PlaygroundReachMode
+  travelMode: "walking" | "cycling"
+  minutes: number
+  areaCode: string
+  jobId: string
+  proposalId: string
+  entityRef: string
+  country: string
+  region: string
+  area: string
+}
+
+/** Parameters for the service, analysis, job and proposal operations. */
+function ResourceFields({
+  operation,
+  values,
+  onChange,
+}: {
+  readonly operation: PlaygroundOperation
+  readonly values: ResourceValues
+  readonly onChange: (key: keyof ResourceValues, value: string | number) => void
+}) {
+  const text = (
+    key: keyof ResourceValues,
+    label: string,
+    hint: string,
+    placeholder = ""
+  ) => (
+    <label key={key} className="block min-w-0 font-semibold">
+      {label}
+      <input
+        name={key}
+        autoComplete="off"
+        spellCheck={false}
+        placeholder={placeholder}
+        className={field}
+        value={String(values[key])}
+        maxLength={255}
+        onChange={(event) => onChange(key, event.target.value.trim())}
+      />
+      <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
+        {hint}
+      </span>
+    </label>
+  )
+  const choose = (
+    key: keyof ResourceValues,
+    label: string,
+    options: { value: string; label: string }[]
+  ) => (
+    <label key={key} className="block min-w-0 font-semibold">
+      {label}
+      <SelectField
+        name={key}
+        className={field}
+        value={String(values[key])}
+        onValueChange={(value) =>
+          onChange(key, key === "minutes" ? Number(value) : value)
+        }
+        options={options}
+      />
+    </label>
+  )
+  const serviceRef = text(
+    "serviceRef",
+    "Service ref",
+    "A service’s stable ref from “List services”. Slugs can change; refs do not."
+  )
+  const place = (
+    <div key="place" className="grid gap-5 sm:grid-cols-3">
+      {text("country", "Country", "Place slug.", "united-kingdom")}
+      {text("region", "Region", "Optional.", "optional")}
+      {text("area", "Area", "Optional; needs a region.", "optional")}
+    </div>
+  )
+  if (operation === "service" || operation === "serviceLibraries")
+    return serviceRef
+  if (operation === "summary")
+    return (
+      <div className="grid gap-5">
+        {choose("summaryOperation", "Operation", SUMMARY_OPERATIONS)}
+        {values.summaryOperation.startsWith("service.") ? serviceRef : place}
+      </div>
+    )
+  if (operation === "reach")
+    return (
+      <div className="grid gap-5">
+        <div className="grid gap-5 sm:grid-cols-3">
+          {choose("reachMode", "Mode", REACH_MODES)}
+          {choose("travelMode", "Travel", [
+            { value: "walking", label: "Walking" },
+            { value: "cycling", label: "Cycling" },
+          ])}
+          {choose("minutes", "Minutes", [
+            { value: "0", label: "All bands" },
+            ...[5, 10, 15, 30].map((m) => ({
+              value: String(m),
+              label: `${m} minutes`,
+            })),
+          ])}
+        </div>
+        {values.reachMode === "library"
+          ? text(
+              "entityRef",
+              "Library entityRef",
+              "A published Library’s complete entityRef from search or list results."
+            )
+          : serviceRef}
+        {values.reachMode === "service"
+          ? text(
+              "areaCode",
+              "Reporting area code",
+              "One reporting area the service covers, for example E06000023."
+            )
+          : null}
+      </div>
+    )
+  if (operation === "job" || operation === "jobResult")
+    return text(
+      "jobId",
+      "Job id",
+      "Filled in from the last summary or Reach response."
+    )
+  if (operation === "proposal")
+    return text(
+      "proposalId",
+      "Proposal id",
+      "Returned when your software files a proposal. Proposals are not created from the playground, so nothing enters the moderation queue by accident."
+    )
+
+  return null
 }

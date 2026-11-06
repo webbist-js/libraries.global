@@ -6,8 +6,10 @@ import { BillingError } from "@/lib/billing/config"
 import { billingFailure, billingJson, billingUser } from "@/lib/billing/http"
 import { billingStripe } from "@/lib/billing/provider"
 import { readBillingJson } from "@/lib/billing/request-body"
-import { apiCheckout, apiPortal } from "@/lib/team-api/billing"
+import { apiCheckout, apiPortal, setApiOverage } from "@/lib/team-api/billing"
+import { OVERAGE_CAP_MAX_PENCE } from "@/lib/team-api/constants"
 import { apiDashboard } from "@/lib/team-api/dashboard"
+import { keyScopes } from "@/lib/team-api/scopes"
 import { createApiKey, changeApiKey } from "@/lib/team-api/store"
 import { requireApiTeam } from "@/lib/team-api/team"
 import { API_SCOPES } from "@/lib/team-api/types"
@@ -19,11 +21,15 @@ const Action = z.discriminatedUnion("action", [
     .object({
       action: z.literal("create"),
       name: z.string().trim().min(1).max(80),
+      /** Omitted means the read scopes only. */
       scopes: z
         .array(z.enum(API_SCOPES))
         .min(1)
         .max(API_SCOPES.length)
-        .transform((s) => [...new Set(s)]),
+        .transform((s) => [...new Set(s)])
+        .optional(),
+      /** Required for `analysis:run` or `submissions:write`. */
+      confirmScopes: z.literal(true).optional(),
       expiresAt: z.iso
         .datetime()
         .nullable()
@@ -46,6 +52,21 @@ const Action = z.discriminatedUnion("action", [
   z
     .object({ action: z.literal("portal"), locale: z.enum(SUPPORTED_LOCALES) })
     .strict(),
+  z
+    .object({
+      action: z.literal("overage"),
+      enabled: z.boolean(),
+      capPence: z.number().int().min(0).max(OVERAGE_CAP_MAX_PENCE).optional(),
+      termsVersion: z.string().max(40).optional(),
+      /** The organiser's affirmative opt-in; the UI never sends it by default. */
+      confirm: z.literal(true).optional(),
+    })
+    .strict()
+    .refine((v) =>
+      v.enabled
+        ? v.capPence !== undefined && v.termsVersion !== undefined && v.confirm
+        : v.capPence === undefined && v.confirm === undefined
+    ),
 ])
 
 export async function GET(req: Request, { params }: Params) {
@@ -64,24 +85,31 @@ export async function GET(req: Request, { params }: Params) {
   }
 }
 
+/** Organisers buy and manage; members only read the dashboard (GET). */
 export async function POST(req: Request, { params }: Params) {
   try {
     const { teamId } = await params
     const parsed = Action.safeParse(await readBillingJson(req))
     if (!parsed.success) throw new BillingError("invalid_api_action", 400)
     const action = parsed.data
-    const user = await billingUser(
-      req,
-      true,
-      ["create", "rotate"].includes(action.action)
-    )
+    const fresh =
+      ["create", "rotate", "checkout"].includes(action.action) ||
+      (action.action === "overage" && action.enabled)
+    const user = await billingUser(req, true, fresh)
+    // Revocation, billing management and turning overage off stay available
+    // while an organisation is inactive, so a leaked key can be contained.
     const needsActiveTeam =
-      action.action !== "revoke" && action.action !== "portal"
+      ["create", "rotate", "checkout"].includes(action.action) ||
+      (action.action === "overage" && action.enabled)
     const team = await requireApiTeam(teamId, user, true, needsActiveTeam)
     switch (action.action) {
       case "create":
         return billingJson(
-          await createApiKey(authDbPool, teamId, user.id, action),
+          await createApiKey(authDbPool, teamId, user.id, {
+            name: action.name,
+            expiresAt: action.expiresAt,
+            scopes: keyScopes(action.scopes, action.confirmScopes === true),
+          }),
           201
         )
       case "rotate":
@@ -102,6 +130,22 @@ export async function POST(req: Request, { params }: Params) {
       case "portal":
         return billingJson(
           await apiPortal(authDbPool, billingStripe(), teamId, action.locale)
+        )
+      case "overage":
+        return billingJson(
+          await setApiOverage(
+            authDbPool,
+            billingStripe(),
+            teamId,
+            user.id,
+            action.enabled
+              ? {
+                  enabled: true,
+                  capPence: action.capPence!,
+                  termsVersion: action.termsVersion!,
+                }
+              : { enabled: false }
+          )
         )
     }
   } catch (error) {

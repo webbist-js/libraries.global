@@ -4,12 +4,15 @@ import { Icon } from "@iconify/react"
 
 import { useContactModal } from "@/components/contact/ContactModalProvider"
 import { T } from "@/lib/design-tokens"
-import { useMembershipContent } from "@/lib/localized-plans"
-import { exportLimitOf } from "@/lib/plans"
+import {
+  MEMBERSHIP_FAQ_COUNT,
+  useMembershipContent,
+  useOfferValues,
+} from "@/lib/localized-plans"
 
 import { H2_STYLE } from "./PlanBits"
 
-/** Questions: a contact prompt on the left, an accordion on the right. */
+/** Plans questions (or any list passed in): a contact prompt beside an accordion. */
 export function ProFaq({
   id = "pro-faq-h",
   title,
@@ -24,14 +27,12 @@ export function ProFaq({
   readonly firstOpen?: boolean
 } = {}) {
   const m = useMembershipContent()
+  const values = useOfferValues()
   const questions =
     items ??
-    Array.from({ length: 7 }, (_, i) => ({
-      q: m(`faq.${i}.q`),
-      a: m(`faq.${i}.a`, {
-        supporter: exportLimitOf("supporter"),
-        pro: exportLimitOf("pro"),
-      }),
+    Array.from({ length: MEMBERSHIP_FAQ_COUNT }, (_, i) => ({
+      q: m(`faq.${i}.q`, values),
+      a: m(`faq.${i}.a`, values),
     }))
   const { openContact } = useContactModal()
 

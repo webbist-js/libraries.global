@@ -77,7 +77,7 @@ const user: BetterAuthUser = {
   username: "reader",
   profileLoaded: true,
   capabilities: ["staff.area", "journal.directEdit"],
-  plan: "pro",
+  facts: ["explorer"],
 }
 const clients: QueryClient[] = []
 
@@ -364,7 +364,7 @@ it("shows the Staff masthead destination only for hydrated staff or Team members
   ).toBe("/staff")
   fireEvent.keyDown(dialog, { key: "Escape" })
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-  state.extra = { capabilities: ["moderate.queue"], plan: "pro" }
+  state.extra = { capabilities: ["moderate.queue"], facts: ["explorer"] }
   view.rerender(
     <QueryClientProvider client={view.client}>
       <App />

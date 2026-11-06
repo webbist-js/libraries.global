@@ -1,5 +1,5 @@
 /**
- * Pure encoders for the Pro Atlas export: CSV and GeoJSON, as generators of
+ * Pure encoders for the Atlas export: CSV and GeoJSON, as generators of
  * text chunks the route streams. No Next or server imports, so the route and
  * the tests share them. The route supplies the rows (read from our own
  * dataset, never from the client) and the page-URL builder.
@@ -11,8 +11,8 @@ export const EXPORT_ATTRIBUTION =
   "libraries.global contributors; see /knowledge for licences"
 
 /**
- * Most ids one export request may carry: the largest plan's row cap (Team).
- * Each plan's own, smaller cap is enforced separately from `limits.exportRows`.
+ * Most ids one export request may carry: a request-size guard. The account's
+ * own, smaller row cap is enforced separately from `limits.exportRows`.
  */
 export const MAX_EXPORT_IDS = 50_000
 

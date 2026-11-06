@@ -50,7 +50,7 @@ describe("Staff entry visibility", () => {
           true
         )
   })
-  it("keeps creation available only to existing staff or an active verified Team", () => {
+  it("keeps creation available only to existing staff or a verified workspace", () => {
     expect(canAddStaffLibrary(0, [])).toBe(false)
     expect(canAddStaffLibrary(1, [])).toBe(true)
     expect(canAddStaffLibrary(0, [summary])).toBe(true)
@@ -58,8 +58,11 @@ describe("Staff entry visibility", () => {
     expect(canAddStaffLibrary(0, [{ ...summary, status: "lapsed" }])).toBe(
       false
     )
+    // Free workspaces never lapse for payment; only verification matters.
     expect(
       canAddStaffLibrary(0, [{ ...summary, expiresAt: "2000-01-01" }])
-    ).toBe(false)
+    ).toBe(true)
+    const { status: _status, expiresAt: _expiresAt, ...free } = summary
+    expect(canAddStaffLibrary(0, [free])).toBe(true)
   })
 })

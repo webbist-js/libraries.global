@@ -14,17 +14,17 @@ Organisers manage everything from `/developers` (overview, keys, usage, referenc
 
 ## Requests
 
-The machine-readable description is the static `public/openapi.json`; `/llms.txt` is generated from the published Knowledge catalogue. Update both, and the introduction in `src/lib/agent-discovery.ts`, alongside changes to versioned routes, projections, limits or live content locales. Routes behind a disabled flag stay out of the OpenAPI paths until they are callable.
+The machine-readable description is the static `public/openapi.json`; `/llms.txt` is generated from the published Knowledge catalogue. Update both, and the introduction in `src/lib/agent-discovery.ts`, alongside changes to versioned routes, projections, limits or live content locales. Staged routes are listed in OpenAPI with `x-feature-flag` and `x-status: staged`. While a flag is off its routes answer 404 `resource_not_enabled` before any key or ledger work; when on they pass the full gateway. A flag never bypasses authentication, scopes, limits or accounting.
 
 Send `Authorization: Bearer YOUR_API_KEY`. Machine routes authenticate keys directly and do not need browser beta or Basic Auth cookies. The CMS, Meilisearch and the native analysis service stay private behind the bridge.
 
-| Scope | Routes | Flag |
-| --- | --- | --- |
-| `search:read` | `POST /api/v1/search/libraries` | — |
-| `libraries:read` | `GET /api/v1/libraries`, `GET /api/v1/libraries/{entityRef}`, `GET /api/v1/places/...` | — |
-| `services:read` | `GET /api/v1/services`, `/services/{ref}`, `/services/{ref}/libraries` | `API_SERVICE_READS_ENABLED` |
-| `submissions:write` | `POST /api/v1/submissions/libraries`, `POST /api/v1/submissions/corrections`, `GET /api/v1/submissions/{id}` | `API_SUBMISSIONS_ENABLED` |
-| `analysis:run` | `POST /api/v1/analysis/summary`, `POST /api/v1/analysis/reach`, `GET /api/v1/analysis/jobs/{id}` and `/result` | `API_ANALYSIS_ENABLED` (network mode also `API_NETWORK_REACH_ENABLED`) |
+| Scope               | Routes                                                                                                         | Flag                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `search:read`       | `POST /api/v1/search/libraries`                                                                                | —                                                                      |
+| `libraries:read`    | `GET /api/v1/libraries`, `GET /api/v1/libraries/{entityRef}`, `GET /api/v1/places/...`                         | —                                                                      |
+| `services:read`     | `GET /api/v1/services`, `/services/{ref}`, `/services/{ref}/libraries`                                         | `API_SERVICE_READS_ENABLED`                                            |
+| `submissions:write` | `POST /api/v1/submissions/libraries`, `POST /api/v1/submissions/corrections`, `GET /api/v1/submissions/{id}`   | `API_SUBMISSIONS_ENABLED`                                              |
+| `analysis:run`      | `POST /api/v1/analysis/summary`, `POST /api/v1/analysis/reach`, `GET /api/v1/analysis/jobs/{id}` and `/result` | `API_ANALYSIS_ENABLED` (network mode also `API_NETWORK_REACH_ENABLED`) |
 
 New keys default to the read scopes; `analysis:run` and `submissions:write` need explicit confirmation.
 
@@ -40,11 +40,31 @@ curl 'https://libraries.global/api/v1/libraries?locale=en&limit=50' \
 
 Search, list, detail and place routes keep their existing cursor, filter, projection and attribution contracts, now with at most 50 records a page. Follow `meta.nextCursor` as `after` and treat it as opaque. Encode `entityRef` as one path segment. Only live content locales are accepted. Source records carry each Dataset's licence, redistribution and attribution metadata.
 
-Service routes return published services and networks with a stable public ref, their kind and member libraries from the CMS, never caller-supplied memberships. Service membership is not staff authority.
+Service routes return public, reviewed Library Networks (`api::library-network`) with their `serviceType` (`library_service`, `university_system` or `consortium`; not every service is a public-library service) and member libraries from the CMS, never caller-supplied memberships. The stable `ref` is the network's CMS document id, which survives renames; slugs can change and are informational. `meta.semantics` explains type and membership. Service membership is not staff authority. Lists are keyset-paginated by ref, at most 50 a page.
 
-Submissions are untrusted proposals. They enter the Content Moderation queue through a dedicated private route that whitelists fields and records the submitting API account, source licence, idempotency key and review history. They never publish directly, cannot assert staff identity and earn no points for the key. Protected fields and arbitrary CMS paths are rejected.
+Submissions are untrusted proposals. They enter the Content Moderation queue through a dedicated private route (`POST /api/content-moderation/api/proposals`, bridge secret only) that whitelists fields and records the submitting API account, key id, source licence, idempotency key and the first review-history event. The submitter is `api:<account>`, which no person can hold, so proposals never publish directly, cannot assert staff identity, create no proposer affiliation, send no submitter email and earn no rewards (the Rewards plugin ignores `api:` ids). Protected fields and arbitrary CMS paths are rejected.
 
-Analysis jobs use the existing CMS and native admission checks, canonical service membership and country dataset coverage. Inputs are bounded: no arbitrary polygons, coordinate arrays, client-selected memberships, upstream URLs or unbounded batches. Results stay below 128 KiB. API jobs never call the browser's session-only Atlas routes.
+- An `Idempotency-Key` header is required. A replay with the same key and payload returns the original proposal (`meta.replayed`); a different payload under the same key is 409 `idempotency_conflict`. A unique index on (account, idempotency key) settles concurrent replays.
+- The same payload still open for the account is 409 `duplicate_proposal`; a published Library with the same name in the same country and city is 409 `possible_duplicate` with its public entityRefs. Other accounts' proposals are never consulted.
+- Bodies are at most 16 KiB. Corrections name a published entityRef and up to ten whitelisted fields; the live values are recorded as `previous` for conflict review.
+- Writes are limited to 30 proposals an hour per key and 200 a day per account (`proposal_rate_limit`), on top of the gateway limits.
+- Status lookup returns only `received`, `in_review`, `needs_information`, `accepted` or `declined`, dates and the published entityRef after acceptance. Foreign and unknown ids get the same 404.
+
+Analysis jobs use the existing CMS and native admission checks, canonical service membership and country dataset coverage, through the Access plugin's private `POST /api/access/api/analysis/{summary,reach}`. Inputs are bounded: no arbitrary polygons, coordinate arrays, client-selected memberships, upstream URLs or unbounded batches. Results stay below 128 KiB; Reach geometry is omitted (`geometry: "unavailable"`) when it would pass 96 KiB. API jobs never call the browser's session-only Atlas routes.
+
+| Operation                                                                                                       | Credits |
+| --------------------------------------------------------------------------------------------------------------- | ------- |
+| `summary` `service.profile`, `place.profile` (counts by status and type)                                        | 1       |
+| `summary` `service.coverage`, `place.coverage` (plus completeness, verification and per-Dataset licence counts) | 5       |
+| `reach` `library` (one published Library)                                                                       | 5       |
+| `reach` `service` (one reporting area of a service)                                                             | 20      |
+| `reach` `network` (whole service; also `API_NETWORK_REACH_ENABLED`)                                             | 40      |
+
+- Jobs live in the app database (`api_jobs`). The job id is also the credit reservation id. Credits are reserved at acceptance with `reserveAnalysis`, settled once when a result is stored and refunded on failure or expiry. A result is stored before settlement, so a crash between the two still delivers what was paid for.
+- Identical input from the same account reuses the open job (a partial unique index blocks a second one) or a live result for no credit. A result that is ready at acceptance (the CMS already had identical work) settles 0 credits; requests and bytes are still metered.
+- At most five open jobs per account and 100 overall (`analysis_queue_full`, `analysis_capacity`). The CMS admits machine jobs from a per-account native pool (60 an hour, 500 a day) separate from organisers' browser Reach.
+- Pending jobs expire after 30 minutes and refund; Reach results are kept 24 hours and summaries 15 minutes, then deleted; job rows are deleted after 30 days. Polls re-check the CMS at most every 3 seconds per job. The billing cron (`maintainApiJobs`) resolves expired jobs exactly once.
+- A result fetch rechecks key scope and coverage through the gateway and never spends a second credit. Usage records hold only the endpoint label; job inputs hold published refs and enumerated options, never free text.
 
 Errors use `{ "error": { "code": "..." } }`. 401 is an invalid, revoked or expired key; 403 a missing scope or no settled coverage; 429 a refusal with a stable code (`quota_requests`, `quota_bytes`, `quota_analysis`, `overage_cap`, `rate_limit`, `concurrency_limit`) and `Retry-After` where meaningful; 502/503 an upstream, response-size or accounting failure. Successful responses include `X-Request-Id` and remaining-allowance and reset headers.
 

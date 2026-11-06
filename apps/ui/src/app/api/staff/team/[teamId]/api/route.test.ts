@@ -5,6 +5,7 @@ const f = vi.hoisted(() => ({
   team: vi.fn(),
   create: vi.fn(),
   change: vi.fn(),
+  overage: vi.fn(),
 }))
 vi.mock("@/lib/auth", () => ({ authDbPool: {} }))
 vi.mock("@/lib/billing/http", () => ({
@@ -21,6 +22,7 @@ vi.mock("@/lib/team-api/team", () => ({ requireApiTeam: f.team }))
 vi.mock("@/lib/team-api/billing", () => ({
   apiCheckout: vi.fn(),
   apiPortal: vi.fn(),
+  setApiOverage: f.overage,
 }))
 vi.mock("@/lib/billing/provider", () => ({ billingStripe: vi.fn() }))
 import { POST } from "./route"
@@ -86,7 +88,73 @@ describe("Team key generation contract", () => {
       {},
       "team000000000000000001",
       "organiser",
-      create
+      { name: "Integration", expiresAt: null, scopes: ["libraries:read"] }
     )
+  })
+  it("defaults new keys to read scopes and requires confirmation for write or analysis", async () => {
+    await POST(request({ ...create, scopes: undefined }), params())
+    expect(f.create.mock.calls[0]?.[3].scopes).toEqual([
+      "search:read",
+      "libraries:read",
+      "services:read",
+    ])
+    const refused = await POST(
+      request({ ...create, scopes: ["analysis:run"] }),
+      params()
+    )
+    expect(refused.status).toBe(400)
+    expect((await refused.json()).error).toBe("api_scope_confirmation_required")
+    const confirmed = await POST(
+      request({
+        ...create,
+        scopes: ["submissions:write"],
+        confirmScopes: true,
+      }),
+      params()
+    )
+    expect(confirmed.status).toBe(201)
+    expect(f.create.mock.calls.at(-1)?.[3].scopes).toEqual([
+      "submissions:write",
+    ])
+  })
+})
+
+describe("overage controls", () => {
+  it("never enables overage without an explicit confirmation, cap and terms", async () => {
+    for (const body of [
+      {
+        action: "overage",
+        enabled: true,
+        capPence: 10000,
+        termsVersion: "2.0",
+      },
+      { action: "overage", enabled: true, confirm: true, termsVersion: "2.0" },
+      { action: "overage", enabled: false, capPence: 10000 },
+    ]) {
+      const response = await POST(request(body), params())
+      expect(response.status).toBe(400)
+    }
+    expect(f.overage).not.toHaveBeenCalled()
+  })
+  it("passes an organiser's confirmed opt-in with a fresh session and allows opting out", async () => {
+    f.overage.mockResolvedValue({ enabled: true, capPence: 10000, revision: 1 })
+    const req = request({
+      action: "overage",
+      enabled: true,
+      capPence: 10000,
+      termsVersion: "2.0",
+      confirm: true,
+    })
+    expect((await POST(req, params())).status).toBe(200)
+    expect(f.user).toHaveBeenCalledWith(req, true, true)
+    expect(f.overage.mock.calls[0]?.[4]).toEqual({
+      enabled: true,
+      capPence: 10000,
+      termsVersion: "2.0",
+    })
+    const off = request({ action: "overage", enabled: false })
+    expect((await POST(off, params())).status).toBe(200)
+    expect(f.user).toHaveBeenLastCalledWith(off, true, false)
+    expect(f.overage.mock.calls[1]?.[4]).toEqual({ enabled: false })
   })
 })

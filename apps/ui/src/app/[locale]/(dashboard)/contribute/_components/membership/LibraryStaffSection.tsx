@@ -135,12 +135,12 @@ export function LibraryStaffSection({
           >
             {isStaff ? t("openStaff") : t("claim")}
           </GlobalLink>
-          <a
-            href="#plan-team"
+          <GlobalLink
+            href="/staff/teams/new"
             className="inline-flex min-h-11 items-center text-sm font-semibold text-(--t-accent-primary) underline underline-offset-4"
           >
             {t("team")}
-          </a>
+          </GlobalLink>
         </div>
       </div>
       <div className="flex flex-col gap-4 rounded-[20px] border border-(--t-border-line) bg-(--t-bg-deep) p-5">
@@ -152,12 +152,6 @@ export function LibraryStaffSection({
           {t("eachLibrary")}
         </p>
         <Benefits items={benefits} />
-        <GlobalLink
-          href="#get-pro-free"
-          className="text-sm font-semibold underline"
-        >
-          {t("proRequest")}
-        </GlobalLink>
         <p className="m-0 mt-auto border-t border-(--t-divider) pt-3 text-sm leading-[1.6] text-(--t-ink-dim)">
           {t("endorsement")}
         </p>

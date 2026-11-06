@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import type { useWidgetDraft } from "@/components/widgets/useWidgetDraft"
 
 function publicationLabel(widget: TeamWidget, active: boolean) {
-  if (!active) return "Unavailable — Team inactive"
+  if (!active) return "Unavailable — workspace closed"
   if (!widget.publishedVersion) return "Draft only"
 
   return `${widget.state === "live" ? "Live" : "Published"} v${widget.publishedVersion}${widget.state !== "live" ? ` · ${widget.state}` : ""}`

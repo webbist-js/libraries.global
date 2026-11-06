@@ -1,6 +1,6 @@
 import { SUPPORTED_LOCALES } from "@repo/shared-data"
 
-import { isTeamApiPath } from "@/lib/team-api/paths"
+import { isTeamApiPath, teamApiMethod } from "@/lib/team-api/paths"
 
 const LOCALE_PREFIX = new RegExp(`^/(?:${SUPPORTED_LOCALES.join("|")})(?=/|$)`)
 
@@ -50,10 +50,7 @@ export function betaPublicShell(pathname: string): boolean {
 }
 
 export function betaPublicRequest(pathname: string, method: string): boolean {
-  if (isTeamApiPath(pathname))
-    return pathname === "/api/v1/search/libraries"
-      ? method === "POST"
-      : method === "GET"
+  if (isTeamApiPath(pathname)) return method === teamApiMethod(pathname)
   if (pathname === "/api/billing/webhook") return method === "POST"
   // The handler authenticates the CMS bridge independently of a browser beta pass.
   if (pathname === "/api/internal/articles/invalidate") return method === "POST"

@@ -1,5 +1,6 @@
 "use client"
 
+import { CONTRIBUTOR_REACH_PER_WEEK } from "@repo/access"
 import {
   ATLAS_REACH_MINUTES,
   parseAtlasReachResult,
@@ -13,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
 import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 
 import type { AtlasLibrary } from "./atlas.logic"
 import { AtlasAnalysisHeader } from "./AtlasAnalysisHeader"
@@ -145,6 +147,7 @@ export function AtlasReachAnalysis({
   canExport,
   calculationLimit = null,
   onZoomLocal,
+  hourlyAllowance = false,
 }: {
   readonly scopeControl?: ReactNode
   readonly library: AtlasLibrary | null
@@ -163,6 +166,8 @@ export function AtlasReachAnalysis({
   readonly canExport: boolean
   readonly calculationLimit?: "zoom" | "busy" | null
   readonly onZoomLocal?: () => void
+  /** The viewer's allowance is the API customer's hourly one, not weekly. */
+  readonly hourlyAllowance?: boolean
 }) {
   const t = useTranslations("atlasAnalysis")
   const result =
@@ -256,6 +261,7 @@ export function AtlasReachAnalysis({
               response={response}
               error={error}
               retry={retry}
+              hourlyAllowance={hourlyAllowance}
             />
           ) : null}
           {!result ? (
@@ -278,14 +284,32 @@ function ReachStatus({
   response,
   error,
   retry,
+  hourlyAllowance = false,
 }: {
   readonly hasLibrary: boolean
   readonly response: AtlasReachResponse | null
   readonly error: string | null
   readonly retry: () => void
+  readonly hourlyAllowance?: boolean
 }) {
   const t = useTranslations("atlasAnalysis")
+  const tLock = useTranslations("accessLocks")
   if (!hasLibrary) return <p role="status">{t("chooseLibrary")}</p>
+  if (error === "allowance" && !hourlyAllowance)
+    return (
+      <div role="alert">
+        <p>{tLock("reachWeekUsed", { count: CONTRIBUTOR_REACH_PER_WEEK })}</p>
+        <p>
+          {tLock("reachApi")}{" "}
+          <Link
+            href="/developers"
+            className="font-semibold text-(--t-accent-primary) underline underline-offset-2"
+          >
+            {tLock("aboutApiAccess")}
+          </Link>
+        </p>
+      </div>
+    )
   if (error)
     return (
       <div role="alert">

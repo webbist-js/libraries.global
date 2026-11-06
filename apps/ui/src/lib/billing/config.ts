@@ -2,8 +2,6 @@ import "server-only"
 
 export { MEMBERSHIP_TERMS_VERSION } from "./constants"
 export const STRIPE_API_VERSION = "2026-03-25.dahlia" as const
-export type PurchasePlan = "supporter" | "pro"
-export type PurchaseInterval = "month" | "year"
 
 export class BillingError extends Error {
   constructor(
@@ -14,6 +12,12 @@ export class BillingError extends Error {
   }
 }
 
+/**
+ * Shared Stripe binding. Personal Supporter/Pro and Team seat purchases were
+ * retired in the November 2026 beta reset; the API subscription is the only
+ * product. Webhook signature checks, the billing worker and maintenance jobs
+ * use this configuration.
+ */
 export function billingConfig() {
   const mode: "live" | "sandbox" =
     process.env.BILLING_ENV === "live" ? "live" : "sandbox"
@@ -27,51 +31,14 @@ export function billingConfig() {
     mode,
     key,
     configured: keyMatches,
-    enabled:
-      process.env.PRO_ENABLED === "true" &&
-      process.env.STRIPE_MANAGED_PAYMENTS_ENABLED === "true" &&
-      keyMatches,
-    supporterApproved: process.env.STRIPE_SUPPORTER_APPROVED === "true",
+    /**
+     * @deprecated Personal membership purchases are retired; always false.
+     * TODO(marketing): remove with the membership page rewrite.
+     */
+    enabled: false,
+    /** @deprecated Retired with personal Supporter purchases; always false. */
+    supporterApproved: false,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-    portalConfiguration: process.env.STRIPE_PORTAL_CONFIGURATION,
-    supporterPortalConfiguration:
-      process.env.STRIPE_PORTAL_CONFIGURATION_SUPPORTER,
-    recoveryPortalConfiguration:
-      process.env.STRIPE_PORTAL_CONFIGURATION_RECOVERY,
     origin: process.env.APP_PUBLIC_URL ?? "http://localhost:3000",
-    prices: {
-      pro: {
-        month: process.env.STRIPE_PRICE_PRO_MONTHLY,
-        year: process.env.STRIPE_PRICE_PRO_ANNUAL,
-      },
-      supporter: {
-        month: process.env.STRIPE_PRICE_SUPPORTER_MONTHLY,
-        year: process.env.STRIPE_PRICE_SUPPORTER_ANNUAL,
-      },
-    },
   }
-}
-
-export function configuredPrice(
-  plan: PurchasePlan,
-  interval: PurchaseInterval
-) {
-  const config = billingConfig()
-  if (!config.enabled) throw new BillingError("billing_unavailable")
-  if (plan === "supporter" && !config.supporterApproved)
-    throw new BillingError("supporter_pending_approval", 409)
-  const id = config.prices[plan][interval]
-  if (!id?.startsWith("price_")) throw new BillingError("price_unavailable")
-
-  return id
-}
-
-/** Current purchase catalogue. Settled snapshots preserve retired founding prices. */
-export function planForPrice(id: string) {
-  const prices = billingConfig().prices
-  for (const plan of ["pro", "supporter"] as const)
-    for (const interval of ["month", "year"] as const)
-      if (prices[plan][interval] === id) return { plan, interval }
-
-  return null
 }

@@ -13,6 +13,13 @@ vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/components/billing/useMembershipRefresh", () => ({
   useMembershipRefresh: () => f.refresh,
 }))
+vi.mock("@/components/networks/TeamNetworkChoice", () => ({
+  TeamNetworkChoice: ({ onChoose }: { onChoose: (v: null) => void }) => (
+    <button type="button" onClick={() => onChoose(null)}>
+      Choose libraries myself
+    </button>
+  ),
+}))
 vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
@@ -22,7 +29,6 @@ vi.mock("@/lib/navigation", () => ({
 import { TeamSignup } from "../TeamSignup"
 
 beforeEach(() => {
-  sessionStorage.clear()
   vi.clearAllMocks()
   vi.stubGlobal("fetch", f.fetch)
 })
@@ -31,99 +37,49 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-it("saves a Team before billing, requires consent, and retries payment without another signup", async () => {
-  f.fetch.mockResolvedValueOnce(Response.json({ teamId: "saved-team" }))
+it("creates a free Team with a stable request id and no seat or payment step", async () => {
+  f.fetch.mockResolvedValue(Response.json({ teamId: "saved-team" }))
   render(
     <TeamSignup
-      available
       verified
-      initialSeats={5}
-      sandbox
       user={{ name: "Organiser", email: "organiser@example.test" }}
     />
   )
   fireEvent.click(
     screen.getByRole("button", { name: "Choose libraries myself" })
   )
-  fireEvent.change(screen.getByPlaceholderText("Bristol Libraries"), {
+  fireEvent.change(screen.getByLabelText("Team name"), {
     target: { value: "Our libraries" },
   })
-  fireEvent.click(screen.getByRole("radio", { name: /Public library service/ }))
-  expect(screen.getByText(/Then £600 a year/)).toBeTruthy()
-  fireEvent.click(screen.getByRole("button", { name: "Continue to billing" }))
-  await screen.findByRole("heading", { name: "Review your billing" })
-  expect(f.fetch).toHaveBeenCalledOnce()
-  expect(JSON.parse(f.fetch.mock.calls[0]![1].body)).toMatchObject({
-    name: "Our libraries",
-    publicServiceRequested: true,
-  })
-  const pay = (await screen.findByRole("button", {
-    name: "Continue to payment",
-  })) as HTMLButtonElement
-  expect(pay.disabled).toBe(true)
-  fireEvent.click(screen.getByRole("checkbox", { name: /I accept the/ }))
-  f.fetch.mockResolvedValueOnce(
-    Response.json({ error: "unavailable" }, { status: 503 })
-  )
-  fireEvent.click(pay)
-  await screen.findByRole("alert")
-  f.fetch.mockResolvedValueOnce(
-    Response.json({ error: "unavailable" }, { status: 503 })
-  )
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Continue to payment" })
-  )
-  await waitFor(() => expect(f.fetch).toHaveBeenCalledTimes(3))
-  expect(f.fetch.mock.calls.slice(1).map(([url]) => url)).toEqual([
-    "/api/staff/team/saved-team/billing",
-    "/api/staff/team/saved-team/billing",
-  ])
-  expect(JSON.parse(f.fetch.mock.calls[2]![1].body)).toEqual({
-    action: "checkout",
-    seats: 5,
-    locale: "en",
-    termsVersion: "1.2",
-  })
+  fireEvent.click(screen.getByRole("button", { name: "Create your Team" }))
+  await waitFor(() => expect(f.push).toHaveBeenCalledWith("/staff/teams"))
+  const body = JSON.parse(f.fetch.mock.calls[0]![1].body)
+  expect(f.fetch.mock.calls[0]![0]).toBe("/api/billing/teams")
+  expect(body).toMatchObject({ name: "Our libraries" })
+  expect(body.requestId).toMatch(/^[\da-f-]{36}$/)
+  expect(body).not.toHaveProperty("seats")
+  expect(f.refresh).toHaveBeenCalled()
 })
 
-it("preserves the estimator API choice through Team creation without including it in the annual charge", async () => {
-  f.fetch.mockResolvedValueOnce(Response.json({ teamId: "chosen-api-team" }))
+it("explains when the account already belongs to a Team", async () => {
+  f.fetch.mockResolvedValue(
+    Response.json({ error: "organisation_exists" }, { status: 409 })
+  )
   render(
     <TeamSignup
-      available
       verified
-      initialSeats={7}
-      initialApiAddon
-      initialPublicService
-      sandbox
       user={{ name: "Organiser", email: "organiser@example.test" }}
     />
   )
   fireEvent.click(
     screen.getByRole("button", { name: "Choose libraries myself" })
   )
-  const selected = screen.getByRole("checkbox", {
-    name: /Add API access after Team payment/,
-  }) as HTMLInputElement
-  expect(selected.checked).toBe(true)
-  expect(
-    (
-      screen.getByRole("radio", {
-        name: /Public library service/,
-      }) as HTMLInputElement
-    ).checked
-  ).toBe(true)
-  fireEvent.change(screen.getByPlaceholderText("Bristol Libraries"), {
-    target: { value: "Our Team" },
+  fireEvent.change(screen.getByLabelText("Team name"), {
+    target: { value: "Ours" },
   })
-  fireEvent.click(screen.getByRole("button", { name: "Continue to billing" }))
-  await screen.findByRole("heading", { name: "Review your billing" })
-  expect(
-    JSON.parse(sessionStorage.getItem("lg.team-api-next.v1:chosen-api-team")!)
-      .selected
-  ).toBe(true)
-  expect(JSON.parse(f.fetch.mock.calls[0]![1].body)).not.toHaveProperty(
-    "apiAddon"
+  fireEvent.click(screen.getByRole("button", { name: "Create your Team" }))
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "already belongs to a Team"
   )
-  expect(screen.getByText("API add-on selected")).toBeTruthy()
+  expect(f.push).not.toHaveBeenCalled()
 })

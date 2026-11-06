@@ -33,6 +33,7 @@ vi.mock("@/lib/navigation", async () => {
 })
 
 const { LibraryChangeTimeline } = await import("../LibraryChangeTimeline")
+const { LIBRARY_HISTORY_UPGRADE } = await import("@/lib/plans")
 const { actorLabel, batchVerb, hasValues, valueState } =
   await import("../change-history.helpers")
 
@@ -114,27 +115,25 @@ describe("LibraryChangeTimeline", () => {
     expect(container.querySelector("[data-previous]")!.textContent).toBe(
       "http://old.example"
     )
-    expect(
-      queryByText("See what changed, field by field, with Supporter or Pro.")
-    ).toBe(null)
+    expect(queryByText(LIBRARY_HISTORY_UPGRADE.text)).toBe(null)
   })
 
-  it("offers Pro, once, when values are absent and the viewer lacks the feature", () => {
+  it("offers sign-in, once, when values are absent and the viewer lacks the feature", () => {
     const { getAllByText, container } = render(
       createElement(LibraryChangeTimeline, {
         documentId: DOC,
         initial: page([batch(), batch({ batchId: "b2" })]),
       })
     )
-    const lines = getAllByText(
-      "See what changed, field by field, with Supporter or Pro."
-    )
+    const lines = getAllByText(LIBRARY_HISTORY_UPGRADE.text)
     expect(lines).toHaveLength(1)
-    expect(lines[0]!.closest("a")!.getAttribute("href")).toBe("/plans")
+    expect(lines[0]!.closest("a")!.getAttribute("href")).toBe(
+      LIBRARY_HISTORY_UPGRADE.href
+    )
     expect(container.querySelector("[data-previous]")).toBe(null)
   })
 
-  it("reloads with values for a Pro viewer on a page rendered without them", async () => {
+  it("reloads with values for a signed-in viewer on a page rendered without them", async () => {
     features.list = ["library.history"]
     fetchMock.mockResolvedValue(
       Response.json(
@@ -178,7 +177,7 @@ describe("LibraryChangeTimeline", () => {
     )
   })
 
-  it("does not repeat the source list's initial import or offer Pro for it", () => {
+  it("does not repeat the source list's initial import or offer access for it", () => {
     const { queryByText } = render(
       createElement(LibraryChangeTimeline, {
         documentId: DOC,
@@ -192,9 +191,7 @@ describe("LibraryChangeTimeline", () => {
       })
     )
     expect(queryByText("Record created")).toBeNull()
-    expect(
-      queryByText("See what changed, field by field, with Supporter or Pro.")
-    ).toBeNull()
+    expect(queryByText(LIBRARY_HISTORY_UPGRADE.text)).toBeNull()
   })
 
   it("says so honestly when nothing has been recorded", () => {
@@ -256,7 +253,7 @@ describe("values that were never recorded (backfilled batches)", () => {
       ],
     })
 
-  it("shows a Pro viewer a note instead of Empty → Empty, and no upgrade line", () => {
+  it("shows a signed-in viewer a note instead of Empty → Empty, and no upgrade line", () => {
     features.list = ["library.history"]
     const { container, queryByText } = render(
       createElement(LibraryChangeTimeline, {
@@ -269,23 +266,19 @@ describe("values that were never recorded (backfilled batches)", () => {
     expect(container.textContent).toContain(
       "Earlier change: values weren't recorded."
     )
-    expect(
-      queryByText("See what changed, field by field, with Supporter or Pro.")
-    ).toBe(null)
+    expect(queryByText(LIBRARY_HISTORY_UPGRADE.text)).toBe(null)
     // Unrecorded is not "missing": no reload for values that don't exist.
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("doesn't offer Pro to a free viewer for values that were never recorded", () => {
+  it("doesn't offer access to a signed-out viewer for values that were never recorded", () => {
     const { queryByText, container } = render(
       createElement(LibraryChangeTimeline, {
         documentId: DOC,
         initial: page([unrecorded()]),
       })
     )
-    expect(
-      queryByText("See what changed, field by field, with Supporter or Pro.")
-    ).toBe(null)
+    expect(queryByText(LIBRARY_HISTORY_UPGRADE.text)).toBe(null)
     expect(container.textContent).not.toContain("Empty")
   })
 
@@ -324,7 +317,7 @@ describe("valueState", () => {
   })
 })
 
-describe("the Pro reload", () => {
+describe("the signed-in reload", () => {
   it("keeps older pages loaded before the session arrived", async () => {
     features.ready = false
     features.list = ["library.history"]

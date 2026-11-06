@@ -501,7 +501,7 @@
   color: var(--t-palette-mint-fg);
   background: var(--t-palette-mint-bg);
 }
-.home-feature-badge[data-access="pro"] {
+.home-feature-badge[data-access="contributor"] {
   color: var(--t-accent-primary);
   background: var(--t-accent-chip);
 }

@@ -22,9 +22,10 @@ const observed = vi.hoisted(() => ({
 }))
 vi.mock("@/lib/access-client", () => ({
   useEntitlements: () => ({
-    plan: observed.plan,
+    signedIn: observed.plan !== "public",
     ready: true,
     can: () => observed.plan === "pro",
+    has: () => false,
   }),
 }))
 vi.mock("@/lib/navigation", () => ({

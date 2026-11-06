@@ -1,24 +1,19 @@
 import "server-only"
 
-import { isDeepStrictEqual } from "node:util"
-
-import type { PaidMembership } from "@repo/access"
-import type { Pool, PoolClient } from "pg"
+import type { Pool } from "pg"
 import type Stripe from "stripe"
 
 import {
+  reconcileApiAttempts,
   refreshApiSubscription,
-  reconcileApiBilling,
 } from "@/lib/team-api/billing"
+import { deliverApiMeters, reconcileApiPeriods } from "@/lib/team-api/meters"
+import { invoiceSubscription } from "@/lib/team-api/projection"
 import { maintainApiUsage } from "@/lib/team-api/store"
-import {
-  refreshTeamSubscription,
-  reconcileTeamBilling,
-} from "@/lib/team-billing/sync"
+import { deliverApiWarnings } from "@/lib/team-api/sync"
 
 import { BillingError, billingConfig } from "./config"
 import { withBillingLock } from "./database"
-import { invoiceSubscription, projectMembership } from "./projection"
 import { isManagedCheckout, stripeId } from "./provider"
 
 export const BILLING_EVENTS = new Set([
@@ -32,6 +27,7 @@ export const BILLING_EVENTS = new Set([
   "customer.subscription.paused",
   "customer.subscription.resumed",
   "invoice.paid",
+  "invoice.finalized",
   "invoice.payment_failed",
   "invoice.payment_action_required",
   "invoice.marked_uncollectible",
@@ -40,12 +36,6 @@ export const BILLING_EVENTS = new Set([
   "charge.dispute.created",
   "charge.dispute.closed",
   "refund.updated",
-  "subscription_schedule.created",
-  "subscription_schedule.updated",
-  "subscription_schedule.canceled",
-  "subscription_schedule.released",
-  "subscription_schedule.completed",
-  "subscription_schedule.aborted",
 ])
 type EventRow = {
   event_id: string
@@ -53,15 +43,13 @@ type EventRow = {
   object_id: string
   attempts: number
 }
-type MembershipRow = {
-  subscription_id: string
-  user_id: string
-  snapshot: PaidMembership
-  revision: string
-  synced_revision: string
-}
 
-/** Persist only references, not raw webhook bodies containing personal data. */
+/**
+ * Signed webhook intake. Persist only references, never raw bodies with
+ * personal data. Replays share the event id; processing refetches provider
+ * state, so delivery order never matters. Events from the other mode or a
+ * connected account are refused.
+ */
 export async function receiveBillingEvent(pool: Pool, event: Stripe.Event) {
   if (event.livemode !== (billingConfig().mode === "live") || event.account)
     throw new BillingError("webhook_environment_mismatch", 400)
@@ -69,24 +57,14 @@ export async function receiveBillingEvent(pool: Pool, event: Stripe.Event) {
   const object = event.data.object as { id?: unknown }
   if (typeof object.id !== "string")
     throw new BillingError("webhook_object_invalid", 400)
-  const id = object.id
   await pool.query(
     "insert into billing_events(event_id,event_type,object_id) values($1,$2,$3) on conflict do nothing",
-    [event.id, event.type, id]
+    [event.id, event.type, object.id]
   )
 }
 
-async function eventSubscription(stripe: Stripe, event: EventRow) {
-  if (event.event_type.startsWith("subscription_schedule.")) {
-    const schedule = await stripe.subscriptionSchedules.retrieve(
-      event.object_id
-    )
-
-    return {
-      id: stripeId(schedule.subscription ?? schedule.released_subscription),
-      revoke: false,
-    }
-  }
+/** The API subscription an event concerns, and whether it reverses payment. */
+export async function eventSubscription(stripe: Stripe, event: EventRow) {
   if (event.event_type.startsWith("customer.subscription."))
     return { id: event.object_id, revoke: false }
   if (event.event_type.startsWith("checkout.session.")) {
@@ -131,208 +109,32 @@ async function eventSubscription(stripe: Stripe, event: EventRow) {
   }
 }
 
-async function trustedOwner(
-  client: PoolClient,
-  stripe: Stripe,
-  subscription: Stripe.Subscription
-) {
-  const customerId = stripeId(subscription.customer)
-  const account = await client.query<{
-    user_id: string
-    deleting: boolean
-    erased_at: Date | null
-    mode: string
-  }>(
-    "select user_id,deleting,erased_at,mode from billing_accounts where customer_id=$1",
-    [customerId]
-  )
-  const owner = account.rows[0]
-  if (!owner) return null
-  if (owner.erased_at || owner.deleting) return null
-  if (owner.mode !== billingConfig().mode)
-    throw new BillingError("billing_environment_mismatch")
-  const attemptId = subscription.metadata.lg_attempt_id
-  const attempt = await client.query<{ id: string; session_id: string }>(
-    "select id,session_id from billing_attempts where id::text=$1 and user_id=$2",
-    [attemptId ?? "", owner.user_id]
-  )
-  const row = attempt.rows[0]
-  if (!row?.session_id) throw new BillingError("subscription_binding_pending")
-  const session = await stripe.checkout.sessions.retrieve(row.session_id)
-  if (
-    !isManagedCheckout(session) ||
-    stripeId(session.subscription) !== subscription.id ||
-    stripeId(session.customer) !== customerId ||
-    session.client_reference_id !== owner.user_id ||
-    subscription.metadata.lg_user_id !== owner.user_id ||
-    session.metadata?.lg_attempt_id !== row.id
-  )
-    throw new BillingError("subscription_binding_invalid")
-
-  return owner.user_id
-}
-
-export async function refreshSubscription(
-  pool: Pool,
-  stripe: Stripe,
-  id: string,
-  reversal?: { revoke: boolean; reversedInvoice?: string }
-) {
-  return withBillingLock(pool, `subscription:${id}`, async (client) => {
-    const subscription = await stripe.subscriptions.retrieve(id, {
-      expand: ["latest_invoice", "schedule.phases.items.price"],
-    })
-    if (subscription.livemode !== (billingConfig().mode === "live"))
-      throw new BillingError("subscription_environment_mismatch")
-    if (subscription.metadata.lg_team_billing_id) {
-      await refreshTeamSubscription(pool, stripe, id, reversal)
-
-      return
-    }
-    if (subscription.metadata.lg_api_team_id) {
-      await refreshApiSubscription(pool, stripe, id, reversal)
-
-      return
-    }
-    const userId = await trustedOwner(client, stripe, subscription)
-    if (!userId) return
-    const existing = await client.query<MembershipRow>(
-      "select * from billing_memberships where subscription_id=$1",
-      [id]
-    )
-    const previous = existing.rows[0]?.snapshot ?? null
-    const invoices = await stripe.invoices.list({
-      subscription: id,
-      status: "paid",
-      limit: 10,
-    })
-    const snapshot = projectMembership(
-      subscription,
-      invoices.data,
-      previous,
-      new Date()
-    )
-    const reversedPeriod = invoices.data.find(
-      (invoice) => invoice.id === reversal?.reversedInvoice
-    )
-    if (
-      reversal?.revoke &&
-      reversedPeriod?.lines.data.some(
-        (line) =>
-          new Date(line.period.end * 1000).toISOString() ===
-          snapshot.paidThrough
-      )
-    )
-      snapshot.revoked = true
-    // A reversal of the current invoice suspends access immediately. Prior-period
-    // refunds must not remove a later, settled paid period.
-    // jsonb changes object key order; compare values so a replay keeps its revision.
-    if (!isDeepStrictEqual(previous, snapshot)) {
-      await client.query(
-        "insert into billing_memberships(subscription_id,user_id,snapshot) select $1,$2,$3 from billing_accounts where user_id=$2 and not deleting and erased_at is null on conflict(subscription_id) do update set snapshot=excluded.snapshot,revision=billing_memberships.revision+1,updated_at=now() where exists(select 1 from billing_accounts where user_id=$2 and not deleting and erased_at is null)",
-        [id, userId, snapshot]
-      )
-    }
-    await client.query(
-      "update billing_memberships set reconciled_at=now() where subscription_id=$1",
-      [id]
-    )
-    await client.query(
-      "update billing_attempts set state='complete',checkout_url=null,subscription_id=$2 where id::text=$1",
-      [subscription.metadata.lg_attempt_id, id]
-    )
-  })
-}
-
-export async function syncMembership(pool: Pool, row: MembershipRow) {
-  if (row.snapshot.mode !== billingConfig().mode)
-    throw new BillingError("billing_environment_mismatch")
-  const secret = process.env.STRAPI_BRIDGE_SECRET
-  if (!secret) throw new BillingError("billing_bridge_unavailable")
-  const res = await fetch(
-    `${process.env.STRAPI_URL ?? "http://127.0.0.1:1337"}/api/billing/sync-membership`,
-    {
-      method: "POST",
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-      headers: {
-        "Content-Type": "application/json",
-        "X-Service-Secret": secret,
-      },
-      body: JSON.stringify({
-        baUserId: row.user_id,
-        subscriptionId: row.subscription_id,
-        revision: Number(row.revision),
-        membership: row.snapshot,
-      }),
-    }
-  )
-  if (res.status === 410) {
-    // A missing/deleted CMS profile must never be recreated by a late event.
-    const erased = await pool.query(
-      "select 1 from billing_accounts where user_id=$1 and erased_at is not null",
-      [row.user_id]
-    )
-    if (!erased.rowCount) throw new BillingError("billing_profile_missing")
-  }
-  if (!res.ok && res.status !== 410)
-    throw new BillingError("billing_sync_unavailable")
-  await pool.query(
-    "update billing_memberships set synced_revision=greatest(synced_revision,$2),sync_attempts=0,next_sync_at=now() where subscription_id=$1",
-    [row.subscription_id, Number(row.revision)]
-  )
-}
-
-async function syncPendingMemberships(
-  pool: Pool,
-  client: PoolClient,
-  withinBudget: () => boolean
-) {
-  const pending = await client.query<MembershipRow>(
-    "select * from billing_memberships where synced_revision<revision and next_sync_at<=now() order by next_sync_at limit 30"
-  )
-  let synced = 0,
-    failed = 0
-  for (const row of pending.rows) {
-    if (!withinBudget()) break
-    try {
-      await syncMembership(pool, row)
-      synced++
-    } catch {
-      await client.query(
-        "update billing_memberships set sync_attempts=sync_attempts+1,next_sync_at=now()+(least(3600,30*power(2,least(sync_attempts,7))) * interval '1 second') where subscription_id=$1",
-        [row.subscription_id]
-      )
-      failed++
-    }
-  }
-
-  return { synced, failed }
-}
-
-/** Run independently of the purchase flag; turning checkout off cannot stop recovery. */
+/**
+ * Run independently of the purchase flags: turning checkout or overage off
+ * never stops renewals, recovery, meter delivery or reconciliation.
+ */
 export async function runBillingWorker(pool: Pool, stripe: Stripe) {
   return withBillingLock(pool, "worker", async (client) => {
     const started = Date.now()
     const withinBudget = (seconds: number) =>
       Date.now() - started < seconds * 1000
+    // Refund abandoned reservations first so limits recover promptly.
+    await maintainApiUsage(pool)
     const events = await client.query<EventRow>(
       "select * from billing_events where state='pending' and next_attempt_at<=now() order by received_at limit 30"
     )
-    let processed = 0
-    // Prioritize already-settled access before reading more provider events.
-    let { failed, synced } = await syncPendingMemberships(pool, client, () =>
-      withinBudget(10)
-    )
+    let processed = 0,
+      failed = 0
     for (const event of events.rows) {
-      if (!withinBudget(25)) break
+      if (!withinBudget(20)) break
       try {
         const target = await eventSubscription(stripe, event)
-        if (target?.id)
-          await refreshSubscription(pool, stripe, target.id, target)
+        const owned = target?.id
+          ? await refreshApiSubscription(pool, stripe, target.id, target)
+          : false
         await client.query(
           "update billing_events set state=$2,completed_at=now(),attempts=attempts+1 where event_id=$1",
-          [event.event_id, target?.id ? "complete" : "ignored"]
+          [event.event_id, owned ? "complete" : "ignored"]
         )
         processed++
       } catch {
@@ -346,72 +148,30 @@ export async function runBillingWorker(pool: Pool, stripe: Stripe) {
         failed++
       }
     }
-    // Recover a lost completion webhook from our owned, persisted Checkout session.
-    const attempts = await client.query<{ session_id: string; id: string }>(
-      "select session_id,id from billing_attempts where state='open' and session_id is not null order by reconciled_at limit 10"
-    )
-    for (const attempt of attempts.rows) {
-      if (!withinBudget(30)) break
-      try {
-        const session = await stripe.checkout.sessions.retrieve(
-          attempt.session_id
-        )
-        const subscriptionId = stripeId(session.subscription)
-        if (session.status === "complete" && subscriptionId)
-          await refreshSubscription(pool, stripe, subscriptionId)
-        if (session.status === "expired")
-          await client.query(
-            "update billing_attempts set state='expired',checkout_url=null where id=$1",
-            [attempt.id]
-          )
-      } catch {
-        failed++
-      } finally {
-        await client.query(
-          "update billing_attempts set reconciled_at=now() where id=$1",
-          [attempt.id]
-        )
-      }
-    }
-    const stale = await client.query<{ subscription_id: string }>(
-      "select subscription_id from billing_memberships where reconciled_at<now()-interval '15 minutes' order by reconciled_at limit 10"
-    )
-    for (const row of stale.rows) {
-      if (!withinBudget(35)) break
-      try {
-        await refreshSubscription(pool, stripe, row.subscription_id)
-      } catch {
-        await client.query(
-          "update billing_memberships set reconciled_at=now() where subscription_id=$1",
-          [row.subscription_id]
-        )
-        failed++
-      }
-    }
-    // A purchase settled or recovered above can become usable in this pass,
-    // rather than waiting for the next scheduled worker. Retry backoff still applies.
-    const fresh = await syncPendingMemberships(pool, client, () =>
-      withinBudget(35)
-    )
-    failed += fresh.failed
-    synced += fresh.synced
-    failed += await reconcileTeamBilling(pool, stripe, () => withinBudget(40))
-    failed += await reconcileApiBilling(pool, stripe, () => withinBudget(45))
-    await maintainApiUsage(pool)
+    failed += await reconcileApiAttempts(pool, stripe, () => withinBudget(30))
+    const meters = await deliverApiMeters(pool, stripe, () => withinBudget(45))
+    failed += meters.failed
+    failed += await reconcileApiPeriods(pool, stripe, () => withinBudget(50))
+    failed += await deliverApiWarnings(pool, () => withinBudget(55))
     await client.query(
       "delete from billing_rate_limits where resets_at<now()-interval '1 day'"
     )
-
-    const backlog = await client.query<{ events: string; projections: string }>(
-      "select (select count(*) from billing_events where state='pending') as events,((select count(*) from billing_memberships where synced_revision<revision)+(select count(*) from team_billing_memberships m join team_billing_accounts a on a.current_subscription_id=m.subscription_id where m.synced_revision<m.revision)) as projections"
+    const backlog = await client.query<{
+      events: string
+      meters: string
+      dead: string
+    }>(
+      "select (select count(*) from billing_events where state='pending') as events,(select count(*) from api_meter_deliveries where state='pending') as meters,(select count(*) from api_meter_deliveries where state='dead') as dead"
     )
+    const row = backlog.rows[0]
 
     return {
       processed,
-      synced,
+      delivered: meters.delivered,
       failed,
-      pendingEvents: Number(backlog.rows[0]?.events ?? 0),
-      pendingProjections: Number(backlog.rows[0]?.projections ?? 0),
+      pendingEvents: Number(row?.events ?? 0),
+      pendingMeters: Number(row?.meters ?? 0),
+      deadMeters: Number(row?.dead ?? 0),
     }
   })
 }

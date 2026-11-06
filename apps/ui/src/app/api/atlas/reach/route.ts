@@ -1,11 +1,14 @@
-import { createHmac } from "node:crypto"
-
 import {
   parseAtlasReachRequest,
   parseAtlasReachResult,
   type AtlasReachRequest,
 } from "@repo/shared-data"
 
+import {
+  reachAllowanceError,
+  reachAllowanceOf,
+  reachUserKey,
+} from "@/lib/access-reach"
 import { requireEntitlement } from "@/lib/access-server"
 import { auth } from "@/lib/auth"
 import { readJsonCapped, readTextCapped } from "@/lib/bridge-params"
@@ -21,7 +24,7 @@ const requests = createRateLimiter({
 
 export async function POST(req: Request) {
   const session = await auth.api.getSession({ headers: req.headers })
-  const denied = requireEntitlement(session?.user, "atlas.analysis")
+  const denied = requireEntitlement(session?.user, "atlas.reach")
   if (denied) return denied
   const rate = await requests.check(session!.user.id)
   if (!rate.ok)
@@ -52,26 +55,19 @@ export async function POST(req: Request) {
   } catch {
     return Response.json({ error: "Invalid Reach request" }, { status: 400 })
   }
-  const limits = (session!.user as { limits?: Record<string, unknown> }).limits
-  const hourlyLimit = limits?.analysisRunsPerHour
-  if (
-    !Number.isInteger(hourlyLimit) ||
-    Number(hourlyLimit) < 1 ||
-    Number(hourlyLimit) > 100
-  )
-    return Response.json(
-      { error: "Analysis allowance is unavailable" },
-      { status: 503 }
-    )
   try {
     const secret = process.env.STRAPI_BRIDGE_SECRET
     const token = process.env.ATLAS_SERVICE_TOKEN
     const host = process.env.STRAPI_URL
     if (!secret || !token || !host)
       throw new Error("Atlas bridge is not configured")
-    const userKey = createHmac("sha256", secret)
-      .update(`reach:${session!.user.id}`)
-      .digest("hex")
+    const allowance = reachAllowanceOf(session!.user, secret)
+    if (!allowance)
+      return Response.json(
+        { error: "Analysis allowance is unavailable" },
+        { status: 503, headers: { "cache-control": "no-store" } }
+      )
+    const userKey = reachUserKey(secret, session!.user.id)
     const response = await fetch(new URL("/api/atlas/reach", host), {
       method: "POST",
       redirect: "error",
@@ -81,7 +77,7 @@ export async function POST(req: Request) {
         "x-service-secret": secret,
         "x-atlas-token": token,
       },
-      body: JSON.stringify({ request, userKey, hourlyLimit }),
+      body: JSON.stringify({ request, userKey, allowance }),
       signal: AbortSignal.any([req.signal, AbortSignal.timeout(25000)]),
     })
     const text = await readTextCapped(response, 3 * 1024 * 1024)
@@ -93,12 +89,9 @@ export async function POST(req: Request) {
     return Response.json(
       response.ok
         ? result
-        : {
-            error:
-              status === 429
-                ? "Hourly analysis allowance reached. Try again later."
-                : "Reach is temporarily unavailable.",
-          },
+        : status === 429
+          ? reachAllowanceError(result)
+          : { error: "Reach is temporarily unavailable." },
       {
         status,
         headers: {

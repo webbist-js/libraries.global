@@ -51,7 +51,15 @@ it("keeps the footer compact with direct published privacy and accessibility lin
   )
   expect(
     nav.getAllByRole("link").map((link) => link.getAttribute("href"))
-  ).toEqual(["/legal", "/legal/privacy", "/legal/accessibility"])
+  ).toEqual(["/legal", "/legal/privacy", "/legal/accessibility", "/sponsor"])
+  expect(nav.getByRole("link", { name: "sponsor" })).toBeTruthy()
+})
+
+it("keeps the fixed sponsor link without CMS footer data or legal documents", () => {
+  render(<GlobalFooter locale="en" footer={null} legalDocuments={[]} />)
+  expect(
+    screen.getByRole("link", { name: "sponsor" }).getAttribute("href")
+  ).toBe("/sponsor")
 })
 
 it("keeps every published policy reachable from the index, including new CMS documents", () => {
@@ -92,7 +100,7 @@ it("shares CMS section and supplemental links with the dashboard while retaining
       ],
     } as unknown as FooterData,
     documents,
-    { legal: "Legal policies", plans: "Plans and pricing" }
+    { legal: "Legal policies", plans: "Plans and pricing", sponsor: "Sponsor" }
   )
   expect(navigation.sections[0]?.links).toEqual([
     { key: "2", href: "/pro", label: "Plans and pricing" },
@@ -102,5 +110,19 @@ it("shares CMS section and supplemental links with the dashboard while retaining
     "/legal/privacy",
     "/legal/accessibility",
     "/about",
+    "/sponsor",
+  ])
+})
+
+it("does not repeat the sponsor link when the CMS footer already has one", () => {
+  const navigation = buildFooterNavigation(
+    {
+      links: [{ id: 5, href: "/sponsor", label: "Sponsorship" }],
+    } as unknown as FooterData,
+    [],
+    { legal: "Legal policies", plans: "Plans and pricing", sponsor: "Sponsor" }
+  )
+  expect(navigation.links).toEqual([
+    { key: "5", href: "/sponsor", label: "Sponsorship" },
   ])
 })

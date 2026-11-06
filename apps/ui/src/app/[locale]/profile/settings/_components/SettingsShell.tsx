@@ -74,9 +74,6 @@ export function SettingsShell({
 
   const router = useRouter()
   const mounted = useMounted()
-  // The eligibility check uses the opening time; this value never needs updating.
-  // eslint-disable-next-line react/hook-use-state
-  const [settingsOpenedAt] = useState(Date.now)
   const { saving, updateProfile } = useProfile()
   const form = useProfileForm({
     profile,
@@ -164,10 +161,7 @@ export function SettingsShell({
           />
           <InterestsSection form={form} />
           <LinksSection form={form} />
-          <MembershipSettingsLink
-            plan={sessionUser.plan ?? "free"}
-            source={sessionUser.planSource}
-          />
+          <MembershipSettingsLink />
           <PrivacySection
             profile={profile}
             visibility={form.visibility}
@@ -176,12 +170,7 @@ export function SettingsShell({
           <AppearanceSettings />
           <NotificationsSection
             profile={profile}
-            hasTeam={sessionTeamsOf(sessionUser).some(
-              (team) =>
-                team.status === "active" &&
-                (!team.expiresAt ||
-                  Date.parse(team.expiresAt) > settingsOpenedAt)
-            )}
+            hasTeam={sessionTeamsOf(sessionUser).length > 0}
           />
           <SignInSecuritySection />
           <DataAccountSection sessionUser={sessionUser} />

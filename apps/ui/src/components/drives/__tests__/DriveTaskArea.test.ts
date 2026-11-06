@@ -217,11 +217,7 @@ describe("DriveTaskArea", () => {
     await waitFor(() =>
       expect(within(part).getByText("3 of 5 waiting for review")).toBeTruthy()
     )
-    expect(
-      within(part).getByText(
-        "Drive work counts toward earned Pro: 4,936 points to 5,000. Keep contributing at least once every 30 days to retain it."
-      )
-    ).toBeTruthy()
+    expect(within(part).queryByText(/earned Pro/)).toBeNull()
   })
 
   it("after a send: announces it, marks the row and moves to the next library", async () => {

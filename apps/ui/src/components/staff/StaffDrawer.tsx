@@ -14,7 +14,7 @@ import {
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
 import { SelectField } from "@/components/ds/SelectField"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
-import { useEntitlements, useStaff } from "@/lib/access-client"
+import { useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { searchLibraryNames } from "@/lib/meilisearch"
@@ -106,7 +106,6 @@ export function StaffDrawer({
   const staff = useStaff()
   const { libraries } = staff
   const teams = staff.teams ?? []
-  const { canForLibrary } = useEntitlements()
   const locale = useLocale()
   const { data: featuredDrive = null } = useFeaturedDrive(libraries.length > 0)
   const { libraryDocumentId: requested } = useStaffDrawer()
@@ -175,8 +174,9 @@ export function StaffDrawer({
   const live = data?.live ?? null
   const isLive = live?.state === "live"
   const canGoLive = staff.can("goLive", id)
-  const teamCovered = canForLibrary("library.team", id)
-  const trafficCovered = canForLibrary("library.traffic", id)
+  // Free staff tools: the viewer's own staff claim on this library decides.
+  const teamCovered = staff.can("seeTeam", id)
+  const trafficCovered = staff.can("traffic", id)
   const organises = teams.some((t) => t.role === "organiser")
   const claimHref = pageLibrary
     ? `/staff/claim?librarySlug=${encodeURIComponent(pageLibrary.slug)}&libraryName=${encodeURIComponent(pageLibrary.name)}&libraryDocumentId=${encodeURIComponent(pageLibrary.documentId)}`

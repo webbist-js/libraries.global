@@ -1,26 +1,26 @@
-# Membership billing
+# API billing
 
-The billing implementation uses hosted Stripe Managed Payments, durable owned checkout attempts, invoice settlement and private Strapi access projections. Better Auth owns account identity. Membership changes tools and limits; it never grants community roles, trust, moderation or library staff authority.
+The billing implementation uses hosted Stripe Managed Payments, durable owned checkout attempts, invoice settlement, an application usage ledger and private Strapi access projections. Better Auth owns account identity. API Access changes machine access and limits; it never grants community roles, trust, moderation or library staff authority.
 
 This guide describes implementation and repeatable checks. Provider account readiness, enabled flags, purchase evidence, approvals and deployment results belong in private operator storage.
 
-## Plans and ownership
+## Offer and ownership
 
-Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. Supporter includes detailed history and exports up to 500 libraries; Pro includes delivered analysis and 10,000-row exports. Team's library-scoped tools have a 50,000-row cap. Do not sell unfinished features or silently replace founding Price IDs.
+Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. The [API account](TEAM-API.md) is the only paid product: £100/month, tax-inclusive base GBP, with 10,000 requests, 250 MiB of response data and 100 analysis credits per settled billing period. Personal Supporter/Pro memberships and paid Team seats were retired in the November 2026 beta reset; Explorer, Contributor, Supporter and Verified Staff are free. See [Team billing](TEAM-BILLING.md) for the retirement note.
 
-The [API account](TEAM-API.md) is the paid product; personal memberships and [Team seats](TEAM-BILLING.md) were retired in the November 2026 beta reset (see [PRICING.md](PRICING.md)). Settled payment, rather than an optimistic checkout return, activates access.
+An API account belongs to an organisation. Organisers buy and manage it; members see usage. A buyer without an organisation gets a single-member organisation at checkout (`POST /api/billing/api/checkout`). Settled payment, rather than an optimistic checkout return, activates access.
 
-## Checkout and plan changes
+## Checkout, periods and overage
 
-Verified accounts create owned customer/attempt records before provider calls. Per-owner PostgreSQL locks and stable idempotency keys protect retries. Prices, quantities, customers and return destinations are server-selected. Payment details remain on the hosted page.
+Verified accounts create owned customer/attempt records before provider calls. Per-owner PostgreSQL locks and stable idempotency keys protect retries. Prices, customers and return destinations are server-selected. Payment details remain on the hosted page. Each purchase snapshots the offer version, Price ID, tax behaviour, limits, overage rates and consent version.
 
-A bounded signed webhook records references before acknowledging delivery. The worker refetches provider state and verifies environment, customer, subscription and settled invoice coverage. The return page waits for both payment and Strapi acknowledgement before refreshing the existing session. A pending or unpaid initial purchase grants nothing; a failed upgrade preserves the already-settled lower plan.
+A bounded signed webhook records references before acknowledging delivery. The worker refetches provider state and verifies environment, customer, subscription and settled invoice coverage. Allowances follow the settled subscription item period `[start, end)`; a new allowance starts only when the next period is paid, and past-due time never authorises overage.
 
-Paid upgrades use the provider's proration review. Reductions and shorter intervals are reviewed in Settings and start at the paid period end with no charge today. Durable plan-change intents recover interrupted schedule creation. Undo removes a future change; the worker releases the schedule after its target phase starts. Future selections never grant access.
+The PostgreSQL ledger is the real-time admission authority: each request reserves capacity under one account/period lock, settles actual bytes and credits after success and refunds failures. Overage (`API_OVERAGE_ENABLED`) is off until an organiser opts in with fresh consent and chooses a cap of £10–£500. Metered overage items are added to the subscription at opt-in. Immutable usage events are delivered to Stripe meters with the event ID as idempotency identifier, bounded retries and a dead-letter state; a period is reconciled only when invoiced quantities match the ledger.
 
-Separate restricted Pro, Supporter and recovery Portal configurations constrain allowed plan changes. Cancellation preserves settled access through the paid period. A failed renewal's grace period is bounded from the first failure. Refund/dispute holds affect paid access independently of complimentary sources.
+Cancellation preserves settled access through the paid period. Refund/dispute holds remove paid access and stay sticky across replays.
 
-Account erasure stops subscriptions and open checkout sessions before clearing bindings. Uncertain cancellation blocks erasure. Completed attempts discard capability URLs. Retention is bounded and preserves pending work; user exports omit payment credentials and capability links.
+Account erasure cancels API subscriptions the account alone owns and expires open checkout sessions before clearing bindings. Uncertain cancellation blocks erasure. Completed attempts discard capability URLs. Retention is bounded and preserves pending work; user exports omit payment credentials and capability links.
 
 ## Local sandbox checks
 
@@ -28,16 +28,17 @@ Follow [Local acceptance](BILLING-LOCAL-TESTS.md). Reuse the existing database a
 
 ```sh
 pnpm --filter @repo/ui billing:check
+pnpm --filter @repo/ui api:check
 pnpm --filter @repo/ui billing:sandbox:work
 ```
 
-`billing:check` inspects the configured catalogue. `billing:sandbox:work` processes a finite local worker pass; use it when testing delayed projection recovery. The sandbox listener saves its signing secret privately. Changing an origin or signing secret requires the relevant existing process to reload its configuration.
+`billing:check` inspects the configured billing setup and `api:check` the API catalogue (the £100 Price, the three metered overage Prices, their Billing Meters and the API Portal). `api:setup` creates missing sandbox catalogue entries; live writes additionally require `--live`. Neither command creates a subscription or enables purchasing. `billing:sandbox:work` processes a finite local worker pass; use it when testing delayed projection recovery. The sandbox listener saves its signing secret privately. Changing an origin or signing secret requires the relevant existing process to reload its configuration.
 
 Focused checks, run sequentially with bounded memory and one worker:
 
 ```sh
-NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/ui test src/lib/billing src/app/api/billing src/components/billing --maxWorkers=1
-NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/strapi test tests/paid-membership.test.ts tests/billing-notice.test.ts tests/email-recipients.test.ts --maxWorkers=1
+NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/ui test src/lib/billing src/lib/team-api src/app/api/billing src/app/api/v1 --maxWorkers=1
+NODE_OPTIONS=--max-old-space-size=2048 pnpm --filter @repo/strapi test tests/access/api-accounts.test.ts tests/access/api-data.test.ts tests/email-recipients.test.ts --maxWorkers=1
 ```
 
 `billing:db:test` creates temporary PostgreSQL schemas. Run it only in an approved isolated CI/acceptance environment, never against the shared development database. Mocks and fixture projections do not establish provider/device acceptance.
@@ -48,15 +49,11 @@ Keep sandbox and live bindings separate. UI and CMS `BILLING_ENV` must match; ch
 
 The checked-in environment examples describe names and placeholders for runtime keys, webhook signing secrets, Price IDs, Portal configurations, bridge credentials, job authentication and public origins. Keep values and generated account-specific catalogue manifests ignored. Disabling new purchases must leave reconciliation and existing billing management available.
 
-A release must apply the billing migration, ship matching shared access/CMS/UI/worker code and configure authenticated billing and retention jobs. `vercel.json` applies only when running on that platform; another host needs its own installed scheduler. Verify signatures, mode, retries, pending-event age, projection lag and alerts before activation.
+The API flags (`API_ENABLED`, `API_OVERAGE_ENABLED`, `API_SERVICE_READS_ENABLED`, `API_SUBMISSIONS_ENABLED`, `API_ANALYSIS_ENABLED`, `API_NETWORK_REACH_ENABLED`) default to false. A flag never bypasses authorisation or accounting.
 
-The live preparation helper defaults to inspection:
+A release must apply the billing migration (`billing:migrate`, which installs the `api_*` ledger tables; `--drop-retired` removes the retired personal and seat tables explicitly), ship matching shared access/CMS/UI/worker code and configure authenticated billing and retention jobs. `vercel.json` applies only when running on that platform; another host needs its own installed scheduler. Verify signatures, mode, retries, pending-event age, projection lag and alerts before activation.
 
-```sh
-node apps/ui/scripts/billing-live.mjs --origin https://YOUR_PRODUCTION_HOST
-```
-
-After owned sandbox acceptance, its `--apply --sandbox-accepted` mode prepares matching catalogue/Portal/webhook objects. The optional `--verify-receiver` probe checks the deployed signature boundary without granting access or charging an account. It does not establish database, worker or CMS health. Review the helper and current provider requirements before using it; authentication and signing-secret recovery stay in private operator configuration.
+Live catalogue preparation uses `api:setup --live` after owned sandbox acceptance. Confirm that Managed Payments supports the metered overage items before enabling `API_OVERAGE_ENABLED` in live mode. Authentication and signing-secret recovery stay in private operator configuration.
 
 Catalogue preparation, code deployment, public opening and live purchase activation are separate operations. Preserve the beta gate and sandbox billing during routine releases. See [Release helpers](../../scripts/release/README.md) for generic promotion requirements.
 
@@ -76,7 +73,7 @@ A real delivery check needs an explicitly authorized recipient. Record SMTP acce
 
 ## Content and recovery
 
-[Customer help](BILLING-HELP.md) describes the user flow. [CMS content operations](../strapi/CONTENT-OPERATIONS.md) defines the environment and publication workflow; the older `update-billing-docs.mjs` helper is a local feature migration, not the routine production publication path.
+[Customer help](BILLING-HELP.md) describes the user flow. [CMS content operations](../strapi/CONTENT-OPERATIONS.md) defines the environment and publication workflow; the retired `update-billing-docs.mjs` helper now exits; `update-sponsored-access-content.mjs` stages the current copy as drafts.
 
 Published policy revisions, purchase consent versions and accepted historical snapshots are distinct. Check `src/lib/membership-pricing.json`, the current checkout consent constants and the CMS publication before releasing changes. Preserve earlier consent evidence. Do not copy a dated legal version or jurisdiction-specific claim from an old launch report into a new release.
 

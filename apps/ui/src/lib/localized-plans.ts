@@ -1,14 +1,23 @@
-import { useTranslations, type TranslationValues } from "next-intl"
+import { useLocale, useTranslations, type TranslationValues } from "next-intl"
+import { useMemo } from "react"
 
-import { compareGroups, type CompareGroup, shortPrice } from "./plan-compare"
 import {
-  exportLimitOf,
-  planCard,
-  type PlanCardKey,
-  type PlanPrice,
+  type CompareColumn,
+  type CompareGroup,
+  compareGroups,
+  type CompareRow,
+  rowMessageKey,
+} from "./plan-compare"
+import {
+  offer,
+  type Offer,
+  type OfferItem,
+  type OfferKey,
+  offerValues,
+  type OfferValues,
 } from "./plans"
 
-/** Dynamic keys follow the canonical plan and comparison inventories; coverage is tested. */
+/** Dynamic keys follow the offer and comparison inventories; coverage is tested. */
 export function useMembershipContent() {
   return useTranslations("membershipContent") as (
     key: string,
@@ -16,69 +25,97 @@ export function useMembershipContent() {
   ) => string
 }
 
-export function useMembershipPlan() {
-  const t = useMembershipContent()
+/** Allowances and prices formatted for the current locale. */
+export function useOfferValues(): OfferValues {
+  const locale = useLocale()
 
-  return (key: PlanCardKey) => {
-    const plan = planCard(key)
-    const prefix = `plans.${key}`
+  return useMemo(() => offerValues(locale), [locale])
+}
+
+export type LocalizedOffer = Omit<Offer, "items" | "cta"> & {
+  name: string
+  who: string
+  /** "Free", "£100 a month", "From £2,500 a year". */
+  priceLabel: string
+  priceNote: string
+  items: (OfferItem & { text: string })[]
+  cta: { id: string; href: string; label: string }
+}
+
+export function useOffer() {
+  const t = useMembershipContent()
+  const values = useOfferValues()
+
+  return (key: OfferKey): LocalizedOffer => {
+    const o = offer(key)
+    const prefix = `offers.${key}`
 
     return {
-      ...plan,
+      ...o,
       name: t(`${prefix}.name`),
-      who: t(`${prefix}.who`),
-      cta: { ...plan.cta, label: t(`${prefix}.cta`) },
-      price:
-        plan.price === "free"
-          ? plan.price
-          : {
-              ...plan.price,
-              ...(key === "pro" ? { note: t(`${prefix}.note`) } : {}),
-            },
-      includes: plan.includes.map((item, i) => ({
+      who: t(`${prefix}.who`, values),
+      priceLabel: t(`${prefix}.price`, values),
+      priceNote: t(`${prefix}.priceNote`, values),
+      cta: { ...o.cta, label: t(`${prefix}.cta.${o.cta.id}`) },
+      items: o.items.map((item) => ({
         ...item,
-        text: t(`${prefix}.includes.${i}`, {
-          limit:
-            key === "pro" || key === "supporter" || key === "team"
-              ? exportLimitOf(key)
-              : 0,
-        }),
+        text: t(`${prefix}.items.${item.id}`, values),
       })),
     }
   }
 }
 
-export function useMembershipGroups() {
+/** A comparison column's name and its short price line. */
+export function useCompareColumn() {
   const t = useMembershipContent()
+  const values = useOfferValues()
+
+  return (column: CompareColumn) => ({
+    name: t(`columns.${column}.name`),
+    price: t(`columns.${column}.price`, values),
+  })
+}
+
+export type LocalizedRow = CompareRow & {
+  label: string
+  cellLabels: Partial<Record<CompareColumn, string>>
+}
+export type LocalizedGroup = Omit<CompareGroup, "rows"> & {
+  title: string
+  rows: LocalizedRow[]
+}
+
+export function useLocalizeRow() {
+  const t = useMembershipContent()
+  const values = useOfferValues()
+
+  return (row: CompareRow): LocalizedRow => ({
+    ...row,
+    label: t(`rows.${rowMessageKey(row.id)}`, values),
+    cellLabels: Object.fromEntries(
+      Object.entries(row.cellValues ?? {}).map(([column, id]) => [
+        column,
+        t(`cells.${id}`, values),
+      ])
+    ),
+  })
+}
+
+export function useMembershipGroups(): LocalizedGroup[] {
+  const t = useMembershipContent()
+  const localize = useLocalizeRow()
 
   return compareGroups().map((group) => ({
     ...group,
     title: t(`groups.${group.id}`),
-    rows: group.rows.map((row) => ({
-      ...row,
-      label: t(`rows.${row.id.replaceAll(".", "_")}`, {
-        limit: exportLimitOf("supporter"),
-      }),
-      ...(row.cellLabelIsSavedViews && row.cellLabels
-        ? {
-            cellLabels: Object.fromEntries(
-              Object.entries(row.cellLabels).map(([plan, value]) => [
-                plan,
-                value === "unlimited"
-                  ? t("copy.unlimited")
-                  : t("copy.eachCount", { count: Number(value) }),
-              ])
-            ),
-          }
-        : {}),
-    })),
+    rows: group.rows.map(localize),
   }))
 }
 
 export function useMembershipSummary() {
   const t = useMembershipContent()
 
-  return (group: CompareGroup) => {
+  return (group: { rows: readonly CompareRow[] }) => {
     const now = group.rows.filter((row) =>
       Object.values(row.cells).includes("yes")
     ).length
@@ -93,13 +130,5 @@ export function useMembershipSummary() {
   }
 }
 
-export function useMembershipShortPrice() {
-  const t = useMembershipContent()
-
-  return (price: PlanPrice) =>
-    price === "free"
-      ? t("copy.free")
-      : shortPrice(price)
-          .replace("/mo", `/${t("copy.shortMonth")}`)
-          .replace("/yr", `/${t("copy.shortYear")}`)
-}
+/** Number of FAQ entries under `membershipContent.faq`. */
+export const MEMBERSHIP_FAQ_COUNT = 8

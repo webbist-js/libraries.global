@@ -17,7 +17,7 @@ import {
   mergeRanges,
   pinDependentLayers,
   parseUrlState,
-  tierForPlan,
+  tierForAccess,
   toggleLayer,
   toUrlParams,
   typeGroupOf,
@@ -169,7 +169,10 @@ describe("layers", () => {
     expect(layerAccess(layerDef("population"), "free")).toBe("available")
     expect(layerAccess(layerDef("reach"), "public")).toBe("pro")
     expect(layerAccess(layerDef("reach"), "free")).toBe("pro")
-    expect(layerAccess(layerDef("reach"), "pro")).toBe("available")
+    expect(layerAccess(layerDef("reach"), "pro")).toBe("pro")
+    expect(layerAccess(layerDef("reach"), "reach")).toBe("available")
+    // Explorer layers are free with an account: a visitor signs in.
+    expect(layerAccess(layerDef("deprivation"), "public")).toBe("signin")
     // Readiness wins, so no plan can unlock an unbuilt layer.
     expect(layerAccess(layerDef("transit"), "free")).toBe("soon")
     expect(layerAccess(layerDef("transit"), "pro")).toBe("soon")
@@ -293,14 +296,20 @@ describe("url state", () => {
   })
 })
 
-describe("tierForPlan", () => {
-  it("maps known plans and fails closed on anything else", () => {
-    expect(tierForPlan("public")).toBe("public")
-    expect(tierForPlan("free")).toBe("free")
-    expect(tierForPlan("pro")).toBe("pro")
-    expect(tierForPlan("team")).toBe("pro")
-    for (const plan of ["platinum", "PRO", "", null, undefined])
-      expect(tierForPlan(plan)).toBe("free")
+describe("tierForAccess", () => {
+  const access = (signedIn: boolean, features: string[]) => ({
+    signedIn,
+    can: (f: string) => features.includes(f),
+  })
+  it("maps entitlements to a tier and fails closed", () => {
+    expect(tierForAccess(access(false, ["atlas.reach"]))).toBe("public")
+    expect(tierForAccess(access(true, []))).toBe("free")
+    expect(tierForAccess(access(true, ["atlas.contextLayers"]))).toBe("pro")
+    expect(
+      tierForAccess(access(true, ["atlas.contextLayers", "atlas.reach"]))
+    ).toBe("reach")
+    // Reach alone, without the Explorer tools, unlocks nothing.
+    expect(tierForAccess(access(true, ["atlas.reach"]))).toBe("free")
   })
 })
 

@@ -101,7 +101,7 @@ const PROMPTS: Record<DismissiblePrompt, ToggleItem<DismissiblePrompt>> = {
   "api-playground-usage": {
     key: "api-playground-usage",
     label: "API playground usage warning",
-    desc: "Show a reminder each time you open the playground that successful requests use your Team’s shared API allowance. The usage notice on the page always stays visible.",
+    desc: "Show a reminder each time you open the playground that successful requests use your API account’s shared allowance. The usage notice on the page always stays visible.",
   },
 }
 

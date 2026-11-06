@@ -80,8 +80,6 @@ const team = (over: Partial<TeamDetail> = {}): TeamDetail => ({
   documentId: "t1",
   name: "Kent Libraries",
   slug: "kent-libraries",
-  seats: 5,
-  used: 2,
   status: "active",
   verifiedAt: "2026-09-01T00:00:00Z",
   expiresAt: null,
@@ -149,21 +147,24 @@ afterEach(() => {
 })
 
 describe("TeamOrganiser (organiser)", () => {
-  it("shows the team, its seats, the libraries covered and where the viewer is staff", () => {
+  it("shows the free workspace, its members, the libraries covered and where the viewer is staff", () => {
     render(organiser())
     expect(screen.getByRole("heading", { name: "Team details" })).toBeTruthy()
-    expect(screen.getByText("Seats").parentElement?.textContent).toContain(
-      "2 of 5 seats used"
-    )
+    expect(
+      screen.getByText("Members", { selector: "dt" }).parentElement?.textContent
+    ).toContain("2 active · 1 invited")
+    expect(screen.queryByText(/seat/i)).toBeNull()
+    expect(screen.queryByText("Runs until")).toBeNull()
     expect(screen.getByText("Team verification: Verified")).toBeTruthy()
-    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.getByText("Workspace: Open")).toBeTruthy()
     expect(screen.getAllByText("Active").length).toBe(2)
     expect(screen.getByText("Organisers").parentElement?.textContent).toContain(
       "Ann"
     )
-    expect(screen.getByText("Runs until").parentElement?.textContent).toContain(
-      "Open ended"
-    )
+    expect(
+      screen.getByRole("link", { name: "Open Developers" }).getAttribute("href")
+    ).toBe("/developers")
+    expect(screen.queryByRole("link", { name: /billing/i })).toBeNull()
     expect(
       screen.getByRole("heading", { name: "Libraries covered" })
     ).toBeTruthy()
@@ -247,12 +248,11 @@ describe("TeamOrganiser (organiser)", () => {
     expect(mocks.refresh).toHaveBeenCalled()
   })
 
-  it("invites by email, with an optional pre-assignment, while seats remain", async () => {
+  it("invites by email, with an optional pre-assignment", async () => {
     render(organiser())
     expect(
       screen.getByRole("heading", { name: "Invite a colleague" })
     ).toBeTruthy()
-    expect(screen.getByText("3 seats left")).toBeTruthy()
     fireEvent.change(screen.getByLabelText("Email"), {
       target: { value: "dee@example.org" },
     })
@@ -313,10 +313,11 @@ describe("TeamOrganiser (organiser)", () => {
     )
   })
 
-  it("says when every seat is taken", () => {
-    render(organiser({ used: 5 }))
-    expect(screen.getByText("0 seats left")).toBeTruthy()
-    expect(screen.getByText(/Every available seat is taken/)).toBeTruthy()
+  it("pauses invitations while the workspace is closed", () => {
+    render(organiser({ status: "lapsed" }))
+    expect(
+      screen.getByText(/Invitations are paused while this workspace is closed/)
+    ).toBeTruthy()
     expect(screen.queryByLabelText("Email")).toBeNull()
   })
 
@@ -342,18 +343,21 @@ describe("TeamOrganiser (organiser)", () => {
   it("explains that an unverified team's assignments go to a moderator", () => {
     render(organiser({ verifiedAt: null }))
     expect(screen.getByText("Team verification: Not verified")).toBeTruthy()
-    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.getByText("Workspace: Open")).toBeTruthy()
     expect(screen.queryByText(/Waiting for Team verification/)).toBeNull()
     expect(
       screen.getByText(/Assignments need moderator review unless/)
     ).toBeTruthy()
   })
 
-  it("warns when the team has lapsed", () => {
+  it("explains a closed workspace without mentioning payment", () => {
     render(organiser({ status: "lapsed" }))
     expect(screen.getByText("This team isn't active")).toBeTruthy()
-    expect(screen.getByText(/It has lapsed/)).toBeTruthy()
-    expect(screen.getByText("Team membership: Lapsed")).toBeTruthy()
+    expect(
+      screen.getByText(/The site team has closed this workspace/)
+    ).toBeTruthy()
+    expect(screen.getByText("Workspace: Closed")).toBeTruthy()
+    expect(screen.queryByText(/renew|seat|Pro\b/i)).toBeNull()
   })
 
   it("distinguishes an unverified Team, pending staff access and an unsent draft", () => {
@@ -395,7 +399,7 @@ describe("TeamOrganiser (organiser)", () => {
         screen.getByRole("list", { name: "Library access for x@example.org" })
       ).getByText("Library access: Awaiting review")
     ).toBeTruthy()
-    expect(screen.getByText("Team membership: Active")).toBeTruthy()
+    expect(screen.getByText("Workspace: Open")).toBeTruthy()
     expect(screen.getByText("Team verification: Not verified")).toBeTruthy()
   })
 })

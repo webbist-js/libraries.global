@@ -36,6 +36,7 @@ import {
 import type { AnalysisTab } from "@/components/atlas/AtlasAnalysisWorkspace"
 import { DashboardContextTransition } from "@/components/dashboard/DashboardRouteTransition"
 import { SelectField } from "@/components/ds/SelectField"
+import GlobalLink from "@/components/global/GlobalLink"
 import { useRouteUrlSyncGuard } from "@/hooks/useRouteUrlSyncGuard"
 import { useEntitlements } from "@/lib/access-client"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
@@ -81,7 +82,7 @@ import {
   loosenSuggestions,
   parseUrlState,
   type Tier,
-  tierForPlan,
+  tierForAccess,
   toggleLayer,
   withRequiredLibraryLocations,
   toUrlParams,
@@ -228,15 +229,20 @@ function useTier(): {
   tier: Tier
   ready: boolean
   capacity: AtlasReachCapacity
-  plan: ReturnType<typeof useEntitlements>["plan"]
+  canExport: boolean
+  canServiceReach: boolean
+  apiCustomer: boolean
 } {
-  const { plan, ready, analysisAreaMultiplier } = useEntitlements()
+  const access = useEntitlements()
 
   return {
-    tier: tierForPlan(plan),
-    ready,
-    capacity: analysisAreaMultiplier,
-    plan,
+    tier: tierForAccess(access),
+    ready: access.ready,
+    // Every Reach allowance uses the standard geographic envelope.
+    capacity: 1,
+    canExport: access.can("atlas.export"),
+    canServiceReach: access.can("atlas.serviceReach"),
+    apiCustomer: access.has("apiCustomer"),
   }
 }
 
@@ -323,6 +329,7 @@ export function AtlasExplorer({
     setExplicitGap(null)
   }, [])
   const tNetwork = useUiTranslations("atlasNetwork")
+  const tLock = useUiTranslations("accessLocks")
   const tDrawers = useUiTranslations("atlasDrawers")
   const tInspect = useUiTranslations("atlasInspect")
   const tList = useUiTranslations("atlasList")
@@ -333,7 +340,14 @@ export function AtlasExplorer({
   const isMobile = useIsMobile(analysisRoot)
   const narrow = useIsMobile(analysisRoot, 1439)
   const animateAtlas = useAtlasMotion()
-  const { tier, ready: entitlementsReady, capacity, plan } = useTier()
+  const {
+    tier,
+    ready: entitlementsReady,
+    capacity,
+    canExport,
+    canServiceReach,
+    apiCustomer,
+  } = useTier()
 
   // ── State (hydrated from the URL after mount) ─────────────────────────────
   const [hydrated, setHydrated] = useState(false)
@@ -447,6 +461,11 @@ export function AtlasExplorer({
   const [populationOpacity, setPopulationOpacity] = useState(0.7)
   const networkSelection = useAtlasNetworkSelection(filters.networks?.[0] ?? "")
   const [reachScope, setReachScope] = useState<"library" | "network">("library")
+  // Service Reach is for API customers only; a shared link falls back.
+  useEffect(() => {
+    if (entitlementsReady && !canServiceReach && reachScope === "network")
+      setReachScope("library")
+  }, [entitlementsReady, canServiceReach, reachScope])
   const [networkGaps, setNetworkGaps] = useState(false)
   const [reachMode, setReachMode] = useState<AtlasReachMode>("walking")
   const [reachMinutes, setReachMinutes] = useState(15)
@@ -634,7 +653,7 @@ export function AtlasExplorer({
     }
   }, [])
 
-  // Drop layers the viewer can't use (e.g. a Pro layer in a shared link).
+  // Drop layers the viewer can't use (e.g. Reach in a shared link).
   const usableLayers = useMemo(
     () =>
       withRequiredLibraryLocations(
@@ -1722,7 +1741,9 @@ export function AtlasExplorer({
                 }
                 options={[
                   { value: "library", label: tNetwork("singleLibrary") },
-                  { value: "network", label: tNetwork("networkScope") },
+                  ...(canServiceReach
+                    ? [{ value: "network", label: tNetwork("networkScope") }]
+                    : []),
                 ]}
               />
             </div>
@@ -1764,7 +1785,7 @@ export function AtlasExplorer({
           response={networkReach.response}
           stale={networkReach.stale}
           calculate={networkReach.calculate}
-          canExport={tier === "pro"}
+          canExport={canExport}
         />
       ) : (
         <AtlasReachAnalysis
@@ -1783,9 +1804,22 @@ export function AtlasExplorer({
                 }
                 options={[
                   { value: "library", label: tNetwork("singleLibrary") },
-                  { value: "network", label: tNetwork("networkScope") },
+                  ...(canServiceReach
+                    ? [{ value: "network", label: tNetwork("networkScope") }]
+                    : []),
                 ]}
               />
+              {entitlementsReady && !canServiceReach ? (
+                <p className="m-0 text-xs text-(--t-ink-dim)">
+                  {tLock("serviceReachApi")}{" "}
+                  <GlobalLink
+                    href="/developers"
+                    className="font-semibold text-(--t-accent-primary) underline underline-offset-2"
+                  >
+                    {tLock("aboutApiAccess")}
+                  </GlobalLink>
+                </p>
+              ) : null}
             </div>
           }
           library={selected}
@@ -1798,7 +1832,8 @@ export function AtlasExplorer({
           onMinutes={setReachMinutes}
           opacity={reachOpacity}
           onOpacity={setReachOpacity}
-          canExport={tier === "pro"}
+          canExport={canExport}
+          hourlyAllowance={apiCustomer}
           collapsed={false}
           onCollapse={closeAnalysis}
           onClose={closeAnalysis}
@@ -3295,6 +3330,7 @@ export function AtlasExplorer({
       onHover={setHovered}
       onShowMap={() => setList(false)}
       onSeePlans={() => setPlansOpen(true)}
+      onSignIn={signIn}
     />
   )
   const projectionControls = (
@@ -3363,7 +3399,6 @@ export function AtlasExplorer({
     <AtlasPlansSheet
       open={plansOpen}
       tier={tier}
-      currentPlan={capacity === 2 ? "team" : plan}
       signInHref={signInHref}
       onClose={() => setPlansOpen(false)}
     />

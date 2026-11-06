@@ -34,7 +34,7 @@ function widgetStatus(
   teamActive: boolean
 ): { color: "warn" | "ok" | "dim"; label: string } {
   if (!teamActive)
-    return { color: "warn", label: "Unavailable — Team inactive" }
+    return { color: "warn", label: "Unavailable — workspace closed" }
   if (w.state === "live")
     return { color: "ok", label: `Live v${w.publishedVersion}` }
 
@@ -262,14 +262,14 @@ export function WidgetsOverview({
         <Notice
           icon="mdi:pause-circle-outline"
           tone="warn"
-          title="Your Team is inactive"
+          title="Your workspace is closed"
         >
           <p>
-            Published widgets are unavailable. An organiser can manage billing,
-            pause, unpublish or archive retained work.
+            Published widgets are unavailable. An organiser can still pause,
+            unpublish or archive retained work.
           </p>
-          <Link href="/staff/teams/billing" className="font-semibold underline">
-            Manage billing and seats
+          <Link href="/contact" className="font-semibold underline">
+            Contact the site team
           </Link>
         </Notice>
       ) : null}

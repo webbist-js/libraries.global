@@ -140,7 +140,7 @@ describe("guided feedback and contact modal", () => {
     expect(
       screen.getByRole("combobox", { name: "What’s your message about?" })
         .textContent
-    ).toBe("Plans and membership")
+    ).toBe("Plans and API Access")
     expect(screen.getByText("Team plan")).toBeTruthy()
     expect(
       (screen.getByLabelText("Email address") as HTMLInputElement).required

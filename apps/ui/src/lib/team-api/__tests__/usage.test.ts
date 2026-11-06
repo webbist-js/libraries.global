@@ -17,7 +17,7 @@ function database(startedAt: string | null, days: unknown[] = []) {
   } as unknown as Pool
 }
 
-describe("Team API usage history", () => {
+describe("API usage history", () => {
   it("keeps keys beyond the first page reachable while totals remain Team-wide", async () => {
     const keys = Array.from({ length: 53 }, (_, index) => ({
       id: `key-${index}`,
@@ -37,13 +37,23 @@ describe("Team API usage history", () => {
           ? keys.slice(Number(values[2]), Number(values[2]) + 51)
           : sql.startsWith("select count(*)")
             ? [{ count: "53" }]
-            : sql.startsWith("select requests,bytes")
-              ? [{ requests: "53", bytes: "54272" }]
+            : sql.startsWith("select * from api_periods")
+              ? [
+                  {
+                    settled_requests: "50",
+                    settled_bytes: "54272",
+                    settled_credits: "2",
+                    reserved_requests: "3",
+                    reserved_bytes: "0",
+                    reserved_credits: "0",
+                  },
+                ]
               : [],
       })),
     } as unknown as Pool
-    const first = await apiUsage(pool, "team")
-    const next = await apiUsage(pool, "team", 50)
+    const period = "2026-10-05T10:00:00.000Z"
+    const first = await apiUsage(pool, "team", period)
+    const next = await apiUsage(pool, "team", period, 50)
     expect(first.keys).toHaveLength(50)
     expect(first.keyPage).toEqual({ offset: 0, hasMore: true, activeCount: 53 })
     expect(next.keys.map((key) => key.id)).toEqual([
@@ -56,13 +66,19 @@ describe("Team API usage history", () => {
       hasMore: false,
       activeCount: 53,
     })
-    expect(next.usage).toEqual(first.usage)
-    expect(next.usage.requests).toBe(53)
+    expect(next.totals).toEqual(first.totals)
+    // Totals include in-flight reservations; settled excludes them.
+    expect(next.totals).toEqual({ requests: 53, bytes: 54272, credits: 2 })
+    expect(next.settled.requests).toBe(50)
   })
 
   it("starts on the UTC day API access began, without inventing earlier zero rows", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-10-20T14:00:00Z"))
-    const result = await apiUsage(database("2026-10-20T13:00:00Z"), "team")
+    const result = await apiUsage(
+      database("2026-10-20T13:00:00Z"),
+      "team",
+      null
+    )
     expect(result.days).toEqual([
       { day: "2026-10-20", requests: 0, bytes: 0, errors: 0 },
     ])
@@ -74,7 +90,8 @@ describe("Team API usage history", () => {
       database("2026-10-18T23:59:00Z", [
         { day: "2026-10-19", requests: "3", bytes: "2048", errors: "1" },
       ]),
-      "team"
+      "team",
+      null
     )
     expect(result.days).toEqual([
       { day: "2026-10-18", requests: 0, bytes: 0, errors: 0 },
@@ -85,7 +102,11 @@ describe("Team API usage history", () => {
 
   it("caps established accounts at the latest 30 UTC calendar days", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-10-20T23:59:00Z"))
-    const result = await apiUsage(database("2026-01-01T12:00:00Z"), "team")
+    const result = await apiUsage(
+      database("2026-01-01T12:00:00Z"),
+      "team",
+      null
+    )
     expect(result.days).toHaveLength(30)
     expect(result.days[0]?.day).toBe("2026-09-21")
     expect(result.days.at(-1)?.day).toBe("2026-10-20")
@@ -93,6 +114,6 @@ describe("Team API usage history", () => {
 
   it("has no daily history before the first paid activation", async () => {
     vi.useFakeTimers().setSystemTime(new Date("2026-10-20T14:00:00Z"))
-    expect((await apiUsage(database(null), "team")).days).toEqual([])
+    expect((await apiUsage(database(null), "team", null)).days).toEqual([])
   })
 })

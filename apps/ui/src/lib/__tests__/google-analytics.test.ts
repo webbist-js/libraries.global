@@ -179,7 +179,7 @@ describe("production analytics", () => {
 it("keeps the checkout channel off by default, even with consent", () => {
   const { browser, append } = fixture(
     "https://libraries.global",
-    "/staff/teams/billing"
+    "/contribute/membership/checkout"
   )
   const analytics = installGoogleAnalytics(browser)!
   analytics.setConsent(true)
@@ -195,7 +195,7 @@ it("keeps the checkout channel off by default, even with consent", () => {
 it("uses a separate consented channel with generic context and no private page views", () => {
   const { browser, append, views } = fixture(
     "https://libraries.global",
-    "/fr/staff/teams/billing"
+    "/fr/contribute/membership/checkout"
   )
   const analytics = installGoogleAnalytics(browser, undefined, true, true)!
   const fields = {
@@ -239,7 +239,7 @@ it("uses a separate consented channel with generic context and no private page v
 })
 
 it("never replays checkout completions across routes or consent epochs", () => {
-  const { browser } = fixture("https://libraries.global", "/staff/teams/new")
+  const { browser } = fixture("https://libraries.global", "/plans")
   const analytics = installGoogleAnalytics(browser, undefined, true, true)!
   const fields = { product: "team", billing_interval: "year" }
   analytics.setConsent(true)
@@ -248,7 +248,7 @@ it("never replays checkout completions across routes or consent epochs", () => {
   analytics.setConsent(true)
   expect(before()).toBe(false)
   const moved = analytics.prepareCheckout!("checkout_handoff", fields)
-  browser.location.pathname = "/staff/teams/billing"
+  browser.location.pathname = "/developers"
   expect(moved()).toBe(false)
   const current = analytics.prepareCheckout!("checkout_handoff", fields)
   expect(current()).toBe(true)

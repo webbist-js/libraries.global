@@ -1,65 +1,53 @@
 /**
- * The "compare every plan" matrix for /plans and the Atlas
- * plans sheet. Rows
- * are derived from lib/plans.ts (each plan's includes) and the entitlement
- * resolver (which Pro features each plan gets), so the table can't claim
- * more than the plans do. Status comes from the copy: "soon" never shows ✓.
+ * The "compare what each offer includes" matrix for /plans and the Atlas
+ * plans sheet. Tool rows are read from the entitlement resolver, so the
+ * table can't claim more than the access code grants; staff rows are
+ * capabilities from verified staff claims, never entitlements. Planned rows
+ * ("soon") never show a tick. Labels live in `membershipContent.rows`.
  */
-import { type Feature, FEATURES } from "@repo/access"
-
 import {
-  ATLAS_PER_CAPITA_LABEL,
-  featuresOf,
-  exportLimitOf,
-  savedViewLimitOf,
-  type PlanCardKey,
-  type PlanPrice,
-  PLANS,
-  PRO_FEATURE_COPY,
-} from "./plans"
+  type EntitlementInput,
+  type Feature,
+  resolveEntitlements,
+} from "@repo/access"
+
+import { FEATURE_STATUS } from "./plans"
+
+/** Who the column describes. Columns are independent, not cumulative. */
+export type CompareColumn =
+  | "public"
+  | "explorer"
+  | "contributor"
+  | "staff"
+  | "api"
+
+export const COMPARE_COLUMNS: readonly CompareColumn[] = [
+  "public",
+  "explorer",
+  "contributor",
+  "staff",
+  "api",
+]
 
 export type CompareCell = "yes" | "soon" | "no"
 
 export type CompareRow = {
   id: string
-  label: string
-  cells: Record<PlanCardKey, CompareCell>
-  cellLabelIsExport?: boolean
-  cellLabels?: Partial<Record<PlanCardKey, string>>
-  /** cellLabels are saved-view allowances ("3" or "unlimited"), worded per locale. */
-  cellLabelIsSavedViews?: boolean
+  cells: Record<CompareColumn, CompareCell>
+  /** A cell's value message (`membershipContent.cells.<id>`) instead of a tick. */
+  cellValues?: Partial<Record<CompareColumn, string>>
   /** The Roadmap item tracking a row that isn't built yet. */
   roadmapKey?: string
 }
 
-export type CompareGroup = { id: string; title: string; rows: CompareRow[] }
-
-export function compareGroupSummary(group: CompareGroup): string {
-  const now = group.rows.filter((row) =>
-    Object.values(row.cells).includes("yes")
-  ).length
-  const soon = group.rows.length - now
-
-  return [
-    now > 0 ? `${now} available now` : null,
-    soon > 0 ? `${soon} on the roadmap` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
-}
-
-/** Column order: each plan includes everything to its left. */
-export const COMPARE_PLANS: readonly PlanCardKey[] = PLANS.map((p) => p.key)
-
-const SOON_SUFFIX = " (coming soon)"
+export type CompareGroup = { id: string; rows: CompareRow[] }
 
 /**
  * Roadmap item keys (CMS `roadmap.feature.key`) for features not built
  * yet. The plans page links a row only when the published Roadmap still
- * has that item, so an editor removing one never leaves a dead link.
+ * lists that item, so an editor removing one never leaves a dead link.
  */
 export const ROADMAP_KEY_FOR_FEATURE: Partial<Record<Feature, string>> = {
-  "library.traffic": "traffic-reports",
   "index.export": "export-attribution",
   "index.alerts": "search-alerts",
   "index.compare": "compare-libraries",
@@ -67,240 +55,173 @@ export const ROADMAP_KEY_FOR_FEATURE: Partial<Record<Feature, string>> = {
   "library.notes": "private-notes",
   "data.benchmark": "benchmark-services",
   "events.personalFeed": "calendar-feed",
-  "team.workspace": "shared-workspace",
-  "team.bulkUpload": "bulk-updates",
-  "api.key": "api-allowances",
 }
 
-/** Includes that only point at another column, not features of their own. */
-const IS_POINTER = /^(Everything in |Pro for every seat)/
+const FAR_FUTURE = "9999-12-31T00:00:00.000Z"
 
-/** Pro features get their own rows, so their include lines are skipped. */
-const FEATURE_LABELS = new Set([
-  ATLAS_PER_CAPITA_LABEL,
-  "Larger service Reach: up to 100 libraries and a 40,000 km² envelope, one travel time per calculation",
-  ...Object.values(PRO_FEATURE_COPY).map((c) => c.label),
-])
-
-const GROUP_FOR_PLAN: Partial<Record<PlanCardKey, string>> = {
-  public: "facts",
-  free: "contributing",
-  supporter: "supporting",
-  team: "teams",
+/** The resolver input each column stands for. Staff read as Explorer. */
+const COLUMN_INPUT: Record<CompareColumn, EntitlementInput> = {
+  public: { signedIn: false, now: new Date(0) },
+  explorer: { signedIn: true, now: new Date(0) },
+  contributor: { signedIn: true, now: new Date(0), acceptedContributions: 1 },
+  staff: { signedIn: true, now: new Date(0) },
+  api: {
+    signedIn: true,
+    now: new Date(0),
+    apiAccounts: [{ role: "organiser", paidThrough: FAR_FUTURE }],
+  },
 }
 
-const FEATURE_GROUPS: Record<string, readonly Feature[]> = {
-  atlas: [
-    "atlas.export",
-    "atlas.contextLayers",
-    "atlas.analysis",
-    "atlas.compare",
-    "data.benchmark",
-    "data.explorerExport",
-  ],
-  watching: [
-    "library.history",
-    "library.watch",
-    "index.alerts",
-    "index.compare",
-    "library.notes",
-    "events.personalFeed",
-    "index.export",
-  ],
-  teams: [
-    "library.team",
-    "library.traffic",
-    "team.workspace",
-    "team.bulkUpload",
-    "team.embed",
-    "api.key",
-  ],
+const ENTITLEMENTS = Object.fromEntries(
+  COMPARE_COLUMNS.map((c) => [c, resolveEntitlements(COLUMN_INPUT[c])])
+) as Record<CompareColumn, ReturnType<typeof resolveEntitlements>>
+
+/** Whether a column's resolved entitlements include a feature. */
+export function columnHas(column: CompareColumn, feature: Feature): boolean {
+  return ENTITLEMENTS[column].features.has(feature)
 }
 
-const GROUP_TITLES: [id: string, title: string][] = [
-  ["facts", "Library facts"],
-  ["contributing", "Contributing and following"],
-  ["supporting", "Supporting the project"],
-  ["atlas", "Atlas analysis"],
-  ["watching", "Watching and comparing libraries"],
-  ["teams", "For teams"],
-  // Catches any feature added to @repo/access before it gets a group.
-  ["more", "More Pro features"],
+const cellsFor = (
+  columns: readonly CompareColumn[],
+  status: CompareCell = "yes"
+): Record<CompareColumn, CompareCell> =>
+  Object.fromEntries(
+    COMPARE_COLUMNS.map((c) => [c, columns.includes(c) ? status : "no"])
+  ) as Record<CompareColumn, CompareCell>
+
+const SIGNED_IN: readonly CompareColumn[] = [
+  "explorer",
+  "contributor",
+  "staff",
+  "api",
 ]
 
-function slug(text: string): string {
-  return text
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, "-")
-    .replaceAll(/^-|-$/g, "")
-}
-
-function cellsFrom(
-  from: PlanCardKey,
-  status: CompareCell
-): Record<PlanCardKey, CompareCell> {
-  const start = COMPARE_PLANS.indexOf(from)
-
-  return Object.fromEntries(
-    COMPARE_PLANS.map((key, i) => [key, i >= start ? status : "no"])
-  ) as Record<PlanCardKey, CompareCell>
-}
-
-/** Rows for the plain includes of Public, Free account, Supporter and Team. */
-function includeRows(): { group: string; row: CompareRow }[] {
-  return PLANS.flatMap((plan) => {
-    const group = GROUP_FOR_PLAN[plan.key]
-    if (!group) return []
-
-    return plan.includes
-      .filter((item) => item.kind !== "note" && !IS_POINTER.test(item.text))
-      .flatMap((item) => {
-        const label = item.text.endsWith(SOON_SUFFIX)
-          ? item.text.slice(0, -SOON_SUFFIX.length)
-          : item.text
-        if (
-          [...FEATURE_LABELS].some(
-            (feature) => label === feature || label.startsWith(`${feature} (`)
-          )
-        )
-          return []
-
-        // The saved-views line states Free's allowance; the row shows each plan's.
-        if (label === SAVED_VIEWS_INCLUDE)
-          return [{ group, row: savedViewsRow(plan.key) }]
-
-        return [
-          {
-            group,
-            row: {
-              id: slug(label),
-              label,
-              cells: cellsFrom(plan.key, item.kind === "soon" ? "soon" : "yes"),
-            },
-          },
-        ]
-      })
-  })
-}
-
-const SAVED_VIEWS_INCLUDE = "3 saved views and 3 saved searches"
-
-function savedViewsLabel(plan: "free" | "supporter" | "pro" | "team") {
-  const limit = savedViewLimitOf(plan)
-
-  return limit >= 1000 ? "unlimited" : String(limit)
-}
-
-function savedViewsRow(from: PlanCardKey): CompareRow {
-  return {
-    id: slug(SAVED_VIEWS_INCLUDE),
-    label: "Saved views and searches",
-    cells: cellsFrom(from, "yes"),
-    cellLabelIsSavedViews: true,
-    cellLabels: {
-      free: savedViewsLabel("free"),
-      supporter: savedViewsLabel("supporter"),
-      pro: savedViewsLabel("pro"),
-      team: savedViewsLabel("team"),
-    },
-  }
-}
-
-function featureRow(feature: Feature): CompareRow {
-  const copy = PRO_FEATURE_COPY[feature]
-  const status: CompareCell = copy.status === "live" ? "yes" : "soon"
-  const pro = featuresOf("pro").includes(feature)
-  const supporter = featuresOf("supporter").includes(feature)
-  const team = featuresOf("team").includes(feature)
-
+function featureRow(
+  feature: Feature,
+  cellValues?: Partial<Record<CompareColumn, string>>
+): CompareRow {
+  const status: CompareCell =
+    FEATURE_STATUS[feature] === "live" ? "yes" : "soon"
   const roadmapKey =
-    copy.status === "soon" ? ROADMAP_KEY_FOR_FEATURE[feature] : undefined
+    status === "soon" ? ROADMAP_KEY_FOR_FEATURE[feature] : undefined
 
   return {
     id: feature,
-    label: copy.label,
-    ...(roadmapKey ? { roadmapKey } : {}),
-    cells: {
-      public: "no",
-      free: "no",
-      supporter: supporter ? status : "no",
-      pro: pro ? status : "no",
-      team: team ? status : "no",
-    },
-    ...(feature === "atlas.export"
+    cells: cellsFor(
+      COMPARE_COLUMNS.filter((c) => columnHas(c, feature)),
+      status
+    ),
+    ...(cellValues
       ? {
-          cellLabelIsExport: true,
-          cellLabels: Object.fromEntries(
-            (["supporter", "pro", "team"] as const).map((plan) => [
-              plan,
-              `${exportLimitOf(plan).toLocaleString("en-GB")}`,
-            ])
+          cellValues: Object.fromEntries(
+            Object.entries(cellValues).filter(([c]) =>
+              columnHas(c as CompareColumn, feature)
+            )
           ),
         }
       : {}),
+    ...(roadmapKey ? { roadmapKey } : {}),
   }
 }
 
+const plain = (
+  id: string,
+  columns: readonly CompareColumn[],
+  status: CompareCell = "yes",
+  cellValues?: Partial<Record<CompareColumn, string>>
+): CompareRow => ({
+  id,
+  cells: cellsFor(columns, status),
+  ...(cellValues ? { cellValues } : {}),
+})
+
+const each = (columns: readonly CompareColumn[], value: string) =>
+  Object.fromEntries(columns.map((c) => [c, value])) as Partial<
+    Record<CompareColumn, string>
+  >
+
 export function compareGroups(): CompareGroup[] {
-  const byGroup = new Map<string, CompareRow[]>(
-    GROUP_TITLES.map(([id]) => [id, []])
-  )
-  for (const { group, row } of includeRows()) byGroup.get(group)!.push(row)
-
-  const grouped = new Set(Object.values(FEATURE_GROUPS).flat())
-  for (const [group, features] of Object.entries(FEATURE_GROUPS))
-    for (const f of features) byGroup.get(group)!.push(featureRow(f))
-  for (const f of FEATURES)
-    if (!grouped.has(f)) byGroup.get("more")!.push(featureRow(f))
-
-  // This delivered tool shares the analysis entitlement with future Reach tools.
-  byGroup.get("atlas")!.splice(1, 0, {
-    id: "atlas.libraryAccess",
-    label: ATLAS_PER_CAPITA_LABEL,
-    cells: {
-      public: "no",
-      free: "no",
-      supporter: "no",
-      pro: featuresOf("pro").includes("atlas.analysis") ? "yes" : "no",
-      team: featuresOf("team").includes("atlas.analysis") ? "yes" : "no",
+  const groups: CompareGroup[] = [
+    {
+      id: "facts",
+      rows: [
+        plain("records", COMPARE_COLUMNS),
+        plain("map", COMPARE_COLUMNS),
+        plain("reading", COMPARE_COLUMNS),
+        plain("downloads", COMPARE_COLUMNS),
+        plain("apiReference", COMPARE_COLUMNS),
+      ],
     },
-  })
+    {
+      id: "account",
+      rows: [
+        plain("contribute", SIGNED_IN),
+        plain("follow", SIGNED_IN),
+        plain("discussions", SIGNED_IN),
+        plain("drives", SIGNED_IN),
+        plain("savedViews", SIGNED_IN, "yes", each(SIGNED_IN, "savedViews")),
+      ],
+    },
+    {
+      id: "atlas",
+      rows: [
+        featureRow("atlas.contextLayers"),
+        featureRow("atlas.analysis"),
+        featureRow("atlas.compare"),
+        featureRow("atlas.export", each(SIGNED_IN, "exportRows")),
+        featureRow("atlas.reach", {
+          contributor: "reachWeek",
+          api: "reachHour",
+        }),
+        featureRow("atlas.serviceReach", { api: "serviceLibraries" }),
+      ],
+    },
+    {
+      id: "watching",
+      rows: (
+        [
+          "library.history",
+          "library.watch",
+          "index.alerts",
+          "index.compare",
+          "library.notes",
+          "events.personalFeed",
+          "index.export",
+          "data.benchmark",
+          "data.explorerExport",
+        ] as const
+      ).map((f) => featureRow(f)),
+    },
+    {
+      id: "staff",
+      rows: [
+        plain("staffWorkspace", ["staff"]),
+        plain("staffEditing", ["staff"]),
+        plain("staffOrganisation", ["staff"]),
+        plain("staffWidgets", ["staff"]),
+        plain("staffTraffic", ["staff"], "soon"),
+      ],
+    },
+    {
+      id: "api",
+      rows: [
+        featureRow("api.key"),
+        plain("apiAllowance", ["api"], "yes", { api: "apiAllowance" }),
+        plain("apiOverage", ["api"]),
+        plain("apiPlayground", ["api"]),
+      ],
+    },
+  ]
 
-  for (const [id, label, pro, team] of [
-    [
-      "atlas.reachArea",
-      "Larger service Reach: maximum envelope (km²), one time per calculation",
-      "20,000",
-      "40,000",
-    ],
-    [
-      "atlas.reachLibraries",
-      "Service Reach: maximum eligible libraries",
-      "50",
-      "100",
-    ],
-    ["atlas.analysisHourly", "New Reach calculations per hour", "20", "100"],
-  ])
-    byGroup.get("atlas")!.push({
-      id: id!,
-      label: label!,
-      cells: cellsFrom("pro", "yes"),
-      cellLabels: { pro, team },
-    })
-  byGroup.get("atlas")!.push({
-    id: "atlas.transit",
-    label: "Transit stops and lines",
-    cells: cellsFrom("pro", "soon"),
-  })
-
-  return GROUP_TITLES.map(([id, title]) => ({
-    id,
-    title,
-    rows: byGroup.get(id)!,
-  })).filter((g) => g.rows.length > 0)
+  return groups.filter((g) => g.rows.length > 0)
 }
 
-/** Keeps rows that at least one plan has today ("Only show what's available now"). */
+/** Every row id, for message coverage tests. */
+export function compareRowIds(): string[] {
+  return compareGroups().flatMap((g) => g.rows.map((r) => r.id))
+}
+
+/** Keeps rows that at least one column has today ("Only show what's available now"). */
 export function availableNow(groups: CompareGroup[]): CompareGroup[] {
   return groups
     .map((g) => ({
@@ -310,49 +231,17 @@ export function availableNow(groups: CompareGroup[]): CompareGroup[] {
     .filter((g) => g.rows.length > 0)
 }
 
-/** "Free", "£3/mo", "£600/yr": the compact price for a column header. */
-export function shortPrice(price: PlanPrice): string {
-  if (price === "free") return "Free"
-  if (price.monthly) return price.monthly.replace("/month", "/mo")
-
-  return (price.yearly ?? "").replace("/year", "/yr").replace(" ex VAT", "")
-}
-
-function amount(text: string | undefined): number | null {
-  const match = /£\s*([\d,]+(?:\.\d+)?)/.exec(text ?? "")
-
-  return match ? Number(match[1]!.replaceAll(",", "")) : null
-}
-
-/**
- * Whole months saved by paying yearly (£3/month vs £30/year → 2), or null
- * when the price has no monthly and yearly pair, or no saving.
- */
-export function yearlySavingMonths(price: PlanPrice): number | null {
-  if (price === "free") return null
-  const monthly = amount(price.monthly)
-  const yearly = amount(price.yearly)
-  if (!monthly || yearly == null) return null
-  const months = Math.round((monthly * 12 - yearly) / monthly)
-
-  return months > 0 ? months : null
-}
-
-/** The rows the Atlas plans sheet shows, in order (its layer rows are its own). */
+/** The rows the Atlas plans sheet shows, in order. */
 export const ATLAS_SHEET_ROW_IDS = [
-  "every-library-record-with-hours-and-services",
-  "search-the-map-and-lists",
-  "follow-libraries-and-save-events",
-  "atlas.export",
-  "atlas.libraryAccess",
+  "records",
+  "map",
+  "follow",
   "atlas.contextLayers",
   "atlas.analysis",
   "atlas.compare",
-  "atlas.reachArea",
-  "atlas.reachLibraries",
-  "atlas.analysisHourly",
-  "atlas.transit",
-  "team.workspace",
+  "atlas.export",
+  "atlas.reach",
+  "atlas.serviceReach",
 ] as const
 
 export function compareRowsById(ids: readonly string[]): CompareRow[] {
@@ -361,19 +250,5 @@ export function compareRowsById(ids: readonly string[]): CompareRow[] {
   return ids.flatMap((id) => all.filter((r) => r.id === id))
 }
 
-/** "£480/year ex VAT" → { amount: "£480", period: "year", suffix: " ex VAT" }. */
-export function splitPrice(
-  text: string | undefined
-): { amount: string; period: string; suffix: string } | null {
-  const slash = text?.indexOf("/") ?? -1
-  if (!text || slash === -1) return null
-  const amount = text.slice(0, slash)
-  if (!/^£[\d,.]+$/.test(amount)) return null
-  const rest = text.slice(slash + 1)
-  const space = rest.indexOf(" ")
-  const period = space === -1 ? rest : rest.slice(0, space)
-
-  return period
-    ? { amount, period, suffix: space === -1 ? "" : rest.slice(space) }
-    : null
-}
+/** A row id as a message key (`atlas.reach` → `atlas_reach`). */
+export const rowMessageKey = (id: string) => id.replaceAll(".", "_")

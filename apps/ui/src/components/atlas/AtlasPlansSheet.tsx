@@ -1,131 +1,110 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
-
 import { Drawer } from "@/components/ds/Drawer"
 import GlobalLink from "@/components/global/GlobalLink"
+import { useEntitlements } from "@/lib/access-client"
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 import {
+  useCompareColumn,
+  useLocalizeRow,
+  useMembershipContent,
+  useOfferValues,
+} from "@/lib/localized-plans"
+import {
   ATLAS_SHEET_ROW_IDS,
   type CompareCell,
+  type CompareColumn,
   compareRowsById,
 } from "@/lib/plan-compare"
-import {
-  planCard,
-  type PlanCardKey,
-  PRICES_ARE_PLACEHOLDERS,
-  priceHeadline,
-} from "@/lib/plans"
 
 import { Icon } from "./atlas-ui"
 import { type LayerId, layerDef, type Tier } from "./atlas.logic"
 
-type SheetPlan = "public" | "free" | "supporter" | "pro" | "team"
-const SHEET_PLANS: readonly SheetPlan[] = [
+/** The Atlas is about browsing and Reach, so staff rows stay on /plans. */
+const SHEET_COLUMNS: readonly CompareColumn[] = [
   "public",
-  "free",
-  "supporter",
-  "pro",
-  "team",
+  "explorer",
+  "contributor",
+  "api",
 ]
+const HIGHLIGHT = "var(--t-bg-selected)"
 
-// Names and prices come from lib/plans; these short lines fit the narrow
-// columns (the /pro page carries the full "who" copy).
-const TAGLINE: Record<SheetPlan, string> = {
-  public: "No account",
-  free: "Free sign-up",
-  supporter: "History & small exports",
-  pro: "For researchers",
-  team: "Libraries & councils",
+/** Which columns can switch on a layer of this tier. */
+const TIER_COLUMNS: Record<Tier, readonly CompareColumn[]> = {
+  public: SHEET_COLUMNS,
+  free: ["explorer", "contributor", "api"],
+  pro: ["explorer", "contributor", "api"],
+  reach: ["contributor", "api"],
 }
-
-const PLANS = SHEET_PLANS.map(planCard)
-const PRO_TINT = "var(--t-bg-selected)"
 
 type SheetRow = {
   id: string
   label: string
   cells: Record<string, CompareCell>
-  cellLabelIsExport?: boolean
-  cellLabels?: Partial<Record<PlanCardKey, string>>
+  cellLabels?: Partial<Record<CompareColumn, string>>
 }
 
-/** A row for a set of Atlas layers: from their tier up, ✓ once all are built. */
-function layerRow(label: string, ids: LayerId[]): SheetRow {
+const LAYER_ROWS: { id: string; layers: LayerId[] }[] = [
+  { id: "basics", layers: ["density", "openLate", "closures"] },
+  { id: "mobile", layers: ["mobile"] },
+  { id: "population", layers: ["population"] },
+  { id: "access", layers: ["access", "events", "complete"] },
+]
+
+function layerRow(id: string, label: string, ids: LayerId[]): SheetRow {
   const defs = ids.map(layerDef)
-  const from = defs[0]!.tier
   const status: CompareCell = defs.every((d) => d.ready) ? "yes" : "soon"
-  const rank: Record<Tier, number> = { public: 0, free: 1, pro: 2 }
-  const planRank: Record<SheetPlan, number> = {
-    public: 0,
-    free: 1,
-    supporter: 1,
-    pro: 2,
-    team: 2,
-  }
+  const columns = TIER_COLUMNS[defs[0]!.tier]
 
   return {
-    id: `layers-${ids.join("-")}`,
+    id: `layers-${id}`,
     label,
     cells: Object.fromEntries(
-      SHEET_PLANS.map((p) => [p, planRank[p] >= rank[from] ? status : "no"])
+      SHEET_COLUMNS.map((c) => [c, columns.includes(c) ? status : "no"])
     ),
   }
 }
 
-function sheetRows(): SheetRow[] {
-  const [record, search, follow, ...pro] = compareRowsById(ATLAS_SHEET_ROW_IDS)
+function useSheetRows(): SheetRow[] {
+  const m = useMembershipContent()
+  const localize = useLocalizeRow()
+  const [records, map, follow, ...tools] =
+    compareRowsById(ATLAS_SHEET_ROW_IDS).map(localize)
+  const layers = LAYER_ROWS.map((row) =>
+    layerRow(row.id, m(`sheet.layers.${row.id}`), row.layers)
+  )
 
   return [
-    record!,
-    search!,
-    layerRow("Density, open-late and closures layers", [
-      "density",
-      "openLate",
-      "closures",
-    ]),
-    layerRow("Mobile library routes and stops", ["mobile"]),
+    records!,
+    map!,
+    layers[0]!,
+    layers[1]!,
     follow!,
-    layerRow("Population density and supported grids", ["population"]),
-    layerRow("Accessibility, events and completeness layers", [
-      "access",
-      "events",
-      "complete",
-    ]),
-    ...pro,
+    layers[2]!,
+    layers[3]!,
+    ...tools,
   ]
 }
-
-const ROWS = sheetRows()
 
 /** A tick, a "Soon" chip or a dash, each with a text label. */
 function SheetCell({
   cell,
   label,
-  isExport = false,
 }: {
   readonly cell: CompareCell
-  readonly isExport?: boolean
   readonly label?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const m = useMembershipContent()
 
   if (cell === "yes" && label)
-    return (
-      <span className="font-semibold">
-        {label}
-        {isExport ? (
-          <span className="sr-only"> libraries per download</span>
-        ) : null}
-      </span>
-    )
+    return <span className="text-sm font-semibold">{label}</span>
 
   if (cell === "yes")
     return (
       <span className="inline-flex" style={{ color: T.accent.ok }}>
         <Icon name="check" size={16} stroke={2.4} />
-        <span className="sr-only">Included</span>
+        <span className="sr-only">{m("copy.included")}</span>
       </span>
     )
   if (cell === "soon")
@@ -135,119 +114,83 @@ function SheetCell({
         style={{ background: T.accent.chip, color: T.accent.primaryHover }}
       >
         <Icon name="clock" size={12} />
-        {tUi("soon")}
-        <span className="sr-only">: coming soon</span>
+        {m("copy.soonShort")}
+        <span className="sr-only">: {m("copy.soon")}</span>
       </span>
     )
 
   return (
     <span style={{ color: "var(--t-ink-low)" }}>
       <span aria-hidden="true">—</span>
-      <span className="sr-only">Not included</span>
+      <span className="sr-only">{m("copy.notIncluded")}</span>
     </span>
   )
 }
 
-function SeeAllPlansLink() {
-  return (
-    <GlobalLink
-      href="/plans"
-      {...analyticsAttributes("membership_interest", {
-        interaction_source: "upgrade_prompt",
-        action_type: "compare",
-      })}
-      className="text-sm font-semibold underline underline-offset-[3px]"
-      style={{ color: T.accent.primary }}
-    >
-      See all plans
-    </GlobalLink>
-  )
-}
-
 const OUTLINE_PILL =
-  "inline-flex h-9 items-center rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold no-underline"
+  "inline-flex min-h-9 items-center rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
 
-function PlanCta({
-  plan,
+function ColumnCta({
+  column,
   current,
-  tier,
   signInHref,
 }: {
-  readonly plan: (typeof PLANS)[number]
-  readonly current: PlanCardKey
-  readonly tier: Tier
+  readonly column: CompareColumn
+  readonly current: CompareColumn
   readonly signInHref: string
 }) {
-  const tUi = useUiTranslations("ui")
-
-  if (plan.key === current)
+  const m = useMembershipContent()
+  if (column === current)
     return (
-      <span className="inline-flex flex-col items-start gap-1">
-        <span
-          className="text-sm whitespace-nowrap"
-          style={{ color: T.ink.dim }}
-        >
-          You’re here
-        </span>
-        {/* Pro and Team members land on the Pro column, which would
-            otherwise lose its link to the plans page. */}
-        {plan.cta.kind === "soon" ? <SeeAllPlansLink /> : null}
+      <span className="text-sm whitespace-nowrap" style={{ color: T.ink.dim }}>
+        {m("sheet.here")}
       </span>
     )
+  const link =
+    column === "explorer" && current === "public"
+      ? { href: signInHref, label: m("sheet.signIn") }
+      : column === "contributor" && current !== "api"
+        ? { href: "/contribute", label: m("sheet.contribute") }
+        : column === "api"
+          ? { href: "/developers", label: m("sheet.api") }
+          : null
+  if (!link) return null
 
-  if (plan.key === "free" && tier === "public")
-    return (
-      <GlobalLink
-        href={signInHref}
-        className={OUTLINE_PILL}
-        style={{ borderColor: T.border.hi, color: T.ink.base }}
-      >
-        {tUi("sign_in")}{" "}
-      </GlobalLink>
-    )
-
-  if (plan.cta.kind === "contact" && plan.cta.href)
-    return (
-      <a
-        href={plan.cta.href}
-        className={OUTLINE_PILL}
-        style={{ borderColor: T.border.hi, color: T.ink.base }}
-      >
-        {plan.cta.label}
-      </a>
-    )
-
-  if (plan.cta.kind === "soon")
-    return (
-      <span className="inline-flex flex-col items-start gap-1">
-        <span
-          className="inline-flex items-center gap-1 text-sm font-semibold whitespace-nowrap"
-          style={{ color: T.ink.dim }}
-        >
-          <Icon name="clock" size={15} />
-          {plan.cta.label}
-        </span>
-        <SeeAllPlansLink />
-      </span>
-    )
-
-  return null
+  return (
+    <GlobalLink
+      href={link.href}
+      className={OUTLINE_PILL}
+      style={{ borderColor: T.border.hi, color: T.ink.base }}
+    >
+      {link.label}
+    </GlobalLink>
+  )
 }
 
 export function AtlasPlansSheet({
   open = true,
   tier,
-  currentPlan = tier,
   onClose,
   signInHref,
 }: {
   readonly open?: boolean
   readonly tier: Tier
-  readonly currentPlan?: PlanCardKey
   readonly onClose: () => void
   readonly signInHref: string
 }) {
-  const current: PlanCardKey = currentPlan
+  const m = useMembershipContent()
+  const values = useOfferValues()
+  const column = useCompareColumn()
+  const rows = useSheetRows()
+  const { has } = useEntitlements()
+  const current: CompareColumn =
+    tier === "public"
+      ? "public"
+      : has("apiCustomer")
+        ? "api"
+        : tier === "reach"
+          ? "contributor"
+          : "explorer"
 
   return (
     <Drawer
@@ -255,9 +198,9 @@ export function AtlasPlansSheet({
       titleId="atlas-plans-h"
       title={
         <>
-          Library facts are free.{" "}
+          {m("sheet.title")}{" "}
           <em className="font-normal" style={{ color: T.accent.primary }}>
-            Always.
+            {m("sheet.titleEmphasis")}
           </em>
         </>
       }
@@ -269,53 +212,46 @@ export function AtlasPlansSheet({
           className="mt-0 mb-5 max-w-[680px] text-base"
           style={{ color: T.ink.dim }}
         >
-          Addresses, hours, services and every community record stay open to
-          everyone. Pro supports the analysis tools and data processing that
-          cost money to run, and help keep the rest free.
+          {m("sheet.lead", values)}
         </p>
         <div
           className="max-w-full shrink-0 overflow-x-auto rounded-[22px] border bg-(--t-bg-deep) [contain:paint]"
+          role="region"
+          aria-label={m("copy.includes")}
+          tabIndex={0}
           style={{ borderColor: T.border.line }}
         >
-          <table className="w-full min-w-[680px] border-collapse text-base">
-            <caption className="sr-only">What each plan includes</caption>
+          <table className="w-full min-w-[640px] border-collapse text-base">
+            <caption className="sr-only">{m("copy.includes")}</caption>
             <thead>
               <tr>
                 <td
-                  className="w-[32%] border-b bg-(--t-bg-deep) max-sm:sticky max-sm:left-0 max-sm:z-[1]"
+                  className="w-[34%] border-b bg-(--t-bg-deep) max-sm:sticky max-sm:left-0 max-sm:z-[1]"
                   style={{ borderColor: T.border.hi }}
                 />
-                {PLANS.map((p) => (
+                {SHEET_COLUMNS.map((key) => (
                   <th
-                    key={p.key}
+                    key={key}
                     scope="col"
                     className="border-b px-3.5 pt-4 pb-3.5 text-left align-top font-bold"
                     style={{
                       borderColor: T.border.hi,
-                      background: p.key === "pro" ? T.accent.chip : T.bg.deep,
+                      background: key === current ? T.accent.chip : T.bg.deep,
                     }}
                   >
-                    <span className="block text-base whitespace-nowrap">
-                      {p.name}
-                    </span>
+                    <span className="block text-base">{column(key).name}</span>
                     <span
-                      className="my-0.5 block text-[22px] leading-tight font-medium"
-                      style={{ fontFamily: T.font.sans }}
-                    >
-                      {priceHeadline(p.price)}
-                    </span>
-                    <span
-                      className="block text-sm font-medium whitespace-nowrap"
+                      className="mt-0.5 block text-sm font-medium"
                       style={{ color: T.ink.dim }}
                     >
-                      {TAGLINE[p.key as SheetPlan]}
+                      {column(key).price}
                     </span>
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {ROWS.map((row) => (
+              {rows.map((row) => (
                 <tr key={row.id}>
                   <th
                     scope="row"
@@ -324,19 +260,18 @@ export function AtlasPlansSheet({
                   >
                     {row.label}
                   </th>
-                  {PLANS.map((p) => (
+                  {SHEET_COLUMNS.map((key) => (
                     <td
-                      key={p.key}
+                      key={key}
                       className="border-b px-3.5 py-2.5 text-center"
                       style={{
                         borderColor: T.border.divider,
-                        background: p.key === "pro" ? PRO_TINT : undefined,
+                        background: key === current ? HIGHLIGHT : undefined,
                       }}
                     >
                       <SheetCell
-                        cell={row.cells[p.key] ?? "no"}
-                        label={row.cellLabels?.[p.key]}
-                        isExport={row.cellLabelIsExport}
+                        cell={row.cells[key] ?? "no"}
+                        label={row.cellLabels?.[key]}
                       />
                     </td>
                   ))}
@@ -344,18 +279,17 @@ export function AtlasPlansSheet({
               ))}
               <tr>
                 <td className="bg-(--t-bg-deep) max-sm:sticky max-sm:left-0 max-sm:z-[1]" />
-                {PLANS.map((p) => (
+                {SHEET_COLUMNS.map((key) => (
                   <td
-                    key={p.key}
+                    key={key}
                     className="px-3.5 py-3.5 text-left"
                     style={{
-                      background: p.key === "pro" ? PRO_TINT : undefined,
+                      background: key === current ? HIGHLIGHT : undefined,
                     }}
                   >
-                    <PlanCta
-                      plan={p}
+                    <ColumnCta
+                      column={key}
                       current={current}
-                      tier={tier}
                       signInHref={signInHref}
                     />
                   </td>
@@ -373,15 +307,19 @@ export function AtlasPlansSheet({
             <Icon name="check" size={18} color={T.accent.ok} />
             <span>
               <strong style={{ color: T.ink.base }}>
-                Free Pro for library staff, students and charities.
+                {m("sheet.reachTitle", values)}
               </strong>{" "}
-              It renews each year.{" "}
+              {m("sheet.reachBody", values)}{" "}
               <GlobalLink
-                href="/plans#get-pro-free"
+                href="/plans"
+                {...analyticsAttributes("membership_interest", {
+                  interaction_source: "upgrade_prompt",
+                  action_type: "compare",
+                })}
                 className="font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
-                Ways to get Pro free
+                {m("sheet.allPlans")}
               </GlobalLink>
             </span>
           </p>
@@ -389,11 +327,9 @@ export function AtlasPlansSheet({
             <Icon name="globe" size={18} color="var(--t-palette-violet-fg)" />
             <span>
               <strong style={{ color: T.ink.base }}>
-                Open source, open data.
+                {m("sheet.openTitle")}
               </strong>{" "}
-              Library records are community-maintained open data, and the atlas
-              code is open source.
-              {PRICES_ARE_PLACEHOLDERS ? " Prices are placeholders." : null}
+              {m("sheet.openBody")}
             </span>
           </p>
         </div>

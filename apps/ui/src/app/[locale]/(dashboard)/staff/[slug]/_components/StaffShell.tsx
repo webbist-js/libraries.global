@@ -1,13 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { PlanKey } from "@repo/access"
 import { usePathname } from "next/navigation"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { useOptionalDashboardOverlay } from "@/components/dashboard/DashboardFrame"
 import { WorkspaceHero as PageHero } from "@/components/dashboard/WorkspaceHero"
-import { Badge, LibrarySwitcher, PlanChip, SectionTabs } from "@/components/ds"
+import { Badge, LibrarySwitcher, SectionTabs } from "@/components/ds"
 import { staffLibraryTabs } from "@/components/staff/staff-library-navigation"
 import { useStaffWorkspaceRecord } from "@/components/staff/StaffWorkspaceRecord"
 import type { StaffLibrarySummary } from "@/lib/access-server"
@@ -48,13 +47,12 @@ export function StaffShell({
   overview,
   libraries,
   meta,
-  plan,
   teamCovered,
 }: {
   readonly overview: StaffOverview
   readonly libraries: StaffLibrarySummary[]
   readonly meta: StaffLibraryMeta
-  readonly plan: PlanKey
+  /** The viewer's own staff claim unlocks the free staff tools here. */
   readonly teamCovered: boolean
 }) {
   const tUi = useUiTranslations("ui")
@@ -158,7 +156,7 @@ export function StaffShell({
               width={15}
             />
           </Link>
-          <PlanChip plan={plan} covered={teamCovered} />
+          <Badge color="dim" label={tUi("staff_access_free")} />
         </>
       }
       tabs={

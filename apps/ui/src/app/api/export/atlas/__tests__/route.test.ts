@@ -22,6 +22,9 @@ vi.mock("@/lib/navigation", () => ({
   routing: { locales: ["cs", "en"], defaultLocale: "en" },
 }))
 
+const spendExport = vi.fn(async (): Promise<Response | null> => null)
+vi.mock("@/lib/export-allowance", () => ({ spendExport }))
+
 const { POST } = await import("../route")
 const { MAX_ID_LENGTH } = await import("@/lib/bridge-params")
 const { MAX_EXPORT_IDS } = await import("@/lib/export-format")
@@ -87,7 +90,7 @@ const bridgeCalls = () =>
     ([, init]) => (JSON.parse(init.body as string) as { ids: string[] }).ids
   )
 
-const PRO_FIELDS = { limits: { exportRows: 10_000 } }
+const PRO_FIELDS = { limits: { exportRows: 10_000, exportsPerDay: 20 } }
 
 const proUser = (fields: Record<string, unknown> = PRO_FIELDS) => ({
   user: { id: "u1", features: ["atlas.export"], ...fields },
@@ -144,9 +147,7 @@ describe("POST /api/export/atlas: access", () => {
   it.each(["csv", "geojson"])(
     "allows Supporter's exact 500-row cap for %s and refuses 501",
     async (format) => {
-      getSession.mockResolvedValue(
-        proUser({ plan: "supporter", limits: { exportRows: 500 } })
-      )
+      getSession.mockResolvedValue(proUser({ limits: { exportRows: 500 } }))
       const ids = many(500)
       fetchMock.mockImplementation(
         bridge(
@@ -178,6 +179,16 @@ describe("POST /api/export/atlas: access", () => {
     ).toBe(400)
     expect(fetchMock).not.toHaveBeenCalled()
   })
+  it("refuses once the daily export allowance is spent, before calling the bridge", async () => {
+    getSession.mockResolvedValue(proUser())
+    spendExport.mockResolvedValueOnce(
+      Response.json({ code: "EXPORT_DAILY_LIMIT" }, { status: 429 })
+    )
+    const res = await post({ format: "csv", ids: [A] })
+    expect(res.status).toBe(429)
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it("returns 401 when signed out", async () => {
     getSession.mockResolvedValue(null)
 

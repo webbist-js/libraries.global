@@ -77,7 +77,6 @@ const shell = (props: Partial<Parameters<typeof StaffShell>[0]> = {}) =>
     overview: overview(),
     libraries,
     meta,
-    plan: "free",
     teamCovered: false,
     ...props,
   })
@@ -184,10 +183,10 @@ describe("StaffShell", () => {
     expect(screen.queryByText(/Based at/)).toBeNull()
   })
 
-  it("drops the Team locks and shows the Team plan chip when the library is covered", () => {
-    render(shell({ plan: "pro", teamCovered: true }))
-    expect(screen.getByText("Team plan")).toBeTruthy()
-    expect(screen.queryByText("Staff access · free")).toBeNull()
+  it("drops the Team locks when the viewer's own claim unlocks the free staff tools", () => {
+    render(shell({ teamCovered: true }))
+    expect(screen.getByText("Staff access · free")).toBeTruthy()
+    expect(screen.queryByText("Team plan")).toBeNull()
     expect(tabNames().slice(-2)).toEqual(["Traffic", "Team"])
   })
 

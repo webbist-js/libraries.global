@@ -1,0 +1,156 @@
+// @vitest-environment happy-dom
+import { cleanup, render, screen, within } from "@testing-library/react"
+import { NextIntlClientProvider } from "next-intl"
+import type { ReactNode } from "react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+import {
+  SponsorAcknowledgementList,
+  SponsorAmounts,
+  SponsorEnquiry,
+  SponsorProgrammes,
+  SponsorRecognition,
+} from "../SponsorSections"
+
+import cs from "../../../../locales/cs.json"
+import en from "../../../../locales/en.json"
+import es from "../../../../locales/es.json"
+import fr from "../../../../locales/fr.json"
+
+vi.mock("@iconify/react", () => ({ Icon: () => null }))
+vi.mock("next/image", () => ({
+  default: ({ alt, src }: { alt: string; src: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element -- Test stand-in for next/image.
+    <img alt={alt} src={src} />
+  ),
+}))
+vi.mock("@/components/global/GlobalLink", () => ({
+  default: ({ children, href }: { children: ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}))
+afterEach(cleanup)
+
+function renderIn(
+  locale: "en" | "fr" | "cs" | "es",
+  messages: Record<string, unknown>,
+  children: ReactNode
+) {
+  const errors: Error[] = []
+  render(
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messages}
+      timeZone="UTC"
+      onError={(error) => errors.push(error)}
+    >
+      {children}
+    </NextIntlClientProvider>
+  )
+
+  return errors
+}
+
+describe("sponsor page sections", () => {
+  it.each([
+    { locale: "en" as const, messages: en },
+    { locale: "fr" as const, messages: fr },
+    { locale: "cs" as const, messages: cs },
+    { locale: "es" as const, messages: es },
+  ])("render in $locale without missing messages", ({ locale, messages }) => {
+    const errors = renderIn(
+      locale,
+      messages,
+      <>
+        <SponsorProgrammes />
+        <SponsorAmounts />
+        <SponsorRecognition />
+        <SponsorAcknowledgementList
+          acknowledgements={{ status: "ok", sponsors: [] }}
+        />
+        <SponsorEnquiry />
+      </>
+    )
+    expect(errors).toEqual([])
+    expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(6)
+  })
+
+  it("shows the catalogue anchors, the separate API offer and a sponsorship enquiry", () => {
+    renderIn(
+      "en",
+      en,
+      <>
+        <SponsorAmounts />
+        <SponsorRecognition />
+        <SponsorEnquiry />
+      </>
+    )
+    for (const amount of ["£2,500", "£5,000", "£10,000"])
+      expect(screen.getByText(amount)).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "developers page" }).getAttribute("href")
+    ).toBe("/developers")
+    expect(screen.getByText(/£100 a month/)).toBeTruthy()
+    const enquiry = screen.getByRole("link", {
+      name: "Start a sponsorship enquiry",
+    })
+    expect(enquiry.dataset.contactType).toBe("sponsorship")
+    expect(enquiry.getAttribute("href")).toBe(
+      "mailto:info@libraries.global?subject=Sponsorship%20enquiry"
+    )
+  })
+
+  it("lists consented sponsors with logo alt text and sponsored links", () => {
+    renderIn(
+      "en",
+      en,
+      <SponsorAcknowledgementList
+        acknowledgements={{
+          status: "ok",
+          sponsors: [
+            {
+              name: "Northfield Trust",
+              tier: "founding",
+              website: "https://example.org/",
+              acknowledgement: "Funds translation.",
+              logo: {
+                url: "https://cdn.example.org/n.png",
+                alternativeText: "Logo",
+                width: 320,
+                height: 120,
+              },
+            },
+          ],
+        }}
+      />
+    )
+    const list = within(screen.getByRole("list"))
+    expect(list.getByRole("img", { name: "Northfield Trust" })).toBeTruthy()
+    expect(
+      list.getByRole("link", { name: "Northfield Trust" }).getAttribute("rel")
+    ).toContain("nofollow")
+    expect(list.getByText("Founding Sponsor")).toBeTruthy()
+  })
+
+  it("keeps the page usable when the list is empty or unavailable", () => {
+    renderIn(
+      "en",
+      en,
+      <SponsorAcknowledgementList
+        acknowledgements={{ status: "ok", sponsors: [] }}
+      />
+    )
+    expect(screen.getByText("No sponsors are listed yet.")).toBeTruthy()
+    cleanup()
+    renderIn(
+      "en",
+      en,
+      <SponsorAcknowledgementList
+        acknowledgements={{ status: "unavailable", sponsors: [] }}
+      />
+    )
+    expect(screen.getByRole("status").textContent).toContain(
+      "The sponsor list isn’t available right now."
+    )
+  })
+})

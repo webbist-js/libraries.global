@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server"
 import GlobalLink from "@/components/global/GlobalLink"
 
 export async function MembershipPolicies() {
-  const t = await getTranslations("billing")
+  const t = await getTranslations("membershipContent.policies")
 
   return (
     <section
@@ -13,26 +13,21 @@ export async function MembershipPolicies() {
     >
       <div className="flex flex-col gap-2">
         <h2 id="membership-policies-heading" className="type-h2 m-0">
-          {t("legalHeading")}
+          {t("heading")}
         </h2>
         <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
-          {t("legalLead")} {t("termsLanguageNote")}
+          {t("lead")} {t("languageNote")}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {(
           [
-            [
-              "membership-terms",
-              "/legal/membership",
-              "membershipTerms",
-              "legalTermsBody",
-            ],
+            ["membership-terms", "/legal/membership", "terms", "termsBody"],
             [
               "cancellation-refunds",
               "/legal/cancellation-refunds",
-              "cancellationPolicy",
-              "legalRefundsBody",
+              "refunds",
+              "refundsBody",
             ],
           ] as const
         ).map(([id, href, title, body]) => (

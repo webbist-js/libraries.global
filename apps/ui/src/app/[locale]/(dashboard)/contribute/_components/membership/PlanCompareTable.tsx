@@ -14,22 +14,20 @@ import { PlanRowLabel } from "@/app/[locale]/(dashboard)/contribute/_components/
 import { PlanToggle } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanToggle"
 import { T } from "@/lib/design-tokens"
 import {
+  type LocalizedGroup,
+  useCompareColumn,
   useMembershipContent,
   useMembershipGroups,
-  useMembershipPlan,
-  useMembershipShortPrice,
   useMembershipSummary,
 } from "@/lib/localized-plans"
-import pricing from "@/lib/membership-pricing.json"
 import {
   availableNow,
-  COMPARE_PLANS,
-  type CompareGroup,
+  COMPARE_COLUMNS,
+  type CompareColumn,
 } from "@/lib/plan-compare"
-import type { PlanCardKey } from "@/lib/plans"
 
-/** Lead with the differences between memberships; free basics remain available. */
-const OPEN_BY_DEFAULT = ["supporting", "atlas"]
+/** Lead with where the offers differ; the free basics remain a click away. */
+const OPEN_BY_DEFAULT = ["atlas", "staff", "api"]
 const PRO_TINT = "var(--t-bg-selected)"
 const STICKY = "max-sm:sticky max-sm:left-0 max-sm:z-[1]"
 
@@ -38,7 +36,7 @@ function GroupHeader({
   open,
   onToggle,
 }: {
-  readonly group: CompareGroup
+  readonly group: LocalizedGroup
   readonly open: boolean
   readonly onToggle: () => void
 }) {
@@ -48,7 +46,7 @@ function GroupHeader({
     <tr>
       <th
         className="border-b p-0 text-left"
-        colSpan={COMPARE_PLANS.length + 1}
+        colSpan={COMPARE_COLUMNS.length + 1}
         id={`compare-${group.id}`}
         scope="rowgroup"
         style={{ background: T.bg.surface, borderColor: T.border.line }}
@@ -83,12 +81,11 @@ function GroupHeader({
   )
 }
 
-/** Every plan against every feature, in collapsible groups, with a "built only" filter. */
 /** Keep roadmap links only for items the published Roadmap still lists. */
 function withRoadmap(
-  groups: CompareGroup[],
+  groups: LocalizedGroup[],
   keys: readonly string[]
-): CompareGroup[] {
+): LocalizedGroup[] {
   const live = new Set(keys)
 
   return groups.map((group) => ({
@@ -99,29 +96,30 @@ function withRoadmap(
   }))
 }
 
+/** Every offer against every feature, in collapsible groups, with a "built only" filter. */
 export function PlanCompareTable({
-  currentPlan,
+  held = [],
   roadmapKeys = [],
 }: {
-  readonly currentPlan?: string
+  /** Columns that describe the viewer today. */
+  readonly held?: readonly CompareColumn[]
   /** Keys of the published Roadmap's items; rows link to the ones listed. */
   readonly roadmapKeys?: readonly string[]
 } = {}) {
   const m = useMembershipContent()
-  const planCard = useMembershipPlan()
-  const shortPrice = useMembershipShortPrice()
+  const column = useCompareColumn()
   const GROUPS = withRoadmap(useMembershipGroups(), roadmapKeys)
-  const NOW = availableNow(GROUPS)
+  const NOW = availableNow(GROUPS) as LocalizedGroup[]
   const tUi = useUiTranslations("ui")
   const t = useUiTranslations("membershipCompare")
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanCardKey>("pro")
-  const [baseline, setBaseline] = useState<PlanCardKey>("free")
+  const [selectedPlan, setSelectedPlan] = useState<CompareColumn>("contributor")
+  const [baseline, setBaseline] = useState<CompareColumn>("explorer")
   const mobileBaseline =
     baseline === selectedPlan
-      ? selectedPlan === "public"
-        ? "free"
-        : "public"
+      ? selectedPlan === "explorer"
+        ? "public"
+        : "explorer"
       : baseline
   const [nowOnly, setNowOnly] = useState(false)
   const [open, setOpen] = useState<ReadonlySet<string>>(
@@ -227,7 +225,7 @@ export function PlanCompareTable({
         tabIndex={0}
         style={{ borderColor: T.border.line }}
       >
-        <table className="w-full min-w-[720px] border-collapse text-base">
+        <table className="w-full min-w-[760px] border-collapse text-base">
           <caption className="sr-only">{m("copy.includes")}</caption>
           <thead>
             <tr>
@@ -238,8 +236,8 @@ export function PlanCompareTable({
               >
                 {m("copy.feature")}
               </th>
-              {COMPARE_PLANS.map((key) => {
-                const plan = planCard(key)
+              {COMPARE_COLUMNS.map((key) => {
+                const plan = column(key)
 
                 return (
                   <th
@@ -264,17 +262,9 @@ export function PlanCompareTable({
                         {plan.name}
                       </span>
                       <span className="text-xs font-medium text-(--t-ink-dim)">
-                        {shortPrice(plan.price)}
-                        {key === "team" ? ` ${m("copy.exVat")}` : ""}
+                        {plan.price}
                       </span>
-                      {key === "team" ? (
-                        <span className="text-xs font-normal text-(--t-ink-dim)">
-                          {m("copy.teamSeats", {
-                            count: pricing.team.includedSeats,
-                          })}
-                        </span>
-                      ) : null}
-                      {key === currentPlan ? (
+                      {held.includes(key) ? (
                         <span className="text-xs font-semibold text-(--t-accent-primary)">
                           {m("copy.current")}
                         </span>
@@ -314,7 +304,7 @@ export function PlanCompareTable({
                         roadmapKey={row.roadmapKey}
                       />
                     </th>
-                    {COMPARE_PLANS.map((key) => (
+                    {COMPARE_COLUMNS.map((key) => (
                       <td
                         key={key}
                         className="border-b px-3 py-3 text-center"
@@ -326,8 +316,7 @@ export function PlanCompareTable({
                       >
                         <PlanCompareCell
                           cell={row.cells[key]}
-                          label={row.cellLabels?.[key]}
-                          isExport={row.cellLabelIsExport}
+                          label={row.cellLabels[key]}
                         />
                       </td>
                     ))}

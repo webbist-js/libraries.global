@@ -59,7 +59,7 @@ const user = {
   createdAt: new Date(),
   updatedAt: new Date(),
   capabilities: [],
-  plan: "free",
+  facts: ["explorer"],
 } satisfies BetterAuthUser
 let footer: HTMLElement
 beforeEach(() => {

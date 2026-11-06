@@ -19,6 +19,7 @@ import {
   MAX_ID_LENGTH,
   readJsonCapped,
 } from "@/lib/bridge-params"
+import { spendExport } from "@/lib/export-allowance"
 import {
   ATLAS_EXPORT_COLUMNS,
   atlasExportRow,
@@ -87,7 +88,8 @@ function exportRowCap(user: { limits?: unknown }): number {
 }
 
 /**
- * POST /api/export/atlas: the libraries in view as CSV or GeoJSON, for Pro.
+ * POST /api/export/atlas: the libraries in view as CSV or GeoJSON, for signed-in
+ * accounts within their daily export allowance.
  * Only ids come from the client; every value is read from Strapi's
  * bridge-gated export action, never trusted from the request body.
  */
@@ -115,6 +117,8 @@ export async function POST(req: Request) {
     } catch {
       return Response.json({ error: "Invalid Atlas scope" }, { status: 400 })
     }
+    const spent = await spendExport(session!.user)
+    if (spent) return spent
     try {
       const signal = AbortSignal.any([req.signal, AbortSignal.timeout(115000)])
       const libraries = await fetchAtlasExport(
@@ -150,6 +154,8 @@ export async function POST(req: Request) {
       { error: "Too many libraries for one export", limit: cap },
       { status: 413 }
     )
+  const spent = await spendExport(session!.user)
+  if (spent) return spent
 
   const secret = process.env.STRAPI_BRIDGE_SECRET
   if (!secret)

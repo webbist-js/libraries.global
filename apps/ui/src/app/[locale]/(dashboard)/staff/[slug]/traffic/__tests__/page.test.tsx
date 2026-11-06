@@ -24,7 +24,7 @@ vi.mock("@/lib/staff/server", () => ({
   loadStaffPage: async () => ({ user: {}, documentId: "library" }),
 }))
 vi.mock("@/lib/access-server", () => ({
-  requireEntitlementForLibrary: () => (access.covered ? null : "upgrade"),
+  canStaffTool: () => access.covered,
 }))
 vi.mock("@/lib/seo/metadata", () => ({ privateMetadata: () => ({}) }))
 vi.mock("@/components/staff/LearnMoreLink", () => ({
@@ -47,7 +47,7 @@ afterEach(() => {
 })
 
 describe("Traffic page without a connected analytics provider", () => {
-  it("shows the free Team gate with an inert illustration and no report controls", async () => {
+  it("explains staff access with an inert illustration and no report controls", async () => {
     render(
       await TrafficPage({
         params: Promise.resolve({ locale: "en", slug: "library" }),
@@ -56,7 +56,9 @@ describe("Traffic page without a connected analytics provider", () => {
     expect(
       screen.getByRole("heading", { name: "See how people find your library" })
     ).toBeTruthy()
-    expect(screen.getByRole("link", { name: "Compare plans" })).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "Check your staff access" })
+    ).toBeTruthy()
     expect(
       screen.getByText("Visitors").closest('[aria-hidden="true"]')
     ).toBeTruthy()
@@ -76,12 +78,12 @@ describe("Traffic page without a connected analytics provider", () => {
       })
     )
     expect(screen.getByRole("heading", { name: "Page traffic" })).toBeTruthy()
-    expect(
-      screen.getByText(/Traffic reporting is not connected yet/)
-    ).toBeTruthy()
+    expect(screen.getByText(/Reporting is not connected yet/)).toBeTruthy()
     expect(screen.queryByText("Visitors")).toBeNull()
     expect(screen.queryByText(/sample data/i)).toBeNull()
-    expect(screen.queryByRole("link", { name: "Compare plans" })).toBeNull()
+    expect(
+      screen.queryByRole("link", { name: "Check your staff access" })
+    ).toBeNull()
     expect(
       screen.queryByRole("navigation", { name: "Report period" })
     ).toBeNull()
