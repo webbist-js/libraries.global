@@ -25,6 +25,8 @@ import {
   markdownComponents,
   nodeText,
   plannedArticle,
+  renamedUrl,
+  slugsFor,
   retiredCopy,
   scrubBlocks,
   scrubbedBody,
@@ -184,7 +186,7 @@ describe("sponsored-access Knowledge copy", () => {
       type: "info",
       body: "Pro costs £5/month.",
     }
-    const { data, dropped } = plannedArticle("plans-and-pro", "en", {
+    const { data, dropped } = plannedArticle("plans-and-pricing", "en", {
       body: [rich("Supporter costs £3/month."), image, staleCallout],
     })
     expect(Object.keys(data)).toEqual(["title", "summary", "body"])
@@ -198,6 +200,33 @@ describe("sponsored-access Knowledge copy", () => {
       "content.rich-text",
       "content.callout",
     ])
+  })
+})
+
+describe("renamed guides", () => {
+  it("finds a guide by its old slug and rewrites only Knowledge links to it", () => {
+    expect(slugsFor("plans-and-pricing")).toEqual([
+      "plans-and-pricing",
+      "plans-and-pro",
+    ])
+    expect(slugsFor("the-public-api")).toEqual(["the-public-api"])
+    for (const [from, to] of [
+      [
+        "/knowledge/governance/plans-and-pro",
+        "/knowledge/governance/plans-and-pricing",
+      ],
+      [
+        "/fr/knowledge/governance/plans-and-pro#api",
+        "/fr/knowledge/governance/plans-and-pricing#api",
+      ],
+      [
+        "/knowledge/governance/plans-and-pro-extra",
+        "/knowledge/governance/plans-and-pro-extra",
+      ],
+      ["/plans-and-pro", "/plans-and-pro"],
+      ["https://example.org/knowledge/x", "https://example.org/knowledge/x"],
+    ])
+      expect(renamedUrl(from)).toBe(to)
   })
 })
 
@@ -241,6 +270,8 @@ describe("scrubbing related guides", () => {
     expect(text).toContain("earns 2 points")
     expect(text).toContain("Drafts do not earn these points.")
     expect(text).toContain('"text":"Plans and pricing"')
+    expect(text).toContain('"url":"/knowledge/governance/plans-and-pricing"')
+    expect(text).not.toContain('plans-and-pro"')
     expect(result.body[0]).toEqual({
       __component: "content.image-block",
       image: 7,

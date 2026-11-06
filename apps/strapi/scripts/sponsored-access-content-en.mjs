@@ -9,7 +9,7 @@
  */
 export default (v) => ({
   articles: {
-    "plans-and-pro": {
+    "plans-and-pricing": {
       title: "Plans and pricing",
       summary:
         "What is free, what you earn by contributing, what verified library staff receive, and what the paid API and sponsorship cover.",
@@ -114,7 +114,7 @@ Organisers manage the workspace: its name, members, invitations and covered libr
 
 ## Workspaces and the API
 
-The same organisation can also hold an API account, but the two are separate. A workspace does not include API access, and buying API access never verifies staff or grants editing rights. Read [Plans and pricing](/knowledge/governance/plans-and-pro) and [The Libraries Global API](/knowledge/data-api/the-public-api).
+The same organisation can also hold an API account, but the two are separate. A workspace does not include API access, and buying API access never verifies staff or grants editing rights. Read [Plans and pricing](/knowledge/governance/plans-and-pricing) and [The Libraries Global API](/knowledge/data-api/the-public-api).
 
 ## No seat charges
 
@@ -488,7 +488,7 @@ Send an enquiry through the contact form or email info@libraries.global with you
         "Contributor and Supporter recognition",
         "/knowledge/contributing/earned-recognition-and-rewards",
       ],
-      ["Plans and pricing", "/knowledge/governance/plans-and-pro"],
+      ["Plans and pricing", "/knowledge/governance/plans-and-pricing"],
     ],
   },
 

@@ -9,7 +9,7 @@
  */
 export default (v) => ({
   articles: {
-    "plans-and-pro": {
+    "plans-and-pricing": {
       title: "Plány a ceny",
       summary:
         "Co je zdarma, co získáte přispíváním, co dostávají ověření zaměstnanci knihoven a co pokrývá placené API a sponzorství.",
@@ -114,7 +114,7 @@ Organizátoři spravují pracovní prostor: jeho název, členy, pozvánky a pok
 
 ## Pracovní prostory a API
 
-Stejná organizace může mít i API účet, ale obojí je oddělené. Pracovní prostor nezahrnuje přístup k API a nákup přístupu k API nikdy neověřuje zaměstnance ani neuděluje práva k úpravám. Přečtěte si [Plány a ceny](/knowledge/governance/plans-and-pro) a [API Libraries Global](/knowledge/data-api/the-public-api).
+Stejná organizace může mít i API účet, ale obojí je oddělené. Pracovní prostor nezahrnuje přístup k API a nákup přístupu k API nikdy neověřuje zaměstnance ani neuděluje práva k úpravám. Přečtěte si [Plány a ceny](/knowledge/governance/plans-and-pricing) a [API Libraries Global](/knowledge/data-api/the-public-api).
 
 ## Žádné poplatky za místa
 
@@ -488,7 +488,7 @@ Pošlete dotaz přes kontaktní formulář nebo napište na info@libraries.globa
         "Uznání Contributor a Supporter",
         "/knowledge/contributing/earned-recognition-and-rewards",
       ],
-      ["Plány a ceny", "/knowledge/governance/plans-and-pro"],
+      ["Plány a ceny", "/knowledge/governance/plans-and-pricing"],
     ],
   },
 

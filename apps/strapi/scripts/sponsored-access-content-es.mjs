@@ -10,7 +10,7 @@
  */
 export default (v) => ({
   articles: {
-    "plans-and-pro": {
+    "plans-and-pricing": {
       title: "Planes y precios",
       summary:
         "Qué es gratuito, qué se obtiene al contribuir, qué recibe el personal verificado de las bibliotecas y qué cubren la API de pago y el patrocinio.",
@@ -115,7 +115,7 @@ Los organizadores gestionan el espacio de trabajo: su nombre, sus miembros, las 
 
 ## Espacios de trabajo y la API
 
-Una misma organización también puede tener una cuenta de API, pero son cosas independientes. Un espacio de trabajo no incluye acceso a la API, y comprar acceso a la API nunca verifica al personal ni otorga derechos de edición. Consulte [Planes y precios](/knowledge/governance/plans-and-pro) y [La API de Libraries Global](/knowledge/data-api/the-public-api).
+Una misma organización también puede tener una cuenta de API, pero son cosas independientes. Un espacio de trabajo no incluye acceso a la API, y comprar acceso a la API nunca verifica al personal ni otorga derechos de edición. Consulte [Planes y precios](/knowledge/governance/plans-and-pricing) y [La API de Libraries Global](/knowledge/data-api/the-public-api).
 
 ## Sin cargos por puesto
 
@@ -489,7 +489,7 @@ Envíe una consulta a través del formulario de contacto o escriba a info@librar
         "Reconocimiento de Contributor y Supporter",
         "/knowledge/contributing/earned-recognition-and-rewards",
       ],
-      ["Planes y precios", "/knowledge/governance/plans-and-pro"],
+      ["Planes y precios", "/knowledge/governance/plans-and-pricing"],
     ],
   },
 

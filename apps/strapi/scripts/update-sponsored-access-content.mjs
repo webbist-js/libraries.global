@@ -25,12 +25,14 @@ import {
   KNOWLEDGE_ARTICLES,
   LOCALES,
   OWNED_FIELDS,
+  RENAMED_SLUGS,
   SCRUB_SLUGS,
   articleCopy,
   cleanBody,
   plannedArticle,
   retiredCopy,
   scrubbedBody,
+  slugsFor,
 } from "./sponsored-access-content.mjs"
 import {
   REVIEW_HEADING,
@@ -250,8 +252,21 @@ const previousStage = (() => {
     return new Map()
   }
 })()
-const ownDraft = (key, draft) =>
-  previousStage.has(key) && matches(draft, previousStage.get(key))
+const ownDraft = (key, draft) => {
+  // A guide staged before its rename was keyed by its old slug.
+  const [kind, slug, locale] = key.split("/")
+  const keys =
+    kind === "article" && locale
+      ? slugsFor(slug).map((s) => `${kind}/${s}/${locale}`)
+      : [key]
+  const staged = keys.find((k) => previousStage.has(k))
+
+  return (
+    staged !== undefined &&
+    matches(draft, withoutSlug(previousStage.get(staged)))
+  )
+}
+const withoutSlug = ({ slug: _slug, ...data }) => data
 
 function matches(doc, data) {
   return Object.entries(data).every(
@@ -259,9 +274,21 @@ function matches(doc, data) {
       key === "section" ||
       key === "articleStatus" ||
       key === "author" ||
-      key === "slug" ||
+      (key === "slug" && !RENAMED_TO.has(value)) ||
       isDeepStrictEqual(comparable(key, doc?.[key]), comparable(key, value))
   )
+}
+const RENAMED_TO = new Set(Object.values(RENAMED_SLUGS))
+/**
+ * Metadata that must not change around a write. A rename's slug is shared
+ * across locales, so it may already have moved when a later locale is
+ * written; its read-back is checked by matches() instead.
+ */
+const guarded = (doc, fields, entry) => {
+  const meta = metadata(doc, fields)
+  if (entry?.data?.slug && RENAMED_TO.has(entry.data.slug)) delete meta.slug
+
+  return meta
 }
 
 // ---------------------------------------------------------------------------
@@ -364,18 +391,23 @@ const entries = []
 const missing = []
 const blockers = []
 const unchanged = []
+/** A guide's row by its slug or a slug it is being renamed from. */
+const articleRow = (locale, slug) =>
+  slugsFor(slug)
+    .map((s) => rows.article[locale].find((r) => r.slug === s))
+    .find(Boolean)
 const sectionFor = (locale, anchor) =>
-  rows.article[locale].find((r) => r.slug === anchor)?.section?.documentId
+  articleRow(locale, anchor)?.section?.documentId
 
 if (knowledge) {
   for (const spec of KNOWLEDGE_ARTICLES) {
     let documentId = LOCALES.map((locale) =>
-      rows.article[locale].find((r) => r.slug === spec.slug)
+      articleRow(locale, spec.slug)
     ).find(Boolean)?.documentId
-    const authorRow = rows.article.en.find((r) => r.slug === spec.slug)
+    const authorRow = articleRow("en", spec.slug)
     for (const locale of LOCALES) {
       articleCopy(spec.slug, locale)
-      const row = rows.article[locale].find((r) => r.slug === spec.slug)
+      const row = articleRow(locale, spec.slug)
       const key = `article/${spec.slug}/${locale}`
       if (row) {
         const published =
@@ -383,11 +415,13 @@ if (knowledge) {
             ? null
             : await get("article", row.documentId, locale, "published")
         const draft = await get("article", row.documentId, locale)
-        const { data, dropped } = plannedArticle(
-          spec.slug,
-          locale,
-          published ?? draft
-        )
+        const planned = plannedArticle(spec.slug, locale, published ?? draft)
+        const { dropped } = planned
+        // The slug is shared by every locale; renaming it is part of the plan.
+        const data =
+          draft.slug === spec.slug
+            ? planned.data
+            : { ...planned.data, slug: spec.slug }
         const done = matches(draft, data)
         if (row.status !== "published" && !done && !ownDraft(key, draft)) {
           blockers.push(`${key}: unrelated unpublished edits need review`)
@@ -608,7 +642,10 @@ for (const entry of entries) {
     const fields = model === "legal" ? LEGAL_METADATA : ARTICLE_METADATA
     if (
       current.updatedAt !== entry.updatedAt ||
-      !isDeepStrictEqual(metadata(current, fields), entry.beforeMetadata)
+      !isDeepStrictEqual(
+        guarded(current, fields, entry),
+        guarded(entry.beforeMetadata, fields, entry)
+      )
     )
       throw new Error(`Changed after preview: ${entry.key}`)
     await api(`${base(model)}/${id}`, entry.locale, "PUT", entry.data)
@@ -635,7 +672,12 @@ for (const entry of entries) {
     throw new Error(`Unexpected publication: ${entry.key}`)
   if (entry.beforeMetadata) {
     const fields = model === "legal" ? LEGAL_METADATA : ARTICLE_METADATA
-    if (!isDeepStrictEqual(metadata(checked, fields), entry.beforeMetadata))
+    if (
+      !isDeepStrictEqual(
+        guarded(checked, fields, entry),
+        guarded(entry.beforeMetadata, fields, entry)
+      )
+    )
       throw new Error(`Unrelated metadata changed: ${entry.key}`)
   }
   if (entry.data.section) {

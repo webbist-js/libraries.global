@@ -9,7 +9,7 @@
  */
 export default (v) => ({
   articles: {
-    "plans-and-pro": {
+    "plans-and-pricing": {
       title: "Formules et tarifs",
       summary:
         "Ce qui est gratuit, ce que vous obtenez en contribuant, ce que reçoit le personnel vérifié des bibliothèques, et ce que couvrent l’API payante et le parrainage.",
@@ -114,7 +114,7 @@ Les organisateurs gèrent l’espace de travail : son nom, ses membres, les invi
 
 ## Espaces de travail et API
 
-Une même organisation peut aussi détenir un compte API, mais les deux sont distincts. Un espace de travail ne comprend pas l’accès à l’API, et acheter l’accès à l’API ne vérifie jamais le personnel et ne donne aucun droit de modification. Consultez [Formules et tarifs](/knowledge/governance/plans-and-pro) et [L’API Libraries Global](/knowledge/data-api/the-public-api).
+Une même organisation peut aussi détenir un compte API, mais les deux sont distincts. Un espace de travail ne comprend pas l’accès à l’API, et acheter l’accès à l’API ne vérifie jamais le personnel et ne donne aucun droit de modification. Consultez [Formules et tarifs](/knowledge/governance/plans-and-pricing) et [L’API Libraries Global](/knowledge/data-api/the-public-api).
 
 ## Aucun frais par place
 
@@ -488,7 +488,7 @@ Envoyez votre demande via le formulaire de contact ou écrivez à info@libraries
         "Reconnaissance Contributor et Supporter",
         "/knowledge/contributing/earned-recognition-and-rewards",
       ],
-      ["Formules et tarifs", "/knowledge/governance/plans-and-pro"],
+      ["Formules et tarifs", "/knowledge/governance/plans-and-pricing"],
     ],
   },
 

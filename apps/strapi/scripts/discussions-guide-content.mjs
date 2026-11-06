@@ -2,7 +2,7 @@
 import { stripComponentIds } from "./cms-component-ids.mjs"
 
 const guidePath = "/knowledge/contributing/library-conversations"
-const plansPath = "/knowledge/governance/plans-and-pro"
+const plansPath = "/knowledge/governance/plans-and-pricing"
 
 // Plain paragraphs, level-two headings and ordinary Markdown links only.
 export function richText(markdown) {
@@ -641,7 +641,7 @@ Oprávnění správci také vybírají obsah přehledů knihoven a kampaní: př
 
 const additions = {
   en: {
-    "plans-and-pro": `## Discussions are free
+    "plans-and-pricing": `## Discussions are free
 
 Read public discussions without an account. Starting a thread, replying, reacting and following are included in a free verified account. Paid API access, sponsorship and recognition do not grant discussion moderation. [Joining library conversations](${guidePath}) explains the review and privacy rules.`,
     "reading-a-library-page": `## Conversations about this library
@@ -669,7 +669,7 @@ Account deletion first stops billing and is refused if cancellation cannot be co
 Discussion participation is free for every verified account. A library or drive can reuse an existing thread, with one shared set of messages and review decisions. Staff may propose links for their own library; permitted managers curate feeds. A workspace organiser or member role does not grant discussion moderation. See [Joining library conversations](${guidePath}).`,
   },
   fr: {
-    "plans-and-pro": `## Les discussions sont gratuites
+    "plans-and-pricing": `## Les discussions sont gratuites
 
 Lisez les discussions publiques sans compte. Démarrer un fil, répondre, réagir et suivre sont inclus dans un compte gratuit vérifié. Ni l’accès payant à l’API, ni le parrainage, ni la reconnaissance ne donnent de droit de modération. [Participer aux conversations](${guidePath}) explique la vérification et la confidentialité.`,
     "reading-a-library-page": `## Conversations sur cette bibliothèque
@@ -697,7 +697,7 @@ La suppression arrête d’abord la facturation et est refusée si l’annulatio
 La participation est gratuite pour tout compte vérifié. Une bibliothèque ou campagne peut reprendre un fil existant avec les mêmes messages et décisions. Le personnel propose les liens pour sa bibliothèque ; les responsables autorisés gèrent les flux. Être organisateur ou membre d’un espace de travail ne donne pas de droit de modération. Voir [Participer aux conversations](${guidePath}).`,
   },
   cs: {
-    "plans-and-pro": `## Diskuse jsou zdarma
+    "plans-and-pricing": `## Diskuse jsou zdarma
 
 Veřejné diskuse čtěte bez účtu. Zakládání vláken, odpovědi, reakce a sledování jsou součástí bezplatného ověřeného účtu. Placený přístup k API, sponzorství ani uznání nedávají moderační práva. [Zapojení do knihovních diskusí](${guidePath}) vysvětluje kontrolu a soukromí.`,
     "reading-a-library-page": `## Diskuse o knihovně

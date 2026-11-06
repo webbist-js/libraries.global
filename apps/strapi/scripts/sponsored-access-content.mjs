@@ -244,12 +244,34 @@ export const nodeText = (node) =>
 // Article plan.
 
 /**
+ * Slugs this rollout renames, old → new. The site is not live, so there are
+ * no redirects: the guide is found by either slug, written with the new one,
+ * and links to the old path in related guides are rewritten.
+ */
+export const RENAMED_SLUGS = { "plans-and-pro": "plans-and-pricing" }
+
+/** The slugs a guide may currently have in the CMS: its own, then old ones. */
+export const slugsFor = (slug) => [
+  slug,
+  ...Object.keys(RENAMED_SLUGS).filter((old) => RENAMED_SLUGS[old] === slug),
+]
+
+/** A Knowledge link with any renamed slug replaced; other links unchanged. */
+export function renamedUrl(url) {
+  if (typeof url !== "string" || !url.includes("/knowledge/")) return url
+
+  return url.replace(/\/([a-z0-9-]+)(?=[#?]|$)/, (whole, slug) =>
+    RENAMED_SLUGS[slug] ? `/${RENAMED_SLUGS[slug]}` : whole
+  )
+}
+
+/**
  * Canonical guides this rollout owns. `anchor` is an existing guide whose
- * section a new locale variant joins. Existing slugs are kept so links and
- * redirects keep working; titles change.
+ * section a new locale variant joins. Existing slugs are kept unless listed
+ * in RENAMED_SLUGS; titles change.
  */
 export const KNOWLEDGE_ARTICLES = [
-  { slug: "plans-and-pro", anchor: "plans-and-pro", status: "stable" },
+  { slug: "plans-and-pricing", anchor: "plans-and-pricing", status: "stable" },
   {
     slug: "earned-recognition-and-rewards",
     anchor: "points-streaks-and-tiers",
@@ -287,7 +309,7 @@ export const KNOWLEDGE_ARTICLES = [
   },
   {
     slug: "sponsoring-libraries-global",
-    anchor: "plans-and-pro",
+    anchor: "plans-and-pricing",
     status: "stable",
   },
 ]
@@ -511,7 +533,10 @@ const meaningful = (children) =>
       (child.type === "text" && /[\p{L}\p{N}]/u.test(child.text))
   )
 
-/** Remove retired sentences from Strapi blocks and relabel old plan links. */
+/**
+ * Remove retired sentences from Strapi blocks, relabel old plan links and
+ * point links at renamed guides.
+ */
 export function scrubBlocks(blocks, locale) {
   const removed = []
   const labels = allLinkLabels(locale)
@@ -530,10 +555,12 @@ export function scrubBlocks(blocks, locale) {
       .map((child) => {
         if (child.type === "link") {
           const label = nodeText(child).trim()
+          const url = renamedUrl(child.url)
+          const link = url === child.url ? child : { ...child, url }
 
           return labels[label]
-            ? { ...child, children: [{ type: "text", text: labels[label] }] }
-            : child
+            ? { ...link, children: [{ type: "text", text: labels[label] }] }
+            : link
         }
         if (child.type === "text" && retiredMatches(child.text, locale).length)
           return { ...child, text: scrubText(child.text) }

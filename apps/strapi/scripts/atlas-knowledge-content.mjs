@@ -32,7 +32,7 @@ const related = () => ({
       "Population, deprivation and Library access",
       "/knowledge/data-api/atlas-population-and-context"
     ),
-    atlasLink("Plans and pricing", "/knowledge/governance/plans-and-pro"),
+    atlasLink("Plans and pricing", "/knowledge/governance/plans-and-pricing"),
   ],
 })
 
