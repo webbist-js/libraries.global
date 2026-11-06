@@ -640,5 +640,9 @@ export function scrubbedBody(doc, locale) {
   if (JSON.stringify(body) === JSON.stringify(original) && !revisedSummary)
     return null
 
-  return { body, removed, ...(revisedSummary ? { summary: revisedSummary } : {}) }
+  return {
+    body,
+    removed,
+    ...(revisedSummary ? { summary: revisedSummary } : {}),
+  }
 }
