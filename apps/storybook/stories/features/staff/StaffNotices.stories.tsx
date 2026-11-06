@@ -174,6 +174,7 @@ export const FullPage: Story = {
             navigation={buildFooterNavigation(footerData, legalDocuments, {
               legal: "Legal and policies",
               plans: "Plans and pricing",
+              sponsor: "Sponsor",
             })}
           >
             <DashboardFrame
@@ -206,7 +207,6 @@ export const FullPage: Story = {
                       operatorName: "Example Library Service",
                       homeLibrary: null,
                     }}
-                    plan="free"
                     teamCovered={false}
                   />
                   <Container className="py-8 sm:py-12">

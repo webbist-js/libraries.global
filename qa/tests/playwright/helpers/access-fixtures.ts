@@ -30,19 +30,16 @@ export function fixturePassword(): string {
 }
 
 /**
- * How a fixture holds a paid plan. The Strapi writer converges exactly this
- * route and removes every other one, so a fixture without a plan is free:
- * no grants, no verifications, 0 points, tier Reader, no earned-Pro hold.
+ * A fixture's earned recognition. The Strapi writer converges the profile's
+ * counters to exactly this, so a fixture without one is an Explorer: no
+ * accepted contributions, 0 points, tier Reader, recognition not revoked.
+ * Recognition adds tools and limits only, never trust.
  */
 export type FixturePlan =
-  /** One entitlement-grant: pro, source admin, no expiry. */
-  | "pro-grant"
-  /** 1500 points and tier Archivist, the lowest tier that earns Pro. */
-  | "pro-earned"
-  /** One pro-verification: library_staff, verified now, for a year. */
-  | "pro-verified"
-  /** One entitlement-grant: team, source team, no expiry. */
-  | "team-grant"
+  /** One accepted contribution: Contributor, with the weekly Reach allowance. */
+  | "contributor"
+  /** 100 accepted contributions: durable Supporter recognition. */
+  | "supporter"
 
 /** A Contributor Role that can be granted (`reader` is "no grants"). */
 export type GrantableRole =
@@ -164,10 +161,8 @@ export const FIXTURES: readonly Fixture[] = [
   // Never onboarded, like `onboarding`, but only signed in by magic link
   // (magic-link.spec.ts), which leaves it un-onboarded, so it needs no reset.
   { key: "magic-link", grants: [], claim: false, username: null },
-  { key: "pro-grant", grants: [], claim: false, plan: "pro-grant" },
-  { key: "pro-earned", grants: [], claim: false, plan: "pro-earned" },
-  { key: "pro-verified", grants: [], claim: false, plan: "pro-verified" },
-  { key: "team", grants: [], claim: false, plan: "team-grant" },
+  { key: "recognised", grants: [], claim: false, plan: "contributor" },
+  { key: "supporter", grants: [], claim: false, plan: "supporter" },
   // Staff area round 2 (staff-area, team, staff-drawer and live specs). The
   // claim-sourced rows stand for approved Library Claims, so these fixtures
   // hold the `verified_librarian` grant a claim approval gives.

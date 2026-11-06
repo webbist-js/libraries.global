@@ -1,25 +1,15 @@
-import type { PriceCatalogue } from "@/components/billing/types"
 import type { TeamDetail } from "@/lib/staff/types"
 import type { ApiDashboard } from "@/lib/team-api/types"
-import type { TeamBillingDashboard } from "@/lib/team-billing/types"
 
-export const priceCatalogue: PriceCatalogue = {
-  available: true,
-  sandbox: true,
-  prices: [
-    { plan: "supporter", interval: "month", unitAmount: 300, currency: "gbp" },
-    { plan: "supporter", interval: "year", unitAmount: 3000, currency: "gbp" },
-    { plan: "pro", interval: "month", unitAmount: 800, currency: "gbp" },
-    { plan: "pro", interval: "year", unitAmount: 8000, currency: "gbp" },
-  ],
-}
 const limits = {
-  requests: 10000,
-  bytes: 100000000,
-  perMinute: 60,
-  concurrency: 4,
+  requests: 10_000,
+  bytes: 262_144_000,
+  analysisCredits: 100,
+  perMinute: 30,
+  concurrency: 2,
+  responseBytes: 131_072,
+  pageSize: 50,
   keys: null,
-  responseBytes: 1000000,
 }
 
 export const apiDashboard: ApiDashboard = {
@@ -32,17 +22,35 @@ export const apiDashboard: ApiDashboard = {
     status: "active",
     priceId: "example-api",
     currency: "gbp",
-    unitAmount: 1000,
+    unitAmount: 10_000,
     paidThrough: "2099-01-15",
+    period: { start: "2098-12-15", end: "2099-01-15" },
+    startedAt: "2098-12-15",
     cancelAtPeriodEnd: false,
     revoked: false,
+    offer: {
+      offerVersion: "2.0",
+      priceId: "example-api",
+      taxBehavior: "inclusive",
+      limits,
+      overageRates: { requestPence: 1, mibPence: 10, creditPence: 50 },
+      overagePrices: {},
+      consentVersion: "2.0",
+    },
+    overageItems: {},
     limits,
   },
   active: true,
   purchasing: true,
-  price: { unitAmount: 1000, currency: "gbp" },
+  price: { unitAmount: 10_000, currency: "gbp" },
   limits,
-  usage: { requests: 1240, bytes: 2500000, resetsAt: "2099-01-15" },
+  usage: {
+    requests: 1240,
+    bytes: 2500000,
+    credits: 15,
+    resetsAt: "2099-01-15",
+    periodStart: "2098-12-15",
+  },
   keys: [
     {
       id: "example-key",
@@ -62,44 +70,17 @@ export const apiDashboard: ApiDashboard = {
     { endpoint: "/v1/libraries", requests: 1240, bytes: 2500000, errors: 2 },
   ],
   warnings: [],
+  overageAvailable: true,
+  rates: { requestPence: 1, mibPence: 10, creditPence: 50 },
+  overage: { enabled: false, capPence: 10_000, revision: 0, updatedAt: null },
+  accrued: { requestsPence: 0, bytesPence: 0, creditsPence: 0, totalPence: 0 },
+  projectedInvoicePence: 10_000,
   pendingPayment: false,
-}
-export const teamBilling: TeamBillingDashboard = {
-  teamId: "example-team",
-  name: "Example Library Team",
-  organiser: true,
-  source: "checkout",
-  active: true,
-  used: 2,
-  seats: 5,
-  purchasing: true,
-  discounted: false,
-  mode: "sandbox",
-  pending: false,
-  synced: true,
-  membership: {
-    mode: "sandbox",
-    status: "active",
-    priceId: "example-team-price",
-    unitAmount: 1200,
-    currency: "gbp",
-    seats: 5,
-    paidSeats: 5,
-    paidThrough: "2099-01-15",
-    accessUntil: "2099-01-15",
-    pastDueSince: null,
-    cancelAtPeriodEnd: false,
-    revoked: false,
-    pendingSeats: null,
-    pendingAt: null,
-  },
 }
 export const team: TeamDetail = {
   documentId: "example-team",
   name: "Example Library Team",
   slug: "example-library-team",
-  seats: 5,
-  used: 2,
   status: "active",
   verifiedAt: null,
   expiresAt: null,
@@ -109,7 +90,6 @@ export const team: TeamDetail = {
   organiserNames: ["Maya S."],
 }
 export const billingResponses = {
-  "GET /api/billing/prices": { body: priceCatalogue },
   "GET /api/profile/me": { body: { profile: { username: "example-member" } } },
 }
 
@@ -140,7 +120,6 @@ export const staffResponses = {
     },
   },
   "GET /api/staff/team/example-team/api": { body: apiDashboard },
-  "GET /api/staff/team/example-team/billing": { body: teamBilling },
   "GET /api/staff/team/libraries": { body: { libraries: team.libraries } },
   "PUT /api/staff/team/example-team": { body: { team } },
 }

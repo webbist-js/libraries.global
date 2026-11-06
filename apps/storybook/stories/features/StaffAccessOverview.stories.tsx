@@ -1,7 +1,6 @@
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { StaffAccessRequests } from "@/components/staff/StaffAccessRequests"
 import { StaffPanel } from "@/components/staff/StaffPanel"
-import { TeamSeatUsage } from "@/components/staff/TeamSeatUsage"
 import { TeamStatusBadges } from "@/components/staff/TeamStatusBadges"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { expect } from "storybook/test"
@@ -29,10 +28,7 @@ const meta = {
       <div className="staff-overview-grid">
         <StaffAccessRequests {...args} />
         <StaffPanel title="Example Library Team" compact>
-          <TeamStatusBadges membership="active" verified={false} />
-          <div className="mt-5">
-            <TeamSeatUsage used={1} total={5} />
-          </div>
+          <TeamStatusBadges workspace="open" verified={false} />
         </StaffPanel>
       </div>
     </div>
@@ -45,7 +41,7 @@ type Story = StoryObj<typeof meta>
 export const ActiveTeamWithPendingLibraryAccess: Story = {
   globals: { locale: "en" },
   play: async ({ canvas }) => {
-    await expect(canvas.getByText("Team membership: Active")).toBeVisible()
+    await expect(canvas.getByText("Workspace: Open")).toBeVisible()
     await expect(
       canvas.getByText("Team verification: Not verified")
     ).toBeVisible()

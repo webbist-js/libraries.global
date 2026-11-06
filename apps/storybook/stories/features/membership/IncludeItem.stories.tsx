@@ -11,7 +11,7 @@ const meta = {
       </ul>
     ),
   ],
-  args: { item: { text: "Save and follow libraries", kind: "feature" } },
+  args: { item: { text: "Save and follow libraries", status: "live" } },
 } satisfies Meta<typeof IncludeItem>
 
 export default meta
@@ -19,5 +19,5 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 export const Planned: Story = {
-  args: { item: { text: "More sharing options", kind: "soon" } },
+  args: { item: { text: "More sharing options", status: "soon" } },
 }

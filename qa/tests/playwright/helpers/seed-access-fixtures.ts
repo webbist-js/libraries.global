@@ -6,8 +6,8 @@
  *
  * Strapi REST is used for reads only (STRAPI_SEED_TOKEN can be read-only).
  * Writes can't use REST: it exposes no update for user-profile and no routes
- * for role-grant, library-affiliation, entitlement-grant or
- * pro-verification (P-A hardening), so they go through the Document Service
+ * for role-grant or library-affiliation (P-A hardening), so they go
+ * through the Document Service
  * in a headless Strapi process (strapi-access-writer.cjs). Contributor Roles
  * are Role Grants; Strapi derives `contributorRole` from them, and the seed
  * never writes it.
@@ -102,10 +102,6 @@ type WriteResult = {
   staffUpdated: number
   staffRemoved: number
   teamSeat: "created" | "updated" | "present" | null
-  grantCreated: boolean
-  grantsRemoved: number
-  verificationCreated: boolean
-  verificationsRemoved: number
   submissionsCreated: number
   submissionsRemoved: number
 }
@@ -315,7 +311,6 @@ function describeResult(item: PlanItem, r: WriteResult): string {
     `${r.roleChanged ? " (re-derived)" : ""}` +
     `${item.passwordReset ? " (password reset)" : ""}` +
     `${r.profileChanged ? " (updated)" : ""}`
-  const granted = item.plan === "pro-grant" || item.plan === "team-grant"
   const notes: [boolean, string][] = [
     [
       item.username === null,
@@ -330,11 +325,6 @@ function describeResult(item: PlanItem, r: WriteResult): string {
     ],
     [r.staffRemoved > 0, `${r.staffRemoved} stray affiliation(s) removed`],
     [item.team !== null, `team ${item.team} (seat ${r.teamSeat ?? "present"})`],
-    [granted, `grant ${createdOrPresent(r.grantCreated)}`],
-    [
-      item.plan === "pro-verified",
-      `verification ${createdOrPresent(r.verificationCreated)}`,
-    ],
     [
       item.roleGrants.length > 0,
       `${item.roleGrants.length} role grant(s)${r.roleGrantsCreated > 0 ? `, ${r.roleGrantsCreated} created` : ""}`,
@@ -352,15 +342,10 @@ function describeResult(item: PlanItem, r: WriteResult): string {
       `${r.submissionsRemoved} earlier submission(s) removed`,
     ],
     [r.claimsRemoved > 0, `${r.claimsRemoved} stray claim(s) removed`],
-    [r.grantsRemoved > 0, `${r.grantsRemoved} stray grant(s) removed`],
-    [
-      r.verificationsRemoved > 0,
-      `${r.verificationsRemoved} stray verification(s) removed`,
-    ],
   ]
   const shown = notes.filter(([on]) => on).map(([, text]) => text)
 
-  return `${item.email}: ${[head, `plan ${item.plan ?? "free"}`, ...shown].join(", ")}`
+  return `${item.email}: ${[head, `recognition ${item.plan ?? "none"}`, ...shown].join(", ")}`
 }
 
 export async function seedAccessFixtures(): Promise<void> {
@@ -451,11 +436,7 @@ export async function seedAccessFixtures(): Promise<void> {
       r.staffUpdated > 0 ||
       r.staffRemoved > 0 ||
       r.teamSeat === "created" ||
-      r.teamSeat === "updated" ||
-      r.grantCreated ||
-      r.grantsRemoved > 0 ||
-      r.verificationCreated ||
-      r.verificationsRemoved > 0
+      r.teamSeat === "updated"
     console.log(describeResult(item, r))
     // A user created in this run has never had a session read, so nothing
     // is cached for them. An existing one might, and the cache only expires.

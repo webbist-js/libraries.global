@@ -21,7 +21,6 @@ const meta = {
     },
     libraries: [staffLibrary],
     meta: { operatorName: "Example Library Service", homeLibrary: null },
-    plan: "free",
     teamCovered: false,
   },
 } satisfies Meta<typeof StaffShell>

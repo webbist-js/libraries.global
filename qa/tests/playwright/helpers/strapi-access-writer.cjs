@@ -10,9 +10,9 @@
  *     must never run while a content-type schema is mid-edit.
  *
  * Why it exists: Strapi REST cannot make these writes, by design.
- * user-profile exposes only find/findOne, and role-grant,
- * library-affiliation, entitlement-grant and pro-verification have no
- * routes at all (P-A hardening; all four are admin-only), nor does a
+ * user-profile exposes only find/findOne, and role-grant and
+ * library-affiliation have no routes at all (P-A hardening; both are
+ * admin-only), nor does a
  * submission's status. So this calls load() and writes through the Document
  * Service, the same way the moderation service does on claim approval. It
  * never calls listen(), so no HTTP server starts. load()
@@ -65,8 +65,6 @@ const PROFILE = "api::user-profile.user-profile"
 const ROLE_GRANT = "api::role-grant.role-grant"
 const SUBMISSION = "plugin::content-moderation.submission"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
-const GRANT = "api::entitlement-grant.entitlement-grant"
-const VERIFICATION = "api::pro-verification.pro-verification"
 const LIBRARY = "api::library.library"
 const TEAM = "plugin::access.team"
 const TEAM_MEMBER = "plugin::access.team-member"
@@ -79,12 +77,6 @@ const STAFF_ROLES = new Set(["owner", "editor"])
 const STAFF_SOURCES = new Set(["claim", "team"])
 const TEAM_ROLES = new Set(["organiser", "member"])
 const SLUG = /^[a-z0-9-]{3,100}$/
-
-const DAY_MS = 86_400_000
-// pro-verified's verification runs a year. One with under 30 days left is
-// replaced, so it never lapses between seeds and a re-run stays a no-op.
-const VERIFICATION_DAYS = 365
-const VERIFICATION_RENEW_DAYS = 30
 
 const GRANTABLE_ROLES = new Set([
   "contributor",
@@ -131,14 +123,22 @@ const ONBOARDING_CLEARED = {
 }
 
 /**
- * Rewards standing. pro-earned sits at Archivist (1500 points), the lowest
- * tier that earns Pro; every other fixture starts from zero. Nobody holds
- * the 90-day earned-Pro hold, which only a drop below Archivist sets.
+ * Rewards standing and recognition. The counters are written directly (no
+ * point events), with no recent contribution, so a re-run is a no-op:
+ * `contributor` holds 1 accepted contribution, `supporter` 100, every other
+ * fixture none. Recognition is never revoked for a fixture.
  */
 function standing(plan) {
-  return plan === "pro-earned"
-    ? { points: 1500, tier: "Archivist", earnedProUntil: null }
-    : { points: 0, tier: "Reader", earnedProUntil: null }
+  const acceptedContributions =
+    plan === "supporter" ? 100 : plan === "contributor" ? 1 : 0
+
+  return {
+    points: 0,
+    tier: "Reader",
+    acceptedContributions,
+    lastContributionAt: null,
+    recognitionRevokedAt: null,
+  }
 }
 
 // null, undefined and an empty list all count as cleared.
@@ -218,8 +218,8 @@ function assertLocalDatabase(strapi) {
 }
 
 async function applyProfile(strapi, item) {
-  // No `fields`: every scalar comes back, private earnedProUntil included
-  // (the Document Service doesn't sanitise), plus the languages component.
+  // No `fields`: every scalar comes back, private recognitionRevokedAt
+  // included (the Document Service doesn't sanitise), plus languages.
   const [profile] = await strapi.documents(PROFILE).findMany({
     filters: { baUserId: { $eq: item.baUserId } },
     populate: { languages: true },
@@ -813,95 +813,6 @@ async function resetLive(strapi, libraryDocumentId) {
   return { sessionsRemoved: sessions.length, settingsRemoved: settings.length }
 }
 
-/** The one entitlement-grant a fixture's plan wants, or null for none. */
-function wantedGrant(plan) {
-  if (plan === "pro-grant")
-    return { plan: "pro", source: "admin", reason: "access fixture" }
-  if (plan === "team-grant")
-    return { plan: "team", source: "team", reason: "access fixture" }
-
-  return null
-}
-
-/**
- * Converges entitlement-grants: a granted fixture ends with exactly its one
- * unexpiring grant; every other fixture ends with none.
- */
-async function applyGrants(strapi, item) {
-  const want = wantedGrant(item.plan)
-  const existing = await strapi.documents(GRANT).findMany({
-    filters: { baUserId: { $eq: item.baUserId } },
-    limit: 100,
-  })
-  let kept = false
-  let removed = 0
-  for (const g of existing) {
-    if (
-      want &&
-      !kept &&
-      g.plan === want.plan &&
-      g.source === want.source &&
-      g.reason === want.reason &&
-      g.expiresAt == null
-    ) {
-      kept = true
-      continue
-    }
-    await strapi.documents(GRANT).delete({ documentId: g.documentId })
-    removed++
-  }
-  const created = !!want && !kept
-  if (created)
-    await strapi.documents(GRANT).create({
-      data: { baUserId: item.baUserId, ...want, expiresAt: null },
-    })
-
-  return { grantCreated: created, grantsRemoved: removed }
-}
-
-/**
- * Converges pro-verifications: pro-verified ends with exactly one
- * library_staff verification that has at least VERIFICATION_RENEW_DAYS to
- * run; every other fixture ends with none.
- */
-async function applyVerifications(strapi, item, now) {
-  const want = item.plan === "pro-verified"
-  const existing = await strapi.documents(VERIFICATION).findMany({
-    filters: { baUserId: { $eq: item.baUserId } },
-    limit: 100,
-  })
-  let kept = false
-  let removed = 0
-  for (const v of existing) {
-    // A verification with no expiry isn't the fixture's shape: replace it.
-    const msLeft = v.expiresAt ? new Date(v.expiresAt).getTime() - now : 0
-    if (
-      want &&
-      !kept &&
-      v.kind === "library_staff" &&
-      v.verifiedAt != null &&
-      msLeft >= VERIFICATION_RENEW_DAYS * DAY_MS
-    ) {
-      kept = true
-      continue
-    }
-    await strapi.documents(VERIFICATION).delete({ documentId: v.documentId })
-    removed++
-  }
-  const created = want && !kept
-  if (created)
-    await strapi.documents(VERIFICATION).create({
-      data: {
-        baUserId: item.baUserId,
-        kind: "library_staff",
-        verifiedAt: new Date(now).toISOString(),
-        expiresAt: new Date(now + VERIFICATION_DAYS * DAY_MS).toISOString(),
-      },
-    })
-
-  return { verificationCreated: created, verificationsRemoved: removed }
-}
-
 /**
  * Every read, update and delete here filters on baUserId, and a missing or
  * empty one could match other users' rows. So a bad plan is refused before
@@ -1063,8 +974,6 @@ async function main() {
         item,
         wantedAffiliations(item, libraries, seat?.rowId ?? null)
       )
-      const grant = await applyGrants(strapi, item)
-      const verification = await applyVerifications(strapi, item, now)
       const submissions = await applySubmissions(strapi, item, now)
       fixtures.push({
         baUserId: item.baUserId,
@@ -1072,8 +981,6 @@ async function main() {
         ...roles,
         ...affiliations,
         teamSeat: seat?.state ?? null,
-        ...grant,
-        ...verification,
         ...submissions,
       })
     }

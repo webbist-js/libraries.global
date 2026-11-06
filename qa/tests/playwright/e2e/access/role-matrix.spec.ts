@@ -123,43 +123,30 @@ const MATRIX: readonly {
   },
 ]
 
-// One row per way of holding a plan (see FIXTURES). Every plan fixture is a
-// reader with no claims, so apart from its plan it must look like the reader.
-const PLAN_MATRIX = [
+// One row per earned standing (see FIXTURES). Every standing fixture is a
+// reader with no claims, so apart from its recognition it must look like
+// the reader. Every signed-in account is an Explorer, with exports.
+const STANDING_MATRIX = [
   {
     key: "reader",
-    plan: "free",
-    planSource: "none",
-    canExport: false,
-    exportRows: 0,
-  },
-  {
-    key: "pro-grant",
-    plan: "pro",
-    planSource: "grant",
-    canExport: true,
+    standing: "explorer",
+    facts: ["explorer"],
+    reach: false,
     exportRows: 10_000,
   },
   {
-    key: "pro-earned",
-    plan: "pro",
-    planSource: "earned",
-    canExport: true,
+    key: "recognised",
+    standing: "contributor",
+    facts: ["explorer", "contributor"],
+    reach: true,
     exportRows: 10_000,
   },
   {
-    key: "pro-verified",
-    plan: "pro",
-    planSource: "verified",
-    canExport: true,
+    key: "supporter",
+    standing: "supporter",
+    facts: ["explorer", "contributor", "supporter"],
+    reach: true,
     exportRows: 10_000,
-  },
-  {
-    key: "team",
-    plan: "team",
-    planSource: "grant",
-    canExport: true,
-    exportRows: 50_000,
   },
 ] as const
 
@@ -331,10 +318,12 @@ test.describe("access role matrix (API)", () => {
       // Moderation API: a 403 from the Next pre-check without a scope.
       const queue = await api.get("/api/moderation/stats")
       expect(queue.status()).toBe(row.scopes.length > 0 ? 200 : 403)
-      expect(user.plan).toBe("free")
-      expect(user.features).toEqual([])
-      // Money never buys trust, and trust never shows up as a plan.
+      expect(user.standing).toBe("explorer")
+      expect(user.facts).toEqual(["explorer"])
+      expect(user.features).not.toContain("atlas.reach")
+      // Money never buys trust, and trust never shows up as an entitlement.
       expect(user).not.toHaveProperty("subscription")
+      expect(user).not.toHaveProperty("plan")
 
       const wiki = await api.get(`/api/contribute/wiki/${DOC_SLUG}`)
       if (row.directEdit) expect(wiki.status()).toBe(200)
@@ -419,24 +408,27 @@ test.describe("access role matrix (API)", () => {
   })
 })
 
-test.describe("access plan matrix (API)", () => {
-  for (const row of PLAN_MATRIX) {
-    test(`${row.key}: plan ${row.plan} (${row.planSource}), export ${
-      row.canExport ? "allowed" : "refused"
-    }`, async ({ baseURL }) => {
+test.describe("access standing matrix (API)", () => {
+  for (const row of STANDING_MATRIX) {
+    test(`${row.key}: ${row.standing}, Reach ${
+      row.reach ? "allowed" : "refused"
+    }, export allowed`, async ({ baseURL }) => {
       const api = await signedIn(baseURL!, row.key)
 
       const { user } = await (await api.get("/api/auth/get-session")).json()
       expect(user.profileLoaded).toBe(true)
-      expect(user.plan).toBe(row.plan)
-      expect(user.planSource).toBe(row.planSource)
-      expect(user.features.includes("atlas.export")).toBe(row.canExport)
+      expect(user.standing).toBe(row.standing)
+      expect(user.facts).toEqual(row.facts)
+      expect(user.features.includes("atlas.export")).toBe(true)
+      expect(user.features.includes("atlas.reach")).toBe(row.reach)
+      expect(user.features.includes("atlas.serviceReach")).toBe(false)
       expect(user.limits.exportRows).toBe(row.exportRows)
+      expect(user.limits.reachRunsPerWeek).toBe(row.reach ? 2 : 0)
 
       const res = await api.post("/api/export/atlas", {
         data: await exportBody(api),
       })
-      if (row.canExport) {
+      {
         expect(res.status()).toBe(200)
         expect(res.headers()["content-type"]).toContain("text/csv")
         const body = await res.body()
@@ -447,14 +439,11 @@ test.describe("access plan matrix (API)", () => {
         expect(records[0]).toMatch(/^name,slug,/)
         expect(records).toHaveLength(2)
         expect(records[1]).toMatch(/[^,]/)
-      } else {
-        expect(res.status()).toBe(402)
-        expect(await res.json()).toMatchObject({ feature: "atlas.export" })
       }
     })
   }
 
-  test("money never buys trust: every paid plan has the reader's access", async ({
+  test("recognition never buys trust: every standing has the reader's access", async ({
     baseURL,
   }) => {
     // With Strapi down every session is a reader with no capabilities, so
@@ -475,7 +464,7 @@ test.describe("access plan matrix (API)", () => {
       contributorRole: "reader",
       capabilities: [...ALL_SIGNED_IN].sort(),
     })
-    for (const row of PLAN_MATRIX.filter((r) => r.plan !== "free"))
+    for (const row of STANDING_MATRIX.filter((r) => r.key !== "reader"))
       expect(await trustOf(row.key), row.key).toEqual(reader)
   })
 })

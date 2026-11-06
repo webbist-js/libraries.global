@@ -68,5 +68,8 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/** Signed in (Explorer) with no accepted contribution: Reach shows its unlock route. */
 export const Default: Story = {}
 export const Public: Story = { args: { tier: "public" } }
+/** At least one accepted contribution: Reach is available. */
+export const Contributor: Story = { args: { tier: "reach" } }

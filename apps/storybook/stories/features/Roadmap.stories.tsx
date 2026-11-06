@@ -15,7 +15,7 @@ const meta = {
           description: "Explore library access by public transport.",
           stage: "next",
           area: "atlas",
-          plans: [{ plan: "pro", detail: null }],
+          plans: [{ plan: "contributor", detail: null }],
           noteKind: "depends",
           note: "Requires routing data.",
         },

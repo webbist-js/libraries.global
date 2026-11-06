@@ -33,7 +33,6 @@ export const Empty: Story = {
     data: {
       ...supporterDirectory,
       entries: [],
-      newThisMonth: [],
       total: 0,
       listed: 0,
       matched: 0,
