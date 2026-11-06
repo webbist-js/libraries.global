@@ -36,7 +36,7 @@ export default ({ strapi }: { strapi: any }) => {
       if (!isDocumentId(ctx.params.id)) throw new AccessError(404, "not_found")
       const team = await strapi.documents("plugin::access.team").findOne({
         documentId: ctx.params.id,
-        fields: ["status", "expiresAt", "source"],
+        fields: ["status"],
       })
       if (!team) throw new AccessError(404, "not_found")
 

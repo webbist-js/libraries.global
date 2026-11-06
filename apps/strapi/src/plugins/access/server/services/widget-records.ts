@@ -38,8 +38,6 @@ export type LibraryRecord = NamedRecord & {
 }
 export type TeamRecord = NamedRecord & {
   status?: string | null
-  source?: string | null
-  expiresAt?: string | null
   widgetBranding?: boolean
   libraries?: Identity[]
   primaryNetwork?: NamedRecord | null

@@ -133,11 +133,6 @@ export function TeamDetailModal({
                     "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
                 }}
               >
-                <Fact label="Expires" value={dateCell(team.expiresAt)} />
-                <Fact
-                  label="Source"
-                  value={team.source === "checkout" ? "Checkout" : "Admin"}
-                />
                 <Fact label="Created" value={dateCell(team.createdAt)} />
                 <Fact
                   label="Organisers"

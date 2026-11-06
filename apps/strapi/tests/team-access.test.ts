@@ -23,7 +23,6 @@ const team = (
   slug: name.toLowerCase().replaceAll(/\s+/g, "-"),
   status: "active",
   verifiedAt: "2026-01-01T00:00:00.000Z",
-  expiresAt: null,
   libraries: libraries.map((id) => ({ documentId: id })),
   ...over,
 })
@@ -32,9 +31,7 @@ const lapsed = team("team00000000000000000002", "Lapsed Team", [LIB_B], {
   status: "lapsed",
   verifiedAt: null,
 })
-const expired = team("team00000000000000000003", "Expired Team", [LIB_C], {
-  expiresAt: "2020-01-01T00:00:00.000Z",
-})
+const third = team("team00000000000000000003", "Third Team", [LIB_C])
 const row = (
   documentId: string,
   baUserId: string,
@@ -45,12 +42,12 @@ const row = (
 
 function setup() {
   return makeFakeStrapi({
-    [TEAM_UID]: [active, lapsed, expired],
+    [TEAM_UID]: [active, lapsed, third],
     [TEAM_MEMBER_UID]: [
       row("teammember00000000000001", "u1", "organiser", "active", active),
       row("teammember00000000000002", "u1", "member", "active", lapsed),
-      row("teammember00000000000003", "u1", "member", "invited", expired),
-      row("teammember00000000000004", "u2", "member", "active", expired),
+      row("teammember00000000000003", "u1", "member", "invited", third),
+      row("teammember00000000000004", "u2", "member", "active", third),
       row("teammember00000000000005", "u2", "member", "removed", active),
     ],
   })
@@ -76,10 +73,10 @@ describe("loadTeamMemberships", () => {
         libraryDocumentIds: [LIB_B],
       }),
     ])
-    // An invited or removed row is no membership; an old paid expiry is ignored.
+    // An invited or removed row is no membership.
     expect(await loadTeamMemberships(strapi, "u2")).toEqual([
       expect.objectContaining({
-        teamDocumentId: expired.documentId,
+        teamDocumentId: third.documentId,
         status: "active",
       }),
     ])
@@ -91,12 +88,5 @@ describe("loadTeamMemberships", () => {
   it("treats status as an admin lifecycle flag only", () => {
     expect(teamIsActive({ status: "active" })).toBe(true)
     expect(teamIsActive({ status: "lapsed" })).toBe(false)
-    expect(
-      teamIsActive({
-        status: "active",
-        expiresAt: "2000-01-01T00:00:00.000Z",
-        source: "checkout",
-      } as Parameters<typeof teamIsActive>[0])
-    ).toBe(true)
   })
 })

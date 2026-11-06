@@ -41,15 +41,7 @@
       "enum": ["active", "lapsed"],
       "default": "active"
     },
-    "source": {
-      "type": "enumeration",
-      "enum": ["admin", "checkout"],
-      "default": "admin"
-    },
     "verifiedAt": {
-      "type": "datetime"
-    },
-    "expiresAt": {
       "type": "datetime"
     },
     "notes": {

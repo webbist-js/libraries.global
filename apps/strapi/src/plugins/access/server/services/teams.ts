@@ -111,9 +111,7 @@ export type TeamView = {
   name: string
   slug: string
   status: "active" | "lapsed"
-  source: "admin" | "checkout"
   verifiedAt: string | null
-  expiresAt: string | null
   notes: string | null
   libraries: TeamLibrary[]
   members: TeamMemberView[]
@@ -144,9 +142,7 @@ type TeamRow = {
   name?: string | null
   slug?: string | null
   status?: string | null
-  source?: string | null
   verifiedAt?: string | null
-  expiresAt?: string | null
   notes?: string | null
   createdAt?: string | null
   libraries?: TeamLibrary[] | null
@@ -199,9 +195,7 @@ const TEAM_FIELDS = [
   "name",
   "slug",
   "status",
-  "source",
   "verifiedAt",
-  "expiresAt",
   "notes",
   "createdAt",
 ]
@@ -274,7 +268,6 @@ export function parseTeamInput(
       value: {
         name?: string
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
         publicServiceApproved?: boolean
@@ -287,7 +280,6 @@ export function parseTeamInput(
   const value: {
     name?: string
     libraryDocumentIds?: string[]
-    expiresAt?: string | null
     notes?: string | null
     status?: "active" | "lapsed"
     publicServiceApproved?: boolean
@@ -315,18 +307,6 @@ export function parseTeamInput(
     if (!ids.every(isDocumentId))
       return { ok: false, message: "A library id is not valid." }
     value.libraryDocumentIds = ids as string[]
-  }
-  if (b.expiresAt !== undefined) {
-    if (b.expiresAt === null || b.expiresAt === "") value.expiresAt = null
-    else {
-      const at =
-        typeof b.expiresAt === "string"
-          ? new Date(b.expiresAt)
-          : new Date(Number.NaN)
-      if (Number.isNaN(at.getTime()))
-        return { ok: false, message: "The expiry must be a date." }
-      value.expiresAt = at.toISOString()
-    }
   }
   if (b.notes !== undefined) {
     if (b.notes !== null && typeof b.notes !== "string")
@@ -416,7 +396,7 @@ export default ({ strapi }: { strapi: any }) => {
       fields: MEMBER_FIELDS,
       populate: {
         team: {
-          fields: ["documentId", "verifiedAt", "status", "expiresAt", "name"],
+          fields: ["documentId", "verifiedAt", "status", "name"],
         },
       },
     })) as MemberRow | null
@@ -550,12 +530,10 @@ export default ({ strapi }: { strapi: any }) => {
       name: team.name ?? "Team",
       slug: team.slug ?? "",
       status: teamIsActive(team) ? "active" : "lapsed",
-      source: team.source === "checkout" ? "checkout" : "admin",
       publicServiceApproved: team.publicServiceApproved === true,
       widgetBranding:
         viewer.role === "admin" ? team.widgetBranding === true : undefined,
       verifiedAt: team.verifiedAt ?? null,
-      expiresAt: team.expiresAt ?? null,
       notes: viewer.role === "admin" ? (team.notes ?? null) : null,
       libraries: (team.libraries ?? []).map((l) => ({
         documentId: l.documentId,
@@ -895,11 +873,7 @@ export default ({ strapi }: { strapi: any }) => {
           status: (team.status === "lapsed" ? "lapsed" : "active") as
             | "active"
             | "lapsed",
-          source: (team.source === "checkout" ? "checkout" : "admin") as
-            | "admin"
-            | "checkout",
           verifiedAt: team.verifiedAt ?? null,
-          expiresAt: team.expiresAt ?? null,
           libraries: (team.libraries ?? []).map((l) => ({
             documentId: l.documentId,
             name: l.name,
@@ -983,7 +957,6 @@ export default ({ strapi }: { strapi: any }) => {
       input: {
         name: string
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         verified?: boolean
         publicServiceApproved?: boolean
@@ -1012,9 +985,7 @@ export default ({ strapi }: { strapi: any }) => {
           name: input.name,
           slug,
           status: "active",
-          source: "admin",
           verifiedAt: input.verified ? now() : null,
-          expiresAt: input.expiresAt ?? null,
           notes: input.notes ?? null,
           createdByAdmin: `admin:${adminId}`,
           publicServiceApproved: input.publicServiceApproved === true,
@@ -1043,7 +1014,6 @@ export default ({ strapi }: { strapi: any }) => {
       input: {
         name?: string
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
         publicServiceApproved?: boolean
@@ -1054,7 +1024,6 @@ export default ({ strapi }: { strapi: any }) => {
         const team = await teamOf(teamId)
         const data: Record<string, unknown> = {}
         if (input.name !== undefined) data.name = input.name
-        if (input.expiresAt !== undefined) data.expiresAt = input.expiresAt
         if (input.notes !== undefined) data.notes = input.notes
         if (input.status !== undefined) data.status = input.status
         if (input.publicServiceApproved !== undefined)
@@ -1449,7 +1418,7 @@ export default ({ strapi }: { strapi: any }) => {
           team: {
             // Preview needs only these fields; accept reloads the full Team.
             // Nested selection rejects private attributes such as notes.
-            fields: ["documentId", "name", "status", "expiresAt"],
+            fields: ["documentId", "name", "status"],
           },
         },
         limit: 1,
@@ -1941,7 +1910,7 @@ export default ({ strapi }: { strapi: any }) => {
           ],
         },
         fields: ["documentId", "status", "teamRole", "baUserId"],
-        populate: { team: { fields: ["documentId", "source"] } },
+        populate: { team: { fields: ["documentId"] } },
         limit: 100,
       })) as MemberRow[]
       for (const row of [...rows].sort((a, b) =>
@@ -1951,9 +1920,6 @@ export default ({ strapi }: { strapi: any }) => {
           const current = row.team?.documentId
             ? await memberOf(row.team.documentId, row.documentId)
             : row
-          const currentTeam = row.team?.documentId
-            ? await teamOf(row.team.documentId)
-            : null
           if (
             current.baUserId !== baUserId &&
             !(
@@ -1963,20 +1929,6 @@ export default ({ strapi }: { strapi: any }) => {
             )
           )
             return
-          if (
-            currentTeam?.source === "checkout" &&
-            current.status === "active" &&
-            current.teamRole === "organiser"
-          ) {
-            const others = (await memberRows(row.team.documentId)).filter(
-              (member) =>
-                member.status === "active" &&
-                member.teamRole === "organiser" &&
-                member.baUserId !== baUserId
-            )
-            if (!others.length)
-              throw new AccessError(409, "transfer_team_before_deletion")
-          }
           await members().update({
             documentId: row.documentId,
             data: {

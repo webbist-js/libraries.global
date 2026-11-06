@@ -69,7 +69,7 @@ describe("API account organisation bridge", () => {
       verifiedAt: null,
     })
     // No payment or lifecycle state is written.
-    for (const field of ["status", "expiresAt", "source"])
+    for (const field of ["status", "expiresAt", "source", "paidThrough"])
       expect(data).not.toHaveProperty(field)
     expect(f.memberCreate.mock.calls[0]).toEqual([
       expect.objectContaining({

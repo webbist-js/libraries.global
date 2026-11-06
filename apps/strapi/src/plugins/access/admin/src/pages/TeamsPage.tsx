@@ -28,12 +28,7 @@ import {
 import { type AccessSection, PluginNav } from "../components/PluginNav"
 import { TeamDetailModal } from "../components/TeamDetailModal"
 import { TeamModal } from "../components/TeamModal"
-import {
-  apiError,
-  dateCell,
-  type Team,
-  type TeamSummary,
-} from "../components/teamsMeta"
+import { apiError, type Team, type TeamSummary } from "../components/teamsMeta"
 
 /**
  * Teams: every Team organisation, newest first, with its libraries
@@ -180,9 +175,6 @@ export function TeamsPage({
                       <Typography variant="sigma">Status</Typography>
                     </Th>
                     <Th>
-                      <Typography variant="sigma">Expires</Typography>
-                    </Th>
-                    <Th>
                       <Typography variant="sigma">Actions</Typography>
                     </Th>
                   </Tr>
@@ -221,9 +213,6 @@ export function TeamsPage({
                             {t.verifiedAt ? "Verified" : "Unverified"}
                           </Status>
                         </Flex>
-                      </Td>
-                      <Td>
-                        <Typography>{dateCell(t.expiresAt)}</Typography>
                       </Td>
                       <Td>
                         <IconButton

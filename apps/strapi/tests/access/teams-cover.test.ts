@@ -51,9 +51,7 @@ const team = (over: Record<string, unknown> = {}) => ({
   name: "Kent Libraries",
   slug: "kent-libraries",
   status: "active",
-  source: "admin",
   verifiedAt: "2026-01-01T00:00:00.000Z",
-  expiresAt: null,
   notes: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   libraries: [libA, libB],
@@ -277,12 +275,6 @@ describe("teams.forLibrary", () => {
 
     const lapsed = setup({ status: "lapsed" })
     expect(await lapsed.teams.forLibrary(LIB_A, "outsider")).toBeNull()
-
-    // A past paid expiry no longer lapses a free workspace.
-    const expired = setup({
-      expiresAt: new Date(Date.now() - DAY).toISOString(),
-    })
-    expect(await expired.teams.forLibrary(LIB_A, "outsider")).not.toBeNull()
   })
 
   it("gives a member the full view, with only the invites pre-assigned to that library", async () => {

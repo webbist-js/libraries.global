@@ -26,7 +26,6 @@ const summary: TeamSummary = {
   organiserName: null,
   libraryDocumentIds: [],
   verified: true,
-  expiresAt: null,
 }
 
 describe("Staff entry visibility", () => {
@@ -58,11 +57,7 @@ describe("Staff entry visibility", () => {
     expect(canAddStaffLibrary(0, [{ ...summary, status: "lapsed" }])).toBe(
       false
     )
-    // Free workspaces never lapse for payment; only verification matters.
-    expect(
-      canAddStaffLibrary(0, [{ ...summary, expiresAt: "2000-01-01" }])
-    ).toBe(true)
-    const { status: _status, expiresAt: _expiresAt, ...free } = summary
+    const { status: _status, ...free } = summary
     expect(canAddStaffLibrary(0, [free])).toBe(true)
   })
 })

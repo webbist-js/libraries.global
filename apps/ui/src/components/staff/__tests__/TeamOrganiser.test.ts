@@ -82,7 +82,6 @@ const team = (over: Partial<TeamDetail> = {}): TeamDetail => ({
   slug: "kent-libraries",
   status: "active",
   verifiedAt: "2026-09-01T00:00:00Z",
-  expiresAt: null,
   libraries: [
     {
       documentId: L1,

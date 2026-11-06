@@ -42,9 +42,7 @@ export type TeamSummary = {
   name: string
   slug: string
   status: "active" | "lapsed"
-  source: "admin" | "checkout"
   verifiedAt: string | null
-  expiresAt: string | null
   libraries: TeamLibrary[]
   createdAt: string | null
 }

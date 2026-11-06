@@ -58,7 +58,6 @@ beforeEach(() => {
       role: "member",
       libraryCount: 2,
       status: "active",
-      expiresAt: null,
       verified: true,
       organiserName: "Ann",
       libraryDocumentIds: [LIB],

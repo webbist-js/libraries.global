@@ -5540,7 +5540,6 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     createdByAdmin: Schema.Attribute.String & Schema.Attribute.Private
-    expiresAt: Schema.Attribute.DateTime
     libraries: Schema.Attribute.Relation<"manyToMany", "api::library.library">
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
@@ -5558,8 +5557,6 @@ export interface PluginAccessTeam extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<false>
     publishedAt: Schema.Attribute.DateTime
     slug: Schema.Attribute.UID<"name">
-    source: Schema.Attribute.Enumeration<["admin", "checkout"]> &
-      Schema.Attribute.DefaultTo<"admin">
     status: Schema.Attribute.Enumeration<["active", "lapsed"]> &
       Schema.Attribute.DefaultTo<"active">
     updatedAt: Schema.Attribute.DateTime

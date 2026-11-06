@@ -11,7 +11,7 @@ describe("Team API management authorization", () => {
   it("rechecks membership on every operation and denies ordinary members' mutations", async () => {
     fetchStaff.mockResolvedValue({
       status: 200,
-      body: { status: "active", expiresAt: null, viewerRole: "member" },
+      body: { status: "active", viewerRole: "member" },
     })
     await requireApiTeam(teamId, user)
     await expect(requireApiTeam(teamId, user, true)).rejects.toThrow(
@@ -24,7 +24,7 @@ describe("Team API management authorization", () => {
   it("requires an active Team for creation but preserves revoke and billing recovery", async () => {
     fetchStaff.mockResolvedValue({
       status: 200,
-      body: { status: "lapsed", expiresAt: null, viewerRole: "organiser" },
+      body: { status: "lapsed", viewerRole: "organiser" },
     })
     await expect(requireApiTeam(teamId, user, true)).rejects.toThrow(
       "team_inactive"

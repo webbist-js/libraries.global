@@ -56,7 +56,6 @@ const team = {
   role: "member",
   libraryCount: 0,
   status: "active",
-  expiresAt: null,
   verified: true,
   libraryDocumentIds: [],
 }
@@ -120,20 +119,12 @@ describe("staff creation page", () => {
     mocks.teams.mockResolvedValue({
       status: 200,
       body: {
-        teams: [
-          team,
-          // Free workspaces never expire for payment.
-          { ...team, id: "old-expiry", expiresAt: "2000-01-01" },
-          { ...team, id: "lapsed", status: "lapsed" },
-        ],
+        teams: [team, { ...team, id: "lapsed", status: "lapsed" }],
       },
     })
     render(await staffPage(query))
     expect(mocks.wizard.mock.calls.at(-1)?.[0]).toMatchObject({
-      creationTeams: [
-        { id: team.id, name: team.name },
-        { id: "old-expiry", name: team.name },
-      ],
+      creationTeams: [{ id: team.id, name: team.name }],
     })
   })
   it("doesn't silently drop Team coverage when the Team API fails", async () => {

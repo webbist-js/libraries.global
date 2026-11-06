@@ -1,10 +1,8 @@
 import {
-  Box,
   Button,
   Checkbox,
   Combobox,
   ComboboxOption,
-  DatePicker,
   Field,
   Flex,
   Modal,
@@ -18,14 +16,11 @@ import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useEffect, useState } from "react"
 
 import { apiError, type Team, type TeamLibrary } from "./teamsMeta"
-import {
-  PluginModalContent,
-  FormGrid,
-} from "../../../../../admin/components/PluginUI"
+import { PluginModalContent } from "../../../../../admin/components/PluginUI"
 
 /**
  * Create or edit a Team: name, the libraries it covers (search by
- * name), verified, expiry and notes. Verifying is the act of trust: it
+ * name), verified and notes. Verifying is the act of trust: it
  * lets the organiser create staff access without a Moderator.
  */
 export function TeamModal({
@@ -50,9 +45,6 @@ export function TeamModal({
   const [lapsed, setLapsed] = useState(team?.status === "lapsed")
   const [publicServiceApproved, setPublicServiceApproved] = useState(
     team?.publicServiceApproved === true
-  )
-  const [expires, setExpires] = useState<Date | undefined>(
-    team?.expiresAt ? new Date(team.expiresAt) : undefined
   )
   const [notes, setNotes] = useState(team?.notes ?? "")
   const [query, setQuery] = useState("")
@@ -102,7 +94,6 @@ export function TeamModal({
     setError(null)
     const body = {
       name: name.trim(),
-      expiresAt: expires ? expires.toISOString() : null,
       libraryDocumentIds: libraries.map((l) => l.documentId),
       publicServiceApproved,
       notes: notes.trim() || null,
@@ -142,9 +133,6 @@ export function TeamModal({
     }
   }
 
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
   return (
     <Modal.Root open onOpenChange={(open) => !open && onClose()}>
       <PluginModalContent>
@@ -164,21 +152,6 @@ export function TeamModal({
                 placeholder="e.g. Devon Libraries"
               />
             </Field.Root>
-            <FormGrid>
-              <Box style={{ flex: "1 1 240px", minWidth: 0 }}>
-                <Field.Root name="expiresAt" hint="Leave empty for no end.">
-                  <Field.Label>Expires (optional)</Field.Label>
-                  <DatePicker
-                    value={expires}
-                    onChange={(d: Date | undefined) => setExpires(d)}
-                    onClear={() => setExpires(undefined)}
-                    clearLabel="Clear the expiry"
-                    minDate={tomorrow}
-                  />
-                  <Field.Hint />
-                </Field.Root>
-              </Box>
-            </FormGrid>
             <Field.Root
               name="libraries"
               hint="The libraries the organiser may assign staff to. Removing one ends every Team-created staff row at it."

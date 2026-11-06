@@ -31,9 +31,7 @@ function setup() {
   const team = {
     documentId: TEAM,
     name: "A service",
-    source: "admin",
     status: "active",
-    expiresAt: null,
     libraries: [{ documentId: L1 }],
     primaryNetwork: { documentId: NET },
     widgetBranding: false,
@@ -290,12 +288,9 @@ describe("Team widgets authority", () => {
       code: "widget_unavailable",
     })
   })
-  it("blocks an admin-lapsed workspace but never an old expiry or checkout source, and retains organiser containment", async () => {
+  it("blocks an admin-lapsed workspace and retains organiser containment", async () => {
     const f = setup(),
       w = await f.publish(await f.create())
-    // Free workspaces: an old expiry or a checkout source is inert.
-    f.store[TEAM_UID]![0]!.expiresAt = "2000-01-01T00:00:00.000Z"
-    f.store[TEAM_UID]![0]!.source = "checkout"
     await expect(f.widgets.public(w.publicId)).resolves.toBeTruthy()
     await expect(f.create()).resolves.toBeTruthy()
     f.store[TEAM_UID]![0]!.status = "lapsed"

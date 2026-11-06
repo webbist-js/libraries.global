@@ -139,7 +139,6 @@ export type TeamDetail = {
   /** `lapsed` only when the site team has closed the free workspace. */
   status: "active" | "lapsed"
   verifiedAt: string | null
-  expiresAt: string | null
   libraries: TeamLibrary[]
   members: TeamMemberRow[]
   viewerRole: TeamRole | null
@@ -156,7 +155,6 @@ export type TeamSummary = {
   libraryCount: number
   /** `lapsed` only when the site team has closed the workspace; may be omitted. */
   status?: "active" | "lapsed"
-  expiresAt?: string | null
   verified: boolean
   organiserName: string | null
   libraryDocumentIds: string[]

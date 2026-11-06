@@ -25,9 +25,7 @@ it("loads membership and invitation projections through Strapi's real nested-que
     documentId: "team00000000000000000001",
     name: "API acceptance",
     status: "active",
-    expiresAt: null,
     notes: "Private administrator notes",
-    source: "checkout",
     libraries: [],
   }
   const fake = makeFakeStrapi({
