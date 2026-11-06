@@ -23,7 +23,6 @@ import {
   parseAtlasChangeRequest,
 } from "../../../utils/atlas-read-store"
 import { atlasSourceRows } from "../../../utils/atlas-source"
-import { syncLibraryAccessPlanCopy } from "../../../utils/library-access-plan-copy"
 import {
   ingestLocalPopulation,
   readLocalPopulation,
@@ -207,12 +206,6 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
       return
     }
     ctx.body = await ingestPopulation(strapi, { dryRun: body.dryRun })
-  },
-  async syncPlanCopy(ctx: Core.Strapi["server"]["app"]["context"]) {
-    if (!authorize(ctx)) return
-    if (Object.keys(ctx.request.body ?? {}).length)
-      return ctx.badRequest("Plan copy sync takes no parameters")
-    ctx.body = await syncLibraryAccessPlanCopy(strapi)
   },
   async localPopulation(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return

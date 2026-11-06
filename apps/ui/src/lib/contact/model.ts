@@ -118,8 +118,7 @@ export function mailtoContactIntent(
     if (/\bmembership support\b/.test(text)) type = "membership_support"
     else if (/issue|bug|problem|error/.test(text)) type = "report_issue"
     else if (/\bsponsor(?:ship|ing)?\b/.test(text)) type = "sponsorship"
-    else if (/\b(?:plans?|pro|grants?|verification|team)\b/.test(text))
-      type = "plans"
+    else if (/\b(?:plans?|pricing|api)\b/.test(text)) type = "plans"
     else if (/privacy|legal|data request/.test(text)) type = "privacy"
 
     return { mode: "contact", type, sourceSubject: subject }

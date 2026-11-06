@@ -19,7 +19,7 @@ export default async function StaffLibraryLayout({
   )
   const meta = await fetchStaffLibraryMeta(documentId)
   // Staff tools are free: the viewer's own verified claim decides.
-  const teamCovered = canStaffTool(user, "seeTeam", documentId)
+  const canSeeTeam = canStaffTool(user, "seeTeam", documentId)
 
   return (
     <>
@@ -27,7 +27,7 @@ export default async function StaffLibraryLayout({
         overview={overview}
         libraries={libraries}
         meta={meta}
-        teamCovered={teamCovered}
+        canSeeTeam={canSeeTeam}
       />
       <Container className="py-8 sm:py-12">{children}</Container>
     </>

@@ -50,11 +50,11 @@ test("an onboarded user's magic link lands on the destination", async ({
   page,
 }) => {
   const email = emailFor("reader")
-  const callbacks = await requestMagicLinkThroughForm(page, email, "/pro")
+  const callbacks = await requestMagicLinkThroughForm(page, email, "/plans")
   const token = await latestMagicLinkToken(email)
   await followMagicLink(page, token, callbacks)
 
-  await expect(page).toHaveURL(/\/pro$/, NAVIGATION)
+  await expect(page).toHaveURL(/\/plans$/, NAVIGATION)
   const user = await sessionUser(page)
   expect(user?.email).toBe(email)
   expect(user?.username).toBe("access_reader")

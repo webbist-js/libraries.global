@@ -121,7 +121,7 @@
         "two": "Explain the languages and topics you can help with.",
         "three": "Follow your application and any requests for more information."
       },
-      "requirement": "Contributor roles are reviewed using experience, contribution history and the role’s requirements. A paid membership does not buy approval."
+      "requirement": "Contributor roles are reviewed using experience, contribution history and the role’s requirements. Payment does not buy approval."
     },
     "claimLibrary": "Claim a library",
     "openDevelopers": "Open Developers"
@@ -2696,7 +2696,7 @@
     "reviewBeforeLive": "Review them before they go live.",
     "checkingSuggestions": "Checking for suggestions…",
     "teamAndInsights": "Team and insights",
-    "teamAccess": "Team tools are available when a Team covers this library.",
+    "teamAccess": "Team and Traffic need your own verified staff claim on this library.",
     "communityDrives": "Community drives",
     "libraryNeeds": "Your library needs: {need}",
     "noLibraryDrive": "No open drive includes it right now.",

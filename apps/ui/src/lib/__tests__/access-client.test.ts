@@ -57,7 +57,7 @@ describe("useEntitlements", () => {
   it("reads missing or malformed fields as Explorer with nothing extra", () => {
     session.data = {
       user: {
-        standing: "pro",
+        standing: "patron",
         facts: "apiCustomer",
         features: "atlas.reach",
         limits: { reachRunsPerWeek: "9" },

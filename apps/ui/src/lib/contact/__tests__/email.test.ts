@@ -14,8 +14,8 @@ const contact: ContactSubmission = {
   type: "plans",
   name: "Reader",
   email: "reader@example.org",
-  message: "We’re interested in a Team plan.",
-  sourceSubject: "Pro grant",
+  message: "We’re interested in API Access.",
+  sourceSubject: "API pricing question",
   context: { page: "/contribute", locale: "en" },
 }
 beforeEach(() => {
@@ -34,7 +34,7 @@ it("uses a programmatic title and the contact system email variant", () => {
   )
   expect(email.subject).toBe("[Contact] Plans and API Access · /contribute")
   expect(email.text).toContain("System notification · Contact request")
-  expect(email.text).toContain("Pro grant")
+  expect(email.text).toContain("API pricing question")
   expect(email.text).toContain("Browser / OS: Chrome test")
   expect(email.text).toContain("Reference: reference")
   expect(email.html).not.toContain("Unsubscribe")

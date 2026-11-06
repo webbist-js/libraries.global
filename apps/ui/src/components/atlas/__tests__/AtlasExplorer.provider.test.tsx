@@ -14,7 +14,7 @@ import { AtlasExplorer } from "../AtlasExplorer"
 import type { AtlasListView as AtlasListViewComponent } from "../AtlasListView"
 
 const observed = vi.hoisted(() => ({
-  plan: "pro",
+  viewer: "explorer",
   map: null as any,
   list: null as any,
   flyTo: vi.fn(),
@@ -23,9 +23,9 @@ const observed = vi.hoisted(() => ({
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({ data: null, isPending: false, error: null }),
   useEntitlements: () => ({
-    signedIn: observed.plan !== "public",
+    signedIn: observed.viewer !== "public",
     ready: true,
-    can: () => observed.plan === "pro",
+    can: () => observed.viewer === "explorer",
     has: () => false,
   }),
 }))
@@ -108,7 +108,7 @@ afterEach(() => {
   cleanup()
   vi.useRealTimers()
   vi.unstubAllGlobals()
-  observed.plan = "pro"
+  observed.viewer = "explorer"
   observed.map = null
   observed.list = null
   observed.flyTo.mockClear()
@@ -1152,7 +1152,7 @@ it("shows a selection skeleton and ignores an older library response after anoth
 
 it("closes the public accessibility preview without enabling its layer", async () => {
   vi.useFakeTimers()
-  observed.plan = "public"
+  observed.viewer = "public"
   window.history.replaceState(
     null,
     "",

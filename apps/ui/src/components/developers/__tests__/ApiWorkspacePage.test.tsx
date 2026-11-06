@@ -103,7 +103,7 @@ it("shows reference docs and a login CTA to guests, without key or usage navigat
       .getAttribute("href")
   ).toContain("%2Ffr%2Fdevelopers%2Freference")
 })
-it("offers individual API checkout, without a Team seat, to an account with no organisation", async () => {
+it("offers individual API checkout to an account with no organisation", async () => {
   state.access.signedIn = true
   state.access.prospect = { purchasing: true }
   render(await ApiWorkspacePage({ section: "keys" }))

@@ -507,8 +507,8 @@ navigation and a pinned guidance card. On phones the same navigation and CTA
 open in the section drawer. Search remains in the content toolbar.
 
 Staff destinations cover Your libraries, Services & networks, Members &
-libraries, Billing & seats, Widgets, API access and Claim a library. Team tools
-appear for Team members; the existing server checks still distinguish members,
+libraries, Widgets, API access and Claim a library. Team tools appear for Team
+members; the existing server checks still distinguish members,
 organisers, verified service scopes and library staff authority. Opening a staff
 library changes the sidebar to its record tools, including mobile-only live
 sharing. The single-library overview is now accessible without an automatic
@@ -557,8 +557,9 @@ API keys. No production content or deployment is part of this batch.
 ### Staff/Contribute final state pass
 
 The masthead now includes Staff for hydrated library staff and Team members
-(including lapsed Teams that still need their billing/workspace). A paid plan,
-editorial role, moderator role or pending claim alone does not expose it. The
+(including lapsed Teams that still need their workspace). API Access,
+recognition, an editorial role, moderator role or pending claim alone does not
+expose it. The
 same destination appears in the mobile/More menu. Short mastheads keep the brand
 and Profile/Contribute controls fixed, with only their middle destinations
 scrolling. Section sidebars remain 320px; their footers include bottom safe-area

@@ -189,7 +189,7 @@ describe("team membership and invites", () => {
     expect(invite.status).toBe("invited")
     expect(invite.tokenHash).toBe(sha256(token))
   })
-  it("records each invite, emails a hashed link, and is not limited by a paid seat count", async () => {
+  it("records each invite, emails a hashed link, and allows further invites", async () => {
     const { teams, store, services } = setup()
     const invited = await teams.invite(
       TEAM,
@@ -219,7 +219,7 @@ describe("team membership and invites", () => {
     await expect(
       teams.invite(TEAM, "mem@example.org", "member", undefined, organiser)
     ).rejects.toMatchObject({ status: 409, code: "already_member" })
-    // Free workspaces: a paid seat count no longer limits invites.
+    // Free workspaces: only the fixed member ceiling limits invites.
     await expect(
       teams.invite(TEAM, "fourth@example.org", "member", undefined, organiser)
     ).resolves.toMatchObject({ member: { status: "invited" } })

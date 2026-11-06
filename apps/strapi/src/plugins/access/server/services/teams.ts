@@ -42,7 +42,7 @@ const SUBMISSION = "plugin::content-moderation.submission"
 export const INVITE_TTL_DAYS = 14
 /**
  * Abuse control for free workspaces: most active plus invited members one
- * Team may hold. A fixed ceiling, never a paid or per-Team seat count.
+ * Team may hold. One fixed ceiling for every workspace.
  */
 export const TEAM_MEMBER_LIMIT = 500
 /** Most member rows read for one Team (removed rows sit above the limit). */
@@ -1250,7 +1250,7 @@ export default ({ strapi }: { strapi: any }) => {
           throw new AccessError(409, "already_member")
         if (existing?.status === "invited")
           throw new AccessError(409, "invite_already_pending")
-        // Free workspaces: a fixed member ceiling, never a paid seat count.
+        // Free workspaces: one fixed member ceiling for abuse control.
         const memberCount = rows.filter((r) => r.status !== "removed").length
         if (memberCount >= TEAM_MEMBER_LIMIT)
           throw new AccessError(409, "member_limit")
@@ -1463,7 +1463,7 @@ export default ({ strapi }: { strapi: any }) => {
      * Accepts an invite: the signed-in email must match the invited one,
      * the invite must be open and the Team active. The row becomes active
      * (token cleared), a pre-assignment is applied, and the session is
-     * refreshed so Pro and the Team's libraries show at once.
+     * refreshed so the Team's libraries show at once.
      */
     async accept(
       token: string,

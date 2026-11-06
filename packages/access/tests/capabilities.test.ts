@@ -162,7 +162,7 @@ describe("resolveCapabilities", () => {
 
   it("rejects unknown submission types", () => {
     const c = resolveCapabilities(input({ contributorRole: "editorial_board" }))
-    expect(canSubmit(c, "pro_upgrade" as never)).toBe(false)
+    expect(canSubmit(c, "unknown_type" as never)).toBe(false)
   })
 
   it("gives every signed-in user role applications", () => {

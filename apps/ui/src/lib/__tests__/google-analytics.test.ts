@@ -176,36 +176,39 @@ describe("production analytics", () => {
   })
 })
 
+const checkoutEvents = (browser: Window) =>
+  (browser.dataLayer ?? []).filter(
+    (v) => (v as { event?: string }).event === "lg_checkout"
+  ) as { analytics: Record<string, unknown> }[]
+
 it("keeps the checkout channel off by default, even with consent", () => {
-  const { browser, append } = fixture(
-    "https://libraries.global",
-    "/contribute/membership/checkout"
-  )
+  const { browser } = fixture("https://libraries.global", "/developers")
   const analytics = installGoogleAnalytics(browser)!
   analytics.setConsent(true)
   expect(
     analytics.trackCheckout!("begin_checkout", {
-      product: "team",
-      billing_interval: "year",
+      product: "team_api",
+      billing_interval: "month",
     })
   ).toBe(false)
-  expect(append).not.toHaveBeenCalled()
+  expect(checkoutEvents(browser)).toEqual([])
 })
 
-it("uses a separate consented channel with generic context and no private page views", () => {
-  const { browser, append, views } = fixture(
+it("uses a separate consented channel with generic context and no page views", () => {
+  const { browser, views } = fixture(
     "https://libraries.global",
-    "/fr/contribute/membership/checkout"
+    "/fr/developers"
   )
   const analytics = installGoogleAnalytics(browser, undefined, true, true)!
   const fields = {
-    product: "team",
-    billing_interval: "year",
-    api_addon: "selected",
+    product: "team_api",
+    billing_interval: "month",
+    billing_mode: "sandbox",
   }
   expect(analytics.trackCheckout!("begin_checkout", fields)).toBe(false)
   analytics.setConsent(true)
-  expect(append).not.toHaveBeenCalled()
+  expect(checkoutEvents(browser)).toEqual([])
+  const pageViews = views().length
   expect(
     analytics.trackCheckout!("begin_checkout", {
       ...fields,
@@ -213,27 +216,19 @@ it("uses a separate consented channel with generic context and no private page v
       teamId: "private-team",
     })
   ).toBe(true)
-  expect(append).toHaveBeenCalledTimes(1)
-  expect(views()).toEqual([])
-  const events = (browser.dataLayer ?? []).filter(
-    (v) => (v as { event?: string }).event === "lg_checkout"
-  ) as { analytics: Record<string, unknown> }[]
+  expect(views()).toHaveLength(pageViews)
+  const events = checkoutEvents(browser)
+  expect(events).toHaveLength(1)
   expect(events[0]!.analytics).toMatchObject({
     event_name: "begin_checkout",
     page_location: "https://libraries.global/fr/checkout",
     page_referrer: "",
     page_title: "checkout",
-    items: [{ item_id: "team", item_variant: "year" }],
+    items: [{ item_id: "team_api", item_variant: "month" }],
   })
   expect(JSON.stringify(events)).not.toMatch(
     /private-team|private@example|staff|token/
   )
-  expect(
-    analytics.track("membership_interest", {
-      interaction_source: "home_plans",
-      action_type: "compare",
-    })
-  ).toBe(false)
   analytics.setConsent(false)
   expect(analytics.trackCheckout!("checkout_handoff", fields)).toBe(false)
 })
@@ -241,7 +236,7 @@ it("uses a separate consented channel with generic context and no private page v
 it("never replays checkout completions across routes or consent epochs", () => {
   const { browser } = fixture("https://libraries.global", "/plans")
   const analytics = installGoogleAnalytics(browser, undefined, true, true)!
-  const fields = { product: "team", billing_interval: "year" }
+  const fields = { product: "team_api", billing_interval: "month" }
   analytics.setConsent(true)
   const before = analytics.prepareCheckout!("checkout_handoff", fields)
   analytics.setConsent(false)
@@ -255,12 +250,6 @@ it("never replays checkout completions across routes or consent epochs", () => {
   expect(current()).toBe(false)
   browser.location.pathname = "/staff/private-library/billing"
   expect(analytics.trackCheckout!("checkout_error", fields)).toBe(false)
-  expect(
-    analytics.trackCheckout!("pricing_action", {
-      ...fields,
-      action_type: "continue",
-    })
-  ).toBe(false)
 })
 
 it("requires the exact published disclosure revision for expanded collection", () => {

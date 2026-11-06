@@ -13,7 +13,7 @@ import type { ApiProspect } from "@/lib/team-api/types"
 /**
  * API checkout for an account without an organisation. The server creates a
  * free single-member organisation with this account as its organiser, then
- * opens the organisation-owned checkout. No Team seat purchase is involved.
+ * opens the organisation-owned checkout.
  */
 export function ApiIndividualCheckout({
   prospect,

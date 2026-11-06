@@ -79,7 +79,7 @@ function byteStream(chunks: Iterator<string>): ReadableStream<Uint8Array> {
   })
 }
 
-/** The plan's export row cap. Missing or malformed limits mean 0. */
+/** The account's export row cap. Missing or malformed limits mean 0. */
 function exportRowCap(user: { limits?: unknown }): number {
   const cap = (user.limits as { exportRows?: unknown } | null | undefined)
     ?.exportRows

@@ -115,9 +115,9 @@ const controls = {
   onTypes: vi.fn(),
   onAnalysis: vi.fn(),
 }
-it("enables the Pro layer and preserves pins while replacing area shading", () => {
-  expect(layerAccess(layerDef("perCapita"), "pro")).toBe("available")
-  expect(layerAccess(layerDef("perCapita"), "free")).toBe("pro")
+it("enables the Explorer layer and preserves pins while replacing area shading", () => {
+  expect(layerAccess(layerDef("perCapita"), "explorer")).toBe("available")
+  expect(layerAccess(layerDef("perCapita"), "free")).toBe("locked")
   expect(layerDef("perCapita").sub).not.toContain("council")
   expect(toggleLayer(["pins", "population"], "perCapita")).toEqual({
     layers: ["pins", "perCapita"],

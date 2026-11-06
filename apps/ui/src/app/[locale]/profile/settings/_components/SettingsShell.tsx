@@ -34,7 +34,7 @@ import { SignInSecuritySection } from "./SignInSecuritySection"
 const ACCOUNT_LINKS = [
   {
     id: "membership",
-    label: "Membership & billing",
+    label: "Standing & API access",
     icon: "mdi:credit-card-outline",
   },
   { id: "notifications", label: "Notifications", icon: "mdi:bell-outline" },

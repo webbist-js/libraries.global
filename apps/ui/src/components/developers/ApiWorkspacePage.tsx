@@ -41,8 +41,8 @@ function ApiAccessCta({
       <p className="mt-3 max-w-[75ch] text-base leading-relaxed text-(--t-ink-dim)">
         Documentation is open to everyone. Running requests in the playground or
         your applications needs an API subscription, bought by an individual or
-        an organisation’s Organisers. No Team seats are required. Organisers
-        manage billing and keys; members can view usage.
+        an organisation’s Organisers. Organisers manage billing and keys;
+        members can view usage.
       </p>
       {!signedIn ? (
         <div className="mt-5 flex flex-wrap gap-3">

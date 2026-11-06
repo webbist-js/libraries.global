@@ -26,7 +26,7 @@
  *
  * Run by the seed with cwd = apps/strapi, so Strapi loads its own .env.
  * Input: ACCESS_SEED_PLAN, a JSON array of { baUserId, email, name,
- * roleGrants: [{ role, queue, locale }], username, plan, claimLibrary,
+ * roleGrants: [{ role, queue, locale }], username, recognition, claimLibrary,
  * trackRecord } (see FIXTURES in access-fixtures.ts; a null username marks
  * the onboarding fixture), and ACCESS_SEED_OPTIONS, { locales }. Output:
  * one line prefixed ACCESS_SEED_RESULT with a JSON summary of what changed.
@@ -46,8 +46,8 @@
  * Staff area round 2 (ACCESS_SEED_OPTIONS: libraries, team, timezone,
  * openingTimes, timetable): the fixture libraries are found by slug and
  * created (published) or converged; the Team is found by slug, kept
- * verified and active, its member rows converged to the fixtures' seats
- * (any other row, such as an invite a spec sent, is deleted); each
+ * verified and active, its member rows converged to the fixtures' team
+ * roles (any other row, such as an invite a spec sent, is deleted); each
  * fixture's affiliations converge to its `staff` list (level, source, Team
  * Member); and the Mobile library's live sessions, events and sharing
  * settings are cleared. Library writes go through the Document Service, so
@@ -128,9 +128,9 @@ const ONBOARDING_CLEARED = {
  * `contributor` holds 1 accepted contribution, `supporter` 100, every other
  * fixture none. Recognition is never revoked for a fixture.
  */
-function standing(plan) {
+function standing(recognition) {
   const acceptedContributions =
-    plan === "supporter" ? 100 : plan === "contributor" ? 1 : 0
+    recognition === "supporter" ? 100 : recognition === "contributor" ? 1 : 0
 
   return {
     points: 0,
@@ -232,7 +232,7 @@ async function applyProfile(strapi, item) {
   const data = {
     username: item.username,
     profileVisibility: "private",
-    ...standing(item.plan),
+    ...standing(item.recognition),
     ...(item.username === null ? ONBOARDING_CLEARED : {}),
   }
   const changed = Object.keys(data).some((k) => !matches(profile[k], data[k]))
@@ -678,7 +678,6 @@ async function ensureTeam(strapi, team, libraryIds) {
   })
   const data = {
     name: team.name,
-    seats: team.seats,
     status: "active",
     source: "admin",
     expiresAt: null,
@@ -701,7 +700,6 @@ async function ensureTeam(strapi, team, libraryIds) {
   const covered = (existing.libraries ?? []).map((l) => l.documentId).sort()
   const differs =
     existing.name !== data.name ||
-    existing.seats !== data.seats ||
     existing.status !== data.status ||
     existing.expiresAt != null ||
     existing.verifiedAt == null ||
@@ -716,32 +714,32 @@ async function ensureTeam(strapi, team, libraryIds) {
 }
 
 /**
- * Converges the Team's member rows to the fixtures' seats: one active row
- * per seated fixture (matched on email), and every other row deleted, so
- * the invites a spec sent are gone. Returns each seated email's row id.
+ * Converges the Team's member rows to the fixtures' memberships: one active
+ * row per member fixture (matched on email), and every other row deleted, so
+ * the invites a spec sent are gone. Returns each member's row id.
  */
-async function applyTeamMembers(strapi, teamId, seats) {
+async function applyTeamMembers(strapi, teamId, wanted) {
   const rows = await strapi.documents(TEAM_MEMBER).findMany({
     filters: { team: { documentId: { $eq: teamId } } },
     sort: "id:asc",
     limit: 600,
   })
   const now = new Date().toISOString()
-  const pending = seats.map((seat) => ({ ...seat, state: null, rowId: null }))
+  const pending = wanted.map((m) => ({ ...m, state: null, rowId: null }))
   let strayRemoved = 0
   for (const row of rows) {
-    const seat = pending.find(
+    const member = pending.find(
       (s) => !s.rowId && (row.email ?? "").toLowerCase() === s.email
     )
-    if (!seat) {
+    if (!member) {
       await strapi.documents(TEAM_MEMBER).delete({ documentId: row.documentId })
       strayRemoved++
       continue
     }
-    seat.rowId = row.documentId
+    member.rowId = row.documentId
     const data = {
-      baUserId: seat.baUserId,
-      teamRole: seat.teamRole,
+      baUserId: member.baUserId,
+      teamRole: member.teamRole,
       status: "active",
       tokenHash: null,
       removedAt: null,
@@ -749,23 +747,23 @@ async function applyTeamMembers(strapi, teamId, seats) {
     }
     const differs = Object.keys(data).some((k) => (row[k] ?? null) !== data[k])
     if (!differs) {
-      seat.state = "present"
+      member.state = "present"
       continue
     }
     await strapi.documents(TEAM_MEMBER).update({
       documentId: row.documentId,
       data: { ...data, acceptedAt: row.acceptedAt ?? now },
     })
-    seat.state = "updated"
+    member.state = "updated"
   }
-  for (const seat of pending) {
-    if (seat.rowId) continue
+  for (const member of pending) {
+    if (member.rowId) continue
     const created = await strapi.documents(TEAM_MEMBER).create({
       data: {
         team: { connect: [{ documentId: teamId }] },
-        email: seat.email,
-        baUserId: seat.baUserId,
-        teamRole: seat.teamRole,
+        email: member.email,
+        baUserId: member.baUserId,
+        teamRole: member.teamRole,
         status: "active",
         tokenHash: null,
         invitedBy: "seed:access",
@@ -775,13 +773,13 @@ async function applyTeamMembers(strapi, teamId, seats) {
         preassign: null,
       },
     })
-    seat.rowId = created.documentId
-    seat.state = "created"
+    member.rowId = created.documentId
+    member.state = "created"
   }
 
   return {
     strayRemoved,
-    seats: new Map(pending.map((s) => [s.baUserId, s])),
+    byUser: new Map(pending.map((s) => [s.baUserId, s])),
   }
 }
 
@@ -893,8 +891,6 @@ function readOptions() {
     typeof team?.slug !== "string" ||
     !SLUG.test(team.slug) ||
     typeof team.name !== "string" ||
-    !Number.isInteger(team.seats) ||
-    team.seats < 1 ||
     !Array.isArray(team.libraries) ||
     !team.libraries.every((k) => LIBRARY_KEYS.has(k))
   )
@@ -968,11 +964,11 @@ async function main() {
     for (const item of plan) {
       const profileChanged = await applyProfile(strapi, item)
       const roles = await applyRoleGrants(strapi, item, syncDerivedRole)
-      const seat = members.seats.get(item.baUserId) ?? null
+      const membership = members.byUser.get(item.baUserId) ?? null
       const affiliations = await applyAffiliations(
         strapi,
         item,
-        wantedAffiliations(item, libraries, seat?.rowId ?? null)
+        wantedAffiliations(item, libraries, membership?.rowId ?? null)
       )
       const submissions = await applySubmissions(strapi, item, now)
       fixtures.push({
@@ -980,7 +976,7 @@ async function main() {
         profileChanged,
         ...roles,
         ...affiliations,
-        teamSeat: seat?.state ?? null,
+        teamMember: membership?.state ?? null,
         ...submissions,
       })
     }

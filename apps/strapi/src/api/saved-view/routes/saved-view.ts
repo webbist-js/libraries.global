@@ -1,7 +1,7 @@
 // Called server-to-server by Next.js only: `auth: false` here because the
 // caller is authenticated by the bridge secret and the user by the
 // X-Ba-User-Id header Next.js sets from the session, both checked in the
-// controller. Next.js also sends the plan's limit for the kind being saved.
+// controller. Next.js also sends the account's limit for the kind being saved.
 export default {
   routes: [
     {

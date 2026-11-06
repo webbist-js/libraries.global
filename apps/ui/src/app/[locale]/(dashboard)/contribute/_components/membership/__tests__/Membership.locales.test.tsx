@@ -5,7 +5,7 @@ import { afterEach, expect, it, vi } from "vitest"
 
 import { OfferCards } from "../OfferCards"
 import { PlanCompareTable } from "../PlanCompareTable"
-import { ProFaq } from "../ProFaq"
+import { PlansFaq } from "../PlansFaq"
 
 import cs from "../../../../../../../../locales/cs.json"
 import es from "../../../../../../../../locales/es.json"
@@ -64,7 +64,7 @@ it.each([
           }}
         />
         <PlanCompareTable />
-        <ProFaq />
+        <PlansFaq />
       </NextIntlClientProvider>
     )
     expect(errors).toEqual([])

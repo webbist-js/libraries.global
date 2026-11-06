@@ -42,7 +42,7 @@ const errorCode = (body: unknown) =>
 
 /**
  * Create a free single-member organisation for an individual API buyer, with
- * the buyer as its organiser and no seat or payment state. Idempotent by
+ * the buyer as its organiser. Idempotent by
  * `requestId`. Refused when the account already belongs to an organisation.
  */
 export async function createApiOrganisation(input: {

@@ -19,6 +19,7 @@ import { createHash, randomUUID } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { isDeepStrictEqual, parseEnv } from "node:util"
 
+import { stripComponentIds } from "./cms-component-ids.mjs"
 import {
   AUTHOR,
   KNOWLEDGE_ARTICLES,
@@ -37,7 +38,6 @@ import {
   legalDraftMarkdown,
   legalDrafts,
 } from "./sponsored-access-legal-content.mjs"
-import { stripComponentIds } from "./team-pricing-content.mjs"
 
 const argv = process.argv.slice(2)
 const args = new Set(argv.filter((arg) => !arg.includes("=")))

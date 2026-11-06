@@ -33,7 +33,7 @@ export function staffCreationOf(
   }
 }
 
-/** Live access checks: a client flag or personal paid plan grants nothing. */
+/** Live access checks: a client flag, recognition or payment grants nothing. */
 export async function resolveStaffLibraryCreation(
   strapi: any,
   baUserId: string,

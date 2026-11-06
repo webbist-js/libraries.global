@@ -109,9 +109,9 @@ async function ensureAccount(
 }
 
 /**
- * Organisers buy one API subscription per organisation. No Team seat or paid
- * workspace state is required. The offer snapshot (version, Price, tax
- * behaviour, limits, overage rates/prices and consent) is fixed here.
+ * Organisers buy one API subscription per organisation. The offer snapshot
+ * (version, Price, tax behaviour, limits, overage rates/prices and consent)
+ * is fixed here.
  */
 export async function apiCheckout(
   pool: Pool,

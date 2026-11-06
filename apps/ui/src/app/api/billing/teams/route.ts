@@ -23,8 +23,8 @@ const Signup = z
 
 /**
  * Create a free organisation (staff workspace container) with the caller as
- * organiser. No seats are bought and no payment state exists; library
- * assignments remain claims until verified authority is reviewed.
+ * organiser. Creating one is free; library assignments remain claims until
+ * verified authority is reviewed.
  */
 export async function POST(req: Request) {
   try {

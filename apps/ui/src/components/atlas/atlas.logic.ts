@@ -627,11 +627,11 @@ export function loosenSuggestions(
 
 /**
  * What the viewer may switch on: "public" (no account), "free" (signed in
- * without the Explorer tools), "pro" (Explorer: every former Pro browse
+ * without the Explorer tools), "explorer" (every browse and context
  * layer, free when signed in) and "reach" (Explorer plus one-library
  * Reach, `atlas.reach`).
  */
-export type Tier = "public" | "free" | "pro" | "reach"
+export type Tier = "public" | "free" | "explorer" | "reach"
 
 /**
  * The atlas tier for the viewer's entitlements. Fails closed: context
@@ -644,7 +644,7 @@ export function tierForAccess(access: {
   if (!access.signedIn) return "public"
   if (!access.can("atlas.contextLayers")) return "free"
 
-  return access.can("atlas.reach") ? "reach" : "pro"
+  return access.can("atlas.reach") ? "reach" : "explorer"
 }
 
 export type LayerId =
@@ -774,7 +774,7 @@ export const LAYERS: LayerDef[] = [
     name: "Library access",
     sub: "Recorded libraries relative to population",
     group: "coverage",
-    tier: "pro",
+    tier: "explorer",
     ready: true,
     exclusive: "area",
   },
@@ -783,7 +783,7 @@ export const LAYERS: LayerDef[] = [
     name: "Founded year",
     sub: "With time slider",
     group: "characteristics",
-    tier: "pro",
+    tier: "explorer",
     ready: false,
     requiresPins: true,
   },
@@ -801,7 +801,7 @@ export const LAYERS: LayerDef[] = [
     name: "Residents beyond reach",
     sub: "Population outside a chosen travel time",
     group: "coverage",
-    tier: "pro",
+    tier: "explorer",
     ready: false,
     exclusive: "area",
   },
@@ -810,7 +810,7 @@ export const LAYERS: LayerDef[] = [
     name: "Service coverage by area",
     sub: "Recorded facilities and accessibility",
     group: "coverage",
-    tier: "pro",
+    tier: "explorer",
     ready: false,
     exclusive: "area",
   },
@@ -828,7 +828,7 @@ export const LAYERS: LayerDef[] = [
     name: "Deprivation",
     sub: "IMD · WIMD · SIMD · NIMDM",
     group: "reference",
-    tier: "pro",
+    tier: "explorer",
     ready: true,
     exclusive: "area",
   },
@@ -837,7 +837,7 @@ export const LAYERS: LayerDef[] = [
     name: "Households without a car",
     sub: "Census 2021 · England and Wales",
     group: "reference",
-    tier: "pro",
+    tier: "explorer",
     ready: true,
     exclusive: "area",
   },
@@ -846,7 +846,7 @@ export const LAYERS: LayerDef[] = [
     name: "Transit stops and lines",
     sub: "OSM · GTFS",
     group: "reference",
-    tier: "pro",
+    tier: "explorer",
     ready: false,
   },
   {
@@ -863,9 +863,9 @@ export function layerDef(id: LayerId): LayerDef {
   return LAYERS.find((l) => l.id === id)!
 }
 
-const RANK: Record<Tier, number> = { public: 0, free: 1, pro: 2, reach: 3 }
+const RANK: Record<Tier, number> = { public: 0, free: 1, explorer: 2, reach: 3 }
 
-export type LayerAccess = "available" | "signin" | "pro" | "soon"
+export type LayerAccess = "available" | "signin" | "locked" | "soon"
 
 export function layerAccess(def: LayerDef, tier: Tier): LayerAccess {
   // Readiness takes priority for every tier: no access can unlock a feature
@@ -874,7 +874,7 @@ export function layerAccess(def: LayerDef, tier: Tier): LayerAccess {
   // Explorer layers are free with an account, so a visitor is asked to sign
   // in; Reach is earned or bought, so it stays locked below its tier.
   if (RANK[tier] < RANK[def.tier])
-    return def.tier !== "reach" && tier === "public" ? "signin" : "pro"
+    return def.tier !== "reach" && tier === "public" ? "signin" : "locked"
 
   return "available"
 }

@@ -40,7 +40,7 @@ export const Actions: Story = {
           icon="mdi:chart-bar"
           label="Analytics"
           description="Understand your library’s reach"
-          tag="Team"
+          lockedBy="Verified staff"
         />
       </DrawerSection>
     )

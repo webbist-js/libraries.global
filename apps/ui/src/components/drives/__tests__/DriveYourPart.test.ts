@@ -38,7 +38,6 @@ describe("DriveYourPart", () => {
       })
     )
     expect(screen.queryByText(/waiting for review/)).toBeNull()
-    expect(screen.queryByText(/earned Pro/)).toBeNull()
     expect(screen.getByText("Nothing sent for this drive yet.")).toBeTruthy()
   })
 

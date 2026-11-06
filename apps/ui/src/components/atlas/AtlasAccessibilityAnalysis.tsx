@@ -91,7 +91,7 @@ export function AtlasAccessibilityAnalysis({
   const id = useId(),
     hasServerOptions = serverOptions !== undefined,
     canApply = tier !== "public",
-    canExport = tier === "pro" || tier === "reach"
+    canExport = tier === "explorer" || tier === "reach"
   const { busy, outcome, run } = useAtlasExport(onSeePlans ?? onSignIn)
   useEffect(() => {
     if (hasServerOptions) return

@@ -12,9 +12,9 @@ describe("existing mail link rollout", () => {
     }
   )
   it.each([
-    "Team plan",
-    "Pro verification",
-    "Pro grant",
+    "Plans and pricing",
+    "API Access",
+    "API pricing",
     "Question about plans",
   ])("preserves and selects plans for %s", (subject) => {
     expect(

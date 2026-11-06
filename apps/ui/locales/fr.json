@@ -121,7 +121,7 @@
         "two": "Préciser les langues et sujets pour lesquels vous pouvez aider.",
         "three": "Suivre votre candidature et les demandes d’informations."
       },
-      "requirement": "Les rôles sont accordés après examen de l’expérience, des contributions et des critères du rôle. Une adhésion payante ne garantit pas leur attribution."
+      "requirement": "Les rôles sont accordés après examen de l’expérience, des contributions et des critères du rôle. Un paiement ne garantit pas leur attribution."
     },
     "claimLibrary": "Revendiquer une bibliothèque",
     "openDevelopers": "Ouvrir Développeurs"
@@ -2696,7 +2696,7 @@
     "reviewBeforeLive": "Examinez-les avant leur publication.",
     "checkingSuggestions": "Recherche de suggestions…",
     "teamAndInsights": "Équipe et statistiques",
-    "teamAccess": "Les outils d’équipe sont accessibles lorsqu’une équipe couvre cette bibliothèque.",
+    "teamAccess": "Équipe et Fréquentation nécessitent votre propre accès vérifié de personnel pour cette bibliothèque.",
     "communityDrives": "Campagnes communautaires",
     "libraryNeeds": "Votre bibliothèque a besoin de : {need}",
     "noLibraryDrive": "Aucune campagne ouverte ne l’inclut actuellement.",

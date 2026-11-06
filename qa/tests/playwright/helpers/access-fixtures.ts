@@ -35,7 +35,7 @@ export function fixturePassword(): string {
  * accepted contributions, 0 points, tier Reader, recognition not revoked.
  * Recognition adds tools and limits only, never trust.
  */
-export type FixturePlan =
+export type FixtureRecognition =
   /** One accepted contribution: Contributor, with the weekly Reach allowance. */
   | "contributor"
   /** 100 accepted contributions: durable Supporter recognition. */
@@ -95,7 +95,7 @@ export type Fixture = {
   /**
    * The fixture's Role Grants; none means reader. The seed converges them
    * exactly, and Strapi derives `user-profile.contributorRole` from them.
-   * Plans never change them: money never buys trust.
+   * API Access and sponsorship never change them: money never buys trust.
    */
   grants: readonly FixtureGrant[]
   /**
@@ -105,9 +105,9 @@ export type Fixture = {
   claim: boolean
   /** Staff memberships on the fixture libraries (FIXTURE_LIBRARIES). */
   staff?: readonly FixtureStaff[]
-  /** An active seat on the fixture Team (FIXTURE_TEAM), in this role. */
+  /** Active membership of the fixture Team (FIXTURE_TEAM), in this role. */
   team?: FixtureTeamRole
-  plan?: FixturePlan
+  recognition?: FixtureRecognition
   /**
    * null: every seed clears the username and the fields onboarding writes,
    * so signing in lands on onboarding. Absent: the seed sets `access_<key>`.
@@ -161,14 +161,14 @@ export const FIXTURES: readonly Fixture[] = [
   // Never onboarded, like `onboarding`, but only signed in by magic link
   // (magic-link.spec.ts), which leaves it un-onboarded, so it needs no reset.
   { key: "magic-link", grants: [], claim: false, username: null },
-  { key: "recognised", grants: [], claim: false, plan: "contributor" },
-  { key: "supporter", grants: [], claim: false, plan: "supporter" },
+  { key: "recognised", grants: [], claim: false, recognition: "contributor" },
+  { key: "supporter", grants: [], claim: false, recognition: "supporter" },
   // Staff area round 2 (staff-area, team, staff-drawer and live specs). The
   // claim-sourced rows stand for approved Library Claims, so these fixtures
   // hold the `verified_librarian` grant a claim approval gives.
   //
   // Owner of the Public fixture library and of the Second one, which no
-  // Team covers (the Team gate panel).
+  // staff workspace covers (the free-workspace prompt).
   {
     key: "staff-owner",
     grants: holds("verified_librarian"),
@@ -178,9 +178,8 @@ export const FIXTURES: readonly Fixture[] = [
       { library: "second", staffRole: "owner", source: "claim" },
     ],
   },
-  // Editor of the Public library by claim, and a member of the Team that
-  // covers it: Team features are on only for the libraries of the viewer's
-  // own Team, so the no-lock check needs the seat.
+  // Editor of the Public library by claim, and a member of the free
+  // workspace that covers it. The claim alone unlocks the staff tools.
   {
     key: "staff-editor",
     grants: holds("verified_librarian"),
@@ -202,8 +201,8 @@ export const FIXTURES: readonly Fixture[] = [
       },
     ],
   },
-  // Organises the Team (Public + Mobile, 5 seats); staff of the Public
-  // library through the Team.
+  // Organises the Team (Public + Mobile); staff of the Public library
+  // through the Team.
   {
     key: "team-organiser",
     grants: holds("verified_librarian"),
@@ -281,11 +280,10 @@ export const FIXTURE_LIBRARY_SLUGS: readonly string[] = Object.values(
   FIXTURE_LIBRARIES
 ).map((l) => l.slug)
 
-/** The Team covering the Public and Mobile fixture libraries. */
+/** The free staff workspace covering the Public and Mobile fixture libraries. */
 export const FIXTURE_TEAM = {
   slug: "access-fixture-team",
   name: "Access Fixture Team",
-  seats: 5,
   libraries: ["public", "mobile"] as readonly FixtureLibraryKey[],
 } as const
 

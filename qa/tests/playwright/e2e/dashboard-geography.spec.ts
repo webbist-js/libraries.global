@@ -399,7 +399,8 @@ async function accountFixtures(page: Page) {
     createdAt: profile.createdAt,
     updatedAt: profile.updatedAt,
     capabilities: [],
-    plan: "free",
+    standing: "explorer",
+    facts: ["explorer"],
     features: [],
   }
   await page.route("**/api/auth/get-session**", (route) =>

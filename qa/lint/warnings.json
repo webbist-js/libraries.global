@@ -234,10 +234,6 @@
     "apps/strapi/src/api/page/middlewares/populate-page.ts": {
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/strapi/src/api/paid-membership/controllers/paid-membership.ts": {
-      "@typescript-eslint/no-explicit-any": 2,
-      "unicorn/consistent-destructuring": 1
-    },
     "apps/strapi/src/api/region/controllers/region.ts": {
       "sonarjs/cognitive-complexity": 1
     },
@@ -332,10 +328,6 @@
     "apps/strapi/src/plugins/access/server/controllers/people.ts": {
       "@typescript-eslint/no-explicit-any": 5
     },
-    "apps/strapi/src/plugins/access/server/controllers/plans.ts": {
-      "@typescript-eslint/no-explicit-any": 5,
-      "unicorn/consistent-function-scoping": 3
-    },
     "apps/strapi/src/plugins/access/server/controllers/team-api.ts": {
       "@typescript-eslint/no-explicit-any": 5,
       "unicorn/consistent-function-scoping": 4
@@ -350,9 +342,6 @@
     "apps/strapi/src/plugins/access/server/services/people.ts": {
       "@typescript-eslint/no-explicit-any": 4,
       "sonarjs/cognitive-complexity": 1
-    },
-    "apps/strapi/src/plugins/access/server/services/plans.ts": {
-      "@typescript-eslint/no-explicit-any": 9
     },
     "apps/strapi/src/plugins/access/server/services/teams.ts": {
       "@typescript-eslint/no-explicit-any": 8,
@@ -717,9 +706,6 @@
       "@typescript-eslint/no-explicit-any": 10,
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/strapi/src/utils/billing-notice.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/strapi/src/utils/board.ts": {
       "@typescript-eslint/no-explicit-any": 1
     },
@@ -753,9 +739,6 @@
     },
     "apps/strapi/src/utils/leader-lock.ts": {
       "@typescript-eslint/no-explicit-any": 3
-    },
-    "apps/strapi/src/utils/library-access-plan-copy.ts": {
-      "@typescript-eslint/no-explicit-any": 7
     },
     "apps/strapi/src/utils/library-completeness.ts": {
       "sonarjs/cognitive-complexity": 1
@@ -798,9 +781,6 @@
     "apps/strapi/src/utils/opening-schedule-refresh.ts": {
       "@typescript-eslint/no-explicit-any": 1,
       "turbo/no-undeclared-env-vars": 2
-    },
-    "apps/strapi/src/utils/paid-membership.ts": {
-      "@typescript-eslint/no-explicit-any": 1
     },
     "apps/strapi/src/utils/population-ingest.ts": {
       "@typescript-eslint/no-explicit-any": 12
@@ -895,9 +875,6 @@
     "apps/strapi/tests/auth-bridge-follow.test.ts": {
       "@typescript-eslint/no-explicit-any": 12,
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/strapi/tests/auth-bridge-sync-user.test.ts": {
-      "@typescript-eslint/no-explicit-any": 7
     },
     "apps/strapi/tests/beta-gate.test.ts": {
       "@typescript-eslint/no-explicit-any": 1
@@ -1203,9 +1180,6 @@
     "apps/strapi/tests/notification-delivery.test.ts": {
       "@typescript-eslint/no-explicit-any": 6
     },
-    "apps/strapi/tests/paid-membership.test.ts": {
-      "@typescript-eslint/no-explicit-any": 3
-    },
     "apps/strapi/tests/populate-middlewares.test.ts": {
       "@typescript-eslint/no-explicit-any": 6
     },
@@ -1247,10 +1221,6 @@
       "@typescript-eslint/no-explicit-any": 22,
       "sonarjs/no-nested-functions": 2,
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/strapi/tests/rewards/earned-pro-hold.test.ts": {
-      "@typescript-eslint/no-explicit-any": 13,
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/strapi/tests/rewards/leader-lock.test.ts": {
       "@typescript-eslint/no-explicit-any": 2,
@@ -1369,18 +1339,6 @@
     "apps/ui/src/app/[locale]/auth/_components/pending-email.ts": {
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/ui/src/app/[locale]/contribute/moderation/[documentId]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/__tests__/moderation-pages.test.ts": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/staff/[libraryId]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/app/[locale]/live/page.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
@@ -1405,9 +1363,6 @@
     },
     "apps/ui/src/app/[locale]/profile/settings/_components/SignInSecuritySection.tsx": {
       "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/profile/settings/_components/__tests__/MembershipBillingSection.test.tsx": {
-      "unicorn/consistent-function-scoping": 1
     },
     "apps/ui/src/app/api/atlas/changes/route.ts": {
       "@typescript-eslint/no-explicit-any": 1
@@ -1560,12 +1515,6 @@
       "@typescript-eslint/no-explicit-any": 3,
       "sonarjs/cognitive-complexity": 2,
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/components/billing/CheckoutFlow.test.tsx": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/components/billing/CheckoutFlow.tsx": {
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/blog/ArticleBodyBlocks.tsx": {
       "sonarjs/cognitive-complexity": 1
@@ -1741,9 +1690,6 @@
       "react/no-array-index-key": 1,
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/ui/src/components/ds/LocationContributeCTA.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/components/ds/MetaRow.tsx": {
       "react/no-array-index-key": 1
     },
@@ -1768,10 +1714,6 @@
     },
     "apps/ui/src/components/events/EventsPageClient.tsx": {
       "react/hook-use-state": 1
-    },
-    "apps/ui/src/components/global/GlobalLoggedUserMenu.tsx": {
-      "@next/next/no-img-element": 1,
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/global/GlobalMobileMenu.tsx": {
       "react-hooks/exhaustive-deps": 1
@@ -1917,9 +1859,6 @@
     },
     "apps/ui/src/components/location/location-page.helpers.ts": {
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/components/membership/PersonalBillingPanel.tsx": {
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/mobile/HomeLibraryPicker.tsx": {
       "sonarjs/redundant-type-aliases": 1
@@ -2100,19 +2039,7 @@
     "apps/ui/src/lib/beta/__tests__/access.test.ts": {
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/ui/src/lib/billing/checkout.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/lib/billing/events.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/plan-change.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/plan-schedule.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/projection.ts": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/lib/community/suggestions.ts": {
@@ -2188,9 +2115,6 @@
     },
     "apps/ui/src/lib/subscriptions.ts": {
       "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/team-api/__tests__/database.integration.test.ts": {
-      "@typescript-eslint/no-explicit-any": 1
     },
     "apps/ui/src/lib/team-api/billing.ts": {
       "sonarjs/cognitive-complexity": 1

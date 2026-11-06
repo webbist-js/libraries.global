@@ -1,5 +1,5 @@
 /** Reviewed editorial copy for the community publishing release, in each CMS locale. */
-import { stripComponentIds } from "./team-pricing-content.mjs"
+import { stripComponentIds } from "./cms-component-ids.mjs"
 
 const guidePath = "/knowledge/contributing/library-conversations"
 const plansPath = "/knowledge/governance/plans-and-pro"
@@ -41,7 +41,7 @@ export function richText(markdown) {
 
 const main = {
   en: {
-    "how-to-contribute": `Libraries Global is kept up to date by the people who use it. You need a free account and something you know about a library; you do not need technical knowledge or a paid membership.
+    "how-to-contribute": `Libraries Global is kept up to date by the people who use it. You need a free account and something you know about a library; you do not need technical knowledge or any payment.
 
 ## Ways to help
 
@@ -93,7 +93,7 @@ Feed managers curate links and featured threads. Verified library staff may prop
 ## Applying and ending a role
 
 After five accepted formal changes you may apply for an editor or moderator role. Choose the queue and languages for a moderator application, including Discussions. There can be one open application per role; after rejection, the same role has a 30-day reapplication wait. Roles may expire or be ended, and a new grant can take up to a minute to appear.`,
-    "becoming-a-moderator": `Moderators check other people’s contributions, compare changes with their evidence and explain their decisions. The role is separate from editor access, library staff authority and paid membership.
+    "becoming-a-moderator": `Moderators check other people’s contributions, compare changes with their evidence and explain their decisions. The role is separate from editor access, library staff authority and API Access.
 
 ## Choose a queue and languages
 
@@ -240,7 +240,7 @@ Permitted board managers also curate library and drive feeds: accepting link pro
 [Joining library conversations](${guidePath}) explains message review and privacy. For questions about the board, contact info@libraries.global.`,
   },
   fr: {
-    "how-to-contribute": `Libraries Global est tenu à jour par les personnes qui l’utilisent. Un compte gratuit et une information sur une bibliothèque suffisent ; aucune connaissance technique ni adhésion payante n’est nécessaire.
+    "how-to-contribute": `Libraries Global est tenu à jour par les personnes qui l’utilisent. Un compte gratuit et une information sur une bibliothèque suffisent ; aucune connaissance technique ni paiement n’est nécessaire.
 
 ## Comment aider
 
@@ -292,7 +292,7 @@ Les responsables de flux choisissent les liens et fils mis en avant. Le personne
 ## Demander ou quitter un rôle
 
 Après cinq modifications formelles acceptées, vous pouvez demander un rôle d’éditeur ou de modérateur. Choisissez la file et les langues, notamment Discussions. Une seule candidature par rôle peut être ouverte ; après un refus, le délai est de 30 jours. Les rôles peuvent expirer ou être retirés. Un nouveau droit peut prendre une minute à apparaître.`,
-    "becoming-a-moderator": `Les modérateurs vérifient les contributions d’autres personnes, les comparent aux sources et expliquent leurs décisions. Ce rôle est distinct des droits d’éditeur, du personnel de bibliothèque et de l’adhésion payante.
+    "becoming-a-moderator": `Les modérateurs vérifient les contributions d’autres personnes, les comparent aux sources et expliquent leurs décisions. Ce rôle est distinct des droits d’éditeur, du personnel de bibliothèque et de l’accès à l’API.
 
 ## Choisir une file et des langues
 
@@ -439,7 +439,7 @@ Les responsables autorisés gèrent aussi les flux des bibliothèques et campagn
 [Participer aux conversations](${guidePath}) explique la vérification et la confidentialité. Pour toute question sur le comité, écrivez à info@libraries.global.`,
   },
   cs: {
-    "how-to-contribute": `Libraries Global aktualizují lidé, kteří jej používají. Stačí bezplatný účet a informace o knihovně; nepotřebujete technické znalosti ani placené členství.
+    "how-to-contribute": `Libraries Global aktualizují lidé, kteří jej používají. Stačí bezplatný účet a informace o knihovně; nepotřebujete technické znalosti ani nic platit.
 
 ## Jak pomoci
 
@@ -491,7 +491,7 @@ Správci přehledů vybírají odkazy a zvýrazněná vlákna. Ověření zaměs
 ## Žádost a ukončení role
 
 Po pěti přijatých formálních změnách můžete požádat o redakční či moderační roli. U moderátora vyberte frontu a jazyky, včetně Discussions. Pro každou roli může být otevřena jedna žádost; po zamítnutí lze požádat znovu za 30 dní. Role mohou vypršet nebo být odebrány. Nové oprávnění se může projevit do minuty.`,
-    "becoming-a-moderator": `Moderátoři kontrolují příspěvky ostatních, porovnávají je se zdroji a vysvětlují rozhodnutí. Role je oddělená od redakčních práv, přístupu zaměstnanců knihoven a placeného členství.
+    "becoming-a-moderator": `Moderátoři kontrolují příspěvky ostatních, porovnávají je se zdroji a vysvětlují rozhodnutí. Role je oddělená od redakčních práv, přístupu zaměstnanců knihoven a přístupu k API.
 
 ## Vyberte frontu a jazyky
 
@@ -765,7 +765,7 @@ export const newGuides = {
       "Start a discussion, reply, follow a conversation and understand what moderators check before a message appears.",
     body: `## Read and take part
 
-Open [Community → Discussions](/community/discussions) to ask a question, share an idea or read what others have tried. Public conversations can be read without an account. Sign in with a verified account to start, reply, react or follow. These features are free; no paid membership or editor role is required. Restricted subjects and threads keep their access rules wherever they are linked.
+Open [Community → Discussions](/community/discussions) to ask a question, share an idea or read what others have tried. Public conversations can be read without an account. Sign in with a verified account to start, reply, react or follow. These features are free; no payment or editor role is required. Restricted subjects and threads keep their access rules wherever they are linked.
 
 ## One conversation in several places
 

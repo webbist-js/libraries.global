@@ -121,7 +121,7 @@
         "two": "Popište jazyky a témata, se kterými můžete pomoci.",
         "three": "Sledujte žádost a případné požadavky na doplnění."
       },
-      "requirement": "Role se posuzují podle zkušeností, historie příspěvků a požadavků role. Placené členství schválení nezaručuje."
+      "requirement": "Role se posuzují podle zkušeností, historie příspěvků a požadavků role. Platba schválení nezaručuje."
     },
     "claimLibrary": "Přihlásit knihovnu ke správě",
     "openDevelopers": "Otevřít stránku Pro vývojáře"
@@ -2696,7 +2696,7 @@
     "reviewBeforeLive": "Zkontrolujte je před zveřejněním.",
     "checkingSuggestions": "Hledáme návrhy…",
     "teamAndInsights": "Tým a přehledy",
-    "teamAccess": "Týmové nástroje jsou dostupné, pokud tuto knihovnu pokrývá tým.",
+    "teamAccess": "Tým a Návštěvnost vyžadují vaše vlastní ověřené oprávnění personálu k této knihovně.",
     "communityDrives": "Komunitní kampaně",
     "libraryNeeds": "Vaše knihovna potřebuje: {need}",
     "noLibraryDrive": "Žádná otevřená kampaň ji nyní nezahrnuje.",

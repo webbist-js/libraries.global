@@ -91,7 +91,7 @@ it("shares CMS section and supplemental links with the dashboard while retaining
         {
           id: 1,
           title: "Explore",
-          links: [{ id: 2, href: "/pro", label: "Membership" }],
+          links: [{ id: 2, href: "/plans", label: "Membership" }],
         },
       ],
       links: [
@@ -103,7 +103,7 @@ it("shares CMS section and supplemental links with the dashboard while retaining
     { legal: "Legal policies", plans: "Plans and pricing", sponsor: "Sponsor" }
   )
   expect(navigation.sections[0]?.links).toEqual([
-    { key: "2", href: "/pro", label: "Plans and pricing" },
+    { key: "2", href: "/plans", label: "Plans and pricing" },
   ])
   expect(navigation.links.map((link) => link.href)).toEqual([
     "/legal",

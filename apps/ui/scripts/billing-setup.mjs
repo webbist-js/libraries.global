@@ -6,9 +6,9 @@
  *   node scripts/billing-setup.mjs --migrate [--drop-retired]
  *   node scripts/billing-setup.mjs
  *
- * `--drop-retired` additionally removes the personal Supporter/Pro, Team seat
- * and £15 Team API tables retired in the November 2026 beta reset. Their
- * sandbox rows are disposable; nothing is converted.
+ * `--drop-retired` additionally removes the tables of the billing flows
+ * withdrawn in the November 2026 beta reset. Their sandbox rows are
+ * disposable; nothing is converted.
  */
 import { readFile } from "node:fs/promises"
 import { createRequire } from "node:module"

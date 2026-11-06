@@ -122,7 +122,7 @@ describe("points.award: recognition counting", () => {
   ])(
     "%s counts one accepted contribution in the award's own statement",
     async (action) => {
-      const { strapi, profile, update, profileUpdate } = fakeStrapi({
+      const { strapi, profile, update } = fakeStrapi({
         points: 100,
         tier: "Indexer",
       })
@@ -139,10 +139,6 @@ describe("points.award: recognition counting", () => {
       ])
       expect(profile.accepted_contributions).toBe(1)
       expect(profile.last_contribution_at >= before).toBe(true)
-      // No earned-Pro bookkeeping remains.
-      expect(profileUpdate.mock.calls[0][0].data).not.toHaveProperty(
-        "earnedProUntil"
-      )
     }
   )
 

@@ -44,7 +44,7 @@ describe("signed, durable billing webhook", () => {
     expect(query).not.toHaveBeenCalled()
   })
   it("persists only the event references before acknowledging, even with checkout off", async () => {
-    vi.stubEnv("PRO_ENABLED", "false")
+    vi.stubEnv("API_ENABLED", "false")
     const payload = JSON.stringify({
       id: "evt_1",
       type: "invoice.paid",

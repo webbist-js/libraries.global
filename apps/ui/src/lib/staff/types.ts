@@ -122,8 +122,7 @@ export type TeamLibrary = {
 
 /**
  * `GET /api/staff/team/[teamId]`: the organiser's (or a member's) view of a
- * free staff workspace. Strapi may still send legacy seat fields; the UI
- * ignores them.
+ * free staff workspace.
  */
 export type TeamDetail = {
   primaryNetwork?: { documentId: string; name: string; slug: string } | null

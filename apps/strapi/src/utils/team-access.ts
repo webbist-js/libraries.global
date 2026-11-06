@@ -2,7 +2,7 @@
  * Teams are free staff workspaces (organisations). Membership is an
  * administrative container: it never grants library editing or staff tools,
  * which come only from the user's own verified staff claims (`canStaff`).
- * A Team's `status` is an admin lifecycle flag, not a paid-seat state.
+ * A Team's `status` is an admin lifecycle flag.
  */
 
 export const TEAM_UID = "plugin::access.team"

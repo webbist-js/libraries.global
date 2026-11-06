@@ -63,7 +63,7 @@ it("organises every layer by purpose and keeps unbuilt layers disabled on every 
   expect(
     screen.getByRole("region", { name: "Reference geography" })
   ).toBeTruthy()
-  for (const tier of ["public", "free", "pro", "reach"] as const) {
+  for (const tier of ["public", "free", "explorer", "reach"] as const) {
     rerender(<AtlasLayersTab {...sidebar} tier={tier} />)
     for (const def of LAYERS.filter((layer) => !layer.ready)) {
       const group = LAYER_GROUPS.find((item) => item.id === def.group)!
@@ -82,7 +82,7 @@ it("organises every layer by purpose and keeps unbuilt layers disabled on every 
   expect(sidebar.onSeePlans).not.toHaveBeenCalled()
 })
 it("shows Coming soon without account badges or suggesting access can unlock it", () => {
-  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
   expect(screen.queryByText(/Planned layers/)).toBeNull()
   for (const def of LAYERS.filter((layer) => !layer.ready)) {
     const item = screen
@@ -166,7 +166,7 @@ it("opens an active layer from its label while keeping its explanation and switc
   render(
     <AtlasLayersTab
       {...sidebar}
-      tier="pro"
+      tier="explorer"
       active={["pins", "population"]}
       onInspect={onInspect}
       summaries={{ population: "United Kingdom · GHS-POP 2020 · R2023A" }}
@@ -438,7 +438,7 @@ it("uses one active state for quick disable, catalogue switches and exclusive vi
 })
 
 it("provides expandable help for the available Reach layer", () => {
-  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
   const about = screen.getByRole("button", { name: "About Travel-time reach" })
   expect(about.getAttribute("aria-expanded")).toBe("false")
   fireEvent.click(about)
@@ -448,7 +448,7 @@ it("provides expandable help for the available Reach layer", () => {
   ).toBeTruthy()
 })
 it("explains how a contribution unlocks Reach in a dialog, with API Access as the other route", async () => {
-  render(<AtlasLayersTab {...sidebar} tier="pro" />)
+  render(<AtlasLayersTab {...sidebar} tier="explorer" />)
   const locked = screen.getByRole("switch", {
     name: "Travel-time reach (locked)",
   })

@@ -217,7 +217,6 @@ describe("DriveTaskArea", () => {
     await waitFor(() =>
       expect(within(part).getByText("3 of 5 waiting for review")).toBeTruthy()
     )
-    expect(within(part).queryByText(/earned Pro/)).toBeNull()
   })
 
   it("after a send: announces it, marks the row and moves to the next library", async () => {

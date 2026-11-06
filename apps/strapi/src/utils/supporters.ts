@@ -103,7 +103,7 @@ export async function readSupporters(
     readSupporterProfiles(strapi),
     strapi.documents("api::site-config.site-config").findFirst({}),
   ])
-  // Explicit projection: no private names, account ids, grants, plans or
+  // Explicit projection: no private names, account ids, grants, payments or
   // hidden locations can be searched or serialized, even for the owner.
   const listed: SupporterEntry[] = profiles
     .filter((p) => supporterListed(p) && p.username)

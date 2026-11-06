@@ -34,7 +34,7 @@ const HIGHLIGHT = "var(--t-bg-selected)"
 const TIER_COLUMNS: Record<Tier, readonly CompareColumn[]> = {
   public: SHEET_COLUMNS,
   free: ["explorer", "contributor", "api"],
-  pro: ["explorer", "contributor", "api"],
+  explorer: ["explorer", "contributor", "api"],
   reach: ["contributor", "api"],
 }
 

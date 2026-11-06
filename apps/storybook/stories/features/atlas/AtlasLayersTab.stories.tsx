@@ -53,7 +53,7 @@ const meta = {
   title: "Features/Atlas/AtlasLayersTab",
   component: AtlasLayersTab,
   args: {
-    tier: "pro",
+    tier: "explorer",
     active: ["pins"],
     onAccessibilityAnalysis: fn(),
     onToggle: fn(),

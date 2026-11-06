@@ -240,7 +240,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json(
       {
         error:
-          "We couldn't stop future membership payments. Please retry before deleting your account.",
+          "We couldn't stop future API Access payments. Please retry before deleting your account.",
       },
       { status: 503 }
     )

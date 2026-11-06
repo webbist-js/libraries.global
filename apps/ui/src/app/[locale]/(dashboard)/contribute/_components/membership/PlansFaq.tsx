@@ -13,8 +13,8 @@ import {
 import { H2_STYLE } from "./PlanBits"
 
 /** Plans questions (or any list passed in): a contact prompt beside an accordion. */
-export function ProFaq({
-  id = "pro-faq-h",
+export function PlansFaq({
+  id = "plans-faq-h",
   title,
   items,
   showContact = true,

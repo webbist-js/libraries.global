@@ -206,7 +206,7 @@ export default ({ strapi }: { strapi: any }) => ({
         : []
 
     // The Team covering this library when the viewer isn't in it: the tab
-    // then names the organiser to ask, instead of offering a plan.
+    // then names the organiser to ask.
     const coveringTeam =
       team && !team.viewerIsMember
         ? {

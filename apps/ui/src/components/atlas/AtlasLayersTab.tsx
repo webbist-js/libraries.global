@@ -153,7 +153,7 @@ export function AtlasLayersTab({
 
         break
 
-      case "pro":
+      case "locked":
         // Reach is earned or bought: explain both routes in a dialog.
         if (def.tier === "reach") setReachLocked(true)
         else setUpsell(upsell === def.id ? null : def.id)
@@ -536,7 +536,7 @@ function LayerRow({
             {tLock("contributorChip")}
           </AccessChip>
         ) : null}
-        {(def.tier === "free" || def.tier === "pro") && def.ready ? (
+        {(def.tier === "free" || def.tier === "explorer") && def.ready ? (
           <MutedChip>{tUi("account")}</MutedChip>
         ) : null}
         {!def.ready ? (
@@ -566,13 +566,13 @@ function LayerRow({
           onChange={onToggle}
           variant="layer"
           label={
-            access === "pro"
+            access === "locked"
               ? tLock("layerLocked", { name: def.name })
               : access === "signin"
                 ? tLock("layerSignIn", { name: def.name })
                 : def.name
           }
-          locked={access === "pro"}
+          locked={access === "locked"}
           disabled={access === "soon" || Boolean(pinRequirement)}
           descriptionId={pinRequirement ? "atlas-pins-required" : undefined}
         />

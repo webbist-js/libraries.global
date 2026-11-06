@@ -181,7 +181,8 @@ describe("StaffDrawer", () => {
     data.set(PUBLIC.id, payload(PUBLIC))
     render(createElement(StaffDrawer))
     expect(screen.getByRole("dialog", { name: "Central Library" })).toBeTruthy()
-    expect(screen.getByText("Verified staff")).toBeTruthy()
+    // The header pill, plus the lock tags on the Team and Traffic tiles.
+    expect(screen.getAllByText("Verified staff")).toHaveLength(3)
     expect(screen.getByText("Library owner")).toBeTruthy()
     expect(screen.queryByRole("combobox", { name: "Library" })).toBeNull()
     const base = `/staff/${PUBLIC.slug}`
@@ -410,10 +411,8 @@ describe("StaffDrawer", () => {
       expect(tile.querySelector<HTMLElement>("[data-icon]")?.dataset.icon).toBe(
         "mdi:lock-outline"
       )
-      // The tag reads "Team" (on the Team tile that's the label and the tag).
-      expect(within(tile).getAllByText("Team").length).toBe(
-        label === "Team" ? 2 : 1
-      )
+      // The lock tag names what unlocks the tile: a verified staff claim.
+      expect(within(tile).getByText("Verified staff")).toBeTruthy()
     }
     expect(screen.queryByRole("link", { name: /Team organiser/ })).toBeNull()
     unmount()

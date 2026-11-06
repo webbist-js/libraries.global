@@ -90,9 +90,9 @@ const bridgeCalls = () =>
     ([, init]) => (JSON.parse(init.body as string) as { ids: string[] }).ids
   )
 
-const PRO_FIELDS = { limits: { exportRows: 10_000, exportsPerDay: 20 } }
+const EXPLORER_FIELDS = { limits: { exportRows: 10_000, exportsPerDay: 20 } }
 
-const proUser = (fields: Record<string, unknown> = PRO_FIELDS) => ({
+const explorer = (fields: Record<string, unknown> = EXPLORER_FIELDS) => ({
   user: { id: "u1", features: ["atlas.export"], ...fields },
   session: { id: "s1" },
 })
@@ -147,7 +147,7 @@ describe("POST /api/export/atlas: access", () => {
   it.each(["csv", "geojson"])(
     "allows Supporter's exact 500-row cap for %s and refuses 501",
     async (format) => {
-      getSession.mockResolvedValue(proUser({ limits: { exportRows: 500 } }))
+      getSession.mockResolvedValue(explorer({ limits: { exportRows: 500 } }))
       const ids = many(500)
       fetchMock.mockImplementation(
         bridge(
@@ -172,15 +172,15 @@ describe("POST /api/export/atlas: access", () => {
   )
 
   it("refuses a browser-supplied export cap or plan", async () => {
-    getSession.mockResolvedValue(proUser({ limits: { exportRows: 500 } }))
+    getSession.mockResolvedValue(explorer({ limits: { exportRows: 500 } }))
     expect(
-      (await post({ format: "csv", ids: [A], limit: 50000, plan: "pro" }))
+      (await post({ format: "csv", ids: [A], limit: 50000, plan: "explorer" }))
         .status
     ).toBe(400)
     expect(fetchMock).not.toHaveBeenCalled()
   })
   it("refuses once the daily export allowance is spent, before calling the bridge", async () => {
-    getSession.mockResolvedValue(proUser())
+    getSession.mockResolvedValue(explorer())
     spendExport.mockResolvedValueOnce(
       Response.json({ code: "EXPORT_DAILY_LIMIT" }, { status: 429 })
     )
@@ -211,8 +211,8 @@ describe("POST /api/export/atlas: access", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("returns 413 when there are more ids than the plan's row cap", async () => {
-    getSession.mockResolvedValue(proUser({ limits: { exportRows: 2 } }))
+  it("returns 413 when there are more ids than the account's row cap", async () => {
+    getSession.mockResolvedValue(explorer({ limits: { exportRows: 2 } }))
 
     const res = await post({ format: "csv", ids: [A, B, C] })
 
@@ -221,8 +221,8 @@ describe("POST /api/export/atlas: access", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("returns 413 for 10,001 ids from a Pro user (cap 10,000)", async () => {
-    getSession.mockResolvedValue(proUser({ limits: { exportRows: 10_000 } }))
+  it("returns 413 for 10,001 ids from an Explorer (cap 10,000)", async () => {
+    getSession.mockResolvedValue(explorer({ limits: { exportRows: 10_000 } }))
 
     const res = await post({
       format: "csv",
@@ -233,8 +233,8 @@ describe("POST /api/export/atlas: access", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("returns 200 for 10,001 ids from a Team user (cap 50,000)", async () => {
-    getSession.mockResolvedValue(proUser({ limits: { exportRows: 50_000 } }))
+  it("returns 200 for 10,001 ids under a 50,000-row session cap", async () => {
+    getSession.mockResolvedValue(explorer({ limits: { exportRows: 50_000 } }))
 
     const res = await post({
       format: "csv",
@@ -249,7 +249,7 @@ describe("POST /api/export/atlas: access", () => {
     ["null", { limits: null }],
     ["malformed", { limits: { exportRows: "10000" } }],
   ])("treats %s limits as a cap of 0", async (_label, fields) => {
-    getSession.mockResolvedValue(proUser(fields))
+    getSession.mockResolvedValue(explorer(fields))
 
     const res = await post({ format: "csv", ids: [A] })
 
@@ -258,7 +258,7 @@ describe("POST /api/export/atlas: access", () => {
 })
 
 describe("POST /api/export/atlas: body", () => {
-  beforeEach(() => getSession.mockResolvedValue(proUser()))
+  beforeEach(() => getSession.mockResolvedValue(explorer()))
 
   it.each([
     ["an unknown format", { format: "xlsx", ids: [A] }],
@@ -303,7 +303,7 @@ describe("POST /api/export/atlas: body size", () => {
   const padded = (bytes: number) => largest + " ".repeat(bytes - largest.length)
 
   beforeEach(() =>
-    getSession.mockResolvedValue(proUser({ limits: { exportRows: 50_000 } }))
+    getSession.mockResolvedValue(explorer({ limits: { exportRows: 50_000 } }))
   )
 
   it("accepts the largest legal body: 50,000 ids of 32 characters", async () => {
@@ -328,7 +328,7 @@ describe("POST /api/export/atlas: body size", () => {
 })
 
 describe("POST /api/export/atlas: the Strapi bridge", () => {
-  beforeEach(() => getSession.mockResolvedValue(proUser()))
+  beforeEach(() => getSession.mockResolvedValue(explorer()))
 
   it("calls the bridge with the service secret, the ids and no-store", async () => {
     await post({ format: "csv", ids: [A] })
@@ -371,11 +371,11 @@ describe("POST /api/export/atlas: the Strapi bridge", () => {
 })
 
 describe("POST /api/export/atlas: chunked bridge calls", () => {
-  const TEAM = proUser({ limits: { exportRows: 50_000 } })
+  const LARGE_CAP = explorer({ limits: { exportRows: 50_000 } })
 
-  beforeEach(() => getSession.mockResolvedValue(TEAM))
+  beforeEach(() => getSession.mockResolvedValue(LARGE_CAP))
 
-  it("sends 50,000 ids from a Team user in 10 calls, each under 1 MiB", async () => {
+  it("sends 50,000 ids under a 50,000-row cap in 10 calls, each under 1 MiB", async () => {
     const ids = many(50_000)
 
     const res = await post({ format: "csv", ids })
@@ -453,7 +453,7 @@ describe("POST /api/export/atlas: chunked bridge calls", () => {
 describe("POST /api/export/atlas: the bridge response", () => {
   const { lat: _lat, ...noLat } = row("b", "Beta", -1.5, 53.7)
 
-  beforeEach(() => getSession.mockResolvedValue(proUser()))
+  beforeEach(() => getSession.mockResolvedValue(explorer()))
 
   it.each([
     ["a latitude that isn't a number", { ...noLat, lat: "53.7" }],
@@ -514,7 +514,7 @@ describe("POST /api/export/atlas: the bridge response", () => {
 })
 
 describe("POST /api/export/atlas: the file", () => {
-  beforeEach(() => getSession.mockResolvedValue(proUser()))
+  beforeEach(() => getSession.mockResolvedValue(explorer()))
 
   it("returns CSV of only the requested ids, in request order", async () => {
     const res = await post({ format: "csv", ids: [C, A] })
@@ -607,7 +607,7 @@ describe("POST /api/export/atlas: streaming", () => {
   const names = ids.map((_, i) => `Library ${i}`)
 
   beforeEach(() => {
-    getSession.mockResolvedValue(proUser())
+    getSession.mockResolvedValue(explorer())
     fetchMock.mockImplementation(bridge(rows))
   })
 

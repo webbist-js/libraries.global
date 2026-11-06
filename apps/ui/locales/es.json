@@ -121,7 +121,7 @@
         "two": "Indique los idiomas y temas en los que puede ayudar.",
         "three": "Siga su solicitud y cualquier petición de más información."
       },
-      "requirement": "Los roles de colaborador se revisan según la experiencia, el historial de contribuciones y los requisitos del rol. Una membresía de pago no compra la aprobación."
+      "requirement": "Los roles de colaborador se revisan según la experiencia, el historial de contribuciones y los requisitos del rol. Un pago no compra la aprobación."
     },
     "claimLibrary": "Reclamar una biblioteca",
     "openDevelopers": "Abrir Desarrolladores"
@@ -2696,7 +2696,7 @@
     "reviewBeforeLive": "Revíselos antes de que se publiquen.",
     "checkingSuggestions": "Buscando sugerencias…",
     "teamAndInsights": "Equipo y estadísticas",
-    "teamAccess": "Las herramientas de Equipo están disponibles cuando un Equipo cubre esta biblioteca.",
+    "teamAccess": "Equipo y Tráfico requieren su propia acreditación verificada como personal de esta biblioteca.",
     "communityDrives": "Campañas comunitarias",
     "libraryNeeds": "Su biblioteca necesita: {need}",
     "noLibraryDrive": "Ninguna campaña abierta la incluye ahora mismo.",

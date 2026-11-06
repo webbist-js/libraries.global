@@ -22,7 +22,7 @@ export async function stopBillingBeforeDeletion(pool: Pool, userId: string) {
   try {
     teams = await organiserTeams(userId)
   } catch {
-    throw new BillingError("cancel_membership_before_deletion", 503)
+    throw new BillingError("stop_api_billing_before_deletion", 503)
   }
   for (const team of teams) {
     if (team.otherOrganisers > 0) continue
@@ -100,7 +100,7 @@ export async function stopBillingBeforeDeletion(pool: Pool, userId: string) {
         ].includes(error.code)
       )
         throw error
-      throw new BillingError("cancel_membership_before_deletion", 503)
+      throw new BillingError("stop_api_billing_before_deletion", 503)
     }
   }
 }

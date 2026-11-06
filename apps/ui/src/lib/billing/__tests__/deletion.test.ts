@@ -82,11 +82,11 @@ describe("API account erasure safety", () => {
     ])
     f.cancel.mockRejectedValue(new Error("provider unavailable"))
     await expect(stopBillingBeforeDeletion(pool, "user")).rejects.toThrow(
-      "cancel_membership_before_deletion"
+      "stop_api_billing_before_deletion"
     )
     f.teams.mockRejectedValue(new Error("cms down"))
     await expect(stopBillingBeforeDeletion(pool, "user")).rejects.toThrow(
-      "cancel_membership_before_deletion"
+      "stop_api_billing_before_deletion"
     )
   })
 })

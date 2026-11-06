@@ -170,7 +170,7 @@ describe("local session profile projection", () => {
     expect(findMany.mock.calls[0][0].limit).toBe(50)
   })
 
-  it("sends free workspaces without paid-seat state and API accounts from the Team API projection", async () => {
+  it("sends free workspaces and API accounts from the Team API projection", async () => {
     fakeServices["access.teams"] = {
       listMine: async () => [
         {

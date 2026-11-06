@@ -128,7 +128,7 @@ describe("access-server", () => {
     expect(staffLibrariesOf(null)).toEqual([])
   })
 
-  it("sessionTeamsOf fails closed on malformed fields and drops paid-seat state", () => {
+  it("sessionTeamsOf fails closed on malformed fields and keeps only workspace fields", () => {
     const team = {
       id: "t1",
       name: "Kent",

@@ -204,7 +204,7 @@ test.afterAll(async () => {
 })
 
 // Scope the current Atlas export API to one synthetic library's coordinates.
-// This tests actual exported rows, not just the plan gate or a header-only file.
+// This tests actual exported rows, not just the entitlement gate or a header-only file.
 let exportScope: Record<string, unknown> | undefined
 async function exportBody(api: APIRequestContext) {
   if (exportScope) return exportScope

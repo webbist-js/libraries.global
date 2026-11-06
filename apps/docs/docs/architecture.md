@@ -21,7 +21,7 @@ PostgreSQL holds CMS and application data. Meilisearch serves derived public sea
 
 Server components fetch published CMS content through `PublicStrapiClient` and feature-specific loaders. Browser requests use bounded Next.js routes; credentials stay on the server. The generic content proxies allow selected published reads only.
 
-The Strapi Better Auth plugin owns public accounts and sessions. Next.js forwards auth traffic through a private service transport. Dedicated Next.js routes resolve the cookie session and construct trusted bridge headers. Strapi verifies the bridge and rechecks current authority for each operation. A paid plan changes tools and quotas; it never grants editorial or staff authority. `PrivateStrapiClient` is a legacy compatibility client and does not obtain a Strapi JWT from a Better Auth session.
+The Strapi Better Auth plugin owns public accounts and sessions. Next.js forwards auth traffic through a private service transport. Dedicated Next.js routes resolve the cookie session and construct trusted bridge headers. Strapi verifies the bridge and rechecks current authority for each operation. API Access changes API tools and quotas; payment and recognition never grant editorial or staff authority. `PrivateStrapiClient` is a legacy compatibility client and does not obtain a Strapi JWT from a Better Auth session.
 
 See [Authentication](authentication.md) and [Strapi API client](strapi-api-client.md).
 

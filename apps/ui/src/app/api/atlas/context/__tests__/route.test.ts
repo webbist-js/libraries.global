@@ -72,7 +72,7 @@ it("allows the free population layer but gates deprivation before tile access", 
   expect(state.calls.some((path) => path.includes("kind=tile"))).toBe(false)
 })
 it("accepts an entitled context request and rejects uninstalled or arbitrary releases", async () => {
-  state.user = { id: "pro", features: ["atlas.analysis"] }
+  state.user = { id: "explorer", features: ["atlas.analysis"] }
   expect(
     (
       await GET(

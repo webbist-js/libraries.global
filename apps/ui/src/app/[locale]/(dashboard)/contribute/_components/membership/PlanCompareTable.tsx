@@ -28,7 +28,7 @@ import {
 
 /** Lead with where the offers differ; the free basics remain a click away. */
 const OPEN_BY_DEFAULT = ["atlas", "staff", "api"]
-const PRO_TINT = "var(--t-bg-selected)"
+const SELECTED_TINT = "var(--t-bg-selected)"
 const STICKY = "max-sm:sticky max-sm:left-0 max-sm:z-[1]"
 
 function GroupHeader({
@@ -246,7 +246,8 @@ export function PlanCompareTable({
                     scope="col"
                     style={{
                       borderColor: T.border.line,
-                      background: key === selectedPlan ? PRO_TINT : undefined,
+                      background:
+                        key === selectedPlan ? SELECTED_TINT : undefined,
                     }}
                   >
                     <button
@@ -311,7 +312,7 @@ export function PlanCompareTable({
                         style={{
                           borderColor: T.border.divider,
                           background:
-                            key === selectedPlan ? PRO_TINT : undefined,
+                            key === selectedPlan ? SELECTED_TINT : undefined,
                         }}
                       >
                         <PlanCompareCell

@@ -40,7 +40,7 @@ describe("Explorer", () => {
     expect(Object.values(e.limits).every((n) => n === 0)).toBe(true)
   })
 
-  it("gives every signed-in account the former Pro browse tools for free, without Reach", () => {
+  it("gives every signed-in account the Explorer browse tools for free, without Reach", () => {
     const e = resolveEntitlements(base())
     expect(e.standing).toBe("explorer")
     expect([...e.facts]).toEqual(["explorer"])

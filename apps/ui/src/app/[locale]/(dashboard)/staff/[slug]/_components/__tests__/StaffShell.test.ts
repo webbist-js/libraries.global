@@ -77,7 +77,7 @@ const shell = (props: Partial<Parameters<typeof StaffShell>[0]> = {}) =>
     overview: overview(),
     libraries,
     meta,
-    teamCovered: false,
+    canSeeTeam: false,
     ...props,
   })
 const tabs = () => screen.getByRole("navigation", { name: "Staff area" })
@@ -150,8 +150,8 @@ describe("StaffShell", () => {
       "GoliveMobile",
       "Notices",
       "Eventfeeds",
-      "TrafficTeam",
-      "TeamTeam",
+      "TrafficVerifiedstaff",
+      "TeamVerifiedstaff",
     ])
     const links = within(tabs()).getAllByRole("link")
     expect(links.map((a) => a.getAttribute("href"))).toEqual([
@@ -174,8 +174,8 @@ describe("StaffShell", () => {
       "Editrecord",
       "Notices",
       "Eventfeeds",
-      "TrafficTeam",
-      "TeamTeam",
+      "TrafficVerifiedstaff",
+      "TeamVerifiedstaff",
     ])
     expect(
       screen.getByRole("heading", { level: 1 }).querySelector("em")?.textContent
@@ -183,10 +183,9 @@ describe("StaffShell", () => {
     expect(screen.queryByText(/Based at/)).toBeNull()
   })
 
-  it("drops the Team locks when the viewer's own claim unlocks the free staff tools", () => {
-    render(shell({ teamCovered: true }))
+  it("drops the Verified staff locks when the viewer's own claim unlocks the free staff tools", () => {
+    render(shell({ canSeeTeam: true }))
     expect(screen.getByText("Staff access · free")).toBeTruthy()
-    expect(screen.queryByText("Team plan")).toBeNull()
     expect(tabNames().slice(-2)).toEqual(["Traffic", "Team"])
   })
 

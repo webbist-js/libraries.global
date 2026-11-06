@@ -16,7 +16,6 @@ const features = vi.hoisted(() => ({ list: [] as string[], ready: true }))
 
 vi.mock("@/lib/access-client", () => ({
   useEntitlements: () => ({
-    plan: features.list.length ? "pro" : "free",
     can: (f: string) => features.list.includes(f),
     ready: features.ready,
   }),

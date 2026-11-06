@@ -17,11 +17,12 @@ import {
 import { NAVIGATION } from "../../helpers/ui-flows"
 
 // Local only, opt-in (the access project), after `pnpm seed:access`, which
-// creates the verified fixture Team (Public and Mobile fixture libraries,
-// five seats) with `team-organiser` organising it and `team-member` as an
-// active member assigned to the Mobile library as editor. The seed also
-// removes the invites and assignments this file leaves behind. Four
-// sign-ins: the organiser, the member, a reader and `moderator-global`.
+// creates the verified fixture Team, a free staff workspace (Public and
+// Mobile fixture libraries, no seats or payment state), with
+// `team-organiser` organising it and `team-member` as an active member
+// assigned to the Mobile library as editor. The seed also removes the
+// invites and assignments this file leaves behind. Four sign-ins: the
+// organiser, the member, a reader and `moderator-global`.
 //
 // Needs `APP_PUBLIC_URL` in apps/strapi/.env: an invite builds its link
 // from it and answers 503 `email_not_configured` without it.
@@ -37,8 +38,6 @@ type Member = {
 type TeamDetail = {
   documentId: string
   name: string
-  seats: number
-  used: number
   libraries: { documentId: string; slug: string }[]
   members: Member[]
   viewerRole: "organiser" | "member" | null
@@ -127,7 +126,7 @@ test.beforeAll(async ({ playwright }, testInfo) => {
 
 test.afterAll(async () => {
   // The invites this run sent go, so a re-run before the next seed never
-  // meets `invite_already_pending` or a full Team.
+  // meets `invite_already_pending`.
   for (const id of invited)
     await organiser
       ?.delete(`/api/staff/team/${teamId}/invites/${id}`, {
@@ -140,10 +139,14 @@ test.afterAll(async () => {
   )
 })
 
-test("the organiser sees the Team's members and seats", async ({ browser }) => {
+test("the organiser sees the free workspace's members, without seats", async ({
+  browser,
+}) => {
   const view = await detail()
   expect(view.viewerRole).toBe("organiser")
-  expect(view.seats).toBe(FIXTURE_TEAM.seats)
+  // Free workspaces carry no seat count or paid state.
+  expect(view).not.toHaveProperty("seats")
+  expect(view).not.toHaveProperty("used")
   expect(view.libraries.map((l) => l.slug).sort()).toEqual(
     FIXTURE_TEAM.libraries.map((k) => FIXTURE_LIBRARIES[k].slug).sort()
   )
@@ -161,12 +164,11 @@ test("the organiser sees the Team's members and seats", async ({ browser }) => {
     })
   ).toBeVisible(NAVIGATION)
   await expect(page.getByText("Team organiser", { exact: true })).toBeVisible()
-  await expect(page.getByText(`of ${view.seats}`)).toBeVisible()
   await expect(page.getByText(MEMBER_EMAIL).first()).toBeVisible()
   await expect(page.getByText(emailFor("team-organiser")).first()).toBeVisible()
 })
 
-test("inviting by email adds a pending seat, and a full Team answers 409 no_seats", async ({
+test("inviting by email adds a pending member with no seat or payment step", async ({
   browser,
 }) => {
   const invite = (n: number) =>
@@ -193,21 +195,19 @@ test("inviting by email adds a pending seat, and a full Team answers 409 no_seat
   if (created.emailSent !== undefined)
     expect(typeof created.emailSent).toBe("boolean")
   invited.push(created.member.documentId)
-
-  // Fill the remaining seats (active + invited rows count), then one more.
-  let view = await detail()
-  let n = 1
-  while (view.used < view.seats) {
-    n++
-    const res = await invite(n)
-    expect(res.status(), await res.text()).toBe(201)
-    invited.push(((await res.json()) as { member: Member }).member.documentId)
-    view = await detail()
-  }
-  expect(view.used).toBe(view.seats)
-  const full = await invite(99)
-  expect(full.status()).toBe(409)
-  expect(((await full.json()) as ErrorBody).error?.code).toBe("no_seats")
+  // The pending invite is listed; a second invite is not limited by any
+  // paid seat count (the fixed 500-member abuse ceiling, 409 `member_limit`,
+  // is covered by the Strapi unit tests).
+  const second = await invite(2)
+  expect(second.status(), await second.text()).toBe(201)
+  invited.push(((await second.json()) as { member: Member }).member.documentId)
+  const view = await detail()
+  expect(
+    view.members.filter(
+      (m) =>
+        m.status === "invited" && m.email.startsWith(`access-invitee-${STAMP}-`)
+    )
+  ).toHaveLength(2)
 
   const page = await pageAs(browser, organiser, baseURL)
   browserContexts.push(page.context())
@@ -216,7 +216,6 @@ test("inviting by email adds a pending seat, and a full Team answers 409 no_seat
     page.getByText(`access-invitee-${STAMP}-1@example.test`).first()
   ).toBeVisible(NAVIGATION)
   await expect(page.getByText("Invited", { exact: true }).first()).toBeVisible()
-  await expect(page.getByText(`${view.seats} of ${view.seats}`)).toBeVisible()
 })
 
 test("assigning a member to the Public library opens its staff area; unassigning closes it", async ({

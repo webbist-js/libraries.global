@@ -33,8 +33,8 @@ type UnfinishedSubmission = {
  * Erase a deleted account's personal data, as the privacy notice promises:
  * the profile is anonymised and emptied (follows, languages, interests,
  * preferences, rewards, recognition), the avatar, saved events, claims,
- * votes, plan and role grants, verifications, upload ownership and the newsletter
- * subscription are deleted, unfinished submissions lose their content and
+ * votes, role and authority grants, affiliations, upload ownership and the
+ * newsletter subscription are deleted, unfinished submissions lose their content and
  * photos, and submissions, points, badges and leaderboard snapshots are
  * re-keyed to one random id that cannot be traced back to the person.
  * Approved contributions themselves stay in the public record.

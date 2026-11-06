@@ -6,11 +6,11 @@
  * `update-sponsored-access-content.mjs`, which only ever stages drafts.
  */
 
+import { stripComponentIds } from "./cms-component-ids.mjs"
 import cs from "./sponsored-access-content-cs.mjs"
 import en from "./sponsored-access-content-en.mjs"
 import es from "./sponsored-access-content-es.mjs"
 import fr from "./sponsored-access-content-fr.mjs"
-import { stripComponentIds } from "./team-pricing-content.mjs"
 
 import pricing from "../../ui/src/lib/membership-pricing.json" with { type: "json" }
 

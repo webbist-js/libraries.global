@@ -6,7 +6,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 import { MembershipPolicies } from "@/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPolicies"
 import { OfferCards } from "@/app/[locale]/(dashboard)/contribute/_components/membership/OfferCards"
 import { PlanCompareTable } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareTable"
-import { ProFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/ProFaq"
+import { PlansFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlansFaq"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
 import { InformationPage } from "@/components/dashboard/InformationPage"
@@ -152,7 +152,7 @@ export default async function PlansPage({
               <PlanCompareTable held={heldColumns} roadmapKeys={roadmapKeys} />
             </section>
             <section id="plan-questions" className="space-y-8">
-              <ProFaq />
+              <PlansFaq />
               <MembershipPolicies />
             </section>
           </Container>

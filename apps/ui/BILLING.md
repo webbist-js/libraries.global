@@ -6,7 +6,7 @@ This guide describes implementation and repeatable checks. Provider account read
 
 ## Offer and ownership
 
-Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. The [API account](TEAM-API.md) is the only paid product: £100/month, tax-inclusive base GBP, with 10,000 requests, 250 MiB of response data and 100 analysis credits per settled billing period. Personal Supporter/Pro memberships and paid Team seats were retired in the November 2026 beta reset; Explorer, Contributor, Supporter and Verified Staff are free. See [Team billing](TEAM-BILLING.md) for the retirement note.
+Read [Pricing](PRICING.md) and `src/lib/membership-pricing.json` for the catalogue. The [API account](TEAM-API.md) is the only paid product: £100/month, tax-inclusive base GBP, with 10,000 requests, 250 MiB of response data and 100 analysis credits per settled billing period. Explorer, Contributor, Supporter and Verified Staff are free; see the beta reset note in [Pricing](PRICING.md#beta-reset).
 
 An API account belongs to an organisation. Organisers buy and manage it; members see usage. A buyer without an organisation gets a single-member organisation at checkout (`POST /api/billing/api/checkout`). Settled payment, rather than an optimistic checkout return, activates access.
 
@@ -51,7 +51,7 @@ The checked-in environment examples describe names and placeholders for runtime 
 
 The API flags (`API_ENABLED`, `API_OVERAGE_ENABLED`, `API_SERVICE_READS_ENABLED`, `API_SUBMISSIONS_ENABLED`, `API_ANALYSIS_ENABLED`, `API_NETWORK_REACH_ENABLED`) default to false. A flag never bypasses authorisation or accounting.
 
-A release must apply the billing migration (`billing:migrate`, which installs the `api_*` ledger tables; `--drop-retired` removes the retired personal and seat tables explicitly), ship matching shared access/CMS/UI/worker code and configure authenticated billing and retention jobs. `vercel.json` applies only when running on that platform; another host needs its own installed scheduler. Verify signatures, mode, retries, pending-event age, projection lag and alerts before activation.
+A release must apply the billing migration (`billing:migrate`, which installs the `api_*` ledger tables; `--drop-retired` removes the withdrawn billing tables explicitly), ship matching shared access/CMS/UI/worker code and configure authenticated billing and retention jobs. `vercel.json` applies only when running on that platform; another host needs its own installed scheduler. Verify signatures, mode, retries, pending-event age, projection lag and alerts before activation.
 
 Live catalogue preparation uses `api:setup --live` after owned sandbox acceptance. Confirm that Managed Payments supports the metered overage items before enabling `API_OVERAGE_ENABLED` in live mode. Authentication and signing-secret recovery stay in private operator configuration.
 
@@ -73,7 +73,7 @@ A real delivery check needs an explicitly authorized recipient. Record SMTP acce
 
 ## Content and recovery
 
-[Customer help](BILLING-HELP.md) describes the user flow. [CMS content operations](../strapi/CONTENT-OPERATIONS.md) defines the environment and publication workflow; the retired `update-billing-docs.mjs` helper now exits; `update-sponsored-access-content.mjs` stages the current copy as drafts.
+[Customer help](BILLING-HELP.md) describes the user flow. [CMS content operations](../strapi/CONTENT-OPERATIONS.md) defines the environment and publication workflow; `update-sponsored-access-content.mjs` stages the current copy as drafts.
 
 Published policy revisions, purchase consent versions and accepted historical snapshots are distinct. Check `src/lib/membership-pricing.json`, the current checkout consent constants and the CMS publication before releasing changes. Preserve earlier consent evidence. Do not copy a dated legal version or jurisdiction-specific claim from an old launch report into a new release.
 

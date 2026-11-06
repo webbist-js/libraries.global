@@ -26,9 +26,9 @@ const Checkout = z
 
 /**
  * Individual API checkout. A buyer without an organisation gets a free
- * single-member organisation (no seat or payment state) with them as
- * organiser, then the same organisation-owned checkout as organisers use.
- * Members of an existing organisation must ask an organiser.
+ * single-member organisation with them as organiser, then the same
+ * organisation-owned checkout as organisers use. Members of an existing
+ * organisation must ask an organiser.
  */
 export async function POST(req: Request) {
   try {

@@ -75,8 +75,8 @@ replace real role/entitlement, billing-provider or production performance accept
 
 A release record must contain the commit, commands, fixture inventory and results. An unexecuted fixture-dependent suite is pending, not a pass. Do not promote a release based solely on the public smoke suite.
 
-- Public: homepage, library search/detail, country/region, Events listing/detail, Journal, Knowledge, community, legal and membership; one main landmark after navigation, keyboard skip link, meaningful loading/error/empty states.
-- Account: signed out, free, Supporter, Pro, verified staff, Team organiser and moderator; direct URLs and reloads, hidden actions and denied server calls, sign-out/account-switch cache isolation. Keep staff verification separate from a complimentary Pro grant.
+- Public: homepage, library search/detail, country/region, Events listing/detail, Journal, Knowledge, community, legal and plans; one main landmark after navigation, keyboard skip link, meaningful loading/error/empty states.
+- Account: signed out, Explorer, Contributor, Supporter, API Access customer, verified staff, workspace organiser and moderator; direct URLs and reloads, hidden actions and denied server calls, sign-out/account-switch cache isolation. Keep staff verification separate from API Access: payment never grants staff access.
 - Events: two geographies with distinct fixtures; search/filters and browser back/forward; more than 300 results; save/read/write failures; cancelled and pending records excluded. Verify a direct worker update reaches search after reconciliation.
 - Editor: in-step autosave, delayed writes, offline failure/retry, latest edit preserved, leave/reload warning and final submission. Use a disposable draft and inspect the persisted result.
 - CMS: all configured plugins in both themes at narrow/wide widths. Cover populated, empty, loading, error/retry and denied states. Check keyboard tabs, modal focus/Escape/dirty dismissal, library search/selection, pagination beyond the first page and permitted action visibility. Exercise a read-only fixture admin as well as a manager; server permission tests remain mandatory.

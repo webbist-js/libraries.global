@@ -175,8 +175,8 @@ export function StaffDrawer({
   const isLive = live?.state === "live"
   const canGoLive = staff.can("goLive", id)
   // Free staff tools: the viewer's own staff claim on this library decides.
-  const teamCovered = staff.can("seeTeam", id)
-  const trafficCovered = staff.can("traffic", id)
+  const canSeeTeam = staff.can("seeTeam", id)
+  const canSeeTraffic = staff.can("traffic", id)
   const organises = teams.some((t) => t.role === "organiser")
   const claimHref = pageLibrary
     ? `/staff/claim?librarySlug=${encodeURIComponent(pageLibrary.slug)}&libraryName=${encodeURIComponent(pageLibrary.name)}&libraryDocumentId=${encodeURIComponent(pageLibrary.documentId)}`
@@ -467,14 +467,14 @@ export function StaffDrawer({
             href={`${base}/team`}
             icon="mdi:account-group-outline"
             label={tUi("team")}
-            tag={teamCovered ? undefined : "Team"}
+            lockedBy={canSeeTeam ? undefined : tUi("verified_staff")}
             onClick={closeStaffDrawer}
           />
           <DrawerAction
             href={`${base}/traffic`}
             icon="mdi:chart-bar"
             label={tUi("traffic")}
-            tag={trafficCovered ? undefined : "Team"}
+            lockedBy={canSeeTraffic ? undefined : tUi("verified_staff")}
             onClick={closeStaffDrawer}
           />
           {organises ? (
@@ -485,7 +485,7 @@ export function StaffDrawer({
               onClick={closeStaffDrawer}
             />
           ) : null}
-          {!teamCovered || !trafficCovered ? (
+          {!canSeeTeam || !canSeeTraffic ? (
             <p className="m-0 mt-2 border-t border-(--t-border-line) pt-2 text-xs leading-relaxed text-(--t-ink-dim)">
               {t("teamAccess")}
             </p>

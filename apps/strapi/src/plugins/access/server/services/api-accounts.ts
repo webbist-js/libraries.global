@@ -12,9 +12,9 @@ import {
 
 /**
  * Private bridge for the application's API accounts. An API account belongs
- * to an organisation (Team). Creating one is free and carries no seat or
- * payment state; paid API coverage lives in the application ledger. Payment
- * never changes Team verification, roles or covered Libraries.
+ * to an organisation (Team). Creating one is free; paid API coverage lives
+ * in the application ledger. Payment never changes Team verification, roles
+ * or covered Libraries.
  */
 const uuid = (v: unknown): v is string =>
   typeof v === "string" && /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i.test(v)

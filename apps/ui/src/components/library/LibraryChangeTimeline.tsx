@@ -261,7 +261,7 @@ export function LibraryChangeTimeline({
   const tUi = useUiTranslations("ui")
 
   const { can, ready } = useEntitlements()
-  const pro = ready && can("library.history")
+  const detailed = ready && can("library.history")
   const [batches, setBatches] = useState(initial.data)
   const [total, setTotal] = useState(initial.meta.total)
   const [page, setPage] = useState(1)
@@ -270,9 +270,9 @@ export function LibraryChangeTimeline({
   const [expanded, setExpanded] = useState(false)
   const upgraded = useRef(false)
 
-  // A Pro viewer of the static page: fetch page 1 again, with values.
+  // A signed-in viewer of the static page: fetch page 1 again, with values.
   useEffect(() => {
-    if (!pro || upgraded.current) return
+    if (!detailed || upgraded.current) return
     if (
       !initial.data.some((batch) => !isImportCreate(batch) && withheld(batch))
     )
@@ -295,7 +295,7 @@ export function LibraryChangeTimeline({
     return () => {
       live = false
     }
-  }, [pro, documentId, initial.data])
+  }, [detailed, documentId, initial.data])
 
   function loadMore() {
     setLoading(true)
@@ -322,7 +322,7 @@ export function LibraryChangeTimeline({
   const entries = total - (batches.length - rows.length)
   const more = batches.length < total && page < 100
   const visible = expanded ? rows : rows.slice(0, FIRST_ROWS)
-  const hidden = ready && !pro && rows.some(withheld)
+  const hidden = ready && !detailed && rows.some(withheld)
 
   if (rows.length === 0 && !more)
     return (

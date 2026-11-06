@@ -7,7 +7,7 @@ description: Team-owned library selections, widget publication, public rendering
 
 The staff section at `/staff/teams/widgets` lets workspace members create library finders, directories, comparison charts and statistic cards. Widgets use published platform records; uploads and arbitrary user datasets are outside this release. No payment or API account is required.
 
-Since the November 2026 beta reset, staff workspaces are free and have no seats or paid expiry. Embed tools follow verified staff access (`canStaff`) on the libraries concerned, not workspace payment. Where this page mentions an inactive Team or Team expiry, read it as a workspace whose members no longer hold the required staff access.
+Staff workspaces are free. Embed tools follow verified staff access (`canStaff`) on the libraries concerned. An inactive Team is a workspace the site team has closed (`status: lapsed`); its retained work stays readable.
 
 ## Ownership and source selection
 
@@ -40,7 +40,7 @@ The optional Widget branding entitlement is granted/revoked from the existing CM
 
 `/embed/w/{publicId}` is a standalone document and hosted view, without account providers, site navigation or tracking scripts. Strapi returns only allowlisted published facts, effective branding and current source credits. It excludes private Team fields, member identities, draft configuration, evidence and unresolved/excluded record references.
 
-Published membership and record revisions are checked on each load. Populated public facts have a bounded process cache with a 30-second maximum retention; publication/membership checks precede cache reuse. Dataset redistribution permissions, Team expiry, widget state and branding are rechecked independently. Unknown or restricted redistribution blocks publication/delivery rather than silently dropping credits or records.
+Published membership and record revisions are checked on each load. Populated public facts have a bounded process cache with a 30-second maximum retention; publication/membership checks precede cache reuse. Dataset redistribution permissions, Team status, widget state and branding are rechecked independently. Unknown or restricted redistribution blocks publication/delivery rather than silently dropping credits or records.
 
 Only the exact standalone embed route receives a per-widget `frame-ancestors` policy. Exact HTTPS origins are required in production; loopback HTTP origins are allowed for development. Previously published origins remain allowed to frame a neutral unavailable card after pause, lapse, unpublication or archive; the separate data check still denies all library facts. Normal pages keep their existing framing policy, and beta/staging gates still run first. A CSP-blocked frame cannot render a fallback card, so copied snippets include a hosted-view link outside the iframe.
 

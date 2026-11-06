@@ -294,7 +294,7 @@ describe("eraseAccount", () => {
     expect(remove.mock.calls.some(([file]) => file.id === 10)).toBe(false)
   })
 
-  it("strips personal data, follows, preferences and earned Pro from the profile", async () => {
+  it("strips personal data, follows, preferences and recognition counters from the profile", async () => {
     const { strapi, store } = seed()
     await eraseAccount(strapi, { baUserId: "u1", email: "alice@example.org" })
 

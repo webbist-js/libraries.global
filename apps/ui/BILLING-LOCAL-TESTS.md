@@ -1,6 +1,6 @@
-# Local membership acceptance
+# Local API Access acceptance
 
-Use the existing local UI and Strapi with the selected sandbox configuration. Open `/contribute/membership` on that UI origin. Check processes and ports before starting helpers; run at most one Next.js and one Strapi server across checkouts. These are sandbox purchases using explicitly controlled test accounts.
+Use the existing local UI and Strapi with the selected sandbox configuration. Open `/developers` on that UI origin. Check processes and ports before starting helpers; run at most one Next.js and one Strapi server across checkouts. These are sandbox purchases using explicitly controlled test accounts.
 
 ## Start again after a restart
 
@@ -13,7 +13,7 @@ pnpm --filter @repo/ui billing:migrate
 pnpm --filter @repo/ui billing:check
 ```
 
-The check must report `mode: sandbox`, four matching prices and three matching portal policies. The helper only accepts the sandbox key/catalogue; it does not copy production credentials. Keep environment files private.
+The check must report `mode: sandbox`, every required variable set and `{"valid":true}` for the monthly Price and each configured overage Price. The helper only accepts the sandbox key/catalogue; it does not copy production credentials. Keep environment files private.
 
 Set `APP_PUBLIC_URL` and `NEXT_PUBLIC_APP_URL` in the private UI environment to the existing local origin (for example `http://localhost:3000`). The listener and worker read this origin by default. Start a listener only if none is already serving that sandbox:
 
@@ -28,11 +28,11 @@ After listener readiness, reload the existing UI only if it needs the new signin
 pnpm --filter @repo/ui billing:sandbox:work
 ```
 
-Without processing, Stripe can show a successful payment while the application is still confirming membership. Stop any listener started for this check when acceptance finishes. Avoid a watch worker for routine finite validation.
+Without processing, Stripe can show a successful payment while the application is still confirming the subscription. Stop any listener started for this check when acceptance finishes. Avoid a watch worker for routine finite validation.
 
 If you choose another port, update both public-origin values, start the UI on that port and restart both helpers. Check the listener's printed forwarding URL. Explicit `BILLING_FORWARD_URL` and `BILLING_LOCAL_ORIGIN` overrides take precedence and must match that port; old background helpers keep their earlier origin until restarted. A production domain is not needed for local card tests.
 
-Confirmation keeps checking after 30 seconds, backs off to five-second checks and recovers from temporary status failures. The worker attempts to acknowledge newly settled projections in the same run when its time budget allows. The app shows success only after paid coverage and Strapi acknowledgment agree. It then refreshes the existing Better Auth session and server UI; no new login is needed. Settings also polls a paid purchase awaiting projection and refreshes access when ready, so a paid invoice is not left beside a stale “No paid membership” card.
+Confirmation keeps checking after 30 seconds, backs off to five-second checks and recovers from temporary status failures. The worker attempts to acknowledge newly settled projections in the same run when its time budget allows. The app shows success only after paid coverage and Strapi acknowledgment agree. It then refreshes the existing Better Auth session and server UI; no new login is needed. `/developers` also polls a paid purchase awaiting projection and refreshes access when ready, so a paid invoice is not left beside a stale unpaid status.
 
 ## API purchase
 
@@ -83,4 +83,4 @@ A real send requires an explicitly authorized recipient. Record SMTP acceptance,
 
 Source tests cover consent, organisation creation, step focus, canceled returns, ownership, ledger reservation and settlement, overage caps and pending acknowledgement. They do not prove real payment settlement, bank authentication, wallets, email delivery or browser geometry.
 
-Record the selected commit, environment, controlled fixture inventory and actual outcomes privately. A skipped or unavailable check remains pending. Complete the applicable card/decline/authentication/device journeys, allowance and overage caps, meter reconciliation and recovery checks before enabling the corresponding live flow. See [Billing](BILLING.md), [Team billing](TEAM-BILLING.md) and the [release contract](../../scripts/release/README.md).
+Record the selected commit, environment, controlled fixture inventory and actual outcomes privately. A skipped or unavailable check remains pending. Complete the applicable card/decline/authentication/device journeys, allowance and overage caps, meter reconciliation and recovery checks before enabling the corresponding live flow. See [Billing](BILLING.md), [API accounts](TEAM-API.md) and the [release contract](../../scripts/release/README.md).

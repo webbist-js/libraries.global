@@ -37,7 +37,7 @@ export default async function StaffOverviewPage({
   const mobile = overview.library.libraryType === "Mobile"
   const canGoLive =
     libraries.find((lib) => lib.id === documentId)?.canGoLive === true
-  const trafficCovered = canStaffTool(user, "traffic", documentId)
+  const canSeeTraffic = canStaffTool(user, "traffic", documentId)
   const health = staffHealthRows(overview)
   const actions: QuickAction[] = [
     {
@@ -127,7 +127,7 @@ export default async function StaffOverviewPage({
             {tUi("traffic")}
           </h2>
           <p className="my-2 text-base" style={{ color: T.ink.dim }}>
-            {trafficCovered
+            {canSeeTraffic
               ? "See traffic reports for your library’s page."
               : "Traffic reports are free for verified staff of this library."}
           </p>
@@ -136,7 +136,7 @@ export default async function StaffOverviewPage({
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            {trafficCovered ? "View traffic" : "About traffic reports"}
+            {canSeeTraffic ? "View traffic" : "About traffic reports"}
             <Icon
               aria-hidden="true"
               icon="mdi:arrow-right"

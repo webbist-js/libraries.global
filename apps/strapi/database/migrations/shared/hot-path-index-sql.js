@@ -209,8 +209,8 @@ const HOT_PATH_INDEXES = [
   // Staff membership and private live records. No record backfill is needed.
   index("library_affiliations", ["ba_user_id"]),
   index("library_affiliations", ["source"]),
-  // Teams (access plugin): a person's seats (session bridge, entitlements),
-  // the invite token lookup, a Team's seat count and the email uniqueness
+  // Teams (access plugin): a person's memberships (session bridge), the
+  // invite token lookup, a Team's member count and the email uniqueness
   // check. `team` is a relation, so its link table carries its own index.
   index("team_members", ["ba_user_id", "status"]),
   index("team_members", ["token_hash"]),

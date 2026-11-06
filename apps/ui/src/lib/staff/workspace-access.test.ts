@@ -32,12 +32,12 @@ const summary: TeamSummary = {
 describe("Staff entry visibility", () => {
   it.each([
     null,
-    { id: "reader", plan: "pro" },
+    { id: "reader", facts: ["apiCustomer"], acceptedContributions: 100 },
     { id: "editor", capabilities: ["docs.directEdit"] },
     { id: "moderator", capabilities: ["moderate.queue"] },
     { id: "claim", claimedLibraryIds: ["lib"] },
   ])(
-    "does not infer staff membership from a plan, application or editorial role: %j",
+    "does not infer staff membership from API Access, recognition, an application or an editorial role: %j",
     (user) => {
       expect(hasStaffWorkspace(user)).toBe(false)
     }

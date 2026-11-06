@@ -193,7 +193,7 @@ describe("standingProgress", () => {
 describe("standingName", () => {
   it("maps unknown values to public", () => {
     expect(standingName("supporter")).toBe("supporter")
-    expect(standingName("pro")).toBe("public")
+    expect(standingName("patron")).toBe("public")
     expect(standingName(undefined)).toBe("public")
   })
 })

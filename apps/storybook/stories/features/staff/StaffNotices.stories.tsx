@@ -207,7 +207,7 @@ export const FullPage: Story = {
                       operatorName: "Example Library Service",
                       homeLibrary: null,
                     }}
-                    teamCovered={false}
+                    canSeeTeam={false}
                   />
                   <Container className="py-8 sm:py-12">
                     <Story />

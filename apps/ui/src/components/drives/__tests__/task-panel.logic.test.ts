@@ -375,7 +375,7 @@ describe("picking the next library", () => {
   })
 })
 
-describe("quota and earned Pro", () => {
+describe("quota", () => {
   it("counts what's waiting and says why sending stops at the limit", () => {
     expect(quotaLine({ pendingCount: 3, pendingLimit: 5 })).toBe(
       "3 of 5 waiting for review"
