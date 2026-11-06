@@ -4,14 +4,14 @@ Libraries Global is free public infrastructure. Only two things are paid: machin
 
 The catalogue is `src/lib/membership-pricing.json`. Static copy, Stripe preparation and the CMS content scripts read amounts from it. A catalogue entry does not enable a purchase.
 
-| Offer | Who | What it gives | Charge |
-| --- | --- | --- | --- |
-| Explorer | Any signed-in account | The former paid browse, comparison, context-layer, alert, notes, history and export tools. 1,000 saved views and 1,000 saved searches, 10,000 export rows per action, 20 exports per rolling day. No Reach. | Free |
-| Contributor | At least 1 accepted contribution | 2 new one-library Reach calculations per rolling 7 days. No service or network Reach. | Free (earned) |
-| Supporter | At least 100 accepted contributions | Recognition only: no tools, quota or authority. | Free (earned) |
-| Verified Staff | Verified affiliation with named libraries | Free staff workspace, editing within scope, embeds, bulk upload, team view and traffic where available. | Free |
-| API Access | Organiser of an API account | Keys, usage dashboard, reference and playground; see below. | £100/month, tax-inclusive base GBP |
-| Sponsor | Organisation funding the service | Acknowledgement with consent, quarterly updates and an annual impact report. No API access unless agreed separately. | Annual agreement; anchors £2,500 / £5,000 / £10,000 |
+| Offer          | Who                                       | What it gives                                                                                                                                                                                               | Charge                                                                                                                                |
+| -------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Explorer       | Any signed-in account                     | The former paid browse, comparison, context-layer, alert, notes, history and export tools. 1,000 saved views and 1,000 saved searches, 10,000 export rows per action, 20 exports per rolling day. No Reach. | Free                                                                                                                                  |
+| Contributor    | At least 1 accepted contribution          | 2 new one-library Reach calculations per rolling 7 days. No service or network Reach.                                                                                                                       | Free (earned)                                                                                                                         |
+| Supporter      | At least 100 accepted contributions       | Recognition only: no tools, quota or authority.                                                                                                                                                             | Free (earned)                                                                                                                         |
+| Verified Staff | Verified affiliation with named libraries | Free staff workspace, editing within scope, embeds, bulk upload, team view and traffic where available.                                                                                                     | Free                                                                                                                                  |
+| API Access     | Organiser of an API account               | Keys, usage dashboard, reference and playground; see below.                                                                                                                                                 | £100/month, tax-inclusive base GBP                                                                                                    |
+| Sponsor        | Organisation funding the service          | Acknowledgement with consent, quarterly updates and an annual impact report. No API access unless agreed separately.                                                                                        | Annual agreement, agreed in conversation. No amount is shown on the site; enquiries open the contact form with the sponsorship topic. |
 
 Earned recognition counts accepted contributions (`acceptedContributions` on the profile), not points; see `packages/access/src/recognition.ts`. Staff tools are capabilities from verified staff claims (`canStaff`), not entitlements. Library-scoped tools apply only to the libraries in the user's own staff claims; organisation membership never unlocks them.
 
@@ -32,13 +32,13 @@ The PostgreSQL ledger is the real-time admission authority; Stripe meters are th
 
 All flags are server environment variables, default `false`, and never bypass authorisation or accounting.
 
-| Flag | Enables |
-| --- | --- |
-| `API_ENABLED` | New API checkout |
-| `API_OVERAGE_ENABLED` | Overage opt-in |
-| `API_SERVICE_READS_ENABLED` | `/api/v1/services` routes |
-| `API_SUBMISSIONS_ENABLED` | `/api/v1/submissions` routes |
-| `API_ANALYSIS_ENABLED` | `/api/v1/analysis` summary and Reach jobs |
+| Flag                        | Enables                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| `API_ENABLED`               | New API checkout                                          |
+| `API_OVERAGE_ENABLED`       | Overage opt-in                                            |
+| `API_SERVICE_READS_ENABLED` | `/api/v1/services` routes                                 |
+| `API_SUBMISSIONS_ENABLED`   | `/api/v1/submissions` routes                              |
+| `API_ANALYSIS_ENABLED`      | `/api/v1/analysis` summary and Reach jobs                 |
 | `API_NETWORK_REACH_ENABLED` | Network-mode Reach, in addition to `API_ANALYSIS_ENABLED` |
 
 ## Beta reset
