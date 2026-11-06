@@ -3,14 +3,10 @@ import type { Metadata } from "next"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
-import { FreePlansCard } from "@/app/[locale]/(dashboard)/contribute/_components/membership/FreePlansCard"
-import { LibraryStaffSection } from "@/app/[locale]/(dashboard)/contribute/_components/membership/LibraryStaffSection"
-import { MembershipPlans } from "@/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPlans"
 import { MembershipPolicies } from "@/app/[locale]/(dashboard)/contribute/_components/membership/MembershipPolicies"
+import { OfferCards } from "@/app/[locale]/(dashboard)/contribute/_components/membership/OfferCards"
 import { PlanCompareTable } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanCompareTable"
-import { MembershipRecognition } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlanStatusBanner"
-import { ProFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/ProFaq"
-import { ProFreeRoutes } from "@/app/[locale]/(dashboard)/contribute/_components/membership/ProFreeRoutes"
+import { PlansFaq } from "@/app/[locale]/(dashboard)/contribute/_components/membership/PlansFaq"
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
 import { InformationPage } from "@/components/dashboard/InformationPage"
@@ -18,17 +14,12 @@ import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import { PlansAccountStrip } from "@/components/membership/PlansAccountStrip"
-import {
-  activeTeamOf,
-  sessionTeamsOf,
-  staffLibrariesOf,
-} from "@/lib/access-server"
-import { authDbPool } from "@/lib/auth"
-import { billingConfig } from "@/lib/billing/config"
-import { hasManagedMembership } from "@/lib/billing/current-membership"
+import { hasFact, staffLibrariesOf } from "@/lib/access-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
 import { T } from "@/lib/design-tokens"
+import type { CompareColumn } from "@/lib/plan-compare"
+import { heldOffers, offerValues, type OfferViewer } from "@/lib/plans"
 import { fetchRoadmap } from "@/lib/roadmap-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -49,7 +40,7 @@ export async function generateMetadata({
     title: (await getUiTranslations({ locale, namespace: "membershipPage" }))(
       "plansTitle"
     ),
-    description: m("metaDescription"),
+    description: m("metaDescription", offerValues(locale)),
     path: "plans",
     locale,
   })
@@ -66,7 +57,6 @@ export default async function PlansPage({
     locale,
     namespace: "membershipContent.copy",
   })
-  const ui = await getUiTranslations({ locale, namespace: "ui" })
   const PROMISES = [m("promiseAds"), m("promiseTrust"), m("promiseData")]
 
   // Rows for unbuilt features link to their Roadmap item while it's listed.
@@ -75,24 +65,27 @@ export default async function PlansPage({
 
   const session = await getContributionSession()
   const user = session?.user
-  // A signed-in session missing its plan counts as free (missing means deny).
-  const currentPlan = user ? (user.plan ?? "free") : "public"
-  // Staff of at least one library go to the staff area; anyone else to the
-  // claim flow (signed out, the claim page asks them to sign in).
-  const isStaff = staffLibrariesOf(user).length > 0
-  const activeTeam = activeTeamOf(user)
-  const hasPaidMembership =
-    user && billingConfig().configured
-      ? await hasManagedMembership(authDbPool, user.id)
-      : false
+  const viewer: OfferViewer = {
+    signedIn: Boolean(user),
+    standing: user ? String(user.standing ?? "explorer") : "public",
+    // Staff of at least one library go to the staff area; anyone else to the
+    // claim flow (signed out, the claim page asks them to sign in).
+    isStaff: staffLibrariesOf(user).length > 0,
+    hasApi: hasFact(user, "apiCustomer"),
+  }
+  const held = heldOffers(viewer)
+  const heldColumns: CompareColumn[] = user
+    ? (["explorer", "contributor", "staff", "api"] as const).filter((key) =>
+        held.has(key)
+      )
+    : ["public"]
 
   return (
     <InformationPage
       title={t("plansTitle")}
       className="dashboard-plans-page"
       links={[
-        { href: "#free-plans", label: ui("free_for_everyone") },
-        { href: "#membership-options", label: ui("choose_your_membership") },
+        { href: "#offers", label: t("offersNav") },
         { href: "#plan-comparison", label: t("comparePlans") },
         { href: "#plan-questions", label: t("questionsPoliciesNav") },
       ]}
@@ -143,51 +136,23 @@ export default async function PlansPage({
           <Container className="plans-sections">
             {user ? (
               <PlansAccountStrip
-                plan={user.plan ?? "free"}
-                source={user.planSource}
-                team={activeTeam}
+                standing={viewer.standing}
+                acceptedContributions={
+                  Number.isSafeInteger(user.acceptedContributions)
+                    ? Number(user.acceptedContributions)
+                    : 0
+                }
+                recentlyActive={user.recentlyActive === true}
               />
             ) : null}
-            <section id="free-plans">
-              <FreePlansCard signedIn={Boolean(user)} />
+            <section id="offers" className="scroll-mt-24">
+              <OfferCards viewer={viewer} />
             </section>
-            <LibraryStaffSection isStaff={isStaff} compact />
-            <div id="membership-options" className="flex flex-col gap-5">
-              <MembershipPlans
-                teams={sessionTeamsOf(user)}
-                currentPlan={currentPlan}
-                billingAvailable={billingConfig().enabled}
-                supporterApproved={billingConfig().supporterApproved}
-                checkoutUser={
-                  user
-                    ? {
-                        email: user.email,
-                        verified: user.emailVerified,
-                        hasPaidMembership,
-                        complimentaryPro:
-                          ["pro", "team"].includes(user.plan ?? "") &&
-                          user.planSource !== "paid",
-                      }
-                    : null
-                }
-              />
-            </div>
             <section id="plan-comparison">
-              <PlanCompareTable
-                currentPlan={currentPlan}
-                roadmapKeys={roadmapKeys}
-              />
+              <PlanCompareTable held={heldColumns} roadmapKeys={roadmapKeys} />
             </section>
-            <div className="flex flex-col gap-6">
-              <ProFreeRoutes />
-              {currentPlan !== "supporter" &&
-              currentPlan !== "pro" &&
-              currentPlan !== "team" ? (
-                <MembershipRecognition />
-              ) : null}
-            </div>
             <section id="plan-questions" className="space-y-8">
-              <ProFaq />
+              <PlansFaq />
               <MembershipPolicies />
             </section>
           </Container>

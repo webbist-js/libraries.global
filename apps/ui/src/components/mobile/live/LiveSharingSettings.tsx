@@ -32,7 +32,7 @@ export function LiveSharingSettings({
 }: {
   readonly initial: LiveSettingsResponse
   readonly owner: boolean
-  /** The library is covered by a Team: per-person switches apply. */
+  /** The library is in a team workspace: per-person switches apply. */
   readonly team: boolean
   readonly members: StaffTeam
   readonly onNote: (note: { tone: "ok" | "danger"; text: string }) => void
@@ -186,8 +186,8 @@ export function LiveSharingSettings({
                 className="mt-0.5 shrink-0"
               />
               <span>
-                With the Team plan, owners choose who can go live, person by
-                person.{" "}
+                In a free team workspace, owners choose who can go live, person
+                by person.{" "}
                 <Link
                   href={staffHref("/team")}
                   className="font-semibold underline underline-offset-[3px]"

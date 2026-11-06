@@ -1,13 +1,8 @@
-import { authDbPool } from "@/lib/auth"
-import { apiSearch, serveTeamApi } from "@/lib/team-api/gateway"
+import { apiSearch, withApiRequest } from "@/lib/team-api/gateway"
 
 export const runtime = "nodejs"
-export async function POST(request: Request) {
-  return serveTeamApi(
-    authDbPool,
-    request,
-    "search:read",
-    "search.libraries",
-    (maximum) => apiSearch(request, maximum)
-  )
-}
+
+export const POST = withApiRequest(
+  { scope: "search:read", endpoint: "search.libraries" },
+  ({ request, maximum }) => apiSearch(request, maximum)
+)

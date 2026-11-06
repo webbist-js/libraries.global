@@ -229,7 +229,7 @@ describe("TeamManager with Team cover", () => {
     expect(
       staffCard?.contains(screen.getByRole("button", { name: "Send invite" }))
     ).toBe(true)
-    // Invitees are listed under the staff, with the seat they hold.
+    // Invitees are listed under the staff, with how long the invite stays open.
     const invitees = screen.getByRole("list", {
       name: "Invited, not yet accepted",
     })
@@ -238,7 +238,7 @@ describe("TeamManager with Team cover", () => {
       .closest("li") as HTMLElement
     expect(invitees.contains(invitee)).toBe(true)
     expect(invitee.textContent).toContain(
-      "Editor · holds a seat until 20 Oct 2026"
+      "Editor · invite open until 20 Oct 2026"
     )
     expect(invitee.textContent).toContain("Invited")
     expect(

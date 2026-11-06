@@ -3,23 +3,38 @@ import { MembershipDashboard } from "@/components/membership/MembershipDashboard
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
 import { readerSession } from "../../../.storybook/FixtureSession"
-import { membershipResponses } from "../../fixtures/workspace/membership"
 
 const meta = {
   title: "Features/Membership/MembershipDashboard",
   component: MembershipDashboard,
   args: {
-    plan: "pro",
-    source: "paid",
-    teams: [],
-    asOf: Date.parse("2026-01-15T12:00:00Z"),
-    staffCount: 1,
+    acceptedContributions: 37,
+    recentlyActive: true,
+    staffLibraries: [
+      {
+        id: "example-library",
+        name: "Northbridge Library",
+        slug: "northbridge",
+        libraryType: "Public",
+        role: "owner",
+        canGoLive: true,
+      },
+    ],
+    teams: [
+      {
+        id: "example-team",
+        name: "Northbridge Libraries",
+        slug: "northbridge-libraries",
+        role: "organiser",
+        libraryCount: 4,
+      },
+    ],
+    apiAccounts: [{ teamId: "example-team", role: "organiser", active: true }],
     recognition: { listed: true, badgeVisible: true, visibility: "public" },
     embedded: true,
   },
   parameters: {
     fixtureSession: readerSession,
-    fixtureResponses: membershipResponses,
     docs: { story: { inline: false, height: "1100px" } },
   },
   decorators: [
@@ -34,4 +49,18 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
+export const Contributor: Story = {}
+
+export const Explorer: Story = {
+  args: {
+    acceptedContributions: 0,
+    recentlyActive: false,
+    staffLibraries: [],
+    teams: [],
+    apiAccounts: [],
+  },
+}
+
+export const Supporter: Story = {
+  args: { acceptedContributions: 142 },
+}

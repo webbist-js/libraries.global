@@ -327,38 +327,26 @@ export function installGoogleAnalytics(
 
     return true
   }
-  const checkoutRouteAllowed = (name: string) => {
-    const path = analyticsPathKey(browser.location.pathname)
-
-    return name === "pricing_action"
-      ? path === "/plans"
-      : [
-          "/plans",
-          "/staff/teams/new",
-          "/staff/teams/billing",
-          "/developers",
-          "/developers/keys",
-          "/developers/usage",
-          "/staff/teams/api",
-          "/contribute/membership/checkout",
-        ].includes(path)
-  }
-  const checkoutConsent = (name: string) =>
+  const checkoutRouteAllowed = () =>
+    ["/plans", "/developers", "/developers/keys", "/developers/usage"].includes(
+      analyticsPathKey(browser.location.pathname)
+    )
+  const checkoutConsent = () =>
     workspaceEnabled &&
     checkoutEnabled &&
     granted &&
     browser.location.origin === ANALYTICS_ORIGIN &&
-    checkoutRouteAllowed(name)
+    checkoutRouteAllowed()
   const trackCheckout = (name: string, parameters: unknown) => {
     const clean = sanitizeCheckoutEvent(name, parameters)
-    if (!clean || !checkoutConsent(name)) return false
+    if (!clean || !checkoutConsent()) return false
     const path = browser.location.pathname
     const locale = path.match(LOCALE_PREFIX)?.[0].slice(1) ?? "en"
     // Private URLs, titles, referrers and IDs never enter the checkout channel.
     const context = {
-      page_location: `${ANALYTICS_ORIGIN}${locale === "en" ? "" : `/${locale}`}/${name === "pricing_action" ? "plans" : "checkout"}`,
-      page_title: name === "pricing_action" ? "membership" : "checkout",
-      page_type: name === "pricing_action" ? "membership" : "checkout",
+      page_location: `${ANALYTICS_ORIGIN}${locale === "en" ? "" : `/${locale}`}/checkout`,
+      page_title: "checkout",
+      page_type: "checkout",
       page_referrer: "",
       content_locale: locale,
     }
@@ -434,7 +422,7 @@ export function installGoogleAnalytics(
     trackCheckout,
     prepareCheckout: (name, parameters) => {
       const clean = sanitizeCheckoutEvent(name, parameters)
-      if (!clean || !checkoutConsent(name)) return () => false
+      if (!clean || !checkoutConsent()) return () => false
       const epoch = generation
       const path = browser.location.pathname
       let completed = false
@@ -444,7 +432,7 @@ export function installGoogleAnalytics(
           completed ||
           epoch !== generation ||
           path !== browser.location.pathname ||
-          !checkoutConsent(name)
+          !checkoutConsent()
         )
           return false
         completed = true

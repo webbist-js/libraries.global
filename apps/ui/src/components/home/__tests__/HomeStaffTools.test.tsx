@@ -40,7 +40,9 @@ describe("homepage staff tool discovery", () => {
     expect(
       screen.getByText("Maintain hours, services and accessibility")
     ).toBeTruthy()
-    expect(screen.getByRole("link", { name: "Explore Teams" })).toBeTruthy()
+    expect(
+      screen.getByRole("link", { name: "How verified staff access works" })
+    ).toBeTruthy()
     expect(
       screen
         .getByRole("link", { name: "Explore staff area" })
@@ -64,7 +66,9 @@ describe("homepage staff tool discovery", () => {
       fireEvent.click(link)
       // Staff workflow links were never navigation-conversion events.
       expect(track).not.toHaveBeenCalled()
-      fireEvent.click(screen.getByRole("link", { name: "Explore Teams" }))
+      fireEvent.click(
+        screen.getByRole("link", { name: "How verified staff access works" })
+      )
       expect(track).toHaveBeenCalledTimes(1)
       expect(JSON.stringify(track.mock.calls)).not.toContain("private-user")
     } finally {

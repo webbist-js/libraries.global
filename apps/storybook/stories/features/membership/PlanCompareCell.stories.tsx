@@ -14,5 +14,5 @@ export const Default: Story = {}
 export const Soon: Story = { args: { cell: "soon" } }
 export const Excluded: Story = { args: { cell: "no" } }
 export const ExportAllowance: Story = {
-  args: { cell: "yes", label: "1,000 rows", isExport: true },
+  args: { cell: "yes", label: "10,000 rows" },
 }

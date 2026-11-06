@@ -19,8 +19,8 @@ export function TeamMembershipConflict() {
         >
           <p>
             Each account now belongs to one Team. Contact us to choose which
-            membership to keep. We’ll check billing and Library assignments
-            before changing your access.
+            membership to keep. We’ll check your library assignments before
+            changing anything.
           </p>
           <Link
             href="/contact"

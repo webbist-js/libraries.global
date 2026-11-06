@@ -1,4 +1,8 @@
-/** Production editorial workflow. Never enables a transport or changes permissions. */
+/**
+ * Production editorial workflow. Never enables a transport or changes permissions.
+ * The plans guides and "exporting-from-the-atlas" belong to
+ * update-sponsored-access-content.mjs; this helper does not write them.
+ */
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs"
@@ -9,26 +13,10 @@ import {
   atlasKnowledgeArticles,
   atlasJournal,
   atlasExploringBody,
-  atlasExportBody,
   atlasRich,
-  reachAllowanceCopy,
 } from "./atlas-knowledge-content.mjs"
 
 const KNOWLEDGE_MODEL = "wiki-article"
-function replaceText(value, before, after) {
-  if (Array.isArray(value))
-    return value.map((child) => replaceText(child, before, after))
-  if (value && typeof value === "object")
-    return Object.fromEntries(
-      Object.entries(value).map(([key, child]) => [
-        key,
-        replaceText(child, before, after),
-      ])
-    )
-
-  return typeof value === "string" ? value.replace(before, after) : value
-}
-
 const args = new Set(process.argv.slice(2))
 const stage = args.has("--stage")
 const publish = args.has("--publish-staged")
@@ -226,33 +214,11 @@ const specs = atlasKnowledgeArticles(section.documentId, stage).map((data) => ({
   model: KNOWLEDGE_MODEL,
   data,
 }))
-if (!stage) {
-  for (const slug of ["plans-and-pro", "teams-for-library-services"]) {
-    const existing = guides.find((d) => d.slug === slug)
-    assert.ok(existing)
-    const body = replaceText(
-      clean(existing.body),
-      "once Reach ships; it is not offered before those tools are available.",
-      "when that separate offer is introduced; it is not currently offered. Shipping Reach does not change an existing subscription price."
-    ).filter((c) => !JSON.stringify(c).includes("Delivered Atlas tools"))
-    body.push(
-      atlasRich(
-        "## Delivered Atlas tools\n\nPro includes UK walking and cycling Reach, Library access and two-area population comparisons, deprivation and households without a car where the required datasets are installed. Population density is available with a free account. Transit, service benchmarking, shared analysis workspaces and traffic reports remain planned. Country library imports do not install local routing or population packs."
-      )
-    )
-    specs.push({ model: KNOWLEDGE_MODEL, data: { slug, body } })
-  }
-  specs.push(
-    {
-      model: KNOWLEDGE_MODEL,
-      data: { slug: "exploring-the-atlas", body: atlasExploringBody },
-    },
-    {
-      model: KNOWLEDGE_MODEL,
-      data: { slug: "exporting-from-the-atlas", body: atlasExportBody },
-    }
-  )
-}
+if (!stage)
+  specs.push({
+    model: KNOWLEDGE_MODEL,
+    data: { slug: "exploring-the-atlas", body: atlasExploringBody },
+  })
 const reference = stories.find(
   (d) => d.slug === "uk-public-libraries-from-libraryon"
 )
@@ -339,19 +305,6 @@ if (media.length === 2) {
   })
 }
 specs.push({ model: "blog-article", data: journal })
-if (stage) {
-  for (const slug of ["plans-and-pro", "teams-for-library-services"]) {
-    const existing = guides.find((d) => d.slug === slug)
-    assert.ok(existing)
-    const body = clean(existing.body).filter(
-      (c) => !JSON.stringify(c).includes("Atlas calculation capacity")
-    )
-    body.push(
-      atlasRich("## Atlas calculation capacity\n\n" + reachAllowanceCopy(true))
-    )
-    specs.push({ model: KNOWLEDGE_MODEL, data: { slug, body } })
-  }
-}
 const planned = []
 for (const spec of specs) {
   const rows = spec.model === KNOWLEDGE_MODEL ? guides : stories
@@ -464,12 +417,7 @@ for (const spec of planned) {
 if (current)
   for (const [locale, copy] of Object.entries(atlasLocalizedCorrections)) {
     const rows = await catalogue(KNOWLEDGE_MODEL, locale)
-    for (const slug of [
-      "plans-and-pro",
-      "teams-for-library-services",
-      "exploring-the-atlas",
-      "exporting-from-the-atlas",
-    ]) {
+    for (const slug of ["exploring-the-atlas"]) {
       const listed = rows.find((d) => d.slug === slug)
       assert.ok(listed, `Missing translated guide: ${locale}/${slug}`)
       assert.equal(
@@ -483,23 +431,7 @@ if (current)
         "draft",
         locale
       )
-      const body =
-        slug === "exploring-the-atlas"
-          ? [atlasRich(copy.exploring)]
-          : slug === "exporting-from-the-atlas"
-            ? [atlasRich(copy.exporting)]
-            : [
-                ...replaceText(
-                  clean(before.body),
-                  copy.priceOld,
-                  copy.priceNew
-                ).filter(
-                  (c) => !JSON.stringify(c).includes(copy.deliveredHeading)
-                ),
-                atlasRich(
-                  "## " + copy.deliveredHeading + "\n\n" + copy.delivered
-                ),
-              ]
+      const body = [atlasRich(copy.exploring)]
       if (isDeepStrictEqual(clean(before.body), clean(body))) continue
       const data = { slug, title: before.title, body }
       save(`${locale}-${slug}-before.json`, before)

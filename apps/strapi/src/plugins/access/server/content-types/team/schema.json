@@ -5,7 +5,7 @@
     "singularName": "team",
     "pluralName": "teams",
     "displayName": "Team",
-    "description": "A Team organisation: a library service's organiser and members. Active membership gives Pro personally and Team features on the Team's libraries only. Edited from the access plugin's Teams page."
+    "description": "A Team organisation: a free workspace and API account container with organisers and members. Membership never grants library editing, staff tools or paid access; staff tools come from verified staff claims. Edited from the access plugin's Teams page."
   },
   "options": {
     "draftAndPublish": false
@@ -24,34 +24,6 @@
       "unique": true,
       "private": true
     },
-    "billingMode": {
-      "type": "enumeration",
-      "enum": ["sandbox", "live"],
-      "private": true
-    },
-    "billingRevision": {
-      "type": "integer",
-      "default": 0,
-      "private": true
-    },
-    "billingMembership": {
-      "type": "json",
-      "private": true
-    },
-    "billingSuspended": {
-      "type": "boolean",
-      "default": false,
-      "private": true
-    },
-    "billingArchived": {
-      "type": "boolean",
-      "default": false,
-      "private": true
-    },
-    "pendingSeats": {
-      "type": "integer",
-      "min": 1
-    },
     "publicServiceApproved": {
       "type": "boolean",
       "default": false
@@ -64,25 +36,12 @@
       "type": "uid",
       "targetField": "name"
     },
-    "seats": {
-      "type": "integer",
-      "default": 5,
-      "min": 1
-    },
     "status": {
       "type": "enumeration",
       "enum": ["active", "lapsed"],
       "default": "active"
     },
-    "source": {
-      "type": "enumeration",
-      "enum": ["admin", "checkout"],
-      "default": "admin"
-    },
     "verifiedAt": {
-      "type": "datetime"
-    },
-    "expiresAt": {
       "type": "datetime"
     },
     "notes": {

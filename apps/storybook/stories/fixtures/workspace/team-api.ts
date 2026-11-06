@@ -16,8 +16,6 @@ const team = {
   slug: "example-library-team",
   role: "organiser",
   libraryCount: 3,
-  status: "active",
-  expiresAt: null,
 } as const
 
 export const apiOrganiserSession = {
@@ -50,6 +48,8 @@ export const guestApiAccess = {
   signedIn: false,
   scope: "guest",
   data: null,
+  prospect: null,
+  accountName: "",
   unavailable: false,
   conflict: false,
   showUsageWarning: true,

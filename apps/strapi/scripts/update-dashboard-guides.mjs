@@ -4,8 +4,8 @@ import { createHash } from "node:crypto"
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs"
 import { isDeepStrictEqual, parseEnv } from "node:util"
 
+import { stripComponentIds } from "./cms-component-ids.mjs"
 import { dashboardGuideBody } from "./dashboard-guide-content.mjs"
-import { stripComponentIds } from "./team-pricing-content.mjs"
 
 const args = new Set(process.argv.slice(2))
 const stage = args.has("--stage")

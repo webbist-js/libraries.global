@@ -107,15 +107,28 @@ describe("staff access", () => {
       fromSessionCapabilities({ claimedLibraryIds: ["library1"] }).staff.size
     ).toBe(0)
   })
-  it("keeps traffic and team management Team-only", () => {
-    for (const plan of ["pro", "team"] as const) {
-      const e = resolveEntitlements({
-        signedIn: true,
-        now: new Date(),
-        grants: [{ plan, expiresAt: null }],
-      })
-      expect(e.features.has("library.team")).toBe(plan === "team")
-      expect(e.features.has("library.traffic")).toBe(plan === "team")
+  it("gives staff tools from verified claims, never from payment or recognition", () => {
+    const e = resolveEntitlements({
+      signedIn: true,
+      now: new Date(),
+      acceptedContributions: 500,
+      apiAccounts: [{ role: "organiser", paidThrough: "2999-01-01T00:00:00Z" }],
+    })
+    expect([...e.features]).not.toContain("library.team")
+    const c = resolveCapabilities({
+      signedIn: true,
+      grants: [],
+      claims: [
+        {
+          libraryDocumentId: "library1",
+          staffRole: "editor",
+          canGoLive: false,
+        },
+      ],
+    })
+    for (const action of ["embed", "bulkUpload", "traffic"] as const) {
+      expect(canStaff(c, action, "library1")).toBe(true)
+      expect(canStaff(c, action, "library2")).toBe(false)
     }
   })
 })

@@ -1,74 +1,96 @@
 import "server-only"
 
-import { BillingError, billingConfig } from "@/lib/billing/config"
+import { billingConfig } from "@/lib/billing/config"
 
-import type { ApiLimits, ApiMembership } from "./types"
+import {
+  API_INCLUDED,
+  API_OFFER_VERSION,
+  API_RATES,
+  API_TERMS_VERSION,
+} from "./constants"
+import { membershipCovered } from "./period"
+import type {
+  ApiDimension,
+  ApiLimits,
+  ApiMembership,
+  ApiOffer,
+  ApiOverageRates,
+} from "./types"
 
-export { API_TERMS_VERSION } from "./constants"
+export { API_TERMS_VERSION, API_OVERAGE_TERMS_VERSION } from "./constants"
 
-function integer(value: string | undefined, fallback: number, maximum: number) {
-  if (!value) return fallback
-  const n = Number(value)
-  if (!Number.isSafeInteger(n) || n < 1 || n > maximum)
-    throw new BillingError("api_configuration_invalid")
-
-  return n
+/** The £100 offer's limits. Saved with each purchase; never read back from env. */
+export const API_OFFER_LIMITS: ApiLimits = {
+  requests: API_INCLUDED.requests,
+  bytes: API_INCLUDED.bytes,
+  analysisCredits: API_INCLUDED.analysisCredits,
+  perMinute: 30,
+  concurrency: 2,
+  responseBytes: 131_072,
+  pageSize: 50,
+  keys: null,
 }
+export const API_OFFER_RATES: ApiOverageRates = { ...API_RATES }
+
+/** Stripe Billing Meter event names, created by `api:setup`. */
+export const API_METER_EVENTS: Record<ApiDimension, string> = {
+  requests: "lg_api_overage_requests",
+  bytes: "lg_api_overage_kib",
+  credits: "lg_api_overage_credits",
+}
+
+const flag = (name: string) => process.env[name] === "true"
 
 export function apiConfig() {
   const billing = billingConfig()
-  const limits: ApiLimits = {
-    requests: integer(
-      process.env.TEAM_API_MONTHLY_REQUESTS,
-      100_000,
-      10_000_000
-    ),
-    bytes: integer(
-      process.env.TEAM_API_MONTHLY_BYTES,
-      10 * 1024 ** 3,
-      1024 ** 4
-    ),
-    perMinute: integer(process.env.TEAM_API_REQUESTS_PER_MINUTE, 60, 10_000),
-    concurrency: integer(process.env.TEAM_API_CONCURRENCY, 5, 100),
-    keys: null,
-    responseBytes: integer(
-      process.env.TEAM_API_RESPONSE_BYTES,
-      256 * 1024,
-      1024 * 1024
-    ),
+  const overagePrices: Partial<Record<ApiDimension, string>> = {}
+  for (const [dimension, name] of [
+    ["requests", "STRIPE_PRICE_API_OVERAGE_REQUESTS"],
+    ["bytes", "STRIPE_PRICE_API_OVERAGE_BYTES"],
+    ["credits", "STRIPE_PRICE_API_OVERAGE_CREDITS"],
+  ] as const) {
+    const id = process.env[name]
+    if (id?.startsWith("price_")) overagePrices[dimension] = id
   }
+  const priceId = process.env.STRIPE_PRICE_API_MONTHLY
 
   return {
-    limits,
-    priceId: process.env.STRIPE_PRICE_TEAM_API_MONTHLY,
-    portalId: process.env.STRIPE_PORTAL_CONFIGURATION_TEAM_API,
+    limits: API_OFFER_LIMITS,
+    rates: API_OFFER_RATES,
+    priceId,
+    overagePrices,
+    portalId: process.env.STRIPE_PORTAL_CONFIGURATION_API,
+    /** `API_ENABLED` gates new checkout only; renewals and recovery continue. */
     purchasing:
-      process.env.TEAM_API_ENABLED === "true" &&
+      flag("API_ENABLED") &&
       billing.configured &&
-      process.env.STRIPE_MANAGED_PAYMENTS_ENABLED === "true" &&
-      Boolean(process.env.STRIPE_PRICE_TEAM_API_MONTHLY),
+      flag("STRIPE_MANAGED_PAYMENTS_ENABLED") &&
+      Boolean(priceId?.startsWith("price_")),
+    /** `API_OVERAGE_ENABLED` gates new opt-ins; never bypasses the cap. */
+    overage: flag("API_OVERAGE_ENABLED") && billing.configured,
     mode: billing.mode,
     origin: billing.origin,
+  }
+}
+
+/** The snapshot recorded with a new checkout attempt. */
+export function apiOffer(priceId: string): ApiOffer {
+  const config = apiConfig()
+
+  return {
+    offerVersion: API_OFFER_VERSION,
+    priceId,
+    taxBehavior: "inclusive",
+    limits: { ...config.limits },
+    overageRates: { ...config.rates },
+    overagePrices: { ...config.overagePrices },
+    consentVersion: API_TERMS_VERSION,
   }
 }
 
 export function apiAccessActive(
   membership: ApiMembership | null,
   now = new Date()
-) {
-  return Boolean(
-    membership &&
-    membership.mode === apiConfig().mode &&
-    !membership.revoked &&
-    membership.paidThrough &&
-    Date.parse(membership.paidThrough) > now.getTime() &&
-    ["active", "past_due", "canceled"].includes(membership.status)
-  )
-}
-
-export function apiMonth(now = new Date()) {
-  return {
-    start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
-    end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)),
-  }
+): membership is ApiMembership {
+  return membershipCovered(membership, apiConfig().mode, now)
 }

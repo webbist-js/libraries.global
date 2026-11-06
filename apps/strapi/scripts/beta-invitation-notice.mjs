@@ -4,7 +4,7 @@ export function betaInvitationNotice(document) {
   const replacements = [
     [
       "Entering the shared beta password",
-      "Redeeming an individual invitation remembers access in this browser for up to 30 days. Invitations can be used once and expire after seven days. This does not sign you in, create an account, grant staff permissions or buy a membership. Creating an account is a separate step under the standard site terms, including the requirement to be 18 or over.",
+      "Redeeming an individual invitation remembers access in this browser for up to 30 days. Invitations can be used once and expire after seven days. This does not sign you in, create an account, grant staff permissions or buy API access. Creating an account is a separate step under the standard site terms, including the requirement to be 18 or over.",
     ],
     [
       "If you request beta access, we store",

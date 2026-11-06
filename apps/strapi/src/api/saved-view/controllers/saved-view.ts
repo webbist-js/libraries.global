@@ -62,7 +62,7 @@ export default factories.createCoreController(UID, ({ strapi }) => {
       ctx.body = { data: (results as SavedViewRow[]).map(toPublic) }
     },
 
-    // POST /api/saved-views { kind, name, query }, within the plan's limit.
+    // POST /api/saved-views { kind, name, query }, within the account's limit.
     async create(ctx) {
       const baUserId = bridgeUserId(ctx)
       if (!baUserId) return ctx.unauthorized()

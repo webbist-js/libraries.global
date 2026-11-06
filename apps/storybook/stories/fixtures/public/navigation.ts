@@ -24,7 +24,7 @@ export const navigationMenu: ContributeMenu = {
   }),
   status: "signedIn",
   acceptedCount: 24,
-  plan: "free",
+  plan: "explorer",
   library: { options: [], selectedId: null, select: () => {} },
 }
 export const visitorMenu: ContributeMenu = {

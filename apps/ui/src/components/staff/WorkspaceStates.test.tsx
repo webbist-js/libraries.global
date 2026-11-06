@@ -63,7 +63,7 @@ const library: StaffWorkspaceRecord = {
   libraryType: "Public",
   role: "owner",
   canGoLive: false,
-  teamCovered: false,
+  canSeeTeam: false,
   suggestions: 2,
 }
 function ChildRecord({ record = library }: { record?: StaffWorkspaceRecord }) {
@@ -152,12 +152,12 @@ describe("Staff record navigation", () => {
     ).toContain("2")
     expect(
       within(nav).getByRole("link", { name: /Traffic/ }).textContent
-    ).toContain("Team")
+    ).toContain("Verified staff")
     expect(within(nav).queryByRole("link", { name: "Go live" })).toBeNull()
   })
-  it("shows mobile-only controls and removes plan locks for a covered library", () => {
+  it("shows mobile-only controls and removes the staff locks for the viewer's own claim", () => {
     state.path = "/staff/central-library/live"
-    render(staff({ ...library, libraryType: "Mobile", teamCovered: true }))
+    render(staff({ ...library, libraryType: "Mobile", canSeeTeam: true }))
     const nav = screen.getByRole("navigation", { name: "Staff area" })
     expect(
       within(nav)

@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
@@ -9,37 +10,13 @@ import { WorkspaceNavigation } from "@/components/dashboard/WorkspaceNavigation"
 import { Container } from "@/components/elementary/Container"
 import { TeamNameContext } from "@/components/staff/TeamNameContext"
 
+/** Section icons; labels, titles and leads are `developersWorkspace.sections.<id>`. */
 export const API_SECTIONS = {
-  overview: {
-    label: "Overview",
-    title: "Build with library data",
-    lead: "Search and retrieve published public Library records. Explore the docs, try a request, then connect your application with the Team API add-on.",
-    icon: "mdi:code-tags",
-  },
-  keys: {
-    label: "API keys",
-    title: "API keys",
-    lead: "Manage credentials for your Team. Each key shares your Team’s request and response-data allowance.",
-    icon: "mdi:key-outline",
-  },
-  usage: {
-    label: "Usage",
-    title: "Usage",
-    lead: "Track requests and response data across your Team’s keys. Allowances reset each calendar month.",
-    icon: "mdi:chart-line",
-  },
-  reference: {
-    label: "Request reference",
-    title: "Request reference",
-    lead: "Three endpoints for published public Library data. Keep the source credits and licences that travel with each record.",
-    icon: "mdi:book-open-outline",
-  },
-  playground: {
-    label: "Playground",
-    title: "Playground",
-    lead: "Make real API requests using your Team’s API key. Successful requests and response data count toward your Team’s shared monthly allowance.",
-    icon: "mdi:play-outline",
-  },
+  overview: { icon: "mdi:code-tags" },
+  keys: { icon: "mdi:key-outline" },
+  usage: { icon: "mdi:chart-line" },
+  reference: { icon: "mdi:book-open-outline" },
+  playground: { icon: "mdi:play-outline" },
 } as const
 export type ApiSection = keyof typeof API_SECTIONS
 export const apiSectionHref = (section: ApiSection) =>
@@ -56,7 +33,8 @@ export function ApiWorkspace({
   readonly teamName?: string
   readonly children: ReactNode
 }) {
-  const current = API_SECTIONS[section]
+  const t = useTranslations("developersWorkspace")
+  const label = (id: ApiSection) => t(`sections.${id}.label`)
   const tabs = (
     Object.entries(API_SECTIONS) as [
       ApiSection,
@@ -66,7 +44,7 @@ export function ApiWorkspace({
     .filter(([id]) => team || !["keys", "usage"].includes(id))
     .map(([id, item]) => ({
       id,
-      label: item.label,
+      label: label(id),
       icon: item.icon,
       href: apiSectionHref(id),
     }))
@@ -79,59 +57,58 @@ export function ApiWorkspace({
         <RecordContextIdentity
           title="API"
           eyebrow="Libraries Global"
-          parent={{
-            href: team ? "/staff/teams" : "/",
-            label: team ? "Your Team" : "Home",
-          }}
+          parent={{ href: "/", label: t("home") }}
         />
       }
       navigation={
         <WorkspaceNavigation
           tabs={tabs}
           activeId={section}
-          label="API navigation"
+          label={t("navigation")}
         />
       }
       navigationFooter={
         <DashboardSidebarCta
-          title="Sources travel with the data."
-          body="Read published public fields with source credits and licences."
+          title={t("sidebarTitle")}
+          body={t("sidebarBody")}
           action={{
             href: "/knowledge/data-api/team-api-quickstart",
-            label: "First-request guide",
+            label: t("quickstart"),
           }}
           secondary={
             team
-              ? { href: "/staff/teams", label: "Back to your Team" }
-              : { href: "/plans#plan-team", label: "Explore Teams + API" }
+              ? { href: "/staff/teams", label: t("organisation") }
+              : { href: "/plans#offer-api", label: t("comparePlans") }
           }
         />
       }
       toolbar={
         <RecordToolbar
           items={[
-            { label: "Home", href: "/" },
+            { label: t("home"), href: "/" },
             {
               label: "API",
               href: section === "overview" ? undefined : "/developers",
             },
-            ...(section === "overview" ? [] : [{ label: current.label }]),
+            ...(section === "overview" ? [] : [{ label: label(section) }]),
           ]}
         />
       }
       overview={
         <div className="workspace-page-content">
           <WorkspacePageHeader
-            title={
-              team && section === "overview" ? "API overview" : current.title
-            }
+            title={t(
+              team && section === "overview"
+                ? "accountOverviewTitle"
+                : `sections.${section}.title`
+            )}
             context={teamName ? <TeamNameContext name={teamName} /> : undefined}
             density={section === "playground" ? "task" : "page"}
-            lead={
+            lead={t(
               team && section === "overview"
-                ? "Check your Team’s API add-on, manage keys and try a request."
-                : current.lead
-            }
+                ? "accountOverviewLead"
+                : `sections.${section}.lead`
+            )}
           />
           <Container className="space-y-6 py-8 sm:py-10">{children}</Container>
         </div>

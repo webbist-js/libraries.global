@@ -5,7 +5,7 @@
     "singularName": "team-member",
     "pluralName": "team-members",
     "displayName": "Team Member",
-    "description": "A person's seat on a Team: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
+    "description": "A person's membership of a Team workspace: invited (by email, with a token), active (after accepting) or removed. Unique per team and email, enforced by the teams service under the team's lock."
   },
   "options": {
     "draftAndPublish": false

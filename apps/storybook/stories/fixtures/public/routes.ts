@@ -14,7 +14,6 @@ export const supporterDirectory: SupportersResponse = {
       initials: "MS",
       city: "Northbridge",
       country: "GB",
-      since: "2025-06-01",
     },
     {
       username: "leo",
@@ -22,10 +21,8 @@ export const supporterDirectory: SupportersResponse = {
       initials: "LR",
       city: null,
       country: "FR",
-      since: "2026-01-02",
     },
   ],
-  newThisMonth: [],
   total: 12,
   listed: 2,
   unlisted: 10,

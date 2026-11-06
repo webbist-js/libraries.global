@@ -19,8 +19,7 @@ export const BADGE_CATALOG: BadgeDefinition[] = [
   {
     id: "active_contributor",
     name: "Active Contributor",
-    description:
-      "Earned 5,000 contribution points. Keep contributing to maintain earned Pro.",
+    description: "Earned 5,000 contribution points.",
     rarity: "UNCOMMON",
     icon: "mdi:star-check-outline",
     variant: "aurora",

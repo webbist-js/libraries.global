@@ -21,7 +21,6 @@ import {
   afterStaffCommit,
   notifyStaffChange,
 } from "../../../utils/staff-notifications"
-import { hasLibraryFeature } from "../../../utils/team-access"
 import { removeServiceScopes } from "../../access/server/services/network-fulfilment"
 
 export const AUDIT = "plugin::library-staff.staff-audit"
@@ -92,12 +91,7 @@ export function facilityHealth(
 }
 
 export default ({ strapi }: { strapi: any }) => ({
-  async authorise(
-    user: string,
-    id: string,
-    action: any = "seeTeam",
-    team = false
-  ) {
+  async authorise(user: string, id: string, action: any = "seeTeam") {
     const member = await requireStaffMember(strapi, user, id, action)
     if (!member) {
       const exists = (await listStaff(strapi, id)).some(
@@ -108,11 +102,9 @@ export default ({ strapi }: { strapi: any }) => ({
         exists ? "forbidden" : "not_found"
       )
     }
-    // Team features belong to the library: on only when an active Team of
-    // the caller's covers it (never a personal plan alone).
-    if (team && !(await hasLibraryFeature(strapi, user, "library.team", id)))
-      throw new StaffError(402, "upgrade_required")
 
+    // Staff tools are free capabilities of the caller's own verified claim
+    // (checked above); Team membership or payment never unlocks them.
     return member
   },
   async name(user: string) {
@@ -174,10 +166,11 @@ export default ({ strapi }: { strapi: any }) => ({
    */
   async team(user: string, id: string) {
     await this.authorise(user, id)
-    const [full, team] = await Promise.all([
-      hasLibraryFeature(strapi, user, "library.team", id),
-      strapi.plugin("access")?.service("teams")?.forLibrary(id, user) ?? null,
-    ])
+    // Verified staff of this library (authorised above) see the full view.
+    const full = true
+    const team =
+      (await strapi.plugin("access")?.service("teams")?.forLibrary(id, user)) ??
+      null
     const members = await listStaff(strapi, id)
     const actor = members.find((row) => row.baUserId === user)!
     const names = await Promise.all(
@@ -213,7 +206,7 @@ export default ({ strapi }: { strapi: any }) => ({
         : []
 
     // The Team covering this library when the viewer isn't in it: the tab
-    // then names the organiser to ask, instead of offering a plan.
+    // then names the organiser to ask.
     const coveringTeam =
       team && !team.viewerIsMember
         ? {
@@ -403,8 +396,7 @@ export default ({ strapi }: { strapi: any }) => ({
       const actor = await this.authorise(
         user,
         id,
-        leave ? "seeTeam" : "manageTeam",
-        !leave
+        leave ? "seeTeam" : "manageTeam"
       )
       const members = await listStaff(strapi, id)
       const member = members.find(

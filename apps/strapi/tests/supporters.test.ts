@@ -5,24 +5,18 @@ import bridge from "../src/api/auth-bridge/controllers/auth-bridge"
 import { readSupporters, supporterMark } from "../src/utils/supporters"
 
 const PROFILE = "api::user-profile.user-profile"
-const GRANT = "api::entitlement-grant.entitlement-grant"
-const VERIFICATION = "api::pro-verification.pro-verification"
-const MEMBER = "plugin::access.team-member"
 const CONFIG = "api::site-config.site-config"
-const now = new Date("2026-10-08T00:00:00Z")
+let nextId = 1
+/** A Supporter by default: 100 accepted contributions, not revoked. */
 const profile = (id: string, extra = {}) => ({
+  id: nextId++,
   documentId: `p-${id}`,
   baUserId: id,
   username: id,
   firstName: id,
   profileVisibility: "public",
-  ...extra,
-})
-const grant = (id: string, extra = {}) => ({
-  documentId: `g-${id}`,
-  baUserId: id,
-  plan: "supporter",
-  expiresAt: null,
+  acceptedContributions: 100,
+  recognitionRevokedAt: null,
   createdAt: "2026-09-01T00:00:00Z",
   ...extra,
 })
@@ -32,68 +26,29 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
+const joined = (id: string) => ({
+  createdAt: id === "future" ? "2026-10-20T00:00:00Z" : "2026-10-01T00:00:00Z",
+})
+
 describe("supporter directory", () => {
-  it("deduplicates active plans, includes earned/verified Pro and Team seats, and removes expired access", async () => {
+  it("lists earned Supporters only: 100 accepted contributions, never points, plans or revoked recognition", async () => {
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [
-        profile("supporter"),
-        profile("pro"),
-        profile("team"),
-        profile("earned", {
-          tier: "Scholar",
-          points: 5000,
-          earnedProUntil: "2026-11-01",
-        }),
-        profile("hold", { points: 5000, earnedProUntil: "2026-11-01" }),
-        profile("verified"),
-        profile("seat"),
-        profile("expired"),
-        profile("lapsed"),
-        profile("removed"),
-        profile("free"),
-      ],
-      [GRANT]: [
-        grant("supporter"),
-        grant("pro", { plan: "pro" }),
-        grant("team", { plan: "team" }),
-        grant("pro", { documentId: "duplicate", plan: "team" }),
-        grant("expired", { expiresAt: "2026-10-01" }),
-      ],
-      [VERIFICATION]: [
-        { documentId: "v", baUserId: "verified", expiresAt: null },
-      ],
-      [MEMBER]: [
-        {
-          documentId: "m",
-          baUserId: "seat",
-          status: "active",
-          team: { status: "active", expiresAt: null },
-        },
-        {
-          documentId: "l",
-          baUserId: "lapsed",
-          status: "active",
-          team: { status: "lapsed", expiresAt: null },
-        },
-        {
-          documentId: "r",
-          baUserId: "removed",
-          status: "removed",
-          team: { status: "active", expiresAt: null },
-        },
+        profile("hundred"),
+        profile("many", { acceptedContributions: 250 }),
+        profile("almost", { acceptedContributions: 99, points: 90000 }),
+        profile("revoked", { recognitionRevokedAt: "2026-10-01T00:00:00Z" }),
+        profile("free", { acceptedContributions: 0 }),
       ],
     })
-    const result = await readSupporters(strapi, {}, now)
-    expect(result.total).toBe(7)
+    const result = await readSupporters(strapi, {})
+    expect(result.total).toBe(2)
     expect(result.entries.map((p) => p.username).sort()).toEqual([
-      "earned",
-      "hold",
-      "pro",
-      "seat",
-      "supporter",
-      "team",
-      "verified",
+      "hundred",
+      "many",
     ])
+    expect(result.entries[0]).not.toHaveProperty("since")
+    expect(result).not.toHaveProperty("newThisMonth")
   })
 
   it("filters privacy before search and aggregates; serializes only public fields", async () => {
@@ -114,11 +69,8 @@ describe("supporter directory", () => {
           supporterBadgeVisible: false,
         }),
       ],
-      [GRANT]: ["public", "private", "limited", "out", "quiet"].map((id) =>
-        grant(id)
-      ),
     })
-    const result = await readSupporters(strapi, {}, now)
+    const result = await readSupporters(strapi, {})
     expect(result.total).toBe(5)
     expect(result.listed).toBe(2)
     expect(result.unlisted).toBe(3)
@@ -137,13 +89,9 @@ describe("supporter directory", () => {
       "plan",
     ])
       expect(serialized).not.toContain(secret)
-    expect(
-      (await readSupporters(strapi, { q: "Secretown" }, now)).matched
-    ).toBe(0)
-    expect((await readSupporters(strapi, { country: "US" }, now)).matched).toBe(
-      0
-    )
-    expect((await readSupporters(strapi, { q: "leeds" }, now)).matched).toBe(1)
+    expect((await readSupporters(strapi, { q: "Secretown" })).matched).toBe(0)
+    expect((await readSupporters(strapi, { country: "US" })).matched).toBe(0)
+    expect((await readSupporters(strapi, { q: "leeds" })).matched).toBe(1)
   })
 
   it("paginates beyond internal batches, sorts deterministically and bounds the requested page", async () => {
@@ -152,24 +100,19 @@ describe("supporter directory", () => {
       (_, i) => `user${String(i).padStart(3, "0")}`
     )
     const { strapi } = makeFakeStrapi({
-      [PROFILE]: ids.map((id, i) => profile(id, { id: i })),
-      [GRANT]: ids.map((id, i) => grant(id, { id: i })),
+      [PROFILE]: ids.map((id, i) => profile(id, { id: i + 1 })),
     })
-    const result = await readSupporters(
-      strapi,
-      { page: "999", sort: "name" },
-      now
-    )
+    const result = await readSupporters(strapi, { page: "999", sort: "name" })
     expect(result.total).toBe(505)
     expect(result.page).toBe(22)
     expect(result.entries).toHaveLength(1)
     expect(result.entries[0]?.username).toBe("user504")
-    expect((await readSupporters(strapi, { page: "-1" }, now)).page).toBe(1)
+    expect((await readSupporters(strapi, { page: "-1" })).page).toBe(1)
   })
 
   it("does not invent costs or income, and reads real dated figures from Site config", async () => {
     const { strapi, store } = makeFakeStrapi()
-    expect((await readSupporters(strapi, {}, now)).costs).toBeNull()
+    expect((await readSupporters(strapi, {})).costs).toBeNull()
     store[CONFIG] = [
       {
         documentId: "config",
@@ -179,7 +122,7 @@ describe("supporter directory", () => {
         costBreakdown: "Hosting and maps",
       },
     ]
-    expect((await readSupporters(strapi, {}, now)).costs).toEqual({
+    expect((await readSupporters(strapi, {})).costs).toEqual({
       month: "2026-10-01",
       currency: "GBP",
       runningCosts: 200.5,
@@ -189,60 +132,52 @@ describe("supporter directory", () => {
   })
 
   it("filters continent pills using public locations and shows only public new members this month", async () => {
-    const ids = ["europe", "america", "asia", "hidden", "out", "future"]
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [
-        profile("europe", { country: "GB" }),
-        profile("america", { country: "BR" }),
-        profile("asia", { country: "JP" }),
+        profile("europe", { country: "GB", ...joined("europe") }),
+        profile("america", { country: "BR", ...joined("america") }),
+        profile("asia", { country: "JP", ...joined("asia") }),
         profile("hidden", {
           country: "GB",
           publicPrefs: { showLocation: false },
+          ...joined("hidden"),
         }),
-        profile("out", { supporterListed: false, country: "GB" }),
-        profile("future", { country: "GB" }),
+        profile("out", {
+          supporterListed: false,
+          country: "GB",
+          ...joined("out"),
+        }),
+        profile("future", { country: "GB", ...joined("future") }),
       ],
-      [GRANT]: ids.map((id) =>
-        grant(id, {
-          createdAt:
-            id === "future" ? "2026-10-20T00:00:00Z" : "2026-10-01T00:00:00Z",
-        })
-      ),
     })
-    const europe = await readSupporters(strapi, { region: "europe" }, now)
+    const europe = await readSupporters(strapi, { region: "europe" })
     expect(europe.entries.map((p) => p.username).sort()).toEqual([
       "europe",
       "future",
     ])
-    expect(europe.newThisMonth.map((p) => p.username)).toEqual(["europe"])
     expect(
-      (await readSupporters(strapi, { region: "americas" }, now)).entries.map(
+      (await readSupporters(strapi, { region: "americas" })).entries.map(
         (p) => p.username
       )
     ).toEqual(["america"])
     expect(
-      (await readSupporters(strapi, { q: "Brazil" }, now)).entries.map(
+      (await readSupporters(strapi, { q: "Brazil" })).entries.map(
         (p) => p.username
       )
     ).toEqual(["america"])
-    const all = await readSupporters(strapi, {}, now)
-    expect(all.newThisMonth.map((p) => p.username)).not.toContain("out")
-    expect(
-      all.newThisMonth.find((p) => p.username === "hidden")?.country
-    ).toBeNull()
+    const all = await readSupporters(strapi, {})
+    expect(all.entries.map((p) => p.username)).not.toContain("out")
+    expect(all.entries.find((p) => p.username === "hidden")?.country).toBeNull()
   })
 
-  it("resolves the profile mark separately from directory listing and removes it at expiry", async () => {
+  it("resolves the profile mark separately from directory listing and removes it on revocation", async () => {
     const p = profile("one", { supporterListed: false })
-    const { strapi, store } = makeFakeStrapi({
-      [PROFILE]: [p],
-      [GRANT]: [grant("one")],
-    })
+    const { strapi, store } = makeFakeStrapi({ [PROFILE]: [p] })
     expect(await supporterMark(strapi, p)).toBe(true)
     expect(
       await supporterMark(strapi, { ...p, supporterBadgeVisible: false })
     ).toBe(false)
-    store[GRANT]![0]!.expiresAt = "2000-01-01"
+    store[PROFILE]![0]!.recognitionRevokedAt = "2026-10-01T00:00:00Z"
     expect(await supporterMark(strapi, p)).toBe(false)
   })
 })

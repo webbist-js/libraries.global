@@ -1,9 +1,4 @@
-import {
-  isSupporterPlan,
-  EARNED_PRO_POINTS,
-  isPaidMembership,
-  selectPaidMembership,
-} from "@repo/access"
+import { has, SUPPORTER_MIN_ACCEPTED } from "@repo/access"
 import {
   type SupporterEntry,
   type SupportersResponse,
@@ -14,23 +9,45 @@ const PROFILE = "api::user-profile.user-profile"
 const PAGE_SIZE = 24
 const BATCH_SIZE = 500
 
-/** Internal reads are paginated; no public endpoint exposes the source rows. */
-async function readAll(
-  strapi: any,
-  uid: string,
-  query: Record<string, unknown>
-) {
+/** Most Supporters the directory reads; keyset pages of BATCH_SIZE. */
+export const SUPPORTERS_MAX = 10_000
+
+const PROFILE_FIELDS = [
+  "baUserId",
+  "username",
+  "firstName",
+  "lastName",
+  "city",
+  "country",
+  "profileVisibility",
+  "publicPrefs",
+  "supporterListed",
+]
+
+/**
+ * Supporter profiles (earned recognition: at least SUPPORTER_MIN_ACCEPTED
+ * accepted contributions, not revoked), read by bounded keyset pages on id.
+ */
+async function readSupporterProfiles(strapi: any) {
   const rows: any[] = []
-  for (let start = 0; ; start += BATCH_SIZE) {
-    const batch = await strapi.documents(uid).findMany({
-      ...query,
+  let after = 0
+  while (rows.length < SUPPORTERS_MAX) {
+    const batch = (await strapi.documents(PROFILE).findMany({
+      filters: {
+        id: { $gt: after },
+        acceptedContributions: { $gte: SUPPORTER_MIN_ACCEPTED },
+        recognitionRevokedAt: { $null: true },
+      },
+      fields: PROFILE_FIELDS,
       sort: "id:asc",
-      start,
-      limit: BATCH_SIZE,
-    })
+      limit: Math.min(BATCH_SIZE, SUPPORTERS_MAX - rows.length),
+    })) as typeof rows
     rows.push(...batch)
-    if (batch.length < BATCH_SIZE) return rows
+    if (batch.length < BATCH_SIZE) break
+    after = Number(batch.at(-1).id)
   }
+
+  return rows
 }
 
 export function supporterListed(profile: any): boolean {
@@ -39,7 +56,7 @@ export function supporterListed(profile: any): boolean {
   )
 }
 
-/** A paid/complimentary plan changes recognition, never the person's trust. */
+/** Earned Supporter recognition marks a profile; it never adds trust. */
 export async function supporterMark(
   strapi: any,
   profile: any
@@ -48,7 +65,7 @@ export async function supporterMark(
   const { resolveUserEntitlements } = await import("./entitlement-inputs")
   const entitlements = await resolveUserEntitlements(strapi, profile.baUserId)
 
-  return isSupporterPlan(entitlements.plan)
+  return has(entitlements, "supporter")
 }
 
 const numberOrNull = (value: unknown): number | null => {
@@ -71,7 +88,7 @@ function countryName(code: string | null): string | null {
   }
 }
 
-/** Directory and aggregates share the session resolver's active-plan rules. */
+/** Directory and aggregates share the session resolver's recognition rule. */
 export async function readSupporters(
   strapi: any,
   query: {
@@ -80,99 +97,13 @@ export async function readSupporters(
     region?: unknown
     sort?: unknown
     page?: unknown
-  } = {},
-  now = new Date()
+  } = {}
 ): Promise<SupportersResponse> {
-  const unexpired = {
-    $or: [
-      { expiresAt: { $null: true } },
-      { expiresAt: { $gt: now.toISOString() } },
-    ],
-  }
-  const [grants, verifications, members, earned, config, paid] =
-    await Promise.all([
-      readAll(strapi, "api::entitlement-grant.entitlement-grant", {
-        filters: {
-          $and: [unexpired, { plan: { $in: ["supporter", "pro", "team"] } }],
-        },
-        fields: ["baUserId", "plan", "createdAt"],
-      }),
-      readAll(strapi, "api::pro-verification.pro-verification", {
-        filters: unexpired,
-        fields: ["baUserId", "verifiedAt", "createdAt"],
-      }),
-      readAll(strapi, "plugin::access.team-member", {
-        filters: { status: "active", team: { status: "active" } },
-        fields: ["baUserId", "acceptedAt"],
-        populate: { team: { fields: ["status", "expiresAt"] } },
-      }),
-      readAll(strapi, PROFILE, {
-        filters: {
-          points: { $gte: EARNED_PRO_POINTS },
-          earnedProUntil: { $gt: now.toISOString() },
-        },
-        fields: ["baUserId"],
-      }),
-      strapi.documents("api::site-config.site-config").findFirst({}),
-      readAll(strapi, "api::paid-membership.paid-membership", {
-        fields: ["baUserId", "membership"],
-      }),
-    ])
-
-  // Each person counts once, even with several grants or Team seats.
-  const eligible = new Map<string, string | null>()
-  for (const row of paid) {
-    if (
-      row.baUserId &&
-      isPaidMembership(row.membership) &&
-      row.membership.mode ===
-        (process.env.BILLING_ENV === "live" ? "live" : "sandbox") &&
-      selectPaidMembership([row.membership], now)
-    )
-      eligible.set(row.baUserId, row.membership.memberSince)
-  }
-  const activeMembers = members.filter(
-    (m) =>
-      m.team?.status === "active" &&
-      (m.team.expiresAt == null || Date.parse(m.team.expiresAt) > now.getTime())
-  )
-  for (const row of [
-    ...grants,
-    ...verifications,
-    ...activeMembers,
-    ...earned,
-  ]) {
-    if (!row.baUserId) continue
-    const date = row.acceptedAt ?? row.verifiedAt ?? row.createdAt ?? null
-    const since = date && Number.isFinite(Date.parse(date)) ? date : null
-    const prior = eligible.get(row.baUserId)
-    eligible.set(
-      row.baUserId,
-      prior && (!since || prior < since) ? prior : since
-    )
-  }
-  const ids = [...eligible.keys()]
-  const profiles: any[] = []
-  for (let start = 0; start < ids.length; start += BATCH_SIZE) {
-    profiles.push(
-      ...(await readAll(strapi, PROFILE, {
-        filters: { baUserId: { $in: ids.slice(start, start + BATCH_SIZE) } },
-        fields: [
-          "baUserId",
-          "username",
-          "firstName",
-          "lastName",
-          "city",
-          "country",
-          "profileVisibility",
-          "publicPrefs",
-          "supporterListed",
-        ],
-      }))
-    )
-  }
-
-  // Explicit projection: no private names, account ids, grants, plans or
+  const [profiles, config] = await Promise.all([
+    readSupporterProfiles(strapi),
+    strapi.documents("api::site-config.site-config").findFirst({}),
+  ])
+  // Explicit projection: no private names, account ids, grants, payments or
   // hidden locations can be searched or serialized, even for the owner.
   const listed: SupporterEntry[] = profiles
     .filter((p) => supporterListed(p) && p.username)
@@ -188,7 +119,6 @@ export async function readSupporters(
           p.username.slice(0, 2).toUpperCase(),
         city: showLocation ? (p.city ?? null) : null,
         country: showLocation ? (p.country ?? null) : null,
-        since: eligible.get(p.baUserId) ?? null,
       }
     })
   const q =
@@ -219,23 +149,12 @@ export async function readSupporters(
           .toLowerCase()
           .includes(q))
   )
-  filtered.sort((a, b) => {
-    if (query.sort === "name")
-      return (
-        a.displayName.localeCompare(b.displayName) ||
-        a.username.localeCompare(b.username)
-      )
-    if (a.since !== b.since) {
-      if (!a.since) return 1
-      if (!b.since) return -1
-
-      return query.sort === "newest"
-        ? b.since.localeCompare(a.since)
-        : a.since.localeCompare(b.since)
-    }
-
-    return a.username.localeCompare(b.username)
-  })
+  // Recognition records no date it was reached, so the directory is by name.
+  filtered.sort(
+    (a, b) =>
+      a.displayName.localeCompare(b.displayName) ||
+      a.username.localeCompare(b.username)
+  )
   const requested = Number(query.page)
   const page = Math.min(
     Math.max(1, Number.isSafeInteger(requested) ? requested : 1),
@@ -245,19 +164,6 @@ export async function readSupporters(
 
   return {
     entries: filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    newThisMonth: filtered
-      .filter(
-        (p) =>
-          p.since &&
-          p.since.slice(0, 7) === now.toISOString().slice(0, 7) &&
-          Date.parse(p.since) <= now.getTime()
-      )
-      .sort(
-        (a, b) =>
-          b.since!.localeCompare(a.since!) ||
-          a.username.localeCompare(b.username)
-      )
-      .slice(0, 4),
     total: profiles.length,
     listed: listed.length,
     unlisted: profiles.length - listed.length,

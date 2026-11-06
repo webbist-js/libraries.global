@@ -10,6 +10,8 @@ const state = vi.hoisted(() => ({
     signedIn: false,
     scope: "guest",
     data: null as null | { teamId: string; active: boolean },
+    prospect: null as null | { purchasing: boolean },
+    accountName: "",
     conflict: false,
     unavailable: false,
   },
@@ -61,6 +63,9 @@ vi.mock("@/components/staff/TeamApiDashboard", () => ({
 vi.mock("@/components/staff/TeamApiPanels", () => ({
   ApiGuidePanel: () => <h2>Public API reference</h2>,
 }))
+vi.mock("@/components/developers/ApiIndividualCheckout", () => ({
+  ApiIndividualCheckout: () => <div data-testid="individual-checkout" />,
+}))
 vi.mock("@/components/developers/ApiPlayground", () => ({
   ApiPlayground: () => <div>Metered API playground</div>,
 }))
@@ -78,6 +83,8 @@ beforeEach(() => {
     signedIn: false,
     scope: "guest",
     data: null,
+    prospect: null,
+    accountName: "",
     conflict: false,
     unavailable: false,
   }
@@ -92,16 +99,19 @@ it("shows reference docs and a login CTA to guests, without key or usage navigat
   expect(screen.queryByRole("link", { name: "Usage" })).toBeNull()
   expect(
     screen
-      .getByRole("link", { name: "Log in to your Team" })
+      .getByRole("link", { name: "Log in to buy API access" })
       .getAttribute("href")
   ).toContain("%2Ffr%2Fdevelopers%2Freference")
 })
-it("offers Teams to signed-in personal accounts instead of token controls, even on a direct keys URL", async () => {
+it("offers individual API checkout to an account with no organisation", async () => {
   state.access.signedIn = true
+  state.access.prospect = { purchasing: true }
   render(await ApiWorkspacePage({ section: "keys" }))
   expect(screen.queryByTestId("private-controls")).toBeNull()
-  expect(screen.getByRole("link", { name: "Explore Teams + API" })).toBeTruthy()
-  expect(screen.queryByRole("link", { name: "Log in to your Team" })).toBeNull()
+  expect(screen.getByTestId("individual-checkout")).toBeTruthy()
+  expect(
+    screen.queryByRole("link", { name: "Log in to buy API access" })
+  ).toBeNull()
 })
 it("splits authorised Team controls into their requested view", async () => {
   state.access.data = { teamId: "team", active: true }
@@ -125,10 +135,16 @@ it.each([false, true])(
 it("keeps runnable playground controls away from guests and personal accounts", async () => {
   const view = render(await ApiWorkspacePage({ section: "playground" }))
   expect(screen.queryByText("Metered API playground")).toBeNull()
-  expect(screen.getByRole("link", { name: "Log in to your Team" })).toBeTruthy()
+  expect(
+    screen.getByRole("link", { name: "Log in to buy API access" })
+  ).toBeTruthy()
   view.unmount()
   state.access.signedIn = true
+  state.access.prospect = { purchasing: true }
   render(await ApiWorkspacePage({ section: "playground" }))
   expect(screen.queryByText("Metered API playground")).toBeNull()
-  expect(screen.getByRole("link", { name: "Explore Teams + API" })).toBeTruthy()
+  expect(screen.queryByTestId("individual-checkout")).toBeNull()
+  expect(
+    screen.getByRole("heading", { name: /connect your application/ })
+  ).toBeTruthy()
 })

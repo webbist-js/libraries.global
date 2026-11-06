@@ -6,9 +6,10 @@ import {
 import { isValidServiceSecret } from "../../../utils/service-secret"
 
 /**
- * POST /libraries/export: rows for the Pro Atlas export. Only the Next route
- * calls it, after checking the plan, so it needs the bridge secret; without
- * that gate Strapi would be a way around Pro.
+ * POST /libraries/export: rows for the Atlas export. Only the Next route
+ * calls it, after checking the account's `atlas.export` entitlement and row
+ * limit, so it needs the bridge secret; without that gate Strapi would be a
+ * way around those limits.
  */
 export default {
   async exportRows(ctx: any) {

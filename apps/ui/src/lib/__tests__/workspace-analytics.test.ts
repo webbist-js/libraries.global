@@ -61,7 +61,6 @@ describe("bounded workspace metrics", () => {
     "/developers/playground",
     "/staff/teams/billing",
     "/staff/teams/new",
-    "/contribute/membership/checkout",
     "/profile/membership",
     "/staff/team/SECRET_ID",
     "/contribute/unknown",

@@ -1,60 +1,55 @@
-# Membership pricing and rollout
+# Pricing and access model
 
-The agreed catalogue is in `src/lib/membership-pricing.json`. Static plan cards, Stripe preparation and CMS content generators read those amounts. Stripe confirms the actual checkout price and tax. A catalogue record does not enable purchases.
+Libraries Global is free public infrastructure. Only two things are paid: machine access through the API, and sponsorship. Payment, sponsorship and recognition never grant trust, ranking, editorial treatment, moderation or staff authority. The authoritative decisions are in [sponsored-access-decisions.md](../docs/docs/proposals/sponsored-access-decisions.md); where it differs from the pricing proposal or implementation spec, it wins.
 
-| Offer                       | Price                                | Tax treatment                                                     |
-| --------------------------- | ------------------------------------ | ----------------------------------------------------------------- |
-| Supporter                   | £3/month or £30/year                 | Tax-inclusive base GBP                                            |
-| Founding Pro                | £5/month or £50/year                 | Tax-inclusive base GBP; existing subscriptions retain their Price |
-| Future standard Pro         | £8/month or £80/year (future offer)  | Not offered or activated yet                                      |
-| Team, five seats            | £600/year                            | Excluding VAT                                                     |
-| Additional Team seat        | £120/year                            | Excluding VAT                                                     |
-| Public-library-service Team | £480/year; additional seats £96/year | Excluding VAT; 20% discount on Team items only                    |
-| Team API add-on             | £15/month, billed separately         | Tax-inclusive base GBP                                            |
+The catalogue is `src/lib/membership-pricing.json`. Static copy, Stripe preparation and the CMS content scripts read amounts from it. A catalogue entry does not enable a purchase.
 
-New Teams use self-service annual Stripe subscriptions when enabled. `/staff/team/new` creates an inactive Team; settled payment activates its seats and the purchaser becomes its Organiser. The subscription uses one £120 annual seat item with a five-seat minimum, or £96 after public-library-service eligibility is confirmed separately. Organisers manage renewal, seat quantities and invoices online. Existing agreed invoice Teams keep their quoted terms and are not converted automatically. Verification is assessed separately. API subscriptions have their own Team customer binding and never buy staff authority. See [Team billing](TEAM-BILLING.md).
+| Offer          | Who                                       | What it gives                                                                                                                                                                                               | Charge                                                                                                                                |
+| -------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Explorer       | Any signed-in account                     | The former paid browse, comparison, context-layer, alert, notes, history and export tools. 1,000 saved views and 1,000 saved searches, 10,000 export rows per action, 20 exports per rolling day. No Reach. | Free                                                                                                                                  |
+| Contributor    | At least 1 accepted contribution          | 2 new one-library Reach calculations per rolling 7 days. No service or network Reach.                                                                                                                       | Free (earned)                                                                                                                         |
+| Supporter      | At least 100 accepted contributions       | Recognition only: no tools, quota or authority.                                                                                                                                                             | Free (earned)                                                                                                                         |
+| Verified Staff | Verified affiliation with named libraries | Free staff workspace, editing within scope, embeds, bulk upload, team view and traffic where available.                                                                                                     | Free                                                                                                                                  |
+| API Access     | Organiser of an API account               | Keys, usage dashboard, reference and playground; see below.                                                                                                                                                 | £100/month, tax-inclusive base GBP                                                                                                    |
+| Sponsor        | Organisation funding the service          | Acknowledgement with consent, quarterly updates and an annual impact report. No API access unless agreed separately.                                                                                        | Annual agreement, agreed in conversation. No amount is shown on the site; enquiries open the contact form with the sponsorship topic. |
 
-## Stripe catalogue
+Earned recognition counts accepted contributions (`acceptedContributions` on the profile), not points; see `packages/access/src/recognition.ts`. Staff tools are capabilities from verified staff claims (`canStaff`), not entitlements. Library-scoped tools apply only to the libraries in the user's own staff claims; organisation membership never unlocks them.
 
-`scripts/pricing-catalogue.mjs` uses the official Stripe MCP and verifies the account and coupon restrictions through Stripe's read API. It reuses matching immutable prices, refuses conflicting catalogue entries and creates only missing products, prices, a scoped coupon and the API billing portal. It never creates invoices, payments, customers or subscriptions, and never enables live checkout.
+## API offer
 
-```sh
-node apps/ui/scripts/pricing-catalogue.mjs
-node apps/ui/scripts/pricing-catalogue.mjs --apply
-node apps/ui/scripts/pricing-catalogue.mjs --live
-node apps/ui/scripts/pricing-catalogue.mjs --live --apply
-```
+- **Price:** £100/month including tax at the base GBP price. Stripe confirms the final charge.
+- **Included per billing period:** 10,000 successful requests, 262,144,000 response bytes (250 MiB) and 100 analysis credits, pooled across all keys.
+- **Limits:** 30 attempts a minute, 2 concurrent requests, 128 KiB per response, 50 records per page.
+- **Period:** the settled Stripe subscription item period `[start, end)` in UTC, not the calendar month. A partial first period gets the full allowance; a new period opens only after its payment settles.
+- **Analysis credits:** simple summary 1, richer summary 5, one-library Reach 5, service Reach 20, network Reach 40. Credits are spent only on completed new jobs; cached repeats cost delivery units only.
+- **Overage:** opt-in only, after the organiser accepts overage terms 2.0. 1p per request, 10p per MiB and 50p per credit, exclusive of tax. The cap runs from £10 to £500 in £10 steps over the combined overage before tax; £100 is preselected but never enabled without an affirmative action. Failed, refused, timed-out or internally retried work is never charged.
+- **Browser Reach bonus:** organisers of a covered API account get 20 new Reach calculations an hour, pooled 100 a day per API account, up to 50 eligible libraries and the standard envelopes (2,500 km² / 75 km for four times, 20,000 km² / 200 km for one). Members do not inherit it.
+- **Consent versions:** API purchase terms 2.0 and overage terms 2.0 (`src/lib/team-api/constants.ts`).
 
-Account-specific catalogue IDs are saved locally in Git-ignored `scripts/pricing-sandbox-catalogue.json` and `scripts/pricing-live-catalogue.json`. Personal founding prices remain unchanged. Standard Pro prices are not created or put in the portal until a separate pricing decision enables that offer. Shipping Reach does not activate a price change.
+The PostgreSQL ledger is the real-time admission authority; Stripe meters are the invoice authority and are reconciled against it. See [API accounts](TEAM-API.md).
 
-For a Team invoice, use one base item plus the number of additional seats. Six seats cost £720/year ex VAT, or £576 for an eligible public-library service. Apply the public-service coupon only after confirming eligibility; it is restricted to the Team base and additional-seat products. It does not discount Supporter, Pro or the API add-on. API usage is capped in the application, with no automatic Stripe overage charges.
+## Flags
 
-## Code and content to release together
+All flags are server environment variables, default `false`, and never bypass authorisation or accounting.
 
-- Ship the static pricing JSON/plan copy, Team consent version 1.2 and the existing personal/API offer consent version 1.1. Existing personal paid snapshots and their original Price IDs remain valid.
-- Ship the complete Team API UI, machine routes, private CMS access-plugin routes and billing-worker accounting from `TEAM-API.md`. UI and CMS must agree on the bridge routes.
-- Ship the self-service Team flow and worker from `TEAM-BILLING.md`, build the Access plugin and generate Strapi types. The CMS Team schema includes private payment bindings and projections.
-- Apply `billing:migrate` to the application/auth PostgreSQL database. It installs the personal, Team API and Team seat billing tables transactionally.
-- Configure the matching-mode API Price and portal IDs from the prepared catalogue. Keep runtime credentials private and preserve separate sandbox/live bindings.
-- Publish the reviewed current policy revisions and matching Knowledge copy before enabling Team seat purchases. Policy document revisions can differ from purchase offer consent versions; preserve historical revisions and accepted offers. [Content operations](../strapi/CONTENT-OPERATIONS.md) documents production and local targets.
-- Complete the owned sandbox purchase, key lifecycle, usage, limits and cancellation checks before live activation. Production Knowledge guides distinguish Stripe Test mode from live purchases and record temporary checkout restrictions.
-- Prepare personal live portals/webhooks through the existing billing runbook after its acceptance requirements are met. Preparing the pricing catalogue does not satisfy settlement or Managed Payments activation checks.
-- Promote the accepted UI/CMS/worker release using the deployment runbook, then update the production API availability copy when purchases are enabled.
+| Flag                        | Enables                                                   |
+| --------------------------- | --------------------------------------------------------- |
+| `API_ENABLED`               | New API checkout                                          |
+| `API_OVERAGE_ENABLED`       | Overage opt-in                                            |
+| `API_SERVICE_READS_ENABLED` | `/api/v1/services` routes                                 |
+| `API_SUBMISSIONS_ENABLED`   | `/api/v1/submissions` routes                              |
+| `API_ANALYSIS_ENABLED`      | `/api/v1/analysis` summary and Reach jobs                 |
+| `API_NETWORK_REACH_ENABLED` | Network-mode Reach, in addition to `API_ANALYSIS_ENABLED` |
 
-The production CMS can be updated independently. The deployed static membership/Atlas prices change only when the new UI build is promoted. See `BILLING.md`, `BILLING-LOCAL-TESTS.md`, `TEAM-API.md` and the private `docs/operations/infrastructure/digitalocean/deployment.md` from the repository root for acceptance and deployment details.
+## Beta reset
 
-## Atlas analysis capacity
+The service is in closed beta with sandbox billing, and existing accounts were amended outright with no grandfathering. Personal Supporter/Pro purchases, paid Team seats, the £15 Team API add-on and its 100,000-request / 10 GiB limits, earned Pro, `entitlement-grant` and `pro-verification` are removed. Local sandbox rows are disposable; `billing:migrate` installs the new schema and does not convert old rows. Workspaces keep their organisation container, members and organisers, without seats or billing.
 
-Pro supports up to 50 eligible libraries per service, Team 100. Four-time calculations use conservative geographic envelopes of 2,500 km² / 75 km span for Pro and 5,000 km² / 150 km for Team. Larger services use only the selected time, up to 20,000 km² / 200 km span for Pro or 40,000 km² / 400 km for Team. Both the service and reporting envelope must fit; area is not land area. The hourly allowance is 20 new calculations for Pro or 100 for an active Team seat. Cache hits do not consume a new calculation. Changing the time for a larger service requires another calculation.
+## Releasing pricing changes
 
-An active Team seat receives the larger analysis allowance without changing its personal Pro plan or its Library editing permissions. Lapsed or expired seats fall back to any independently held plan. Transit, shared workspaces, benchmarking and traffic reports remain marked as planned. Deprivation, households without a car, Library access comparison and UK walking/cycling Reach are delivered; availability still depends on the required country datasets and mapped Library records. Checkout remains subject to the beta availability notice.
+- Prepare the sandbox catalogue first: one immutable £100 monthly Price, metered overage Prices and the API billing portal. Set `STRIPE_PRICE_API_MONTHLY` and `STRIPE_PORTAL_CONFIGURATION_API` (plus the overage meter bindings) in the private runtime environment. Keep sandbox and live IDs separate. No build creates catalogue entries or enables live checkout.
+- Run `pnpm --filter @repo/ui billing:migrate` against the selected application database.
+- Stage the Knowledge guides and legal revision drafts with `apps/strapi/scripts/update-sponsored-access-content.mjs` (see [content operations](../strapi/CONTENT-OPERATIONS.md)). Legal drafts need legal review before publication; publication is a separate operator step with the matching release.
+- Complete owned sandbox acceptance — purchase, settlement, keys, quota refusal, overage invoice, refusal at the cap, refund, cancellation and job failure — before live activation, then promote through the protected-main release runbook.
 
-## Earned Pro
-
-Earned Pro requires at least 5,000 current reward points and an accepted contribution within the last 30 days. Each positive qualifying award extends `earnedProUntil` to its acceptance time plus 30 days. Expiry is checked when resolving entitlements; no scheduled downgrade is needed. Another accepted contribution restores access if the points requirement is still met. Recognition tiers and permanent badges do not grant Pro. Paid Pro and other independent access grants are unaffected.
-
-Qualifying actions are defined in `packages/access/src/earned-pro.ts`. Administrative point adjustments, daily streaks and automatic drive-completion bonuses do not renew access. Moderated discussion threads earn 2 points, replies 1 and edits 1; each approved revision can be credited only once, using its original approval time even on delayed outbox delivery.
-
-The November 2026 migration replaces old tier-based holds using each account's latest positive qualifying point event plus 30 days. Existing accounts receive no new rollout grace period. Deploy the migration with the updated entitlement code. At 50 points per approved new library, 5,000 points is equivalent to 100 new libraries before other rewards.
-
-Approved event-feed connections or replacements and accepted option suggestions each earn 5 points and renew the 30-day clock from acceptance. Option suggestions credit the original suggester (including accepted merges or clarifications), not voters; legacy anonymous suggestions have no reward recipient. Acceptance and rewards commit atomically, with an idempotency key per submission or suggestion. Access requests and role applications should remain separate from contribution rewards. Badges now recognise discussion threads/replies and the 5,000-point milestone; approved corrections count toward edit badges and Journal translations toward Copy Editor.
+Publishing CMS text does not deploy code, and preparing a catalogue does not satisfy settlement or Managed Payments checks.

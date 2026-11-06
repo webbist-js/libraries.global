@@ -71,7 +71,7 @@ function fakeStrapi(opts: {
 }
 
 describe("badges.checkAndAward", () => {
-  it("recognises discussions, corrections, translations and the earned-Pro milestone", async () => {
+  it("recognises discussions, corrections, translations and the 5,000-point milestone", async () => {
     const { strapi, created } = fakeStrapi({
       total: 5000,
       counts: [

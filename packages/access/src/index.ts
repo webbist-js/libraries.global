@@ -1,12 +1,10 @@
 export * from "./capabilities"
-export * from "./billing"
-export * from "./team-billing"
 export * from "./entitlements"
 export * from "./limits"
 export * from "./roles"
 export * from "./review-categories"
 export * from "./staff"
 
-export * from "./earned-pro"
+export * from "./recognition"
 
 export * from "./session"

@@ -19,7 +19,7 @@ const raw = {
       area: "atlas",
       plans: [
         { plan: "free", detail: "3 saved" },
-        { plan: "pro", detail: "unlimited" },
+        { plan: "contributor", detail: "unlimited" },
         { plan: "nonsense" },
       ],
       noteKind: "target",
@@ -31,7 +31,7 @@ const raw = {
       title: "Embeddable library finder",
       stage: "later",
       area: "widgets",
-      plans: [{ plan: "team" }],
+      plans: [{ plan: "staff" }],
     },
   ],
   dataImports: [
@@ -60,7 +60,7 @@ describe("roadmap content", () => {
     expect(content.features.map((f) => f.key)).toEqual(["save-views", "embed"])
     expect(content.features[0]!.plans).toEqual([
       { plan: "free", detail: "3 saved" },
-      { plan: "pro", detail: "unlimited" },
+      { plan: "contributor", detail: "unlimited" },
     ])
     expect(content.dataImports[0]).toMatchObject({
       code: "DE",

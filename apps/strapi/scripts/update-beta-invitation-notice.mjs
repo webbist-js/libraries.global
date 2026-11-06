@@ -4,7 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { isDeepStrictEqual, parseEnv } from "node:util"
 
 import { betaInvitationNotice } from "./beta-invitation-notice.mjs"
-import { stripComponentIds } from "./team-pricing-content.mjs"
+import { stripComponentIds } from "./cms-component-ids.mjs"
 
 const source = parseEnv(
   readFileSync(new URL("../.env", import.meta.url), "utf8")

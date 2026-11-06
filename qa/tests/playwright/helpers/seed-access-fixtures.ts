@@ -1,13 +1,13 @@
 /**
  * Seeds the Better Auth users for the access E2E (FIXTURES): one per
  * Contributor Role, scoped Moderators and editors, an applicant with a track
- * record, one per way of holding a paid plan, and two that haven't onboarded
- * yet. Local only: refuses to run in production or against a non-local host.
+ * record, one per earned recognition (Contributor, Supporter), and two
+ * that haven't onboarded yet. Local only: refuses to run in production or against a non-local host.
  *
  * Strapi REST is used for reads only (STRAPI_SEED_TOKEN can be read-only).
  * Writes can't use REST: it exposes no update for user-profile and no routes
- * for role-grant, library-affiliation, entitlement-grant or
- * pro-verification (P-A hardening), so they go through the Document Service
+ * for role-grant or library-affiliation (P-A hardening), so they go
+ * through the Document Service
  * in a headless Strapi process (strapi-access-writer.cjs). Contributor Roles
  * are Role Grants; Strapi derives `contributorRole` from them, and the seed
  * never writes it.
@@ -50,7 +50,7 @@ import {
   FIXTURE_OPENING_TIMES,
   FIXTURE_TEAM,
   FIXTURE_TIMEZONE,
-  type FixturePlan,
+  type FixtureRecognition,
   type FixtureStaff,
   type FixtureTeamRole,
   fixtureMobileTimetable,
@@ -79,11 +79,11 @@ type PlanItem = {
   roleGrants: readonly FixtureGrant[]
   /** null for the onboarding fixture, which the writer resets. */
   username: string | null
-  plan: FixturePlan | null
+  recognition: FixtureRecognition | null
   claimLibrary: string | null
   /** Affiliations on the fixture libraries, converged exactly. */
   staff: readonly FixtureStaff[]
-  /** An active seat on the fixture Team, or none. */
+  /** Active membership of the fixture Team, or none. */
   team: FixtureTeamRole | null
   trackRecord: number
   signedUpNow: boolean
@@ -101,11 +101,7 @@ type WriteResult = {
   staffCreated: number
   staffUpdated: number
   staffRemoved: number
-  teamSeat: "created" | "updated" | "present" | null
-  grantCreated: boolean
-  grantsRemoved: number
-  verificationCreated: boolean
-  verificationsRemoved: number
+  teamMember: "created" | "updated" | "present" | null
   submissionsCreated: number
   submissionsRemoved: number
 }
@@ -275,7 +271,7 @@ async function runWriter(plan: PlanItem[]): Promise<WriterOutput> {
             locale: g.locale ?? null,
           })),
           username: item.username,
-          plan: item.plan,
+          recognition: item.recognition,
           claimLibrary: item.claimLibrary,
           staff: item.staff.map((s) => ({
             library: s.library,
@@ -315,7 +311,6 @@ function describeResult(item: PlanItem, r: WriteResult): string {
     `${r.roleChanged ? " (re-derived)" : ""}` +
     `${item.passwordReset ? " (password reset)" : ""}` +
     `${r.profileChanged ? " (updated)" : ""}`
-  const granted = item.plan === "pro-grant" || item.plan === "team-grant"
   const notes: [boolean, string][] = [
     [
       item.username === null,
@@ -329,11 +324,9 @@ function describeResult(item: PlanItem, r: WriteResult): string {
         `${r.staffUpdated > 0 ? `, ${r.staffUpdated} updated` : ""}`,
     ],
     [r.staffRemoved > 0, `${r.staffRemoved} stray affiliation(s) removed`],
-    [item.team !== null, `team ${item.team} (seat ${r.teamSeat ?? "present"})`],
-    [granted, `grant ${createdOrPresent(r.grantCreated)}`],
     [
-      item.plan === "pro-verified",
-      `verification ${createdOrPresent(r.verificationCreated)}`,
+      item.team !== null,
+      `team ${item.team} (member row ${r.teamMember ?? "present"})`,
     ],
     [
       item.roleGrants.length > 0,
@@ -352,15 +345,10 @@ function describeResult(item: PlanItem, r: WriteResult): string {
       `${r.submissionsRemoved} earlier submission(s) removed`,
     ],
     [r.claimsRemoved > 0, `${r.claimsRemoved} stray claim(s) removed`],
-    [r.grantsRemoved > 0, `${r.grantsRemoved} stray grant(s) removed`],
-    [
-      r.verificationsRemoved > 0,
-      `${r.verificationsRemoved} stray verification(s) removed`,
-    ],
   ]
   const shown = notes.filter(([on]) => on).map(([, text]) => text)
 
-  return `${item.email}: ${[head, `plan ${item.plan ?? "free"}`, ...shown].join(", ")}`
+  return `${item.email}: ${[head, `recognition ${item.recognition ?? "none"}`, ...shown].join(", ")}`
 }
 
 export async function seedAccessFixtures(): Promise<void> {
@@ -407,7 +395,7 @@ export async function seedAccessFixtures(): Promise<void> {
         roleGrants: f.grants,
         username:
           f.username === null ? null : `access_${f.key.replaceAll("-", "_")}`,
-        plan: f.plan ?? null,
+        recognition: f.recognition ?? null,
         claimLibrary: f.claim ? claimLibrary : null,
         staff: f.staff ?? [],
         team: f.team ?? null,
@@ -450,12 +438,8 @@ export async function seedAccessFixtures(): Promise<void> {
       r.staffCreated > 0 ||
       r.staffUpdated > 0 ||
       r.staffRemoved > 0 ||
-      r.teamSeat === "created" ||
-      r.teamSeat === "updated" ||
-      r.grantCreated ||
-      r.grantsRemoved > 0 ||
-      r.verificationCreated ||
-      r.verificationsRemoved > 0
+      r.teamMember === "created" ||
+      r.teamMember === "updated"
     console.log(describeResult(item, r))
     // A user created in this run has never had a session read, so nothing
     // is cached for them. An existing one might, and the cache only expires.

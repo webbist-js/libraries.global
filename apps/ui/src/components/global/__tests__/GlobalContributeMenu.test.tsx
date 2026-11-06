@@ -188,7 +188,7 @@ describe("GlobalContributeMenu", () => {
         capabilities: ["submit.correction", "staff.area", "moderate.queue"],
         staffLibraries: STAFF_LIBRARIES,
         teams: [],
-        plan: "pro",
+        standing: "contributor",
       },
     }
     responses.set("/api/drives/featured", {
@@ -259,7 +259,7 @@ describe("GlobalContributeMenu", () => {
         within(nav).getByRole("link", { name: /My submissions/ }).textContent
       ).toContain("2 in review")
     )
-    expect(within(nav).getByText("Plan: Pro")).toBeTruthy()
+    expect(within(nav).getByText("Contributor")).toBeTruthy()
     expect(within(nav).queryByText("Staff drawer")).toBeNull()
 
     fireEvent.keyDown(document.activeElement ?? document.body, {
@@ -329,7 +329,7 @@ describe("GlobalContributeMenu", () => {
     session.data = {
       user: {
         id: "busy-organiser",
-        plan: "pro",
+        standing: "contributor",
         capabilities: [
           "staff.area",
           "docs.directEdit",
@@ -370,7 +370,6 @@ describe("GlobalContributeMenu", () => {
         "/staff/nailsea-library/events",
         "/staff/teams",
         "/developers",
-        "/staff/teams/billing",
         "/contribute/knowledge/new?type=knowledge",
         "/contribute/knowledge",
         "/contribute/knowledge/new?type=journal",

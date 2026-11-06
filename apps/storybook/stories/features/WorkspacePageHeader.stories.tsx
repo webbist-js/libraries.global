@@ -73,7 +73,7 @@ export const IndependentStatuses: Story = {
   args: {
     title: "Members & libraries",
     context: "Example Library Team",
-    status: <TeamStatusBadges membership="active" verified={false} />,
+    status: <TeamStatusBadges workspace="open" verified={false} />,
   },
 }
 export const StandaloneNavigation: Story = {

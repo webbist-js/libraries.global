@@ -21,7 +21,6 @@ describe("DriveYourPart", () => {
       h(DriveYourPart, {
         mine: { sent: 6, inReview: 3, accepted: 2 },
         quota: { pendingCount: 3, pendingLimit: 5 },
-        toEarnedPro: 340,
       })
     )
     const part = screen.getByRole("region", { name: "Your part" })
@@ -29,28 +28,21 @@ describe("DriveYourPart", () => {
     expect(part.textContent).toContain("3In review")
     expect(part.textContent).toContain("2Accepted")
     expect(screen.getByText("3 of 5 waiting for review")).toBeTruthy()
-    expect(
-      screen.getByText(
-        "Drive work counts toward earned Pro: 340 points to 5,000. Keep contributing at least once every 30 days to retain it."
-      )
-    ).toBeTruthy()
   })
 
-  it("leaves out the quota and earned Pro when there's nothing to say", () => {
+  it("leaves out the quota when there's nothing to say", () => {
     render(
       h(DriveYourPart, {
         mine: { sent: 0, inReview: 0, accepted: 0 },
         quota: null,
-        toEarnedPro: null,
       })
     )
     expect(screen.queryByText(/waiting for review/)).toBeNull()
-    expect(screen.queryByText(/earned Pro/)).toBeNull()
     expect(screen.getByText("Nothing sent for this drive yet.")).toBeTruthy()
   })
 
   it("says the counts are loading until they arrive", () => {
-    render(h(DriveYourPart, { mine: null, quota: null, toEarnedPro: null }))
+    render(h(DriveYourPart, { mine: null, quota: null }))
     expect(
       screen.getByRole("region", { name: "Your part" }).textContent
     ).toContain("Loading your part…")

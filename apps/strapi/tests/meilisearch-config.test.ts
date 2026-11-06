@@ -62,7 +62,7 @@ const LEAK_KEYS = [
   "baUserId",
   "notifPrefs",
   "publicPrefs",
-  "earnedProUntil",
+  "recognitionRevokedAt",
   "firstName",
   "lastName",
   "createdBy",
@@ -159,7 +159,7 @@ const PROFILE = {
   lastName: "Bennett",
   notifPrefs: { digest: true },
   publicPrefs: { showActivity: false },
-  earnedProUntil: "2027-01-01T00:00:00.000Z",
+  recognitionRevokedAt: "2027-01-01T00:00:00.000Z",
 }
 
 const ADMIN = { id: 1, firstName: "Root", lastName: "Admin", email: "root@x" }

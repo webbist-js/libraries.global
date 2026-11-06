@@ -1,13 +1,12 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import type { PlanKey } from "@repo/access"
 import { usePathname } from "next/navigation"
 import { useTranslations as useUiTranslations } from "next-intl"
 
 import { useOptionalDashboardOverlay } from "@/components/dashboard/DashboardFrame"
 import { WorkspaceHero as PageHero } from "@/components/dashboard/WorkspaceHero"
-import { Badge, LibrarySwitcher, PlanChip, SectionTabs } from "@/components/ds"
+import { Badge, LibrarySwitcher, SectionTabs } from "@/components/ds"
 import { staffLibraryTabs } from "@/components/staff/staff-library-navigation"
 import { useStaffWorkspaceRecord } from "@/components/staff/StaffWorkspaceRecord"
 import type { StaffLibrarySummary } from "@/lib/access-server"
@@ -34,28 +33,24 @@ export function staffHeroTitle(name: string): string {
   return `${words.join(" ")} *${last}*`
 }
 
-/** The Team-plan tag on a gated tab carries the lock; the tab keeps its icon. */
-const TEAM_TAG = <Badge label="Team" color="aurora" icon="mdi:lock-outline" />
-
 /**
  * The staff area's hero and tabs for one library: breadcrumb, the
  * "Library staff" and type pills, the full-size italic title, the meta
- * line with the plan chip, the stacked library switcher with "Claim
+ * line with the free staff-access chip, the stacked library switcher with "Claim
  * another library" under it, and the section tabs (icons kept on gated
- * tabs; the lock sits in their "Team" tag).
+ * tabs; the lock sits in their "Verified staff" tag).
  */
 export function StaffShell({
   overview,
   libraries,
   meta,
-  plan,
-  teamCovered,
+  canSeeTeam,
 }: {
   readonly overview: StaffOverview
   readonly libraries: StaffLibrarySummary[]
   readonly meta: StaffLibraryMeta
-  readonly plan: PlanKey
-  readonly teamCovered: boolean
+  /** The viewer's own staff claim unlocks the free staff tools here. */
+  readonly canSeeTeam: boolean
 }) {
   const tUi = useUiTranslations("ui")
   const tDashboard = useUiTranslations("dashboard")
@@ -70,7 +65,7 @@ export function StaffShell({
     canGoLive:
       libraries.find((item) => item.id === library.documentId)?.canGoLive ??
       false,
-    teamCovered,
+    canSeeTeam,
     suggestions: counts.suggestions,
   })
   const pathname = usePathname()
@@ -87,8 +82,13 @@ export function StaffShell({
   ).map((tab) => ({
     ...tab,
     badge:
-      !teamCovered && ["traffic", "team"].includes(tab.id) ? (
-        TEAM_TAG
+      !canSeeTeam && ["traffic", "team"].includes(tab.id) ? (
+        // The tag carries the lock; the tab keeps its icon.
+        <Badge
+          label={tUi("verified_staff")}
+          color="aurora"
+          icon="mdi:lock-outline"
+        />
       ) : tab.id === "live" ? (
         <Badge label="Mobile" color="ok" />
       ) : undefined,
@@ -158,7 +158,7 @@ export function StaffShell({
               width={15}
             />
           </Link>
-          <PlanChip plan={plan} covered={teamCovered} />
+          <Badge color="dim" label={tUi("staff_access_free")} />
         </>
       }
       tabs={

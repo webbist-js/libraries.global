@@ -25,8 +25,30 @@ export function teamApiPlaceRoute(
   return places.length <= 2 ? { kind: "places", country, region } : null
 }
 
+const DOCUMENT_ID = "[a-z0-9]{20,32}"
+const JOB_ID = "(?:reach|summary)(?::|%3A)[A-Za-z0-9_-]{22}"
+/** Service, submission and analysis routes and the one method each takes. */
+const RESOURCE_ROUTES: [RegExp, "GET" | "POST"][] = [
+  [/^\/api\/v1\/services$/, "GET"],
+  [new RegExp(`^/api/v1/services/${DOCUMENT_ID}(?:/libraries)?$`), "GET"],
+  [/^\/api\/v1\/submissions\/(?:libraries|corrections)$/, "POST"],
+  [new RegExp(`^/api/v1/submissions/${DOCUMENT_ID}$`), "GET"],
+  [/^\/api\/v1\/analysis\/(?:summary|reach)$/, "POST"],
+  [new RegExp(`^/api/v1/analysis/jobs/${JOB_ID}(?:/result)?$`, "i"), "GET"],
+]
+
+/** The method an exact machine route accepts, or null for any other path. */
+export function teamApiMethod(path: string): "GET" | "POST" | null {
+  if (path === "/api/v1/search/libraries") return "POST"
+  for (const [pattern, method] of RESOURCE_ROUTES)
+    if (pattern.test(path)) return method
+
+  return isTeamApiPath(path) ? "GET" : null
+}
+
 /** Exact machine routes carry their own API-key authentication, including in beta. */
-export function isTeamApiPath(path: string) {
+export function isTeamApiPath(path: string): boolean {
+  if (RESOURCE_ROUTES.some(([pattern]) => pattern.test(path))) return true
   if (path === "/api/v1/search/libraries" || path === "/api/v1/libraries")
     return true
   if (path === "/api/v1/places" || path.startsWith("/api/v1/places/"))

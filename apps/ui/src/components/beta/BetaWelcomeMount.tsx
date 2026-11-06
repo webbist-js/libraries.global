@@ -24,8 +24,7 @@ export function BetaWelcomeMount({ sandbox }: { readonly sandbox: boolean }) {
   const visit = useRef<BetaWelcomeVisit | null>(null)
   const excluded =
     /^\/(?:auth|beta|live)(?:\/|$)/.test(pathname) ||
-    pathname === "/staff/teams/new" ||
-    pathname === "/staff/teams/billing"
+    pathname === "/staff/teams/new"
 
   useEffect(() => {
     if (isPending || error || excluded) return

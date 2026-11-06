@@ -26,18 +26,21 @@ export async function staffRequest<T = unknown>(
         "Verify your email address before accepting this invite.",
       forbidden: "You do not have access to this action.",
       not_found: "Your staff access has changed. Reload this page.",
-      upgrade_required: "This action needs the Team plan.",
+      upgrade_required:
+        "This tool isn’t available for your account. Check your staff access for this library.",
       invalid_message: "Write a message between 10 and 1,000 characters.",
       moderators_email_not_configured:
         "Staff access reports are temporarily unavailable.",
-      no_seats: "The team has no free seats. Ask your organiser to add one.",
+      member_limit:
+        "This workspace has reached its member limit. Remove a member or invitation first.",
       team_membership_exists:
         "Your account already belongs to a Team. Ask its Organiser to remove your membership before joining another. An Organiser must hand over their role first.",
       already_member: "They are already on the team.",
       invite_already_pending: "An invite for that email is already pending.",
       invalid_email: "Enter a valid email address.",
       library_not_in_team: "That library is not one of the team's.",
-      team_inactive: "The team is lapsed or has expired.",
+      team_inactive:
+        "This workspace has been closed by the site team. Contact them to reopen it.",
       member_not_active: "They haven't accepted their invite yet.",
       claim_pending:
         "A claim for that library is already waiting for a moderator.",

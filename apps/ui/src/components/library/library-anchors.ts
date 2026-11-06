@@ -8,8 +8,6 @@ export interface AnchorItem {
   label: string
   count?: string | number
   icon: string
-  /** Marks a section with Pro analysis in it. */
-  pro?: boolean
 }
 
 export const LIBRARY_ANCHORS = {

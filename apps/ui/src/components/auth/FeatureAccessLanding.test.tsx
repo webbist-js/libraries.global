@@ -52,23 +52,38 @@ describe("contextual feature invitation", () => {
       expect(screen.getAllByRole("listitem")).toHaveLength(3)
     }
   )
-  it.each(["teams", "widgets", "api"] as const)(
-    "offers a relevant next step to a member without %s access",
+  it.each(["teams", "widgets"] as const)(
+    "offers a free workspace, never a plan, to a member without %s access",
     async (feature) => {
       render(await FeatureAccessLanding({ feature, signedIn: true }))
       expect(
         screen
-          .getByRole("link", { name: "Explore Team plans" })
+          .getByRole("link", { name: messages.featureAccess.setUpTeam })
           .getAttribute("href")
-      ).toBe("/plans#plan-team")
-      expect(
-        screen.getByRole("link", { name: "Set up a Team" }).getAttribute("href")
       ).toBe("/staff/teams/new")
+      expect(
+        screen
+          .getByRole("link", { name: messages.featureAccess.claimLibrary })
+          .getAttribute("href")
+      ).toBe("/staff/claim")
+      expect(
+        screen
+          .getAllByRole("link")
+          .some((link) => link.getAttribute("href")?.startsWith("/plans"))
+      ).toBe(false)
       expect(
         screen.queryByRole("link", { name: "Create a free account" })
       ).toBeNull()
     }
   )
+  it("sends a signed-in member to Developers for API access", async () => {
+    render(await FeatureAccessLanding({ feature: "api", signedIn: true }))
+    expect(
+      screen
+        .getByRole("link", { name: messages.featureAccess.openDevelopers })
+        .getAttribute("href")
+    ).toBe("/developers")
+  })
   it("retains selected claim context and explains verification separately from payment", async () => {
     const signInHref =
       "/auth/signin?callbackUrl=%2Ffr%2Fstaff%2Fclaim%3FlibrarySlug%3Dcentral"

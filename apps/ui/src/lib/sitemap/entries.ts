@@ -178,4 +178,5 @@ const STATIC_ROUTES: {
     changeFrequency: "monthly",
     priority: 0.5,
   },
+  { path: "sponsor", changeFrequency: "monthly", priority: 0.4 },
 ]

@@ -25,10 +25,8 @@ import {
   addSkip,
   nextTask,
   type PendingQuota,
-  pointsToEarnedPro,
   randomTask,
   readSkips,
-  type StandingTier,
   taskVerb,
 } from "./task-panel.logic"
 
@@ -118,7 +116,6 @@ function DriveTasksWorkspace({
   const focusName = useRef(false)
 
   const [quota, setQuota] = useState<PendingQuota | null>(null)
-  const [toEarnedPro, setToEarnedPro] = useState<number | null>(null)
   const [mine, setMine] = useState<DriveMine | null>(null)
   const [mineVersion, setMineVersion] = useState(0)
 
@@ -182,19 +179,17 @@ function DriveTasksWorkspace({
       .then(
         (
           json: {
-            data?: StandingTier
             pendingCount?: unknown
             pendingLimit?: unknown
           } | null
         ) => {
           if (!live || !json) return
-          const { data, pendingCount, pendingLimit } = json
+          const { pendingCount, pendingLimit } = json
           setQuota(
             typeof pendingCount === "number" && typeof pendingLimit === "number"
               ? { pendingCount, pendingLimit }
               : null
           )
-          setToEarnedPro(pointsToEarnedPro(data ?? null))
         }
       )
       .catch(() => {})
@@ -454,13 +449,7 @@ function DriveTasksWorkspace({
             busy={randomBusy}
             disabled={loading}
           />
-          {signedIn ? (
-            <DriveYourPart
-              mine={mine}
-              quota={quota}
-              toEarnedPro={toEarnedPro}
-            />
-          ) : null}
+          {signedIn ? <DriveYourPart mine={mine} quota={quota} /> : null}
         </div>
       </div>
       {panel ? (

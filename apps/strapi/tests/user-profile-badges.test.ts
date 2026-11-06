@@ -49,7 +49,8 @@ describe("user-profile badge endpoints follow profile visibility", () => {
           // it's requested (private:true only protects core find/findOne).
           notifPrefs: { weeklyDigest: true },
           contributorNumber: 7,
-          earnedProUntil: "2099-01-01T00:00:00.000Z",
+          recognitionRevokedAt: "2099-01-01T00:00:00.000Z",
+          acceptedContributions: 4,
         },
         { ...profile("pLim", "lim", "uLim", "limited"), city: "Leeds" },
         profile("pPriv", "priv", "uPriv", "private"),
@@ -296,7 +297,8 @@ describe("user-profile badge endpoints follow profile visibility", () => {
 
   describe("private fields never leak (findByUsername / findByDocumentId)", () => {
     const PRIVATE_FIELDS = [
-      "earnedProUntil",
+      "recognitionRevokedAt",
+      "acceptedContributions",
       "baUserId",
       "notifPrefs",
       "contributorNumber",

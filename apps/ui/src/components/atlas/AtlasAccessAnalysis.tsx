@@ -5,7 +5,10 @@ import type {
   AtlasBounds,
   AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import {
+  useTranslations,
+  useTranslations as useUiTranslations,
+} from "next-intl"
 import { useMemo, useState, type ReactNode } from "react"
 
 import {
@@ -83,6 +86,7 @@ export function AtlasAccessAnalysis({
   readonly onTab?: (tab: AnalysisTab) => void
 }) {
   const tUi = useUiTranslations("ui")
+  const tAnalysis = useTranslations("atlasAnalysis")
 
   const [localTab, setLocalTab] = useState<AnalysisTab>("overview"),
     [showAllAreas, setShowAllAreas] = useState(false),
@@ -164,7 +168,7 @@ export function AtlasAccessAnalysis({
   return (
     <AtlasAnalysisWorkspace
       title={tUi("library_access")}
-      badge="Pro"
+      badge={tAnalysis("areaLayer")}
       description={`${metric === "per100k" ? "Libraries per 100k people" : "People per library"} · ${areaKind}`}
       {...{ collapsed, onCollapse, onClose, onSettings }}
       tab={tab}

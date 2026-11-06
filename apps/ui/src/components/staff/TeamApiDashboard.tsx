@@ -4,8 +4,6 @@ import { Icon } from "@iconify/react"
 import { useLocale, useTranslations } from "next-intl"
 import {
   useEffect,
-  useMemo,
-  useSyncExternalStore,
   useRef,
   useState,
   useTransition,
@@ -15,40 +13,23 @@ import {
 
 import { Badge } from "@/components/ds/Badge"
 import { Notice } from "@/components/ds/Notice"
+import { ApiOveragePanel } from "@/components/staff/ApiOveragePanel"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamApiKeyDialog } from "@/components/staff/TeamApiKeyDialog"
-import { TeamPurchaseProgress } from "@/components/staff/TeamPurchaseJourney"
 import { Button } from "@/components/ui/button"
 import { captureCheckoutAttempt } from "@/lib/checkout-analytics"
 import { redirectForReauthentication } from "@/lib/fresh-auth"
 import { Link } from "@/lib/navigation"
 import type { ApiDashboard } from "@/lib/team-api/types"
-import {
-  rememberTeamApiChoice,
-  teamApiChoiceSelected,
-} from "@/lib/team-purchase-intent"
 
 import {
   ApiSubscriptionPanel,
   ApiUsagePanel,
   ApiGuidePanel,
   formatApiBytes,
+  formatPeriodTime,
+  warningSummary,
 } from "./TeamApiPanels"
-
-const ERRORS: Record<string, string> = {
-  api_terms_required:
-    "The membership terms have changed. Reload this page and review them before subscribing.",
-  organiser_required: "Ask a Team Organiser to manage API access.",
-  api_key_limit_reached: "Revoke an unused key before creating another.",
-  api_key_inactive: "This key has expired or been revoked. Create a new key.",
-  api_addon_required: "Your Team needs an active API add-on to create keys.",
-  api_subscription_already_exists:
-    "Your Team already has an API subscription. Open billing to manage it.",
-  api_payment_confirmation_pending:
-    "Your payment is being confirmed. This page will update when it is ready.",
-  too_many_requests: "Please wait a minute before trying again.",
-  team_inactive: "Your Team is inactive. Contact us to renew it.",
-}
 
 function activeApiKeyCount(data: ApiDashboard, now: number) {
   return (
@@ -74,6 +55,50 @@ function hasApiKeys(data: ApiDashboard) {
 }
 function canCreateApiKeys(data: ApiDashboard) {
   return data.organiser && data.active
+}
+
+function ApiUsageSummary({
+  data,
+  locale,
+}: {
+  readonly data: ApiDashboard
+  readonly locale: string
+}) {
+  const count = (n: number) => new Intl.NumberFormat(locale).format(n)
+  const warnings = warningSummary(data.warnings)
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-(--t-ink-dim) tabular-nums">
+        <span>
+          This period: {count(data.usage.requests)} of{" "}
+          {count(data.limits.requests)} requests
+        </span>
+        <span>
+          {formatApiBytes(data.usage.bytes, locale)} of{" "}
+          {formatApiBytes(data.limits.bytes, locale)} response data
+        </span>
+        <span>
+          {count(data.usage.credits)} of {count(data.limits.analysisCredits)}{" "}
+          analysis credits
+        </span>
+        {data.usage.resetsAt ? (
+          <span>Resets {formatPeriodTime(data.usage.resetsAt, locale)}</span>
+        ) : null}
+        <Link
+          href="/developers/usage"
+          className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
+        >
+          View usage
+        </Link>
+      </div>
+      {warnings.length ? (
+        <p role="status" className="m-0 text-sm font-semibold">
+          Usage alert: {warnings.join("; ")}.
+        </p>
+      ) : null}
+    </div>
+  )
 }
 
 function KeyPagination({
@@ -234,7 +259,7 @@ function TeamKeyList({
                 </div>
                 <p className="mt-3 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
                   {count(key.requests)} requests ·{" "}
-                  {formatApiBytes(key.bytes, locale)} this month ·{" "}
+                  {formatApiBytes(key.bytes, locale)} this period ·{" "}
                   {key.lastUsedAt
                     ? "Last used " +
                       new Date(key.lastUsedAt).toLocaleString(locale)
@@ -432,33 +457,14 @@ function ApiKeySecret({
 function apiDashboardVisibility(
   data: ApiDashboard,
   section: string,
-  guided: boolean,
   setupRequested: boolean
 ) {
   return {
-    progress: guided && data.organiser && ["all", "overview"].includes(section),
-    stage: data.active
-      ? ("complete" as const)
-      : data.teamActive
-        ? ("api" as const)
-        : ("team" as const),
     summary: hasApiUsage(data) && section === "overview",
     usage: hasApiUsage(data) && ["all", "usage"].includes(section),
+    overage: data.active && ["all", "overview", "usage"].includes(section),
     keys: hasApiKeys(data) && ["all", "keys"].includes(section),
     setup: setupRequested && data.organiser,
-  }
-}
-
-// A browser purchase choice is read once per Team visit. Keep the completed
-// journey visible after its persistent hand-off marker has been cleared.
-const noJourneyUnsubscribe = () => {}
-const noJourneySubscription = () => noJourneyUnsubscribe
-function journeySnapshot(teamId: string, requested: boolean) {
-  let selected: boolean | undefined
-
-  return {
-    browser: () => (selected ??= requested || teamApiChoiceSelected(teamId)),
-    server: () => requested,
   }
 }
 
@@ -474,15 +480,6 @@ export function TeamApiDashboard({
   readonly confirming: boolean
 }) {
   const [data, setData] = useState(initial)
-  const journey = useMemo(
-    () => journeySnapshot(data.teamId, setupRequested),
-    [data.teamId, setupRequested]
-  )
-  const guided = useSyncExternalStore(
-    noJourneySubscription,
-    journey.browser,
-    journey.server
-  )
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState("")
   const [secret, setSecret] = useState<string | null>(null)
@@ -490,15 +487,11 @@ export function TeamApiDashboard({
   const [keyCreationOpen, setKeyCreationOpen] = useState(false)
   const secretRef = useRef<HTMLDivElement>(null)
   const t = useTranslations("teamApiKeys")
+  const tErrors = useTranslations("teamApiErrors")
   const [confirmation, setConfirmation] = useState<KeyChange | null>(null)
   const [pending, startTransition] = useTransition()
   const locale = useLocale()
   const endpoint = `/api/staff/team/${data.teamId}/api`
-
-  useEffect(() => {
-    if (!data.organiser) return
-    if (data.active) rememberTeamApiChoice(data.teamId, false)
-  }, [data.teamId, data.organiser, data.active, setupRequested])
 
   useEffect(() => {
     if ((!confirming && !data.pendingPayment) || data.active) return
@@ -546,8 +539,9 @@ export function TeamApiDashboard({
         if (!response.ok && redirectForReauthentication(result)) return
         if (!response.ok)
           throw new Error(
-            ERRORS[result.error ?? ""] ??
-              "API access is temporarily unavailable. Try again shortly."
+            result.error && tErrors.has(result.error as never)
+              ? tErrors(result.error as never)
+              : tErrors("unavailable")
           )
         if (result.url) {
           handoff()
@@ -573,12 +567,7 @@ export function TeamApiDashboard({
     })
 
   const activeKeys = activeApiKeyCount(data, now)
-  const visibility = apiDashboardVisibility(
-    data,
-    section,
-    guided,
-    setupRequested
-  )
+  const visibility = apiDashboardVisibility(data, section, setupRequested)
   const subscription = (
     <ApiSubscriptionPanel
       data={data}
@@ -604,9 +593,6 @@ export function TeamApiDashboard({
 
   return (
     <div className="min-w-0 space-y-6 text-(--t-ink-base)">
-      {visibility.progress ? (
-        <TeamPurchaseProgress stage={visibility.stage} />
-      ) : null}
       <ApiDashboardHeader
         data={data}
         subscription={subscription}
@@ -624,26 +610,17 @@ export function TeamApiDashboard({
       ) : null}
       {!data.active ? subscription : null}
       {visibility.summary ? (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-(--t-ink-dim) tabular-nums">
-          <span>
-            This month:{" "}
-            {new Intl.NumberFormat(locale).format(data.usage.requests)} of{" "}
-            {new Intl.NumberFormat(locale).format(data.limits.requests)}{" "}
-            successful requests
-          </span>
-          <span>
-            {formatApiBytes(data.usage.bytes, locale)} of{" "}
-            {formatApiBytes(data.limits.bytes, locale)} response data
-          </span>
-          <Link
-            href="/developers/usage"
-            className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
-          >
-            View usage and reset date
-          </Link>
-        </div>
+        <ApiUsageSummary data={data} locale={locale} />
       ) : null}
       {visibility.usage ? <ApiUsagePanel data={data} locale={locale} /> : null}
+      {visibility.overage ? (
+        <ApiOveragePanel
+          data={data}
+          locale={locale}
+          pending={pending}
+          request={request}
+        />
+      ) : null}
       {visibility.keys ? (
         <StaffPanel
           title={t("title")}

@@ -183,14 +183,25 @@ export default [
     handler: "widgets.report",
     config: { auth: false },
   },
-  ...["create", "context", "sync", "deletionCheck", "discard"].map(
-    (action) => ({
-      method: "POST",
-      path: `/billing/${action}`,
-      handler: `team-billing.${action}`,
-      config: { auth: false },
-    })
-  ),
+  // API account bridge (service secret; see controllers/api-accounts).
+  {
+    method: "POST",
+    path: "/api/accounts/organisation",
+    handler: "api-accounts.organisation",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/api/accounts/owner-check",
+    handler: "api-accounts.ownerCheck",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/api/teams/:id/api-notices",
+    handler: "api-accounts.notice",
+    config: { auth: false },
+  },
   {
     method: "GET",
     path: "/api/teams/:id/status",
@@ -213,6 +224,38 @@ export default [
     method: "GET",
     path: "/api/places",
     handler: "api-data.places",
+    config: { auth: false },
+  },
+  // Machine API service reads and analysis admission (bridge secret only;
+  // see controllers/api-resources). No user identity is accepted.
+  {
+    method: "GET",
+    path: "/api/services",
+    handler: "api-resources.services",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/api/services/:ref",
+    handler: "api-resources.service",
+    config: { auth: false },
+  },
+  {
+    method: "GET",
+    path: "/api/services/:ref/libraries",
+    handler: "api-resources.serviceLibraries",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/api/analysis/summary",
+    handler: "api-resources.summary",
+    config: { auth: false },
+  },
+  {
+    method: "POST",
+    path: "/api/analysis/reach",
+    handler: "api-resources.reach",
     config: { auth: false },
   },
   route("GET", "/teams/mine", "mine"),

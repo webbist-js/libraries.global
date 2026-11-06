@@ -129,7 +129,7 @@ const reader: BetterAuthUser = {
   createdAt: new Date(),
   updatedAt: new Date(),
   capabilities: ["staff.area", "journal.directEdit"],
-  plan: "pro",
+  facts: ["explorer", "apiCustomer"],
 }
 const clients: QueryClient[] = []
 function App() {
@@ -305,22 +305,17 @@ it("keeps the account header and actions available before a community profile is
     within(dialog).queryByRole("link", { name: "View public profile" })
   ).toBeNull()
 })
-it.each(["supporter", "pro", "team"] as const)(
-  "hands %s support off once after restoring focus",
-  async (plan) => {
-    state.user!.plan = plan
-    mount()
-    const { trigger, dialog } = await open()
-    fireEvent.click(within(dialog).getByRole("button", { name: "Support" }))
-    await waitFor(() =>
-      expect(state.contact).toHaveBeenCalledExactlyOnceWith(
-        "membership_support"
-      )
-    )
-    expect(screen.queryByRole("dialog")).toBeNull()
-    expect(document.activeElement).toBe(trigger)
-  }
-)
+it("hands API customer support off once after restoring focus", async () => {
+  state.user!.facts = ["explorer", "apiCustomer"]
+  mount()
+  const { trigger, dialog } = await open()
+  fireEvent.click(within(dialog).getByRole("button", { name: "Support" }))
+  await waitFor(() =>
+    expect(state.contact).toHaveBeenCalledExactlyOnceWith("membership_support")
+  )
+  expect(screen.queryByRole("dialog")).toBeNull()
+  expect(document.activeElement).toBe(trigger)
+})
 it("gates tools and support using the current session, and hands authorized tools off after close", async () => {
   const view = mount()
   let opened = await open()
@@ -333,7 +328,7 @@ it("gates tools and support using the current session, and hands authorized tool
       opened.trigger
     )
   )
-  state.user = { ...reader, plan: "free", capabilities: [] }
+  state.user = { ...reader, facts: ["explorer"], capabilities: [] }
   view.rerender()
   opened = await open()
   expect(

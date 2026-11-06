@@ -332,7 +332,7 @@ describe("atlasExportRow", () => {
 })
 
 describe("MAX_EXPORT_IDS", () => {
-  it("caps one export request at the Team plan's row limit", () => {
+  it("caps one export request's ids as a request-size guard", () => {
     expect(MAX_EXPORT_IDS).toBe(50_000)
   })
 })

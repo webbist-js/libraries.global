@@ -10,6 +10,7 @@ import {
 } from "@repo/shared-data"
 
 const { template } = createRequire(import.meta.url)("lodash")
+import { apiUsageNotice } from "../../strapi/src/plugins/access/server/utils/api-usage-notice.ts"
 import {
   applicationDecidedEmail,
   claimApprovedEmail,
@@ -17,7 +18,6 @@ import {
   driveThanksEmail,
   moderatorAlertEmail,
 } from "../../strapi/src/plugins/content-moderation/server/utils/email-templates.ts"
-import { billingNotice } from "../../strapi/src/utils/billing-notice.ts"
 
 /** Inert previews: no tokens, enrollments, queue records or real moderation changes. */
 export function emailSamples() {
@@ -44,79 +44,24 @@ export function emailSamples() {
       action,
     }),
   })
-  const paid = {
-    mode: "sandbox",
-    plan: "pro",
-    status: "active",
-    interval: "month",
-    currency: "gbp",
-    unitAmount: 500,
-    memberSince: "2026-10-12T12:00:00Z",
-    periodEnd: "2026-11-12T12:00:00Z",
-    paidThrough: "2026-11-12T12:00:00Z",
-    pastDueSince: null,
-    cancelAtPeriodEnd: false,
-    revoked: false,
-  }
+  // API usage warnings: the only billing notices the application sends.
   const billingSamples = [
-    ["billing-ready", paid, null],
-    [
-      "billing-supporter-ready",
-      { ...paid, plan: "supporter", unitAmount: 300 },
-      null,
-    ],
-    [
-      "billing-upgraded-to-pro",
-      paid,
-      { ...paid, plan: "supporter", unitAmount: 300 },
-    ],
-    [
-      "billing-downgraded-to-supporter",
-      { ...paid, plan: "supporter", unitAmount: 300 },
-      paid,
-    ],
-    [
-      "billing-change-scheduled",
-      {
-        ...paid,
-        pendingChange: {
-          plan: "supporter",
-          interval: "month",
-          effectiveAt: paid.paidThrough,
-        },
-      },
-      paid,
-    ],
-    [
-      "billing-change-undone",
-      paid,
-      {
-        ...paid,
-        pendingChange: {
-          plan: "supporter",
-          interval: "month",
-          effectiveAt: paid.paidThrough,
-        },
-      },
-    ],
-    ["billing-canceled", { ...paid, cancelAtPeriodEnd: true }, paid],
-    ["billing-resumed", paid, { ...paid, cancelAtPeriodEnd: true }],
-    ["billing-recovered", paid, { ...paid, status: "past_due" }],
-    ["billing-ended", { ...paid, graceExpired: true }, paid],
-    ["billing-changed", { ...paid, interval: "year" }, paid],
-  ].map(([id, next, previous]) => {
-    const notice = billingNotice(
-      next,
-      previous,
-      new Date("2026-10-12T12:00:00Z")
-    )
+    ["requests", 50],
+    ["requests", 80],
+    ["requests", 100],
+    ["bytes", 100],
+    ["credits", 100],
+    ["cap", 80],
+    ["cap", 100],
+  ].map(([dimension, threshold]) => {
+    const notice = apiUsageNotice(dimension, threshold)
 
     return simple(
-      id,
+      `billing-api-${dimension}-${threshold}`,
       notice.title,
       notice.body,
-      "/profile/settings#membership",
-      "Manage membership"
+      "/developers/usage",
+      "View API usage"
     )
   })
   const samples = [

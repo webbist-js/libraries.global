@@ -1,17 +1,16 @@
 {
   "featureAccess": {
     "freeAccount": "Compte gratuit",
-    "teamRequired": "Accès Team actif requis",
-    "apiRequired": "Team + option API",
+    "teamRequired": "Espace de travail gratuit",
+    "apiRequired": "Accès API",
     "eyebrow": "Aller plus loin avec Libraries Global",
     "benefitsTitle": "Ce que vous pouvez faire ici",
     "accessTitle": "Conditions d’accès",
     "accountTitle": "Commencez avec un compte gratuit",
     "accountNote": "Connectez-vous à votre compte ou créez-en un gratuitement. Les conditions d’accès supplémentaires sont expliquées ici.",
-    "teamTitle": "La prochaine étape avec une équipe",
-    "teamNote": "Ces outils utilisent un espace Team. Créez-en un ou demandez une invitation à la personne qui organise votre équipe.",
-    "teamPlans": "Découvrir les offres Team",
-    "setUpTeam": "Créer une équipe",
+    "teamTitle": "Prochaine étape : un espace de travail du personnel",
+    "teamNote": "Ces outils se trouvent dans un espace de travail gratuit pour le personnel. Créez-en un ou demandez une invitation à la personne qui l’organise. Pour modifier une bibliothèque, il faut toujours votre propre accès du personnel vérifié.",
+    "setUpTeam": "Créer un espace gratuit",
     "createAccount": "Créer un compte gratuit",
     "networks": {
       "title": "Connectez-vous pour gérer votre service ou réseau",
@@ -33,36 +32,36 @@
       "benefits": {
         "one": "Inviter des collègues et gérer les membres.",
         "two": "Associer les bibliothèques du service aux bonnes personnes.",
-        "three": "Utiliser les outils Team, dont les widgets, avec un accès actif."
+        "three": "Créer des widgets pour votre site à partir des bibliothèques dont vous vous occupez."
       },
-      "requirement": "L’adhésion Team et l’accès du personnel sont distincts. La modification des fiches exige une vérification ; le paiement ne donne pas cette autorité.",
+      "requirement": "Les espaces de travail sont gratuits. En être membre ne donne jamais le droit de modifier une bibliothèque : il faut pour cela votre propre accès du personnel vérifié pour chacune.",
       "memberTitle": "Réunissez votre service avec Team"
     },
     "widgets": {
       "title": "Connectez-vous pour intégrer des données à votre site",
       "lead": "Créez des cartes, répertoires et graphiques reliés aux fiches publiées.",
       "action": "Se connecter pour utiliser les widgets",
-      "publicAction": "Voir les offres Team",
+      "publicAction": "Parcourir l’index des bibliothèques",
       "benefits": {
         "one": "Réutiliser une sélection de bibliothèques dans plusieurs formats.",
         "two": "Adapter une carte, un répertoire ou une comparaison à votre site.",
         "three": "Prévisualiser les brouillons et gérer leur publication."
       },
-      "requirement": "Les widgets nécessitent un accès Team actif. Les modifications et la publication dépendent de vos autorisations dans l’équipe.",
-      "memberTitle": "Intégrez les données des bibliothèques avec Team"
+      "requirement": "Les widgets sont gratuits dans un espace de travail du personnel. La modification et la publication dépendent de votre rôle dans l’espace.",
+      "memberTitle": "Intégrez les données des bibliothèques à votre site avec un espace gratuit"
     },
     "api": {
       "title": "Connectez-vous pour relier votre application",
-      "lead": "Utilisez les données publiques grâce à l’option API de votre équipe.",
+      "lead": "Construisez avec les données publiques des bibliothèques grâce à l’accès API.",
       "action": "Se connecter pour accéder à l’API",
       "publicAction": "Explorer les guides sur les données",
       "benefits": {
         "one": "Relier vos outils aux fiches publiées des bibliothèques.",
-        "two": "Gérer les accès API au sein de votre équipe autorisée.",
+        "two": "Gérez les clés pour vous-même ou pour votre organisation.",
         "three": "Consulter les quotas de requêtes et leur utilisation."
       },
-      "requirement": "L’API est une option payante distincte pour les équipes. Créer un compte ou acheter une offre personnelle ne l’active pas.",
-      "memberTitle": "Reliez votre application avec l’API Team"
+      "requirement": "L’accès API est un abonnement mensuel distinct. Un compte gratuit, une reconnaissance ou une vérification du personnel ne l’incluent pas.",
+      "memberTitle": "Connectez votre application avec l’accès API"
     },
     "claim": {
       "title": "Connectez-vous pour revendiquer votre bibliothèque",
@@ -86,7 +85,7 @@
         "two": "Ajouter des horaires, photos, informations d’accessibilité ou sources.",
         "three": "Enregistrer un brouillon et suivre sa relecture."
       },
-      "requirement": "Un compte gratuit suffit pour proposer des changements. Les contributions ordinaires sont relues avant publication ; aucune offre payante n’est nécessaire."
+      "requirement": "Un compte gratuit suffit pour proposer des changements. Les contributions ordinaires sont relues avant publication."
     },
     "add": {
       "title": "Connectez-vous pour ajouter une bibliothèque à la carte",
@@ -122,8 +121,10 @@
         "two": "Préciser les langues et sujets pour lesquels vous pouvez aider.",
         "three": "Suivre votre candidature et les demandes d’informations."
       },
-      "requirement": "Les rôles sont accordés après examen de l’expérience, des contributions et des critères du rôle. Une adhésion payante ne garantit pas leur attribution."
-    }
+      "requirement": "Les rôles sont accordés après examen de l’expérience, des contributions et des critères du rôle. Un paiement ne garantit pas leur attribution."
+    },
+    "claimLibrary": "Revendiquer une bibliothèque",
+    "openDevelopers": "Ouvrir Développeurs"
   },
   "homepageTrust": {
     "sources": "D’où viennent nos données",
@@ -160,9 +161,9 @@
     "badges": {
       "free": "Gratuit",
       "account": "Compte gratuit",
-      "pro": "Pro / Team",
       "staff": "Gratuit · personnel vérifié",
-      "soon": "Prévu"
+      "soon": "Prévu",
+      "contributor": "Gratuit · contributeurs"
     },
     "map": {
       "title": "Toutes les bibliothèques sur une carte",
@@ -296,7 +297,7 @@
     "busy": "Réduisez la zone à {count} bibliothèques ou moins avant de calculer. Seul le service ou la bibliothèque choisi est évalué.",
     "serviceTitle": "Choisissez un service plus petit ou une bibliothèque",
     "libraries": "La couverture d’un service est limitée à {count} bibliothèques admissibles par calcul. Choisissez une bibliothèque pour explorer la portée dans ce service.",
-    "area": "Ce service ou sa zone de référence dépasse la limite géographique Reach de votre formule. Choisissez une bibliothèque pour explorer les trajets locaux à pied et à vélo.",
+    "area": "Ce service ou sa zone de référence dépasse la limite géographique de Reach. Choisissez une bibliothèque pour explorer les trajets locaux à pied et à vélo.",
     "zoomIn": "Afficher une vue locale",
     "singleLibrary": "Analyser une seule bibliothèque"
   },
@@ -446,8 +447,6 @@
     "reachUnsupported": "Reach n’est pas encore disponible pour cette bibliothèque. Les bibliothèques fixes en Angleterre, au pays de Galles, en Écosse et en Irlande du Nord sont prises en charge lorsque les données sont disponibles. Les bibliothèques prévues, fermées temporairement ou définitivement sont exclues.",
     "openReach": "Ouvrir cette analyse dans l’Atlas",
     "reachAvailability": "Explorez les trajets à pied et à vélo vers les bibliothèques du Royaume-Uni.",
-    "reachAccessMessage": "Pro et Team incluent cette analyse. Les informations sur les bibliothèques restent gratuites.",
-    "seePlans": "Comparer les offres",
     "populationYearShort": "Estimations de population pour {year}",
     "reachCountsExplanation": "Le total à 15 minutes inclut les personnes à 5 et 10 minutes. N’additionnez pas les lignes.",
     "reachOverlap": "Une personne peut habiter à proximité de plusieurs bibliothèques. Additionner leurs totaux compterait certaines personnes plusieurs fois.",
@@ -749,11 +748,12 @@
         "report_issue": "Signaler un problème",
         "general_inquiry": "Question générale",
         "account_support": "Aide concernant mon compte",
-        "membership_support": "Assistance adhésion",
+        "membership_support": "Accès API et facturation",
         "library_correction": "Corriger les informations d’une bibliothèque",
-        "plans": "Offres et adhésion",
+        "plans": "Formules et accès API",
         "partnership": "Partenariat ou collaboration",
-        "privacy": "Confidentialité ou demande concernant les données"
+        "privacy": "Confidentialité ou demande concernant les données",
+        "sponsorship": "Mécénat"
       },
       "prompts": {
         "report_issue": {
@@ -772,9 +772,9 @@
           "placeholder": "Je rencontre des difficultés avec…"
         },
         "membership_support": {
-          "label": "De quelle aide avez-vous besoin pour votre adhésion ?",
-          "hint": "Précisez votre adhésion Supporter, Pro ou Team et tout problème de facturation, d’accès ou de fonctionnalités. N’incluez pas de coordonnées bancaires, de mot de passe ni de code de sécurité.",
-          "placeholder": "Je suis membre et j’ai besoin d’aide pour…"
+          "label": "De quelle aide avez-vous besoin ?",
+          "hint": "Parlez-nous de votre abonnement à l’accès API, d’une ancienne adhésion, ou de tout problème de facturation, d’accès ou de fonctionnalités. N’incluez pas de coordonnées bancaires, de mot de passe ni de code de sécurité.",
+          "placeholder": "J’ai besoin d’aide pour…"
         },
         "library_correction": {
           "label": "Quelle bibliothèque et quelles informations faut-il corriger ?",
@@ -783,7 +783,7 @@
         },
         "plans": {
           "label": "De quoi souhaitez-vous discuter ?",
-          "hint": "Présentez votre bibliothèque ou votre service, l’offre qui vous intéresse, ou votre question concernant une subvention ou une vérification.",
+          "hint": "Présentez votre bibliothèque ou votre service, ce que vous souhaitez utiliser, ou votre question sur la vérification.",
           "placeholder": "Nous sommes intéressés par… pour…"
         },
         "partnership": {
@@ -795,6 +795,11 @@
           "label": "Quelle est votre question ou votre demande ?",
           "hint": "Décrivez votre demande. N’envoyez pas de pièce d’identité ni d’informations personnelles sensibles ici.",
           "placeholder": "Je souhaiterais me renseigner sur…"
+        },
+        "sponsorship": {
+          "label": "Quel travail souhaitez-vous soutenir ?",
+          "hint": "Présentez votre organisation, le programme qui vous intéresse et, si vous les connaissez, votre budget et votre calendrier. N’indiquez aucune coordonnée de paiement.",
+          "placeholder": "Nous sommes… et souhaitons soutenir…"
         }
       }
     }
@@ -1016,7 +1021,6 @@
     "support": "Assistance",
     "contributing_is_free": "Contribuer est gratuit.",
     "sign_in_to_suggest_edits_add_libraries_and_join_drives": "Connectez-vous pour proposer des corrections, ajouter des bibliothèques et participer aux campagnes.",
-    "support_the_index_and_explore_pro": "Soutenez le répertoire et découvrez Pro.",
     "contribute_menu": "Menu des contributions",
     "your_work": "Votre travail",
     "everyone": "Tout le monde",
@@ -1049,8 +1053,8 @@
     "choose_a_different_library": "Choisir une autre bibliothèque",
     "you_re_editing_as_staff": "Vous intervenez en tant que membre du personnel",
     "adding_a_library_as_staff": "Ajout d’une bibliothèque par son personnel",
-    "team_coverage": "Périmètre de l’équipe",
-    "no_team_free_staff_access": "Sans équipe · accès gratuit du personnel",
+    "team_coverage": "Espace d’équipe",
+    "no_team_free_staff_access": "Aucun espace d’équipe",
     "step_navigation": "Navigation entre les étapes",
     "skip_to_sources": "Passer aux sources",
     "continent": "Continent",
@@ -1250,7 +1254,6 @@
     "area_search_results": "Résultats de recherche de zones",
     "article_type": "Type d’article",
     "badges_earned": "Badges obtenus",
-    "billing_period": "Période de facturation",
     "breadcrumb": "Fil d’Ariane",
     "by_email": "Par e-mail",
     "by_place": "Par lieu",
@@ -1275,7 +1278,7 @@
     "collect": "Recueillir",
     "coming_soon": "Bientôt disponible",
     "community_contributor": "Contributeur de la communauté",
-    "compare_every_plan": "Comparer toutes les offres",
+    "compare_every_plan": "Comparer ce qui est inclus",
     "confirm_its_you": "Confirmez votre identité",
     "connected_feeds": "Flux connectés",
     "console_menu": "Menu de la console",
@@ -1333,8 +1336,6 @@
     "founded_until": "Fondée jusqu’à",
     "founder": "Fondateur",
     "free": "Gratuit",
-    "free_for_everyone": "Gratuit, pour tous",
-    "get_pro_free": "Obtenir Pro gratuitement",
     "getting_started": "Premiers pas",
     "go_live": "Passer en direct",
     "goal": "Objectif",
@@ -1547,7 +1548,6 @@
     "team": "Équipe",
     "team_coverage_couldnt_be_loaded": "Impossible de charger le périmètre de l’équipe",
     "team_organiser": "Responsable de l’équipe",
-    "team_plan": "Offre Équipe",
     "term_time_only": "Pendant les périodes scolaires uniquement",
     "test_result": "Résultat du test",
     "test_when_sent": "Test à l’envoi",
@@ -1644,9 +1644,9 @@
     "change_at_least_one_field_before_sending": "Modifiez au moins un champ avant l’envoi.",
     "library_sent_for_review_approval_will_add_it_to_your_staff_area": "Bibliothèque envoyée pour examen. Après approbation, elle apparaîtra dans votre espace du personnel.",
     "submission_received_editorial_review_typically_takes_13_days": "Contribution reçue — l’examen par la rédaction prend généralement 1 à 3 jours.",
-    "it_will_also_be_covered_by_the_team_selected_below": "Elle sera également couverte par l’équipe sélectionnée ci-dessous.",
+    "it_will_also_be_covered_by_the_team_selected_below": "Elle sera également ajoutée à l’espace d’équipe sélectionné ci-dessous.",
     "everyday_staff_tools_stay_free": "Les outils courants du personnel restent gratuits.",
-    "team_coverage_is_saved_with_this_draft": "Le périmètre de l’équipe est enregistré avec ce brouillon.",
+    "team_coverage_is_saved_with_this_draft": "L’espace d’équipe est enregistré avec ce brouillon.",
     "choose_the_library_service_this_new_record_belongs_to": "Choisissez le réseau de bibliothèques auquel appartient cette nouvelle fiche.",
     "home_section": "Rubrique principale",
     "open_library": "Ouvrir {library}",
@@ -1683,7 +1683,6 @@
     "legal_data": "Données et responsabilité",
     "legal_other": "Autres politiques",
     "legal_unavailable": "Les politiques sont actuellement indisponibles. Veuillez réessayer plus tard.",
-    "choose_your_membership": "Choisissez votre abonnement",
     "loading_library_details": "Chargement des informations sur la bibliothèque…",
     "loading_map": "Chargement de la carte…",
     "fetching_libraries": "Chargement des bibliothèques.",
@@ -1702,7 +1701,9 @@
     "history_community_member": "Membre de la communauté",
     "atlas_controls": "Commandes",
     "atlas_show_controls": "Afficher les commandes de l’Atlas",
-    "atlas_hide_controls": "Masquer les commandes de l’Atlas"
+    "atlas_hide_controls": "Masquer les commandes de l’Atlas",
+    "sponsor": "Mécénat",
+    "staff_access_free": "Accès du personnel · gratuit"
   },
   "translation": {
     "language": "Langue",
@@ -1877,153 +1878,6 @@
     "upNext": "À lire ensuite",
     "nextStory": "Article suivant",
     "baseline": "État initial du contenu"
-  },
-  "billing": {
-    "secureCheckout": "Paiement sécurisé",
-    "sandbox": "Mode test",
-    "steps": "Étapes du paiement",
-    "plan": "Formule",
-    "details": "Informations",
-    "payment": "Paiement",
-    "choose": "Choisissez votre adhésion",
-    "yourDetails": "Vos informations",
-    "loading": "Chargement…",
-    "unavailable": "L’adhésion payante n’est pas encore disponible.",
-    "interval": "Période de facturation",
-    "month": "Mensuel",
-    "year": "Annuel",
-    "pro": "Pro",
-    "supporter": "Soutien",
-    "comingSoon": "Bientôt disponible",
-    "proDescription": "Tout le plan Soutien, des exports de 10 000 bibliothèques et des comparaisons démographiques. D’autres outils d’analyse sont à venir.",
-    "supporterDescription": "Historique détaillé des modifications et exports CSV/GeoJSON de 500 bibliothèques par téléchargement.",
-    "complimentary": "Vous disposez déjà de Pro offert. Vous pouvez aussi acheter Soutien pour financer le projet.",
-    "continue": "Continuer",
-    "accountEmail": "E-mail du compte :",
-    "badge": "Afficher une marque de soutien sur mon profil",
-    "credit": "Me citer sur la page publique des soutiens",
-    "termsConsent": "J’accepte les conditions de l’abonnement renouvelable et demande un accès immédiat aux outils. Mes droits légaux de rétractation restent inchangés.",
-    "terms": "Lire les conditions",
-    "providerExplanation": "Continuez vers Stripe pour confirmer le montant total et payer via son service de marchand officiel.",
-    "opening": "Ouverture de la facturation sécurisée…",
-    "continueStripe": "Continuer vers Stripe",
-    "verify": "Vérifiez l’e-mail de votre compte avant d’acheter une adhésion.",
-    "signInExplanation": "Connectez-vous ou créez un compte gratuit pour gérer votre adhésion.",
-    "signIn": "Se connecter",
-    "createAccount": "Créer un compte",
-    "back": "Retour",
-    "error": "La facturation est temporairement indisponible. Vérifiez votre adhésion avant de réessayer un paiement.",
-    "summary": "Récapitulatif",
-    "taxAndCurrency": "Les montants affichés ici utilisent la devise de facturation de base. Stripe confirme les taxes et tout paiement en devise locale au moment du paiement et dans votre confirmation financière.",
-    "cancel": "Annulez le renouvellement à tout moment dans Adhésion et facturation.",
-    "trust": "Le paiement ne change ni votre rôle ni la vérification de vos modifications.",
-    "manage": "Gérer l’adhésion",
-    "join": "Continuer avec {plan}",
-    "thankYou": "Merci.",
-    "ready": "Votre paiement est confirmé et votre adhésion est disponible.",
-    "confirming": "Confirmation de votre adhésion",
-    "pending": "La confirmation peut prendre un peu de temps. Consultez Adhésion et facturation ; ne payez pas une seconde fois.",
-    "confirmationUnavailable": "Nous ne pouvons pas vérifier votre adhésion pour le moment. Nous réessaierons automatiquement. Vous pouvez aussi consulter Adhésion et facturation ; ne payez pas à nouveau.",
-    "expired": "Ce paiement a expiré. Votre adhésion et votre accès existants restent inchangés.",
-    "settingsTitle": "Adhésion et facturation",
-    "settingsLead": "Votre accès actuel, votre adhésion et vos coordonnées de facturation au même endroit.",
-    "noMembership": "Aucune adhésion payante",
-    "freeRemains": "Votre compte gratuit et les fiches publiques des bibliothèques restent disponibles.",
-    "suspended": "Accès suspendu",
-    "ends": "Renouvellement annulé ; fin de la période actuelle",
-    "periodEnd": "Fin de la période de facturation actuelle",
-    "effectiveAccess": "Accès actuel",
-    "viewPlans": "Voir les formules",
-    "portalExplanation": "Modifiez vos informations de paiement, consultez vos factures ou annulez le renouvellement en toute sécurité avec Stripe Managed Payments.",
-    "invoices": "Factures récentes",
-    "date": "Date",
-    "amount": "Montant",
-    "status": "Statut",
-    "invoice": "Facture",
-    "download": "Télécharger le PDF",
-    "recognitionSettings": "Paramètres de marque de soutien et de mention publique",
-    "retry": "Réessayer",
-    "active": "Actif",
-    "renewalStopped": "Renouvellement arrêté",
-    "paymentAttention": "Le paiement nécessite votre attention",
-    "paymentAttentionBody": "Ouvrez la gestion sécurisée pour mettre à jour votre moyen de paiement et consulter la facture impayée. Vos autres droits d’accès restent valables.",
-    "nextRetry": "Prochaine tentative prévue",
-    "memberSince": "Membre depuis",
-    "foundingPrice": "Tarif fondateur",
-    "cardEnding": "{brand} se terminant par {last4}",
-    "expiresCard": "Expire",
-    "update": "Mettre à jour",
-    "edit": "Modifier",
-    "billingDetails": "Coordonnées de facturation",
-    "description": "Description",
-    "membershipInvoice": "Adhésion",
-    "changePlan": "Changer d’offre",
-    "currentPlan": "Offre actuelle",
-    "reviewChange": "Vérifier le changement avec Stripe",
-    "changeReviewExplanation": "Stripe confirme les mises à niveau payantes. Les formules inférieures et les intervalles plus courts conservent votre période payée et sont programmés après votre vérification.",
-    "scheduledChange": "Passage à {plan} ({interval}, {amount}) le {date}. Votre abonnement payé actuel reste actif jusque-là.",
-    "reviewScheduledChange": "Consulter le changement prévu sur Stripe",
-    "accessPlans": {
-      "public": "Public",
-      "free": "Gratuit",
-      "supporter": "Soutien",
-      "pro": "Pro",
-      "team": "Équipe"
-    },
-    "accessSources": {
-      "none": "Compte gratuit",
-      "paid": "Adhésion payante",
-      "team": "Adhésion d’équipe",
-      "grant": "Accès offert",
-      "verified": "Personnel de bibliothèque vérifié",
-      "earned": "Obtenu grâce aux contributions"
-    },
-    "creditExplanation": "La reconnaissance publique nécessite un profil public. Les profils privés ou limités ne sont jamais listés ; le paiement ne modifie pas la confidentialité.",
-    "scheduledReview": "Passage à {plan} ({interval}, {amount}) le {date}. Vos outils payés actuels restent disponibles jusque-là.",
-    "scheduledNoCharge": "Aucun débit aujourd’hui. Le prix récurrent de base ci-dessus s’applique à cette date ; Stripe confirme tout montant en devise locale. Vous pouvez annuler le changement avant son début.",
-    "confirmSchedule": "Confirmer le changement programmé",
-    "undoScheduledChange": "Annuler le changement programmé",
-    "membershipConfirming": "Confirmation du paiement",
-    "membershipEnded": "Terminée",
-    "invoiceStatuses": {
-      "draft": "Brouillon",
-      "open": "En attente de paiement",
-      "paid": "Payée",
-      "uncollectible": "Impayée",
-      "void": "Annulée",
-      "unknown": "Statut indisponible"
-    },
-    "termsLanguageNote": "Les politiques d’adhésion sont actuellement disponibles en anglais.",
-    "cancellationPolicy": "Annulation et remboursements",
-    "perMonth": "mois",
-    "perYear": "an",
-    "twoMonthsFree": "2 mois offerts",
-    "billedMonthly": "Facturation mensuelle",
-    "billedYearly": "Facturation annuelle",
-    "basePrice": "Prix de l’abonnement",
-    "renewsMonthly": "Renouvellement chaque mois jusqu’à résiliation. Stripe confirme la première date de renouvellement au paiement.",
-    "renewsYearly": "Renouvellement chaque année jusqu’à résiliation. Stripe confirme la première date de renouvellement au paiement.",
-    "switchYearly": "Passer à l’année : {amount}",
-    "annualSaving": "Économisez {amount} par an",
-    "includedSupporter": "Tout ce qui est inclus dans Supporter",
-    "historyBenefit": "Historique détaillé des modifications des bibliothèques",
-    "exportBenefit": "Exports CSV et GeoJSON de {count} bibliothèques maximum",
-    "comparisonBenefit": "Comparaisons de population",
-    "recognitionBenefit": "Badge Supporter et remerciement public facultatifs",
-    "supporterIntro": "Gardez l’index gratuit, avec des outils d’historique et d’export.",
-    "proIntro": "Plus de capacité d’export et d’analyse de population.",
-    "recognitionTitle": "Votre visibilité",
-    "badgeHelp": "Un petit badge à côté de votre nom. Masquez-le à tout moment.",
-    "creditHelp": "Votre nom sur la liste publique de remerciements. Désactivé sauf si vous le choisissez.",
-    "securePaymentBenefit": "Stripe traite vos informations de paiement en toute sécurité.",
-    "dismiss": "Annuler",
-    "legalHeading": "Conditions d’adhésion et remboursements",
-    "legalLead": "Lisez ces politiques avant le paiement. Vous pouvez imprimer ou enregistrer chaque page.",
-    "membershipTerms": "Conditions d’adhésion",
-    "legalTermsBody": "Vos outils, tarifs, renouvellements, changements de formule et compte.",
-    "legalRefundsBody": "Arrêt du renouvellement, demandes de remboursement et droits légaux d’annulation.",
-    "personalBillingTitle": "Abonnement personnel et facturation",
-    "personalBillingLead": "Gérez votre abonnement personnel, vos paiements et vos factures. Les abonnements Team sont gérés séparément."
   },
   "discovery": {
     "languages": "Langue du contenu",
@@ -2842,7 +2696,7 @@
     "reviewBeforeLive": "Examinez-les avant leur publication.",
     "checkingSuggestions": "Recherche de suggestions…",
     "teamAndInsights": "Équipe et statistiques",
-    "teamAccess": "Les outils d’équipe sont accessibles lorsqu’une équipe couvre cette bibliothèque.",
+    "teamAccess": "Équipe et Fréquentation nécessitent votre propre accès vérifié de personnel pour cette bibliothèque.",
     "communityDrives": "Campagnes communautaires",
     "libraryNeeds": "Votre bibliothèque a besoin de : {need}",
     "noLibraryDrive": "Aucune campagne ouverte ne l’inclut actuellement.",
@@ -2858,78 +2712,8 @@
     "getInvolved": "Participer",
     "loading": "Chargement de vos raccourcis…"
   },
-  "teamPurchase": {
-    "selectApi": "Ajouter l’accès API après le paiement Team",
-    "separateCharges": "Team est facturé à l’année. L’API est un abonnement mensuel distinct, avec son propre paiement et consentement.",
-    "stepsLabel": "Paiements Team et API",
-    "teamStep": "Abonnement Team",
-    "apiStep": "Option API",
-    "confirmed": "Confirmé",
-    "yearly": "Paiement annuel",
-    "monthly": "Paiement mensuel distinct",
-    "journeyTitle": "Terminer la configuration Team et API",
-    "teamReady": "Votre Team est actif. Consultez le prix, les limites et les conditions de l’API avant son paiement distinct.",
-    "waitingForTeam": "Nous confirmons le paiement et l’activation de votre Team. Le paiement API sera disponible dès que votre Team sera prêt.",
-    "continueApi": "Continuer vers le paiement API",
-    "skipApi": "Ignorer l’API pour le moment",
-    "waiting": "En attente de l’activation Team",
-    "apiSelected": "Option API sélectionnée",
-    "apiOptional": "Option API facultative",
-    "month": "mois",
-    "afterTeamPayment": "Payez d’abord Team. Une fois l’activation confirmée, nous vous guiderons vers le paiement mensuel distinct de l’API. Sélectionner cette option n’autorise pas son paiement."
-  },
-  "membershipPlans": {
-    "apiLead": "Intégrez les données publiées des bibliothèques à vos outils et services.",
-    "apiSearch": "Recherchez des bibliothèques et récupérez leurs fiches publiées.",
-    "apiKeys": "Créez, renouvelez et révoquez les clés de vos applications.",
-    "apiUsage": "Suivez l’utilisation partagée avec des quotas plafonnés, sans frais de dépassement automatiques.",
-    "apiExplore": "Découvrir l’accès API",
-    "apiAfterActivation": "Activez d’abord votre Team, puis ajoutez l’accès API depuis votre espace Team avec un paiement mensuel distinct.",
-    "manageTeamDetail": "Invitez des collègues et organisez leurs affectations aux bibliothèques.",
-    "teamBillingDetail": "Consultez les places, factures, moyens de paiement et renouvellements.",
-    "teamLibraryCount": "{count, plural, one {# bibliothèque} other {# bibliothèques}}",
-    "teamOrganiser": "Responsable",
-    "teamMember": "Membre",
-    "continueTeam": "Continuer avec Team",
-    "backToPlans": "Revenir à toutes les offres",
-    "lead": "Soutenez le répertoire avec un abonnement personnel ou offrez les outils Pro à toute votre Team.",
-    "personalBilling": "Supporter et Pro peuvent être réglés au mois ou à l’année.",
-    "organisations": "Pour les organisations",
-    "invoicedYearly": "Abonnement annuel",
-    "teamLead": "Pro pour votre équipe, avec des outils de données et une gestion facultative des bibliothèques. Aucune revendication n’est nécessaire.",
-    "estimateTeam": "Estimez votre offre Team",
-    "estimateLead": "Choisissez votre type de service et le nombre de personnes ayant besoin d’un accès.",
-    "serviceType": "Type de service",
-    "teamPricing": "Tarification Team",
-    "standard": "Standard",
-    "standardDescription": "Pour les équipes et organisations.",
-    "publicService": "Service de bibliothèques publiques",
-    "publicDescription": "Réduction pour les services de bibliothèques publiques éligibles.",
-    "discount": "−{percent} %",
-    "seats": "Places",
-    "includedSeats": "{count} places incluses de base.",
-    "seatCount": "{count, plural, one {# place} other {# places}}",
-    "removeSeat": "Retirer une place Team",
-    "addSeat": "Ajouter une place Team",
-    "annualEstimate": "Total annuel estimé",
-    "annualUnit": "/ an HT",
-    "firstSeats": "Les {count} premières places",
-    "eachExtra": "Chaque place supplémentaire",
-    "annualAmount": "{amount} / an",
-    "discountNote": "L’éligibilité des services de bibliothèques publiques est confirmée séparément avant le paiement à tarif réduit. La réduction concerne uniquement les places Team.",
-    "confirmQuote": "Créez votre équipe et payez chaque année via Stripe. L’accès payant commence après confirmation.",
-    "apiLabel": "Option API",
-    "monthlyAmount": "{amount} / mois",
-    "apiSeparate": "L’API est facturée séparément ; elle n’est incluse ni dans cette estimation ni dans la réduction pour les services de bibliothèques publiques.",
-    "checkEligibility": "Vous avez peut-être droit à Pro gratuitement — vérifier les conditions",
-    "manageTeam": "Gérer votre équipe",
-    "yourTeam": "Votre équipe",
-    "existingTeamLead": "Gérez vos membres, bibliothèques et abonnement annuel dans votre espace d’équipe.",
-    "teamBilling": "Facturation et places",
-    "openYourTeam": "Ouvrir votre équipe"
-  },
   "membershipCompare": {
-    "lead": "Découvrez les fonctionnalités disponibles aujourd’hui. Celles marquées « Bientôt » sont encore prévues.",
+    "lead": "Chaque colonne est une façon distincte de participer, et non un niveau supérieur. Les fonctionnalités marquées « Bientôt » figurent encore sur la feuille de route.",
     "controls": "Options de comparaison",
     "availability": "Disponibilité des fonctionnalités",
     "allFeatures": "Toutes les fonctionnalités",
@@ -2937,31 +2721,10 @@
     "expandAll": "Tout déplier",
     "collapseAll": "Tout replier",
     "showing": "{count} fonctionnalités affichées sur {total}",
-    "highlightHint": "Sélectionnez le nom d’une offre pour mettre sa colonne en évidence.",
-    "firstPlan": "Première offre",
-    "secondPlan": "Deuxième offre",
+    "highlightHint": "Sélectionnez un en-tête de colonne pour la mettre en évidence.",
+    "firstPlan": "Première option",
+    "secondPlan": "Deuxième option",
     "roadmapLink": "Voir sur la feuille de route"
-  },
-  "membershipStatus": {
-    "yourMembership": "Votre adhésion",
-    "complimentary": "Offerte",
-    "teamSeat": "Place Team",
-    "paidMembership": "Adhésion payante",
-    "grantDetail": "Accordée par l’équipe Libraries Global, sans paiement requis pour cet accès.",
-    "earnedDetail": "Inclus avec au moins 5 000 points et une contribution acceptée au cours des 30 derniers jours. Chaque contribution acceptée renouvelle Pro pour 30 jours.",
-    "verifiedDetail": "Inclus en tant que personnel de bibliothèque vérifié, étudiant ou personnel associatif, sans paiement pour cet accès. Vérifiez votre admissibilité si un renouvellement est nécessaire.",
-    "teamDetail": "L’accès Pro est inclus dans votre place Team. Les droits de modification sont vérifiés séparément.",
-    "paidDetail": "Gérez votre abonnement, son renouvellement et vos factures dans les paramètres d’adhésion.",
-    "unknownDetail": "Consultez les paramètres d’adhésion pour les détails de votre accès et de votre facturation.",
-    "manageMembership": "Gérer l’adhésion",
-    "membershipSettings": "Paramètres d’adhésion",
-    "contributions": "Voir vos contributions",
-    "staffArea": "Ouvrir l’espace du personnel",
-    "recognition": "Reconnaissance publique",
-    "recognitionMember": "La marque sur votre profil et votre mention sur la page des soutiens sont facultatives. Choisissez-les séparément dans Confidentialité ; aucune ne révèle ce que vous payez.",
-    "recognitionLead": "Les membres Supporter, Pro et Team peuvent choisir une marque sur leur profil et une mention publique. Ces choix sont indépendants dans Confidentialité ; aucun ne révèle ce que vous payez.",
-    "recognitionSettings": "Choisir votre visibilité",
-    "meetSupporters": "Découvrir les soutiens"
   },
   "eventListing": {
     "metaTitle": "Événements des bibliothèques",
@@ -3128,7 +2891,7 @@
   "membershipStaff": {
     "eyebrow": "Pour le personnel des bibliothèques",
     "title": "Gérez la fiche de votre bibliothèque, <em>gratuitement.</em>",
-    "lead": "La vérification donne accès aux outils gratuits de votre bibliothèque. L’adhésion et Pro offert sont distincts ; payer ne donne jamais un accès au personnel.",
+    "lead": "La vérification vous donne des outils gratuits pour votre bibliothèque. L’accès du personnel n’est jamais vendu, et aucun paiement ne le donne.",
     "step0Title": "Revendiquer votre bibliothèque",
     "step0Body": "Depuis sa fiche, avec votre adresse professionnelle.",
     "step1Title": "Nous vérifions auprès de la bibliothèque",
@@ -3139,260 +2902,12 @@
     "benefit1": "Publier des avis et des fermetures",
     "benefit2": "Consulter et traiter les modifications proposées",
     "benefit3": "Gérer les horaires et partager la position en direct",
-    "benefit4": "Possibilité de demander Pro offert séparément",
+    "benefit4": "Une organisation gratuite pour vos collègues et des widgets à intégrer",
     "openStaff": "Ouvrir l’espace du personnel",
     "claim": "Revendiquer votre bibliothèque",
-    "team": "Vous gérez un réseau ? Découvrez Team",
+    "team": "Vous gérez tout un réseau ? Créez une organisation gratuite",
     "eachLibrary": "Pour chaque bibliothèque dont vous êtes responsable.",
-    "endorsement": "Une fiche vérifiée est suivie par un membre du personnel ; cela ne signifie pas que la bibliothèque soutient Libraries Global.",
-    "proRequest": "Comment demander Pro offert"
-  },
-  "membershipContent": {
-    "plans": {
-      "public": {
-        "name": "Public",
-        "who": "Tout le monde, sans compte",
-        "cta": "Aucun compte nécessaire",
-        "includes": {
-          "0": "Toutes les fiches de bibliothèques, horaires et services compris",
-          "1": "Recherche, carte et listes",
-          "2": "Lire le Journal, les articles de la base de connaissances, les événements, les annonces et les discussions publiques",
-          "3": "Parcourir les campagnes communautaires, les annonces et les horaires des bibliothèques",
-          "4": "Téléchargement des fiches de bibliothèques"
-        }
-      },
-      "free": {
-        "name": "Compte gratuit",
-        "who": "Toute personne inscrite",
-        "cta": "Créer un compte gratuit",
-        "includes": {
-          "0": "Tout ce qui est accessible au public",
-          "1": "Proposer des corrections, des photos et de nouvelles bibliothèques",
-          "2": "Suivre des bibliothèques et enregistrer des événements",
-          "3": "Lancer des discussions, répondre, réagir et suivre les échanges",
-          "4": "Participer aux campagnes communautaires ; en proposer une après 5 modifications acceptées",
-          "5": "Suggérer des corrections aux connaissances et proposer des sujets au Journal",
-          "6": "Demander un rôle de rédaction pour les connaissances ou le Journal",
-          "7": "Revendiquer votre bibliothèque et utiliser les outils gratuits du personnel",
-          "8": "3 vues et 3 recherches enregistrées",
-          "9": "Un récapitulatif hebdomadaire facultatif des bibliothèques suivies",
-          "10": "Densité de population : moyennes par territoire et grilles disponibles"
-        }
-      },
-      "supporter": {
-        "name": "Soutien",
-        "who": "Les personnes qui souhaitent soutenir la pérennité de l’index",
-        "cta": "Bientôt disponible",
-        "includes": {
-          "0": "Tout le contenu du compte gratuit",
-          "1": "Un badge de soutien facultatif, que vous pouvez masquer",
-          "2": "Une mention facultative sur la page des soutiens",
-          "3": "Exporter les résultats de l’Atlas en CSV ou GeoJSON (jusqu’à {limit, number} bibliothèques par téléchargement)",
-          "4": "Voir chaque modification d’une bibliothèque, champ par champ",
-          "5": "Le paiement ne modifie jamais votre rôle communautaire ni l’examen des modifications."
-        }
-      },
-      "pro": {
-        "name": "Pro",
-        "who": "Les chercheurs, journalistes, consultants et passionnés",
-        "cta": "Bientôt disponible",
-        "note": "Tarif fondateur conservé tant que votre adhésion reste active.",
-        "includes": {
-          "0": "Tout le contenu de l’offre Soutien",
-          "1": "Exporter les résultats de l’Atlas en CSV ou GeoJSON (jusqu’à {limit, number} bibliothèques par téléchargement)",
-          "2": "Défavorisation et ménages sans voiture dans les zones britanniques couvertes",
-          "3": "Zones accessibles à pied et à vélo en Angleterre",
-          "4": "Comparer l’accès aux bibliothèques entre deux territoires",
-          "5": "Accès aux bibliothèques : comparaisons par population pour les pays et les territoires pris en charge",
-          "6": "Exporter les résultats de recherche avec attribution",
-          "7": "Alertes sur les recherches enregistrées",
-          "8": "Comparer jusqu’à six bibliothèques côte à côte",
-          "9": "Surveiller les modifications et fermetures d’une bibliothèque",
-          "10": "Notes privées sur toute bibliothèque",
-          "11": "Comparer un service à des services similaires",
-          "12": "Exporter les indicateurs calculés",
-          "13": "Un flux de calendrier personnel",
-          "14": "Portée du service : jusqu’à 50 bibliothèques et une emprise de 20 000 km², une seule durée pour les grandes zones",
-          "15": "Vues et recherches enregistrées illimitées",
-          "16": "Arrêts et lignes de transport"
-        }
-      },
-      "team": {
-        "name": "Équipe",
-        "who": "Les réseaux de bibliothèques, collectivités, universités et cabinets de conseil",
-        "cta": "Créer votre équipe",
-        "includes": {
-          "0": "Pro pour chaque membre de l’équipe",
-          "1": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
-          "2": "Choisir qui peut diffuser la position d’une bibliothèque mobile",
-          "3": "Widgets intégrables pour votre site : recherche de bibliothèques, annuaire, graphiques et chiffres clés",
-          "5": "Portée étendue : jusqu’à 100 bibliothèques et une emprise de 40 000 km², une durée par calcul",
-          "6": "Rapports de fréquentation",
-          "7": "Espace partagé d’analyse dans l’Atlas",
-          "8": "Mises à jour groupées depuis un tableur",
-          "9": "Des quotas supérieurs pour l’option API",
-          "10": "Créez votre équipe en ligne, choisissez les places et payez chaque année via Stripe. Le responsable invite les collègues et attribue les bibliothèques ; les droits du personnel sont vérifiés séparément.",
-          "4": "Option API : rechercher, lister et parcourir les bibliothèques par pays, région et zone, avec gestion des clés et suivi de l’utilisation"
-        }
-      }
-    },
-    "groups": {
-      "facts": "Informations sur les bibliothèques",
-      "contributing": "Contribuer et suivre",
-      "supporting": "Soutenir le projet",
-      "atlas": "Analyses de l’Atlas",
-      "watching": "Surveiller et comparer les bibliothèques",
-      "teams": "Pour les équipes"
-    },
-    "rows": {
-      "every-library-record-with-hours-and-services": "Toutes les fiches de bibliothèques, horaires et services compris",
-      "search-the-map-and-lists": "Recherche, carte et listes",
-      "read-the-journal-knowledge-articles-events-noticeboard-and-public-discussions": "Lire le Journal, les articles de la base de connaissances, les événements, les annonces et les discussions publiques",
-      "browse-community-drives-and-library-notices-and-timetables": "Parcourir les campagnes communautaires, les annonces et les horaires des bibliothèques",
-      "library-record-downloads": "Téléchargement des fiches de bibliothèques",
-      "contribute-corrections-photos-and-new-libraries": "Proposer des corrections, des photos et de nouvelles bibliothèques",
-      "follow-libraries-and-save-events": "Suivre des bibliothèques et enregistrer des événements",
-      "start-discussions-reply-react-and-follow-conversations": "Lancer des discussions, répondre, réagir et suivre les échanges",
-      "join-community-drives-propose-one-after-5-accepted-changes": "Participer aux campagnes communautaires ; en proposer une après 5 modifications acceptées",
-      "suggest-knowledge-edits-and-pitch-journal-stories": "Suggérer des corrections aux connaissances et proposer des sujets au Journal",
-      "apply-for-knowledge-or-journal-editing-roles": "Demander un rôle de rédaction pour les connaissances ou le Journal",
-      "claim-your-library-and-use-the-free-staff-tools": "Revendiquer votre bibliothèque et utiliser les outils gratuits du personnel",
-      "3-saved-views-and-3-saved-searches": "Vues et recherches enregistrées",
-      "an-opt-in-weekly-digest-of-followed-libraries": "Un récapitulatif hebdomadaire facultatif des bibliothèques suivies",
-      "an-optional-supporter-mark-you-can-hide": "Un badge de soutien facultatif, que vous pouvez masquer",
-      "optional-credit-on-the-supporters-page": "Une mention facultative sur la page des soutiens",
-      "export-atlas-results-as-csv-or-geojson-up-to-500-libraries-per-download": "Exporter les résultats de l’Atlas en CSV ou GeoJSON (jusqu’à {limit, number} bibliothèques par téléchargement)",
-      "see-every-change-to-a-library-field-by-field": "Voir chaque modification d’une bibliothèque, champ par champ",
-      "atlas_export": "Exporter les résultats de l’Atlas en CSV ou GeoJSON",
-      "atlas_libraryAccess": "Accès aux bibliothèques : comparaisons par population pour les pays et les territoires pris en charge",
-      "atlas_contextLayers": "Défavorisation et ménages sans voiture dans les zones britanniques couvertes",
-      "atlas_analysis": "Zones accessibles à pied et à vélo en Angleterre",
-      "atlas_compare": "Comparer l’accès aux bibliothèques entre deux territoires",
-      "data_benchmark": "Comparer un service à des services similaires",
-      "data_explorerExport": "Exporter les indicateurs calculés",
-      "library_history": "Voir chaque modification d’une bibliothèque, champ par champ",
-      "library_watch": "Surveiller les modifications et fermetures d’une bibliothèque",
-      "index_alerts": "Alertes sur les recherches enregistrées",
-      "index_compare": "Comparer jusqu’à six bibliothèques côte à côte",
-      "library_notes": "Notes privées sur toute bibliothèque",
-      "events_personalFeed": "Un flux de calendrier personnel",
-      "index_export": "Exporter les résultats de recherche avec attribution",
-      "team-organiser-assign-staff-to-your-libraries": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
-      "choose-who-can-go-live-for-a-mobile-library": "Choisir qui peut diffuser la position d’une bibliothèque mobile",
-      "optional-api-add-on-search-list-and-browse-libraries-by-country-region-and-area-with-managed-keys-and-usage-reporting": "Option API : rechercher, lister et parcourir les bibliothèques par pays, région et zone, avec gestion des clés et suivi de l’utilisation",
-      "traffic-reports": "Rapports de fréquentation",
-      "a-shared-service-workspace": "Un espace de travail partagé pour le réseau",
-      "bulk-updates-from-a-spreadsheet": "Mises à jour groupées depuis un tableur",
-      "an-embeddable-library-finder": "Un outil de recherche de bibliothèques intégrable",
-      "higher-allowances-for-the-api-add-on": "Des quotas supérieurs pour l’option API",
-      "library_team": "Gestion d’équipe : affecter le personnel à vos bibliothèques",
-      "library_traffic": "Rapports de fréquentation",
-      "team_workspace": "Espace partagé d’analyse dans l’Atlas",
-      "team_bulkUpload": "Mises à jour groupées depuis un tableur",
-      "team_embed": "Widgets intégrables pour votre site : recherche de bibliothèques, annuaire, graphiques et chiffres clés",
-      "api_key": "Des quotas supérieurs pour l’option API",
-      "atlas_reachArea": "Portée étendue : emprise maximale (km²), une durée par calcul",
-      "atlas_reachLibraries": "Portée du service : nombre maximal de bibliothèques admissibles",
-      "atlas_analysisHourly": "Nouveaux calculs de portée par heure",
-      "atlas_transit": "Arrêts et lignes de transport",
-      "population-density-area-averages-and-supported-population-grids": "Densité de population : moyennes par territoire et grilles disponibles"
-    },
-    "copy": {
-      "unlimited": "Illimité",
-      "eachCount": "{count} de chaque",
-      "title": "Offres et *Pro*",
-      "metaTitle": "Offres et Pro",
-      "lead": "Libraries Global est gratuit. Les adhésions facultatives soutiennent les données ouvertes et ajoutent des outils d’historique, d’export et d’analyse.",
-      "metaDescription": "Les informations sur les bibliothèques restent gratuites. Découvrez les adhésions, les outils d’analyse et comment obtenir Pro gratuitement.",
-      "promiseAds": "Aucune publicité, jamais",
-      "promiseTrust": "La confiance ne s’achète pas",
-      "promiseData": "Les données ouvertes restent ouvertes",
-      "freeLead": "Toutes les informations, avec ou sans compte.",
-      "browse": "Commencez à explorer",
-      "signedIn": "Vous êtes connecté",
-      "current": "Votre offre",
-      "includedNow": "Inclus dès maintenant",
-      "soon": "Bientôt disponible",
-      "month": "mois",
-      "year": "an",
-      "monthly": "Mensuel",
-      "yearly": "Annuel",
-      "otherPrice": "Ou {amount} par {period}.",
-      "forWhom": "Pour {who}.",
-      "freeMonths": "{count, plural, one {# mois offert} other {# mois offerts}}",
-      "openAtlas": "Ouvrir l’Atlas",
-      "manage": "Gérer l’adhésion",
-      "payment": "Les paiements Soutien et Pro sont traités de façon sécurisée par Stripe, qui confirme le total et la taxe. Vous pouvez annuler le renouvellement à tout moment. Consultez notre",
-      "refund": "politique d’annulation et de remboursement",
-      "compare": "Comparer toutes les fonctionnalités",
-      "roadmap": "En préparation",
-      "showAll": "Tout afficher",
-      "showLess": "Réduire",
-      "roadmapLabel": "{expanded, select, yes {Réduire les fonctionnalités prévues pour {plan}} other {Afficher toutes les fonctionnalités prévues pour {plan}}}",
-      "roadmapPro": "Couches d’analyse, outils de portée, suivi et comparaison des bibliothèques.",
-      "roadmapTeam": "Rapports de fréquentation, espace partagé, mises à jour groupées, outil intégrable et quotas API supérieurs.",
-      "feature": "Fonctionnalité",
-      "includes": "Contenu de chaque offre",
-      "compareTwo": "Comparer deux offres",
-      "comparisonCaption": "{group} : {first} et {second}",
-      "exVat": "HT",
-      "teamSeats": "Standard · {count, number} places",
-      "free": "Gratuit",
-      "shortMonth": "mois",
-      "shortYear": "an",
-      "availableCount": "{count, number} disponibles maintenant",
-      "roadmapCount": "{count, number} en préparation",
-      "perDownload": "bibliothèques par téléchargement",
-      "included": "Inclus",
-      "notIncluded": "Non inclus",
-      "questions": "Questions",
-      "contactLead": "Une autre question ? Les responsables répondent sous 5 jours ouvrés.",
-      "ask": "Poser une question",
-      "freeProLead": "Si vous avez droit à Pro gratuitement, aucun paiement ne vous sera demandé.",
-      "live": "Disponible",
-      "proRequest": "Pro gratuit sur demande",
-      "request": "Sur demande",
-      "staffTitle": "Personnel de bibliothèque, étudiants et associations vérifiés",
-      "staffBody": "Le personnel des bibliothèques et des associations ainsi que les étudiants peuvent demander Pro gratuitement. Écrivez-nous depuis votre adresse professionnelle, étudiante ou associative. La vérification autonome de Pro sera bientôt disponible.",
-      "write": "Écrivez-nous",
-      "earnedTitle": "Obtenu grâce aux contributions",
-      "earnedBody": "Cumulez {points, number} points et une contribution acceptée au cours des {days, number} derniers jours pour débloquer Pro. Chaque contribution acceptée relance cette période de {days, number} jours.",
-      "start": "Commencer à contribuer",
-      "grantTitle": "Attributions pour la presse et les partenaires",
-      "grantBody": "Les journalistes, chercheurs de projets partenaires et organismes partenaires peuvent demander une attribution Pro à l’équipe.",
-      "grant": "Demander une attribution",
-      "roadmapVote": "Votez et discutez sur la feuille de route"
-    },
-    "faq": {
-      "0": {
-        "q": "La TVA est-elle ajoutée lors du paiement ?",
-        "a": "Les prix de base Soutien et Pro sont en GBP, taxes comprises. Stripe confirme la taxe applicable, la devise locale et le total récurrent avant le paiement. L’offre Équipe est un abonnement annuel via Stripe, hors TVA lorsque cela est indiqué."
-      },
-      "1": {
-        "q": "Puis-je annuler ?",
-        "a": "Annulez le renouvellement à tout moment dans Adhésion et facturation, dans les paramètres. Votre adhésion reste active jusqu’à la fin de la période payée. Les remboursements suivent notre politique d’annulation et les conditions de commande de Stripe ; vos droits légaux restent inchangés."
-      },
-      "2": {
-        "q": "Comment fonctionne l’offre Équipe ?",
-        "a": "Créez une Team, choisissez les places et payez annuellement via Stripe. La confirmation du paiement active Team et Pro pour chaque place. Votre responsable invite les collègues. Les revendications et droits de modification sont facultatifs et examinés séparément."
-      },
-      "3": {
-        "q": "Que comprend l’offre Soutien ?",
-        "a": "L’historique détaillé et les exports Atlas CSV/GeoJSON jusqu’à {supporter, number} bibliothèques par téléchargement. Pro porte cette limite à {pro, number} et ajoute les comparaisons par population. Les outils inachevés sont signalés comme bientôt disponibles."
-      },
-      "4": {
-        "q": "Puis-je utiliser Apple Pay ou Google Pay ?",
-        "a": "Le paiement Stripe affiche les moyens disponibles pour votre appareil et votre pays, dont Apple Pay et Google Pay le cas échéant. Le paiement par carte est disponible. Libraries Global ne reçoit pas les coordonnées complètes de votre carte."
-      },
-      "5": {
-        "q": "L’adhésion modifie-t-elle mon rôle ou l’examen de mes modifications ?",
-        "a": "Non. La confiance ne s’achète pas. Soutien et Pro n’attribuent pas de points, ne changent ni votre niveau ni votre rôle et ne dispensent pas de l’examen des contributions."
-      },
-      "6": {
-        "q": "Qu’est-ce qui reste gratuit ?",
-        "a": "Toutes les fiches, leurs horaires et services, la recherche, la carte et les listes restent gratuits pour tous, avec ou sans compte. Contribuer est également gratuit."
-      }
-    }
+    "endorsement": "Une fiche vérifiée est suivie par un membre du personnel ; cela ne signifie pas que la bibliothèque soutient Libraries Global."
   },
   "contributeNav": {
     "hub": "Accueil",
@@ -3416,7 +2931,6 @@
     "howClaimsWork": "Comment fonctionne la vérification",
     "noLibraryAssignments": "Aucune bibliothèque attribuée",
     "teamLinks": "Votre équipe",
-    "billing": "Facturation et places",
     "widgets": "Widgets",
     "networks": "Services et réseaux",
     "detailsUnavailable": "Impossible d’actualiser les détails de l’équipe. Ouvrez son espace pour réessayer.",
@@ -3434,14 +2948,11 @@
     "accessPending": "Accès à la bibliothèque : En attente d’examen",
     "accessNeedsInfo": "Accès à la bibliothèque : Informations requises",
     "accessUnknown": "Accès à la bibliothèque : État indisponible",
-    "membershipActive": "Adhésion à l’équipe : Active",
-    "membershipLapsed": "Adhésion à l’équipe : Inactive",
-    "membershipExpired": "Adhésion à l’équipe : Expirée",
-    "seatsUsed": "{used} places utilisées sur {total}",
-    "seatsProgress": "Places utilisées dans l’équipe",
     "coverageCount": "{count, plural, one {# bibliothèque couverte} other {# bibliothèques couvertes}}",
     "accessApproved": "Accès à la bibliothèque : Approuvé",
-    "accessOnAcceptance": "Affectation à la bibliothèque : À l’acceptation"
+    "accessOnAcceptance": "Affectation à la bibliothèque : À l’acceptation",
+    "workspaceOpen": "Espace de travail : ouvert",
+    "workspaceClosed": "Espace de travail : fermé"
   },
   "teamApiKeys": {
     "title": "Clés API",
@@ -3476,22 +2987,27 @@
   "teamApiSubscription": {
     "title": "Ajouter l’accès à l’API",
     "addAccess": "Ajouter l’accès à l’API",
-    "viewAddon": "Voir l’option API",
+    "viewAddon": "Voir l’accès API",
     "description": "Connectez les applications de {team} à la recherche et aux fiches publiées des bibliothèques.",
     "perMonth": "par mois",
-    "taxDetail": "Taxes comprises au tarif de base en GBP. Stripe confirme le montant lors du paiement.",
+    "taxDetail": "Les taxes sont comprises dans ce prix de base en GBP. Stripe confirme le montant lors du paiement.",
     "unavailable": "L’achat de l’accès à l’API est indisponible pour le moment. Veuillez réessayer plus tard.",
-    "allowance": "Inclus pour chaque mois civil",
+    "allowance": "Inclus à chaque période de facturation payée",
     "requests": "Requêtes réussies",
     "responseData": "Données de réponse",
     "rate": "{count} requêtes par minute",
     "concurrency": "{count} requêtes simultanées",
-    "keys": "Clés API illimitées ; un quota partagé par équipe",
-    "noOverage": "Aucun dépassement n’est facturé automatiquement.",
+    "keys": "Clés illimitées partageant un même quota",
     "consent": "J’accepte les <membership>conditions d’adhésion</membership>, la <refunds>politique d’annulation et de remboursement</refunds> et les limites de l’API indiquées ici, et demande l’accès dès confirmation du paiement.",
     "subscribe": "Souscrire à l’accès à l’API",
     "opening": "Ouverture du paiement sécurisé…",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "perMonthTaxIncluded": "par mois, taxes comprises",
+    "billedTo": "Facturé chaque mois à {owner}. Résiliable à tout moment depuis la gestion de la facturation ; la résiliation prend effet à la fin de la période payée.",
+    "credits": "Crédits d’analyse",
+    "responseLimit": "Réponse maximale de {size} · {records} fiches par page",
+    "periodNoOverage": "La période suit votre abonnement payé : la première commence à la confirmation du paiement et comprend le quota complet. Le dépassement n’est pas disponible. Les requêtes s’arrêtent lorsqu’un quota inclus est épuisé ; les requêtes échouées ou refusées ne sont jamais facturées.",
+    "periodAndOverage": "La période suit votre abonnement payé : la première commence à la confirmation du paiement et comprend le quota complet. Le dépassement est désactivé par défaut. Un organisateur peut l’activer plus tard avec un plafond mensuel de {capMin} à {capMax} hors taxes, à {request} par requête supplémentaire, {mib} par Mio supplémentaire et {credit} par crédit d’analyse supplémentaire. Sans dépassement, les requêtes s’arrêtent lorsqu’un quota est épuisé."
   },
   "teamInvitation": {
     "joinedLibraryPending": "Votre adhésion à l’équipe est active. L’affectation à {library} doit être examinée par un modérateur avant de donner accès à l’espace du personnel. Vous pouvez suivre son avancement dans Mes contributions.",
@@ -3511,14 +3027,14 @@
     "editor": "Éditeur",
     "libraryFallback": "bibliothèque {id}",
     "libraryAccess": "Accès à la bibliothèque après l’adhésion",
-    "organiserDetail": "En tant qu’organisateur, vous pouvez inviter des collègues et gérer leurs affectations aux bibliothèques. L’accès à l’API est une option de l’équipe, gérée séparément.",
+    "organiserDetail": "En tant qu’organisateur, vous pouvez inviter des collègues et gérer leurs affectations aux bibliothèques. L’accès à l’API s’achète à part, sur la page Développeurs.",
     "memberDetail": "Votre organisateur gère les affectations aux bibliothèques. Les bibliothèques qui vous sont attribuées apparaîtront dans votre espace personnel après votre adhésion.",
-    "membershipNote": "Les outils Pro sont inclus tant que l’équipe est active. L’accès du personnel concerne les bibliothèques qui vous sont attribuées.",
+    "membershipNote": "L’espace de travail est gratuit. Le rejoindre ne permet pas à lui seul de modifier une bibliothèque : l’accès du personnel ne vaut que pour les bibliothèques qui vous sont attribuées et pour lesquelles vous êtes vérifié.",
     "joinAction": "Rejoindre {team}",
     "joining": "Adhésion en cours…",
     "joinError": "Impossible de rejoindre l’équipe. Veuillez réessayer.",
     "expiredDetail": "Demandez à {inviter} de vous envoyer une nouvelle invitation.",
-    "inactiveDetail": "Son abonnement a expiré. Demandez à {inviter} de contacter l’équipe du site.",
+    "inactiveDetail": "L’équipe du site a fermé cet espace de travail. Demandez à {inviter} de la contacter.",
     "wrongEmailDetail": "Cette invitation a été envoyée à {email}. Déconnectez-vous, connectez-vous avec cette adresse, puis ouvrez à nouveau le lien.",
     "verifyDetail": "Confirmez votre adresse e-mail dans les paramètres du compte, puis revenez à ce lien.",
     "emailSettings": "Paramètres de l’e-mail",
@@ -3657,12 +3173,12 @@
     "exploreBody": "Explorez l’Atlas, essayez les filtres et consultez les profils publics.",
     "contributeTitle": "Contribuez",
     "contributeBody": "Proposez une correction, répondez aux questions d’accessibilité ou lancez une discussion.",
-    "teamTitle": "Essayez les offres et votre équipe",
-    "teamBody": "Testez les abonnements disponibles, invitez des collègues et découvrez l’espace du personnel. L’accès du personnel exige toujours une vérification.",
+    "teamTitle": "Essayez un espace du personnel",
+    "teamBody": "Créez un espace d’équipe gratuit, invitez des collègues et gérez le travail de la bibliothèque. L’accès du personnel exige toujours une vérification.",
     "apiTitle": "Connectez une application",
-    "apiBody": "Essayez l’API bêta avec une option API d’équipe active. Les clés partagent un quota mensuel par équipe.",
+    "apiBody": "Essayez l’API bêta avec un abonnement Accès API. Les clés partagent un quota par période de facturation.",
     "paymentTitle": "Paiement de test",
-    "paymentBody": "Vous pouvez essayer les offres et abonnements disponibles. Le paiement bêta utilise le mode test de Stripe : aucun paiement réel n’est effectué.",
+    "paymentBody": "Vous pouvez essayer le paiement de l’Accès API. Le paiement bêta utilise le mode test de Stripe : aucun paiement réel n’est effectué.",
     "cardLabel": "Carte de test Stripe",
     "cardDetails": "Expiration : une date future · CVC : 3 chiffres quelconques. Utilisez des coordonnées de facturation fictives.",
     "copyCard": "Copier la carte de test",
@@ -3672,7 +3188,7 @@
     "stripeGuide": "Guide de test Stripe",
     "paymentsOff": "Les tests de paiement ne sont pas disponibles dans cet environnement. Explorez les autres fonctionnalités de la bêta.",
     "resetTitle": "Les données bêta seront effacées avant le lancement",
-    "resetBody": "Les comptes, contributions, équipes et abonnements de test ne seront pas conservés. Gardez une copie de ce que vous souhaitez sauvegarder.",
+    "resetBody": "Les comptes, contributions, espaces d’équipe et abonnements de test ne seront pas conservés. Gardez une copie de ce que vous souhaitez sauvegarder.",
     "feedbackBody": "Attendez-vous à des bugs et à des détails inachevés. Utilisez Commentaires pour signaler les problèmes ou proposer des idées. Décrivez le résultat attendu et ce qui s’est passé.",
     "start": "Commencer les tests",
     "feedback": "Envoyer un commentaire",
@@ -4022,97 +3538,6 @@
     "completeness": "Fiche complète à {percent, number} %",
     "unscored": "Non évaluée"
   },
-  "membershipPage": {
-    "title": "Votre abonnement",
-    "hero": "Votre *abonnement*",
-    "lead": "Votre formule, vos outils et la gestion de votre abonnement.",
-    "home": "Accueil",
-    "accountEyebrow": "Votre compte",
-    "plansTitle": "Formules et tarifs",
-    "questionsPoliciesNav": "Questions et conditions",
-    "plansHelpLead": "Comparez les offres, consultez les réponses ci-dessous ou posez-nous une question sur votre adhésion.",
-    "plansHero": "Formules et *tarifs*",
-    "plansEyebrow": "Formules et tarifs",
-    "currentAccess": "Accès actuel",
-    "manageMembership": "Gérer votre abonnement",
-    "teamSeat": "Place Team",
-    "yourTeam": "votre Team",
-    "currentPlan": "Votre formule actuelle",
-    "activeAccess": "Accès actif",
-    "freeAccount": "Compte gratuit",
-    "teamAccess": "Vos outils Pro sont inclus dans votre place au sein de {name}. Vous pouvez les utiliser sans revendiquer de bibliothèque ni de réseau.",
-    "freeAccess": "Explorez les bibliothèques, partagez vos connaissances et suivez les lieux qui vous intéressent. Une formule payante est facultative.",
-    "accessFrom": "Fourni par",
-    "libraryPermissions": "Droits de modification",
-    "approvedLibraries": "{count, plural, one {# bibliothèque approuvée} other {# bibliothèques approuvées}}",
-    "noStaffAccess": "Aucun accès de modification approuvé",
-    "subscription": "Abonnement",
-    "openAtlas": "Ouvrir l’Atlas",
-    "explorePlans": "Découvrir les formules",
-    "comparePlans": "Comparer les formules",
-    "startContributing": "Commencer à contribuer",
-    "included": "Ce qui est inclus",
-    "availableNow": "Disponible maintenant",
-    "toolsLead": "Découvrez les outils inclus dans votre accès actuel.",
-    "freeToolsLead": "Chaque compte permet d’explorer le répertoire et de l’améliorer.",
-    "openTool": "Ouvrir l’outil",
-    "findLibraries": "Rechercher et explorer les bibliothèques",
-    "browseLibraries": "Voir les bibliothèques",
-    "contributeRecords": "Contribuer aux fiches des bibliothèques",
-    "teamTools": "Outils de données Team",
-    "teamToolsDescription": "Sélections de bibliothèques et outils partagés. Les droits de modification sont vérifiés séparément.",
-    "openTeam": "Ouvrir l’espace Team",
-    "apiSeparate": "L’API de données publiques est une option facturée séparément.",
-    "recognition": "Reconnaissance publique",
-    "recognitionLead": "Choisissez d’apparaître sur la page des soutiens et d’afficher la marque Supporter sur votre profil. Chaque préférence est enregistrée séparément.",
-    "recognitionUnavailable": "Impossible de charger vos préférences. Rechargez cette page ou ouvrez les paramètres du compte.",
-    "recognitionFree": "La reconnaissance Supporter est disponible avec les accès Supporter, Pro et Team. Votre rôle de contributeur et l’examen des modifications ne dépendent jamais du paiement.",
-    "meetSupporters": "Rencontrer nos soutiens",
-    "profilePrivacy": "Confidentialité du profil",
-    "teamMembership": "Votre abonnement Team",
-    "organiserBilling": "Gérez l’abonnement, les factures et les places de votre Team dans la facturation Team. Votre place inclut l’accès Pro.",
-    "memberBilling": "Votre responsable gère l’abonnement, les factures et les places de la Team. Votre place inclut l’accès Pro.",
-    "manageTeamBilling": "Gérer la facturation Team",
-    "billing": "Facturation",
-    "complimentaryBilling": "Votre accès actuel est offert. Vous n’avez pas d’abonnement personnel à gérer.",
-    "freeBilling": "Votre compte gratuit n’a ni abonnement ni paiement récurrent.",
-    "helpAndAccess": "Aide et accès aux bibliothèques",
-    "libraryStaff": "Accès du personnel",
-    "separate": "Distinct",
-    "approvedStaff": "Vos droits approuvés sont indépendants de votre abonnement. Vous pouvez gérer ces fiches sans formule payante.",
-    "staffOptional": "Vous ne gérez aucune bibliothèque. Ce n’est pas un problème : votre adhésion fonctionne sans cela.",
-    "manageLibraries": "Gérer vos bibliothèques",
-    "claimLibrary": "Revendiquer une bibliothèque",
-    "claimExplanation": "Si vous travaillez dans une bibliothèque, revendiquez-la pour mettre à jour sa fiche. C’est gratuit, et un modérateur vérifie d’abord votre rôle.",
-    "howItWorks": "Comment ça marche",
-    "termsAndHelp": "Conditions et aide",
-    "cancellationAndRefunds": "Annulation et remboursements",
-    "askQuestion": "Poser une question",
-    "getProFree": "Obtenir Pro gratuitement",
-    "getProFreeLead": "Les contributeurs réguliers, le personnel vérifié, les étudiants et les associations admissibles peuvent obtenir Pro gratuitement.",
-    "seeEligibility": "Voir les conditions",
-    "needHelp": "Besoin d’aide ?",
-    "helpLead": "Trouvez des réponses sur les formules, les paiements et votre compte.",
-    "membershipQuestions": "Questions sur l’abonnement",
-    "terms": "Conditions d’abonnement",
-    "accountSettings": "Paramètres du compte",
-    "settingsLead": "Votre accès actuel, vos préférences de reconnaissance et votre facturation ont désormais leur propre page.",
-    "plansLink": "Formules et tarifs",
-    "features": {
-      "atlas_export": "Exports Atlas avec attribution des sources",
-      "atlas_contextLayers": "Contexte social dans les zones britanniques prises en charge",
-      "atlas_analysis": "Portée à pied et à vélo au Royaume-Uni",
-      "atlas_compare": "Comparer l’accès aux bibliothèques entre territoires",
-      "library_history": "Historique détaillé des modifications"
-    },
-    "paidThrough": "Payé jusqu’au",
-    "teamInactive": "Team inactive",
-    "inactiveTeamBilling": "Cet abonnement Team est inactif. Votre responsable peut consulter la facturation et le renouvellement. Les places Pro et les outils de données Team nécessitent un abonnement actif. Les droits de modification approuvés sont distincts.",
-    "inTeamTitle": "Vous faites partie d’une Team",
-    "inTeamOrganiser": "Vous êtes responsable de {team}.",
-    "inTeamMember": "Vous avez une place dans {team}.",
-    "manageTeam": "Gérer votre équipe"
-  },
   "membershipPreferences": {
     "saved": "Préférence enregistrée",
     "failed": "Impossible d’enregistrer votre préférence. Réessayez.",
@@ -4120,7 +3545,7 @@
     "listed": "M’afficher sur la page des soutiens",
     "listedDescription": "Votre nom et votre lieu public. Vous pouvez vous retirer à tout moment.",
     "settings": "Réglages de la marque Supporter",
-    "badgeDescription": "La marque n’indique jamais votre formule, vos paiements ni votre rôle de contributeur.",
+    "badgeDescription": "La marque indique uniquement une reconnaissance obtenue. Elle n’affiche jamais vos rôles ni ce que vous payez.",
     "privateProfile": "Les profils privés et limités ne sont pas listés. Rendez votre profil public dans les paramètres, puis choisissez d’apparaître ou non."
   },
   "siteSearch": {
@@ -4202,17 +3627,17 @@
     "discussTitle": "Demandez à la communauté.",
     "discussBody": "Questions, conseils et idées sur les bibliothèques. Chaque message et modification est vérifié.",
     "discussAction": "Lancer une discussion",
-    "supportTitle": "Soutenez son ouverture.",
-    "supportThanks": "Merci pour votre soutien.",
-    "supportBody": "Le soutien préserve l’indépendance du répertoire. Les fiches et contributions restent gratuites.",
-    "manageSupport": "Gérer l’adhésion",
-    "supportAction": "Devenir soutien",
+    "supportTitle": "Obtenez la reconnaissance Soutien.",
+    "supportThanks": "Merci pour vos contributions.",
+    "supportBody": "Soutien distingue 100 contributions acceptées. Cela se mérite, ne s’achète jamais et n’ajoute aucun pouvoir.",
+    "manageSupport": "Paramètres Soutien",
+    "supportAction": "Commencer à contribuer",
     "learnMore": "Comment ça marche",
     "eventsTitle": "Ajoutez vos événements.",
     "eventsBody": "Le personnel peut connecter un flux d’événements, vérifiés avant leur publication dans le calendrier.",
     "eventsAction": "Connecter un flux",
     "findTitle": "Vous connaissez une bibliothèque ?",
-    "findBody": "Ajoutez une bibliothèque manquante ou améliorez une fiche. Chaque modification est vérifiée.",
+    "findBody": "Ajoutez une bibliothèque manquante ou améliorez une fiche. Chaque modification est vérifiée, et la première acceptée débloque Reach.",
     "roadmap": "Feuille de route",
     "roadmapTitle": "Vous connaissez un jeu de données ouvert ?",
     "roadmapBody": "Suggérez une source pour votre pays ou votre région. Les modérateurs vérifient sa licence avant de la proposer au vote.",
@@ -4237,7 +3662,6 @@
     "reviewLead": "Suivez l’avancement dans vos contributions",
     "outcome": "Vous recevez une réponse",
     "outcomeLead": "Accepté, à modifier ou non accepté",
-    "earnedPro": "Pro, obtenu par vos contributions régulières ou votre adhésion",
     "freeContribution": "Contribuer reste gratuit",
     "status": {
       "draft": "Brouillon",
@@ -4278,7 +3702,7 @@
     "reviewerBody": "Vérifiez les sources et le contexte local. Demandez des précisions si nécessaire.",
     "reviewerGuide": "Lire les conseils de relecture",
     "supportTitle": "Un index ouvert à tous",
-    "supportBody": "L’adhésion aide à maintenir la plateforme. Tous peuvent contribuer.",
+    "supportBody": "Soutien distingue 100 contributions acceptées, jamais un paiement. Les organisations peuvent soutenir le service public par le mécénat.",
     "meetSupporters": "Découvrir nos soutiens",
     "impactTitle": "Vos contributions",
     "accepted": "Changements acceptés",
@@ -4308,10 +3732,7 @@
   "dashboardInformation": {
     "title": "Gardons l’index ouvert",
     "body": "Ajoutez vos connaissances, corrigez une fiche ou soutenez le projet.",
-    "networks": "Réseaux",
-    "supportTitle": "Choisissez comment participer",
-    "supportBody": "Découvrez l’accès gratuit, la reconnaissance des contributions et les offres pour les équipes.",
-    "supportAction": "Voir les offres"
+    "networks": "Réseaux"
   },
   "applicantSummary": {
     "noProfile": "Aucun profil public",
@@ -4367,7 +3788,17 @@
       "unconfirmedAccess": "Certaines fiches ne confirment pas toutes les caractéristiques d’accessibilité sélectionnées. Une information non confirmée ne signifie pas qu’une caractéristique est absente.",
       "unverifiedDirectory": "L’exhaustivité de l’annuaire n’a pas été vérifiée pour cette zone. Les nombres et comparaisons portent sur les bibliothèques recensées ; une fiche manquante ne prouve pas l’absence de bibliothèque.",
       "temporaryFailure": "Le service n’a pas pu charger ce résultat. Cet échec de récupération temporaire ne prouve pas l’absence de données pour ce lieu."
-    }
+    },
+    "dontShowAgain": "Ne plus afficher",
+    "dontShowAgainVisit": "Ne plus afficher pendant cette visite",
+    "hideHintSignedIn": "Le bouton « {button} » reste sur la carte. Vous pouvez réactiver ces explications dans Paramètres → Notifications → Invitations.",
+    "hideHintSignedOut": "Le bouton « {button} » reste sur la carte. Connectez-vous pour enregistrer ce choix.",
+    "hiddenSignedIn": "Les explications automatiques sont désactivées. Réactivez-les dans Paramètres → Notifications → Invitations.",
+    "hiddenSignedOut": "Les explications automatiques sont désactivées jusqu’à ce que vous quittiez l’Atlas.",
+    "saveError": "Impossible d’enregistrer votre préférence. Réessayez, ou décochez « Ne plus afficher » pour continuer pendant cette visite.",
+    "saving": "Enregistrement…",
+    "settingLabel": "Explications des données manquantes dans l’Atlas",
+    "settingDesc": "Ouvrir automatiquement une explication lorsqu’il manque des données à une couche ou à une analyse. Le bouton « {button} » reste toujours disponible."
   },
   "roadmap": {
     "title": "Feuille de route",
@@ -4387,10 +3818,9 @@
     },
     "plans": {
       "free": "Gratuit",
-      "supporter": "Soutien",
-      "pro": "Pro",
-      "team": "Team",
-      "api": "Option API"
+      "api": "Accès API",
+      "contributor": "Contributeur",
+      "staff": "Personnel vérifié"
     },
     "planFilter": "Offre",
     "anyPlan": "Toutes les offres",
@@ -4518,12 +3948,11 @@
     "saving": "Enregistrement…",
     "saved": "« {name} » enregistrée.",
     "saveFailed": "L’enregistrement a échoué. Réessayez.",
-    "limitReached": "Vous avez utilisé les {limit} de votre formule.",
+    "limitReached": "Vous avez utilisé les {limit}. Supprimez-en une pour en enregistrer une autre.",
     "atLimit": {
-      "view": "Vous avez enregistré {limit} vues, le maximum de votre formule. Supprimez-en une pour enregistrer celle-ci, ou passez à l’illimité.",
-      "search": "Vous avez enregistré {limit} recherches, le maximum de votre formule. Supprimez-en une pour enregistrer celle-ci, ou passez à l’illimité."
+      "view": "Vous avez enregistré {limit} vues, le maximum par compte. Supprimez-en une pour enregistrer celle-ci.",
+      "search": "Vous avez enregistré {limit} recherches, le maximum par compte. Supprimez-en une pour enregistrer celle-ci."
     },
-    "seePlans": "Voir les formules",
     "listTitle": {
       "view": "Vos vues",
       "search": "Vos recherches"
@@ -4539,5 +3968,694 @@
     "delete": "Supprimer {name}",
     "deleted": "« {name} » supprimée.",
     "deleteFailed": "La suppression a échoué. Réessayez."
+  },
+  "sponsorPage": {
+    "metaTitle": "Mécénat",
+    "metaDescription": "Soutenez l’accès public, la qualité des données, la traduction, la couverture géographique ou les outils ouverts de Libraries Global : ce que finance le mécénat, ce que reçoivent les mécènes et nos règles d’indépendance. Chaque mécénat commence par une discussion.",
+    "title": "Mécénat",
+    "eyebrow": "Mécénat",
+    "heroTitle": "Financer un inventaire ouvert des *bibliothèques* du monde",
+    "lead": "Libraries Global est un index indépendant et ouvert des bibliothèques. Le mécénat finance des travaux publics précis sur cet index, et nous rendons compte de l’usage des fonds. Il n’achète jamais d’influence sur les fiches.",
+    "nav": {
+      "programmes": "Ce que finance le mécénat",
+      "recognition": "Ce que reçoivent les mécènes",
+      "independence": "Indépendance",
+      "sponsors": "Mécènes actuels",
+      "enquire": "Nous contacter"
+    },
+    "programmes": {
+      "title": "Ce que finance le mécénat",
+      "lead": "Chaque accord de mécénat soutient un ou plusieurs programmes, que nous choisissons avec vous avant toute signature.",
+      "items": {
+        "publicAccess": {
+          "title": "Accès public",
+          "body": "Garder l’index, la carte et les pages des bibliothèques gratuits pour tous, sans publicité."
+        },
+        "dataQuality": {
+          "title": "Qualité des données",
+          "body": "Vérifier, sourcer et corriger les fiches des bibliothèques, et examiner les contributions de la communauté."
+        },
+        "translation": {
+          "title": "Traduction",
+          "body": "Traduire le site et ses guides pour que chacun puisse les utiliser dans sa langue."
+        },
+        "coverage": {
+          "title": "Couverture géographique",
+          "body": "Intégrer et tenir à jour les données des pays et régions que l’index couvre encore mal."
+        },
+        "tooling": {
+          "title": "Outils ouverts",
+          "body": "Du code open source, des exports de données ouvertes et une documentation que chacun peut réutiliser."
+        }
+      },
+      "reportingTitle": "Rapports trimestriels et annuels",
+      "reportingBody": "Chaque mécène reçoit un rapport d’activité trimestriel et un rapport d’impact annuel sur les programmes qu’il finance."
+    },
+    "recognition": {
+      "title": "Ce que reçoivent les mécènes",
+      "items": {
+        "acknowledgement": {
+          "title": "Mention du nom et du logo",
+          "body": "Si vous le souhaitez, nous affichons le nom et le logo de votre organisation sur cette page. Rien n’est publié sans votre accord."
+        },
+        "entry": {
+          "title": "Une fiche mécène factuelle",
+          "body": "Une courte description factuelle, sur cette page, du travail que finance votre mécénat."
+        },
+        "briefings": {
+          "title": "Points d’étape",
+          "body": "Des points réguliers sur l’avancement du programme, en plus des rapports trimestriels et annuels."
+        }
+      }
+    },
+    "independence": {
+      "title": "Indépendance",
+      "summary": "Le mécénat n’achète aucune influence",
+      "items": {
+        "influence": "Les mécènes n’ont aucun pouvoir sur les fiches des bibliothèques, le classement, les résultats de recherche, la vérification ou la relecture éditoriale.",
+        "charity": "Le mécénat proposé ici n’est pas un don à une œuvre caritative, et nous ne prétendons pas qu’il ouvre droit à une réduction d’impôt.",
+        "api": "Le mécénat n’inclut aucune capacité d’API. L’accès API est une offre distincte à {price} par mois, présentée sur la <link>page développeurs</link>."
+      }
+    },
+    "sponsors": {
+      "title": "Mécènes actuels",
+      "lead": "Les organisations qui soutiennent actuellement Libraries Global en tant que mécènes et ont accepté d’être citées.",
+      "empty": "Aucun mécène n’est encore affiché.",
+      "emptyDetail": "Les mécènes apparaissent ici une fois qu’ils ont accepté d’être cités.",
+      "unavailable": "La liste des mécènes est momentanément indisponible.",
+      "unavailableDetail": "Veuillez réessayer plus tard.",
+      "tiers": {
+        "founding": "Mécène Fondateur",
+        "service": "Mécène Service",
+        "community": "Mécène Communauté",
+        "custom": "Mécène"
+      }
+    },
+    "enquire": {
+      "title": "Parlons de mécénat",
+      "body": "Chaque mécénat commence par une discussion : le travail que vous souhaitez financer, pour combien de temps et la façon dont nous en rendons compte. Nous convenons du montant ensemble.",
+      "action": "Parlons de mécénat",
+      "email": "Ou écrivez-nous à <link>{email}</link>.",
+      "terms": {
+        "contract": "Chaque accord de mécénat fait l’objet d’un devis et d’un contrat distincts.",
+        "invoice": "Le mécénat est généralement facturé.",
+        "tax": "Le traitement fiscal est précisé dans chaque contrat."
+      }
+    },
+    "sidebar": {
+      "title": "Demandes de mécénat",
+      "body": "Parlons du financement de l’accès public, de la qualité des données, de la traduction, de la couverture ou des outils ouverts.",
+      "action": "Nous contacter",
+      "api": "Accès API"
+    },
+    "heroHow": "Comment fonctionne le mécénat"
+  },
+  "accessLocks": {
+    "contributorChip": "Contributeur",
+    "layerLocked": "{name} (verrouillé)",
+    "layerSignIn": "{name} (connectez-vous pour l’utiliser)",
+    "reachLocked": "Contribuez une fois pour débloquer {count, plural, =2 {deux calculs Reach} one {# calcul Reach} other {# calculs Reach}} par semaine.",
+    "reachApi": "Les clients de l’API disposent d’un quota plus large, y compris Reach pour tout un service de bibliothèques.",
+    "howToContribute": "Comment contribuer",
+    "aboutApiAccess": "À propos de l’Accès API",
+    "layerIncluded": "{name} est gratuit pour tout compte connecté.",
+    "howAccessWorks": "Comment fonctionne l’accès",
+    "notNow": "Pas maintenant",
+    "layersFooter": "Les informations sur les bibliothèques sont gratuites pour tous. Les couches de contexte et les analyses sont gratuites avec un compte, et Reach se débloque avec votre première contribution acceptée.",
+    "signInChip": "Connexion",
+    "csvSignIn": "Les téléchargements CSV sont gratuits avec un compte. Connectez-vous pour télécharger.",
+    "exportLocked": "Exporter · Connexion",
+    "exportNote": "Les exports sont gratuits avec un compte : jusqu’à {rows, number} bibliothèques par export, {perDay, number} exports par jour.",
+    "serviceReachApi": "Reach pour tout un service de bibliothèques est réservé aux clients de l’API.",
+    "reachWeekUsed": "Vous avez utilisé {count, plural, =2 {vos deux nouveaux calculs Reach} one {votre # nouveau calcul Reach} other {vos # nouveaux calculs Reach}} de la semaine. Les résultats déjà calculés restent gratuits à rouvrir, et chaque calcul compte pendant sept jours à partir du moment où vous l’avez lancé.",
+    "standing": {
+      "explorer": "Explorateur",
+      "contributor": "Contributeur",
+      "supporter": "Soutien"
+    },
+    "reachCta": "Faire ma première contribution",
+    "reachDialogTitle": "Débloquer Reach en temps de trajet",
+    "reachDialogLead": "Reach estime combien de personnes vivent à 5, 10, 15 ou 30 minutes à pied ou à vélo d’une bibliothèque.",
+    "reachPathContributor": "Contributeur",
+    "reachPathContributorBody": "Gratuit. Votre première contribution acceptée débloque {count, plural, =2 {deux nouveaux calculs Reach} one {# nouveau calcul Reach} other {# nouveaux calculs Reach}} par semaine ; rouvrir vos résultats reste gratuit.",
+    "reachPathApi": "Accès API",
+    "reachPathApiBody": "Pour les organisations : {perHour, plural, one {# calcul} other {# calculs}} par heure et Reach pour tout un service de bibliothèques, jusqu’à {libraries, plural, one {# bibliothèque} other {# bibliothèques}}.",
+    "reachApiCta": "Voir l’Accès API",
+    "reachSignInHint": "Pour contribuer, il faut un compte gratuit. <signIn>Connectez-vous</signIn> ou <register>créez-en un</register> d’abord.",
+    "serviceReachDialogTitle": "Reach pour tout un service de bibliothèques",
+    "serviceReachDialogLead": "Estimez la population desservie par tout un service de bibliothèques, à partir de sa zone de référence cartographiée. Les zones qui se chevauchent ne sont comptées qu’une fois."
+  },
+  "supportersPage": {
+    "metaTitle": "Soutiens",
+    "metaDescription": "La reconnaissance Soutien distingue les personnes qui ont apporté au moins {count, number} contributions acceptées à Libraries Global. Elle se mérite et ne s’achète jamais.",
+    "title": "Celles et ceux qui *construisent l’index.*",
+    "titleBroken": "Celles et ceux\nqui *construisent l’index.*",
+    "lead": "Soutien est la reconnaissance accordée après {count, number} contributions acceptées : nouvelles bibliothèques, corrections, photos, traductions, etc. Elle ne s’achète pas et n’ajoute ni outils ni pouvoirs.",
+    "startContributing": "Commencer à contribuer",
+    "seeWho": "Voir qui est là",
+    "thanksFallbackName": "à vous",
+    "thanks": "Merci, {name}.",
+    "acceptedCount": "{count, plural, one {# contribution acceptée} other {# contributions acceptées}} à ce jour.",
+    "listed": "Votre nom figure ci-dessous.",
+    "notListed": "Votre nom n’est pas affiché publiquement.",
+    "markShown": "Votre profil affiche la marque Soutien.",
+    "markHidden": "Votre marque Soutien est masquée.",
+    "recognitionTitle": "Ce que signifie la reconnaissance Soutien",
+    "markTitle": "Une marque Soutien facultative",
+    "markBody": "Affichée à côté de votre nom sur votre profil. Masquez-la à tout moment dans les paramètres.",
+    "creditTitle": "Une mention sur cette page",
+    "creditBody": "Votre nom d’affichage et, si votre profil l’indique, votre localisation. Vous choisissez d’y figurer ou non.",
+    "onPurpose": "C’est tout, et c’est voulu. Soutien n’ajoute ni outils, ni quotas, ni pouvoirs. Cela ne change ni ce que vous pouvez modifier ni le fonctionnement des relectures, et cela ne s’achète pas.",
+    "previewTitle": "La marque sur un profil",
+    "previewName": "Votre nom",
+    "previewHandle": "@votrenom · Votre localisation publique",
+    "previewNote": "La marque indique une reconnaissance obtenue, rien d’autre. Elle disparaît de votre profil dès que vous la masquez.",
+    "stepsTitle": "Comment obtenir la reconnaissance",
+    "stepsLead": "Chaque contribution acceptée compte une fois. Chacune est vérifiée par un relecteur.",
+    "howAccessWorks": "Comment fonctionne l’accès",
+    "steps": {
+      "first": {
+        "title": "Votre première contribution acceptée",
+        "body": "Vous devenez Contributeur et débloquez {count, plural, =2 {deux calculs Reach} one {# calcul Reach} other {# calculs Reach}} par semaine."
+      },
+      "count": {
+        "title": "Chaque modification acceptée compte",
+        "body": "Une nouvelle bibliothèque, une correction, une photo, une traduction, un article du Journal, etc. Les séries, bonus et ajustements de points ne comptent pas."
+      },
+      "milestone": {
+        "title": "{count, number} contributions acceptées",
+        "body": "Vous devenez Soutien, avec une marque de profil facultative et une mention sur cette page."
+      }
+    },
+    "faqTitle": "À propos de la reconnaissance Soutien",
+    "faq": {
+      "listing": {
+        "q": "Dois-je figurer sur la liste ?",
+        "a": "Non. Désactivez l’affichage ici ou dans les paramètres de votre profil. Les profils privés et limités n’apparaissent jamais. Si vous rendez à nouveau votre profil public, choisissez de réactiver ou non l’affichage."
+      },
+      "shown": {
+        "q": "Qu’est-ce qui s’affiche à côté de mon nom ?",
+        "a": "Votre nom d’affichage renvoie vers votre profil public. Votre ville et votre pays n’apparaissent que si vous affichez publiquement votre localisation. Votre adresse e-mail et les détails de votre compte ne sont jamais affichés."
+      },
+      "mark": {
+        "q": "Puis-je masquer la marque Soutien ?",
+        "a": "Oui. La marque a son propre interrupteur dans les paramètres du profil. La masquer ne change pas votre présence sur cette page."
+      },
+      "who": {
+        "q": "Qui peut figurer ici ?",
+        "a": "Toute personne ayant au moins {count, number} contributions acceptées et qui choisit d’apparaître. Les séries quotidiennes, bonus et ajustements de points ne comptent pas dans le total."
+      },
+      "buy": {
+        "q": "Puis-je acheter la reconnaissance Soutien ?",
+        "a": "Non. Elle s’obtient uniquement par des contributions acceptées. Aucun paiement, y compris l’Accès API ou le mécénat, n’achète une reconnaissance, la confiance, un classement ou un traitement éditorial."
+      },
+      "revoked": {
+        "q": "La reconnaissance peut-elle être retirée ?",
+        "a": "Oui, si un modérateur constate que des contributions étaient frauduleuses ou en double. Votre mention et votre marque disparaissent alors ; vos choix de visibilité sont conservés."
+      },
+      "organisations": {
+        "q": "Les organisations peuvent-elles soutenir le service ?",
+        "a": "Oui, par le mécénat. Les mécènes sont remerciés publiquement et n’obtiennent jamais d’influence sur les fiches, le classement ou la modération. Le personnel et les bénévoles peuvent toujours obtenir Soutien par leurs propres contributions."
+      }
+    },
+    "sponsorTitle": "Financer le service public",
+    "sponsorBody": "Les organisations peuvent soutenir Libraries Global en tant que mécènes pour couvrir les serveurs, les cartes et les données pour tous. Les mécènes sont remerciés publiquement et n’ont aucune influence sur les fiches, le classement ou la modération.",
+    "sponsorAction": "À propos du mécénat",
+    "closingTitle": "Votre prochaine modification acceptée compte.",
+    "closingBody": "Ajoutez une bibliothèque manquante, corrigez une fiche ou partagez une photo. Chaque contribution acceptée compte pour Soutien, et la première débloque {count, plural, =2 {deux calculs Reach} one {# calcul Reach} other {# calculs Reach}} par semaine.",
+    "costs": {
+      "thisMonth": "Coûts de fonctionnement ce mois-ci",
+      "forMonth": "Coûts de fonctionnement · {month}",
+      "covered": "{percent} % couverts",
+      "coveredLabel": "Coûts de fonctionnement couverts pour {month}",
+      "breakdown": "Où va l’argent",
+      "inCosts": "{amount} de coûts",
+      "inFunding": "{amount} de financement"
+    }
+  },
+  "developersWorkspace": {
+    "metaTitle": "API de données sur les bibliothèques",
+    "metaDescription": "Recherchez et récupérez les fiches de bibliothèques publiées avec leurs sources. Lisez la référence, essayez le bac à sable et achetez l’accès API pour {apiPrice} par mois.",
+    "home": "Accueil",
+    "navigation": "Navigation de l’API",
+    "organisation": "Votre organisation",
+    "comparePlans": "Comparer les formules",
+    "sidebarTitle": "Les sources accompagnent les données.",
+    "sidebarBody": "Lisez les champs publics publiés avec leurs sources et licences.",
+    "quickstart": "Guide de la première requête",
+    "accountOverviewTitle": "Vue d’ensemble de l’API",
+    "accountOverviewLead": "Vérifiez votre abonnement API, gérez vos clés et essayez une requête.",
+    "sections": {
+      "overview": {
+        "label": "Vue d’ensemble",
+        "title": "Construire avec les données des bibliothèques",
+        "lead": "Recherchez et récupérez les fiches publiques publiées. Lisez la documentation, essayez une requête, puis achetez l’accès API pour connecter votre application."
+      },
+      "keys": {
+        "label": "Clés API",
+        "title": "Clés API",
+        "lead": "Gérez les identifiants de votre organisation. Toutes les clés partagent un même quota."
+      },
+      "usage": {
+        "label": "Utilisation",
+        "title": "Utilisation",
+        "lead": "Suivez les requêtes, les données de réponse et les crédits d’analyse de toutes vos clés. Les quotas sont réinitialisés au début de chaque période de facturation."
+      },
+      "reference": {
+        "label": "Référence des requêtes",
+        "title": "Référence des requêtes",
+        "lead": "Les points d’accès aux données publiques publiées. Conservez les sources et licences qui accompagnent chaque fiche."
+      },
+      "playground": {
+        "label": "Bac à sable",
+        "title": "Bac à sable",
+        "lead": "Envoyez de vraies requêtes avec votre clé. Les requêtes réussies et les données de réponse sont décomptées de votre quota."
+      }
+    }
+  },
+  "developersOffer": {
+    "title": "Accès API",
+    "badge": "Un seul abonnement mensuel",
+    "perMonth": "par mois, taxes comprises",
+    "priceNote": "Stripe confirme le montant final, taxes locales comprises, avant le paiement. Facturation mensuelle ; résiliable à tout moment, avec effet à la fin de la période payée.",
+    "includedTitle": "Inclus à chaque période de facturation",
+    "requests": "Requêtes",
+    "responseData": "Données de réponse",
+    "credits": "Crédits d’analyse",
+    "rate": "{count} requêtes par minute",
+    "concurrency": "{count} simultanées",
+    "responseLimit": "Réponse maximale de {size} · {records} fiches par page",
+    "keys": "Clés illimitées partageant un même quota",
+    "period": "Votre période de facturation suit votre abonnement : la première commence à la confirmation du paiement et comprend le quota complet.",
+    "buy": "Acheter l’accès API",
+    "signIn": "Se connecter pour acheter l’accès API",
+    "readReference": "Lire la référence des requêtes",
+    "overageOffTitle": "Aucun frais de dépassement",
+    "overageTitle": "Le dépassement reste désactivé tant que vous ne l’activez pas",
+    "overageUnavailable": "Le dépassement n’est pas disponible. Les requêtes s’arrêtent avec une erreur explicite lorsqu’un quota inclus est épuisé, jusqu’à la période payée suivante. Les requêtes échouées ou refusées ne sont jamais facturées.",
+    "overageBody": "Un organisateur peut l’activer et choisir un plafond mensuel de {capMin} à {capMax} hors taxes ({capDefault} est suggéré). Au-delà du quota inclus :",
+    "overageRequest": "{requestPrice} par requête supplémentaire",
+    "overageMib": "{mibPrice} par Mio de données de réponse supplémentaire",
+    "overageCredit": "{creditPrice} par crédit d’analyse supplémentaire",
+    "overageStop": "Sans dépassement, ou une fois le plafond atteint, les requêtes s’arrêtent avec une erreur explicite jusqu’à la période suivante. Les requêtes échouées ou refusées ne sont jamais facturées.",
+    "whoTitle": "Qui peut acheter",
+    "whoBody": "Toute personne ayant une adresse e-mail vérifiée. Vous achetez pour vous-même ? Nous créons une organisation gratuite dont vous êtes l’organisateur, pour pouvoir ajouter des collègues plus tard. Dans une organisation existante, un organisateur achète pour tout le monde ; les membres voient l’utilisation.",
+    "reachBonus": "Les organisateurs disposant d’un accès API actif ont aussi plus de calculs de portée dans l’Atlas : {perHour} nouveaux calculs par heure, jusqu’à {perDay} par jour pour le compte, et une portée de réseau jusqu’à {libraries} bibliothèques.",
+    "independence": "Une clé API identifie votre application, pas une personne. Elle ne donne jamais de droit de modification, de vérification du personnel ni de meilleure place dans les résultats.",
+    "terms": "Lire les conditions de l’API"
+  },
+  "membershipContent": {
+    "standing": {
+      "public": "Non connecté",
+      "explorer": "Explorateur",
+      "contributor": "Contributeur",
+      "supporter": "Soutien"
+    },
+    "offers": {
+      "explorer": {
+        "name": "Explorateur",
+        "who": "Toute personne disposant d’un compte gratuit.",
+        "price": "Gratuit",
+        "priceNote": "Inscription avec une adresse e-mail. Ni carte bancaire ni période d’essai.",
+        "cta": {
+          "signUp": "Créer un compte gratuit"
+        },
+        "items": {
+          "records": "Toutes les fiches de bibliothèques, la carte et les listes, avec ou sans compte",
+          "contribute": "Proposer des corrections, des photos et de nouvelles bibliothèques",
+          "follow": "Suivre des bibliothèques, enregistrer des événements et participer aux discussions",
+          "contextLayers": "Couches de contexte de l’Atlas : défavorisation et ménages sans voiture dans les zones britanniques prises en charge",
+          "libraryAccess": "Accès aux bibliothèques : comparaisons par habitant pour les pays et les zones locales prises en charge",
+          "history": "Chaque modification d’une bibliothèque, champ par champ",
+          "savedViews": "Jusqu’à {savedViews} vues et {savedViews} recherches enregistrées",
+          "export": "Exports de l’Atlas jusqu’à {exportRows} lignes, {exportsPerDay} par jour",
+          "alerts": "Alertes sur les recherches enregistrées",
+          "notes": "Notes privées sur n’importe quelle bibliothèque"
+        }
+      },
+      "contributor": {
+        "name": "Contributeur",
+        "who": "Toute personne ayant au moins une contribution acceptée.",
+        "price": "Gratuit",
+        "priceNote": "Obtenu dès votre première contribution acceptée.",
+        "cta": {
+          "contribute": "Commencer à contribuer"
+        },
+        "items": {
+          "everythingExplorer": "Tout ce qu’offre Explorateur",
+          "reach": "{reachPerWeek} nouveaux calculs de portée pour une bibliothèque tous les 7 jours ; rouvrir un résultat déjà obtenu est gratuit",
+          "credit": "Un crédit pour chaque modification acceptée et l’historique de vos contributions",
+          "supporter": "La reconnaissance Soutien à {supporterAt} contributions acceptées",
+          "noAuthority": "La reconnaissance ne donne jamais de droits de modification ni de vérification du personnel. Les points et les badges sont comptés à part."
+        }
+      },
+      "staff": {
+        "name": "Personnel vérifié",
+        "who": "Les personnes qui travaillent dans une bibliothèque ou un réseau de bibliothèques.",
+        "price": "Gratuit",
+        "priceNote": "Une fois votre rôle confirmé auprès de la bibliothèque.",
+        "cta": {
+          "claim": "Revendiquer votre bibliothèque"
+        },
+        "items": {
+          "workspace": "L’espace personnel pour chaque bibliothèque pour laquelle vous êtes vérifié",
+          "editing": "Modifier la fiche de votre bibliothèque, publier des avis et répondre aux suggestions",
+          "organisation": "Une organisation gratuite pour inviter des collègues et organiser vos bibliothèques",
+          "widgets": "Moteurs de recherche de bibliothèques, annuaires, graphiques et statistiques à intégrer",
+          "traffic": "Rapports de fréquentation des pages de votre bibliothèque",
+          "scope": "Votre autorité ne couvre que les bibliothèques pour lesquelles vous êtes vérifié. Rejoindre une organisation ne donne à lui seul aucun droit de modification."
+        }
+      },
+      "api": {
+        "name": "Accès API",
+        "who": "Développeurs, chercheurs et organisations qui connectent leurs propres outils.",
+        "price": "{apiPrice} par mois",
+        "priceNote": "Taxes comprises. Stripe affiche le montant final avant le paiement.",
+        "cta": {
+          "developers": "Aller à l’espace Développeurs"
+        },
+        "items": {
+          "allowance": "{apiRequests} requêtes, {apiMib} Mio de données de réponse et {apiCredits} crédits d’analyse par période de facturation",
+          "keys": "Clés illimitées, tableau de bord d’utilisation, référence des requêtes et bac à sable",
+          "overage": "Dépassement facultatif avec un plafond mensuel de votre choix ({capMin} à {capMax}). Il reste désactivé tant que vous ne l’activez pas.",
+          "reach": "Les organisateurs disposent de plus de calculs de portée dans l’Atlas : {apiReachPerHour} nouveaux calculs par heure et une portée de réseau jusqu’à {apiReachLibraries} bibliothèques",
+          "noOrganisation": "Achetez pour vous-même ou pour une organisation.",
+          "noAuthority": "Une clé API identifie votre application. Elle ne donne jamais de droit de modification, de vérification ni de meilleure place dans les recherches."
+        }
+      },
+      "sponsor": {
+        "name": "Mécène",
+        "who": "Les organisations qui souhaitent financer le service public.",
+        "price": "Sur accord",
+        "priceNote": "Convenu avec vous : le travail financé, la durée et la façon dont nous en rendons compte.",
+        "cta": {
+          "contact": "Parlons de mécénat",
+          "sponsor": "En savoir plus sur le mécénat"
+        },
+        "items": {
+          "programmes": "Financer l’accès public, la qualité des données, la traduction, la couverture géographique ou les outils ouverts",
+          "reporting": "Des points d’activité trimestriels et un rapport d’impact annuel",
+          "acknowledgement": "Votre nom et votre logo sur notre page des mécènes, si vous le souhaitez",
+          "independence": "Les mécènes n’ont aucune influence sur les fiches, le classement, la vérification ou la relecture éditoriale. Le mécénat n’est pas un don à une œuvre caritative."
+        }
+      }
+    },
+    "columns": {
+      "public": {
+        "name": "Sans compte",
+        "price": "Gratuit"
+      },
+      "explorer": {
+        "name": "Explorateur",
+        "price": "Gratuit"
+      },
+      "contributor": {
+        "name": "Contributeur",
+        "price": "Gratuit, mérité"
+      },
+      "staff": {
+        "name": "Personnel vérifié",
+        "price": "Gratuit"
+      },
+      "api": {
+        "name": "Accès API",
+        "price": "{apiPrice}/mois"
+      }
+    },
+    "groups": {
+      "facts": "Informations sur les bibliothèques",
+      "account": "Participer",
+      "atlas": "Analyse de l’Atlas",
+      "watching": "Suivre et comparer les bibliothèques",
+      "staff": "Pour le personnel des bibliothèques",
+      "api": "Pour les développeurs"
+    },
+    "rows": {
+      "records": "Toutes les fiches de bibliothèques, avec horaires et services",
+      "map": "Recherche, carte et listes",
+      "reading": "Journal, Connaissances, événements, tableau d’affichage et discussions publiques",
+      "downloads": "Téléchargement des fiches de bibliothèques",
+      "apiReference": "Documentation de l’API et référence des requêtes",
+      "contribute": "Proposer des corrections, des photos et de nouvelles bibliothèques",
+      "follow": "Suivre des bibliothèques et enregistrer des événements",
+      "discussions": "Lancer des discussions, répondre et réagir",
+      "drives": "Participer aux campagnes collectives",
+      "savedViews": "Vues et recherches enregistrées",
+      "atlas_contextLayers": "Couches de contexte : défavorisation et ménages sans voiture (zones britanniques prises en charge)",
+      "atlas_analysis": "Accès aux bibliothèques : comparaisons par habitant",
+      "atlas_compare": "Comparer l’accès aux bibliothèques entre deux zones",
+      "atlas_export": "Exporter les résultats de l’Atlas en CSV ou GeoJSON",
+      "atlas_reach": "Portée en temps de trajet pour une bibliothèque",
+      "atlas_serviceReach": "Portée d’un réseau sur plusieurs bibliothèques",
+      "library_history": "Chaque modification d’une bibliothèque, champ par champ",
+      "library_watch": "Surveiller une bibliothèque (modifications et fermetures)",
+      "index_alerts": "Alertes sur les recherches enregistrées",
+      "index_compare": "Comparer jusqu’à six bibliothèques côte à côte",
+      "library_notes": "Notes privées sur n’importe quelle bibliothèque",
+      "events_personalFeed": "Un flux d’agenda personnel",
+      "index_export": "Exporter les résultats de recherche avec attribution",
+      "data_benchmark": "Comparer un réseau à des réseaux similaires",
+      "data_explorerExport": "Exporter des indicateurs dérivés",
+      "staffWorkspace": "Espace personnel pour vos bibliothèques vérifiées",
+      "staffEditing": "Modifier les fiches, publier des avis et répondre aux suggestions",
+      "staffOrganisation": "Une organisation gratuite avec invitations",
+      "staffWidgets": "Widgets à intégrer sur votre site",
+      "staffTraffic": "Rapports de fréquentation",
+      "api_key": "Clés API et tableau de bord d’utilisation",
+      "apiAllowance": "Quota API inclus par période de facturation",
+      "apiOverage": "Dépassement facultatif avec un plafond choisi",
+      "apiPlayground": "Requêtes dans le bac à sable avec votre propre clé"
+    },
+    "cells": {
+      "savedViews": "{savedViews}",
+      "exportRows": "{exportRows} lignes",
+      "reachWeek": "{reachPerWeek} par semaine",
+      "reachHour": "{apiReachPerHour} par heure",
+      "serviceLibraries": "Jusqu’à {apiReachLibraries}",
+      "apiAllowance": "{apiRequests} requêtes"
+    },
+    "copy": {
+      "lead": "Les informations sur les bibliothèques sont gratuites, tout comme les outils pour les explorer et les améliorer. L’accès API et le mécénat financent le fonctionnement du service.",
+      "metaDescription": "Explorateur, Contributeur et Personnel vérifié sont gratuits. L’accès API coûte {apiPrice} par mois. Les organisations peuvent soutenir le service public. L’argent n’achète jamais la confiance.",
+      "promiseAds": "Jamais de publicité",
+      "promiseTrust": "L’argent n’achète jamais la confiance",
+      "promiseData": "Les données ouvertes restent ouvertes",
+      "offersTitle": "Les façons de participer",
+      "offersLead": "L’essentiel de Libraries Global est gratuit. Les options payantes financent le service ; aucune ne change la relecture ou le classement des fiches.",
+      "independence": "Payer l’accès API ou nous soutenir comme mécène ne change jamais votre rôle dans la communauté, la relecture de vos modifications ni la place d’une bibliothèque.",
+      "compare": "Tout comparer côte à côte",
+      "current": "Vous en bénéficiez",
+      "includes": "Ce qui est inclus",
+      "signedIn": "Vous êtes connecté",
+      "openStaff": "Ouvrir l’espace personnel",
+      "manageApi": "Gérer l’accès API",
+      "soon": "Bientôt disponible",
+      "soonShort": "Bientôt",
+      "included": "Inclus",
+      "notIncluded": "Non inclus",
+      "feature": "Fonctionnalité",
+      "compareTwo": "Comparer deux options",
+      "comparisonCaption": "{group} : {first} et {second}",
+      "availableCount": "{count, number} disponibles maintenant",
+      "roadmapCount": "{count, number} prévues sur la feuille de route",
+      "questions": "Questions",
+      "contactLead": "Une autre question ? L’équipe répond sous 5 jours ouvrés.",
+      "ask": "Poser une question",
+      "supporterEyebrow": "Mérité, jamais acheté",
+      "supporterTitle": "Soutien : {supporterAt} contributions acceptées",
+      "supporterBody": "Soutien est une reconnaissance pour les personnes dont {supporterAt} contributions ont été acceptées. Elle ajoute une marque sur le profil et une mention facultative sur la page des soutiens. Elle n’ajoute aucun outil, quota ni autorité, et ne s’achète pas.",
+      "meetSupporters": "Découvrir les soutiens",
+      "freeGroupTitle": "Gratuit pour tous",
+      "freeGroupLead": "Sans carte ni période d’essai. Vos outils s’étoffent à mesure que vous participez.",
+      "paidGroupTitle": "Pour les organisations",
+      "paidGroupLead": "Les deux façons de financer le service.",
+      "moreInComparison": "{count, plural, one {# de plus} other {# de plus}} dans le comparatif"
+    },
+    "policies": {
+      "heading": "Conditions et remboursements",
+      "lead": "Lisez-les avant d’acheter l’accès API. Vous pouvez imprimer ou enregistrer chaque page.",
+      "languageNote": "Ces conditions sont actuellement disponibles en anglais.",
+      "terms": "Conditions d’adhésion et de l’API",
+      "termsBody": "Le prix mensuel, les quotas inclus, le dépassement facultatif, les périodes de facturation et votre compte.",
+      "refunds": "Annulation et remboursements",
+      "refundsBody": "Arrêter le renouvellement, demander un remboursement et vos droits légaux de rétractation."
+    },
+    "faq": {
+      "0": {
+        "q": "Qu’est-ce qui est gratuit ?",
+        "a": "Tout, sauf l’accès API. Sans compte, vous pouvez consulter toutes les fiches et utiliser la carte. Un compte gratuit (Explorateur) ajoute les couches de contexte, les comparaisons, l’historique des modifications, les vues enregistrées et des exports jusqu’à {exportRows} lignes. Votre première contribution acceptée fait de vous un Contributeur, avec {reachPerWeek} calculs de portée par semaine."
+      },
+      "1": {
+        "q": "Comment fonctionne Soutien ?",
+        "a": "Chaque contribution substantielle acceptée compte une fois : nouvelles bibliothèques, corrections, photos, traductions, articles, etc. Les séries quotidiennes, les bonus et les ajustements administratifs ne comptent pas. Votre profil indique votre total et votre progression vers {supporterAt}. Soutien n’ajoute ni outil ni autorité."
+      },
+      "2": {
+        "q": "Combien coûte l’accès API ?",
+        "a": "{apiPrice} par mois, taxes comprises, pour {apiRequests} requêtes, {apiMib} Mio de données de réponse et {apiCredits} crédits d’analyse par période de facturation. Le dépassement est désactivé tant que vous ne l’activez pas ; il coûte alors {requestPrice} par requête supplémentaire, {mibPrice} par Mio supplémentaire et {creditPrice} par crédit d’analyse supplémentaire, dans la limite d’un plafond mensuel de {capMin} à {capMax}."
+      },
+      "3": {
+        "q": "Faut-il une organisation pour acheter l’accès API ?",
+        "a": "Non. Si vous achetez pour vous-même, nous créons une organisation gratuite dont vous êtes le seul organisateur, pour pouvoir ajouter des collègues plus tard. Les organisateurs gèrent les clés et la facturation ; les membres voient l’utilisation."
+      },
+      "4": {
+        "q": "Payer ou être mécène donne-t-il des droits de modification ?",
+        "a": "Non. Modifier la fiche d’une bibliothèque nécessite une autorité de personnel vérifiée pour cette bibliothèque, que nous confirmons auprès d’elle. L’accès API, le mécénat, la reconnaissance et l’appartenance à une organisation ne la donnent jamais."
+      },
+      "5": {
+        "q": "Que comprend le mécénat ?",
+        "a": "Le mécénat finance un programme de travail, comme la qualité des données ou la traduction, avec des points d’activité trimestriels et un rapport d’impact annuel. Nous convenons du montant avec chaque mécène : écrivez à {contactEmail} ou utilisez le formulaire de contact. Ce n’est pas un don à une œuvre caritative et il n’inclut pas l’accès API."
+      },
+      "6": {
+        "q": "Puis-je annuler l’accès API ?",
+        "a": "Oui, à tout moment depuis la gestion de la facturation dans l’espace Développeurs. L’accès continue jusqu’à la fin de la période payée. Consultez la politique d’annulation et de remboursement pour vos droits légaux."
+      }
+    },
+    "sheet": {
+      "title": "Les informations sur les bibliothèques sont gratuites.",
+      "titleEmphasis": "Toujours.",
+      "lead": "Adresses, horaires, services et toutes les fiches de la communauté restent ouverts à tous. Connectez-vous pour les outils de l’Atlas, contribuez une fois pour la portée, ou achetez l’accès API pour aller plus loin.",
+      "here": "Vous êtes ici",
+      "signIn": "Se connecter",
+      "contribute": "Contribuer",
+      "api": "À propos de l’accès API",
+      "reachTitle": "Contribuez une fois pour débloquer deux calculs de portée par semaine.",
+      "reachBody": "Les clients de l’API en obtiennent {apiReachPerHour} par heure, ainsi que la portée de réseau.",
+      "allPlans": "Voir toutes les options",
+      "openTitle": "Code ouvert, données ouvertes.",
+      "openBody": "Les fiches de bibliothèques sont des données ouvertes entretenues par la communauté, et le code de l’Atlas est open source.",
+      "layers": {
+        "basics": "Couches densité, ouverture tardive et fermetures",
+        "mobile": "Itinéraires et arrêts des bibliobus",
+        "population": "Densité de population et grilles prises en charge",
+        "access": "Couches accessibilité, événements et complétude"
+      }
+    }
+  },
+  "membershipPage": {
+    "title": "Votre statut",
+    "hero": "Votre *statut*",
+    "lead": "Vos contributions, votre accès en tant que personnel et vos comptes API, présentés séparément.",
+    "plansTitle": "Formules et tarifs",
+    "plansEyebrow": "Formules et tarifs",
+    "plansHero": "Gratuit pour tous, *payant uniquement pour l’accès API*",
+    "offersNav": "Les façons de participer",
+    "comparePlans": "Comparer les formules",
+    "questionsPoliciesNav": "Questions et conditions",
+    "membershipQuestions": "Des questions ?",
+    "plansHelpLead": "Comparez ce qui est inclus, lisez les réponses ci-dessous ou écrivez-nous.",
+    "askQuestion": "Poser une question",
+    "settingsLead": "Votre statut, votre accès en tant que personnel et vos comptes API se trouvent sur votre profil.",
+    "plansLink": "Formules et tarifs",
+    "yourStanding": "Votre statut",
+    "acceptedCount": "{count, plural, one {# contribution acceptée} other {# contributions acceptées}}",
+    "recentlyActive": "Actif récemment",
+    "notRecentlyActive": "Pas d’activité récente",
+    "viewStanding": "Voir votre statut",
+    "standingTitle": "Votre statut",
+    "standingBody": {
+      "public": "Connectez-vous pour voir votre statut.",
+      "explorer": "Vous pouvez utiliser tous les outils gratuits. Votre première contribution acceptée fera de vous un Contributeur, avec {reachPerWeek} calculs de portée par semaine.",
+      "contributor": "Vous pouvez lancer {reachPerWeek} nouveaux calculs de portée pour une bibliothèque tous les 7 jours. La reconnaissance Soutien arrive à {supporterAt} contributions acceptées.",
+      "supporter": "Merci. Vous avez atteint {supporterAt} contributions acceptées. Soutien est une reconnaissance uniquement : vos outils et votre quota de portée sont ceux d’un Contributeur."
+    },
+    "progressLabel": "Progression vers Soutien",
+    "progressValue": "{count, number} sur {total, number}",
+    "nextMilestone": {
+      "contributor": "{count, plural, one {# contribution acceptée avant Contributeur} other {# contributions acceptées avant Contributeur}}",
+      "supporter": "{count, plural, one {Encore # contribution acceptée avant Soutien} other {Encore # contributions acceptées avant Soutien}}"
+    },
+    "milestoneReached": "Vous avez atteint Soutien.",
+    "activityNote": "« Actif récemment » signifie qu’une de vos contributions a été acceptée au cours des {activityDays} derniers jours. Cette indication est distincte et ne modifie pas votre statut.",
+    "recognition": "Reconnaissance publique",
+    "recognitionLead": "Choisissez d’apparaître ou non sur la page des soutiens et d’afficher la marque Soutien sur votre profil. Chaque préférence s’enregistre séparément.",
+    "recognitionUnavailable": "Impossible de charger vos préférences de profil. Rechargez la page ou ouvrez les paramètres du compte.",
+    "startContributing": "Commencer à contribuer",
+    "yourContributions": "Vos contributions",
+    "standingIndependence": "Le statut se calcule à partir des contributions acceptées, et non des points ou d’un paiement. Il ne donne jamais de droits de modification ni de vérification du personnel.",
+    "staffTitle": "Accès du personnel vérifié",
+    "approvedLibraries": "{count, plural, one {# bibliothèque} other {# bibliothèques}}",
+    "noStaffAccess": "Aucun",
+    "staffLead": "Vous pouvez modifier et gérer ces bibliothèques parce que nous avons vérifié votre rôle auprès de chacune.",
+    "claimExplanation": "Si vous travaillez dans une bibliothèque, revendiquez-la pour mettre à jour sa fiche. C’est gratuit, et un modérateur vérifie d’abord votre rôle.",
+    "staffRoles": {
+      "owner": "Propriétaire",
+      "editor": "Éditeur"
+    },
+    "canGoLive": "Peut passer en direct",
+    "organisations": "Vos organisations",
+    "organisationOrganiser": "Organisateur",
+    "organisationMember": "Membre",
+    "organisationNote": "Les organisations sont des espaces gratuits pour les collègues. En faire partie ne donne jamais le droit de modifier une bibliothèque.",
+    "manageLibraries": "Gérer vos bibliothèques",
+    "claimLibrary": "Revendiquer une bibliothèque",
+    "openOrganisation": "Ouvrir votre organisation",
+    "apiTitle": "Comptes API",
+    "organisationUnnamed": "Votre organisation",
+    "apiLead": "Les clés, l’utilisation et la facturation de ces comptes se gèrent dans l’espace Développeurs.",
+    "apiNone": "Vous n’avez pas de compte API. L’accès API coûte {apiPrice} par mois et s’achète dans l’espace Développeurs.",
+    "apiActive": "Actif",
+    "apiInactive": "Inactif",
+    "openDevelopers": "Aller à l’espace Développeurs",
+    "apiIndependence": "L’accès API est facturé séparément. Il ne donne jamais de droit de modification ni de vérification du personnel.",
+    "helpAndAccess": "Aide et autres options",
+    "waysToTakePart": "Les façons de participer",
+    "waysLead": "Explorateur, Contributeur et Personnel vérifié sont gratuits. L’accès API et le mécénat sont les options payantes.",
+    "sponsorLink": "Soutenir le service comme mécène",
+    "termsAndHelp": "Conditions et aide",
+    "terms": "Conditions d’adhésion et de l’API",
+    "cancellationAndRefunds": "Annulation et remboursements"
+  },
+  "apiOverage": {
+    "title": "Dépassement et prochaine facture",
+    "badgeOn": "Dépassement activé · plafond {cap}",
+    "badgeOff": "Dépassement désactivé",
+    "accrued": "Dépassement cumulé sur cette période (hors taxes)",
+    "accruedBreakdown": "Requêtes {requests} · Données {data} · Analyse {analysis}",
+    "projected": "Prochaine facture estimée",
+    "projectedEnding": "Dépassement cumulé uniquement ; votre abonnement ne sera pas renouvelé.",
+    "projectedRenewing": "L’abonnement du mois prochain (taxes comprises) plus le dépassement de cette période. Stripe ajoute les taxes dues sur le dépassement et confirme le montant final.",
+    "rates": "Au-delà du quota inclus : {request} par requête réussie, {mib} par Mio de données de réponse (calculé sur le total des octets en excès) et {credit} par crédit d’analyse consommé. Le plafond couvre les trois ensemble, hors taxes. Les travaux refusés, échoués ou expirés ne sont jamais facturés.",
+    "capReachedTitle": "Plafond de dépassement atteint",
+    "capReached": "L’utilisation payante est suspendue jusqu’à la période suivante ou à un plafond plus élevé. Les montants déjà cumulés restent sur votre prochaine facture.",
+    "capLabel": "Plafond mensuel de dépassement (hors taxes)",
+    "capBelowAccrued": "Ce plafond est inférieur au dépassement déjà cumulé. L’utilisation payante s’arrêtera ; les montants cumulés restent sur votre facture.",
+    "consent": "J’accepte de payer l’utilisation au-delà du quota inclus aux tarifs ci-dessus, jusqu’à {cap} par mois hors taxes, facturée avec la prochaine facture mensuelle.",
+    "updateCap": "Mettre à jour le plafond",
+    "turnOn": "Activer le dépassement",
+    "confirmOff": "Confirmer : désactiver le dépassement",
+    "keepOn": "Le garder activé",
+    "turnOff": "Désactiver le dépassement",
+    "organisersOnly": "Les organisateurs décident d’autoriser ou non le dépassement et fixent son plafond.",
+    "inactive": "Le dépassement peut être activé tant que l’accès API est actif.",
+    "unavailable": "Le dépassement n’est pas encore disponible. Les requêtes s’arrêtent lorsqu’un quota est épuisé."
+  },
+  "apiIndividualCheckout": {
+    "title": "Acheter l’accès API",
+    "lead": "Vous achetez pour vous-même ? Nous créons une organisation gratuite pour votre compte afin que vous puissiez ajouter des collègues plus tard. Vous en devenez l’organisateur et gérez les clés et la facturation.",
+    "verifyTitle": "Vérifiez votre e-mail pour acheter l’accès API",
+    "verifyBody": "L’accès API est réservé aux comptes dont l’adresse e-mail est vérifiée.",
+    "openSettings": "Ouvrir les paramètres du compte",
+    "openFailed": "Impossible d’ouvrir le paiement. Réessayez dans un instant.",
+    "retry": "Veuillez réessayer."
+  },
+  "teamApiErrors": {
+    "api_terms_required": "Les conditions de l’API ont changé. Rechargez cette page et relisez-les avant de vous abonner.",
+    "organiser_required": "Demandez à un organisateur de gérer l’accès à l’API.",
+    "api_key_inactive": "Cette clé a expiré ou a été révoquée. Créez une nouvelle clé.",
+    "api_access_required": "L’accès à l’API doit être actif pour créer des clés.",
+    "api_scope_confirmation_required": "Confirmez l’autorisation d’analyse ou de soumission avant de créer cette clé.",
+    "api_subscription_already_exists": "Votre organisation dispose déjà d’un abonnement API. Ouvrez la facturation pour le gérer.",
+    "api_payment_confirmation_pending": "Votre paiement est en cours de confirmation. Cette page se mettra à jour dès qu’il sera prêt.",
+    "api_purchases_unavailable": "L’achat de l’accès API est actuellement indisponible.",
+    "api_overage_unavailable": "Le dépassement n’est pas encore disponible pour cet abonnement.",
+    "api_overage_standing_required": "Le dépassement nécessite un abonnement à jour. Mettez d’abord à jour vos informations de paiement.",
+    "api_overage_terms_required": "Les conditions de dépassement ont changé. Rechargez cette page et relisez-les.",
+    "invalid_overage_cap": "Choisissez un plafond entre 10 £ et 500 £.",
+    "organisation_exists": "Votre compte appartient déjà à une organisation. Demandez à son organisateur d’acheter l’accès API.",
+    "organisation_conflict": "Votre compte appartient à plusieurs organisations. Contactez-nous pour résoudre ce problème.",
+    "too_many_requests": "Veuillez patienter une minute avant de réessayer.",
+    "team_inactive": "Votre organisation est inactive. Contactez-nous pour obtenir de l’aide.",
+    "billing_busy": "Une autre modification de facturation est en cours. Réessayez dans un instant.",
+    "unavailable": "L’accès à l’API est temporairement indisponible. Réessayez dans un instant."
   }
 }

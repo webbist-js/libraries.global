@@ -26,13 +26,13 @@ export function betaLegalContent(operator, postalAddress, email) {
     order: 99,
     summaryPoints: [
       {
-        text: "Beta access is an invitation to test; it does not create an account or membership.",
+        text: "Beta access is an invitation to test; it does not create an account or make a purchase.",
       },
       {
         text: "The waitlist is for requested beta access only. No newsletter enrolment.",
       },
       {
-        text: "Standard site and membership policies remain available before and after entry.",
+        text: "Standard site and API policies remain available before and after entry.",
       },
     ],
     sections: [
@@ -43,10 +43,10 @@ export function betaLegalContent(operator, postalAddress, email) {
           `Libraries Global is operated by ${operator}, who is the controller of the personal information described here. Contact: ${email}. Postal contact: ${postalAddress}.`
         ),
         paragraph(
-          "The closed beta is a limited invitation to test a developing service. Please do not share the invitation password publicly, misuse access or submit harmful or unlawful content. Features can change, become unavailable or contain errors. Test data may be reset; do not rely on beta records as your only copy of important information. These limitations do not remove statutory rights or change the promises made for any paid membership."
+          "The closed beta is a limited invitation to test a developing service. Please do not share the invitation password publicly, misuse access or submit harmful or unlawful content. Features can change, become unavailable or contain errors. Test data may be reset; do not rely on beta records as your only copy of important information. These limitations do not remove statutory rights or change the promises made for paid API access."
         ),
         paragraph(
-          "Entering the shared beta password remembers access in this browser. It does not identify you, sign you in, create an account, grant staff permissions or buy a membership. Creating an account is a separate step under the standard site terms, including the requirement to be 18 or over."
+          "Entering the shared beta password remembers access in this browser. It does not identify you, sign you in, create an account, grant staff permissions or buy API access. Creating an account is a separate step under the standard site terms, including the requirement to be 18 or over."
         )
       ),
       section(
@@ -103,8 +103,8 @@ export function betaLegalContent(operator, postalAddress, email) {
           ". Those policies also remain directly readable without a beta pass."
         ),
         paragraph(
-          "If you choose a paid membership during beta, read the separate ",
-          link("Membership terms", "membership"),
+          "If you buy API access during beta, read the separate ",
+          link("API purchase terms", "membership"),
           " and ",
           link("Cancellation & refunds policy", "cancellation-refunds"),
           ". Beta entry does not change billing, renewal, cancellation or refund rights. This notice will be removed from the beta entrance when the gate is retired; it is not part of the main site's legal navigation."

@@ -3,52 +3,26 @@ import { describe, expect, it, vi } from "vitest"
 
 import { purgeBillingMetadata } from "../retention"
 
-describe("minimal billing retention", () => {
-  it("removes only completed events and old erased bindings, preserving pending and live accounts", async () => {
-    const query = vi.fn(async (sql: string, _params?: unknown[]) =>
-      sql.startsWith("select user_id")
-        ? { rows: [{ user_id: "erased_owner" }], rowCount: 1 }
-        : { rows: [], rowCount: 2 }
-    )
-    const release = vi.fn()
+describe("billing retention", () => {
+  it("removes only completed webhook event references older than 90 days", async () => {
+    const query = vi.fn(async (_sql: string, _params?: unknown[]) => ({
+      rows: [],
+      rowCount: 2,
+    }))
     const result = await purgeBillingMetadata(
-      { connect: async () => ({ query, release }) } as unknown as Pool,
-      new Date("2032-10-12T00:00:00Z")
+      { query } as unknown as Pool,
+      new Date("2026-12-01T00:00:00Z")
     )
-    expect(result).toEqual({ events: 2, erasedAccounts: 1 })
-    expect(query.mock.calls[1]?.[0]).toContain(
+    expect(result).toEqual({ events: 2 })
+    expect(query.mock.calls[0]?.[0]).toContain(
       "state in ('complete','ignored')"
     )
-    expect(query.mock.calls[2]?.[0]).toContain("erased_at<$2")
-    expect(query.mock.calls[2]?.[1]).toEqual([
-      "sandbox",
-      new Date("2026-10-12T00:00:00Z"),
-    ])
-    expect(
-      query.mock.calls.find(([sql]) =>
-        sql.startsWith("delete from billing_plan_changes")
-      )?.[1]
-    ).toEqual([["erased_owner"]])
-    expect(
-      query.mock.calls.find(([sql]) =>
-        sql.startsWith("select id from team_billing_accounts")
-      )?.[0]
-    ).toContain("archived_at<$2")
-    expect(query.mock.calls.at(-1)?.[0]).toBe("COMMIT")
-    expect(release).toHaveBeenCalled()
+    expect(query.mock.calls[0]?.[1]).toEqual([new Date("2026-09-02T00:00:00Z")])
   })
-  it("rolls back partial deletion and releases the connection on failure", async () => {
-    const query = vi
-      .fn()
-      .mockResolvedValue({ rows: [], rowCount: 0 })
-      .mockRejectedValueOnce(new Error("unavailable"))
-    const release = vi.fn()
-    await expect(
-      purgeBillingMetadata({
-        connect: async () => ({ query, release }),
-      } as unknown as Pool)
-    ).rejects.toThrow("unavailable")
-    expect(query).toHaveBeenLastCalledWith("ROLLBACK")
-    expect(release).toHaveBeenCalled()
+  it("reports an undeployed schema without failing the job", async () => {
+    const query = vi.fn().mockRejectedValue({ code: "42P01" })
+    expect(await purgeBillingMetadata({ query } as unknown as Pool)).toEqual({
+      configured: false,
+    })
   })
 })

@@ -15,10 +15,11 @@ const contactLabels: Record<ContactType, string> = {
   report_issue: "Issue report",
   general_inquiry: "General inquiry",
   account_support: "Account support",
-  membership_support: "Membership support",
+  membership_support: "API Access and billing",
   library_correction: "Library correction",
-  plans: "Plans and membership",
+  plans: "Plans and API Access",
   partnership: "Partnership",
+  sponsorship: "Sponsorship enquiry",
   privacy: "Privacy inquiry",
 }
 const topicLabels = {

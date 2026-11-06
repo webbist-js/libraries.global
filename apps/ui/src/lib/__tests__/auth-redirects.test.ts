@@ -42,14 +42,16 @@ describe("magicLinkCallbacks", () => {
       "https://evil.test/",
       "//evil.test",
       String.raw`/\evil.test`,
-      "pro",
+      "plans",
     ]) {
       expect(magicLinkCallbacks(bad).callbackURL).toBe(POST_SIGNIN_PATH)
     }
   })
 
   it("always sends errors to the magic-link page", () => {
-    expect(magicLinkCallbacks("/pro").errorCallbackURL).toBe("/auth/magic-link")
+    expect(magicLinkCallbacks("/plans").errorCallbackURL).toBe(
+      "/auth/magic-link"
+    )
   })
 })
 

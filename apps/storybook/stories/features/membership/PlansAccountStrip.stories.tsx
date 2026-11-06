@@ -4,7 +4,11 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 const meta = {
   title: "Features/Membership/PlansAccountStrip",
   component: PlansAccountStrip,
-  args: { plan: "pro", source: "paid" },
+  args: {
+    standing: "contributor",
+    acceptedContributions: 12,
+    recentlyActive: true,
+  },
   parameters: { docs: { story: { inline: false, height: "900px" } } },
 } satisfies Meta<typeof PlansAccountStrip>
 
@@ -12,5 +16,13 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
-export const Free: Story = { args: { plan: "free", source: "none" } }
-export const TeamSeat: Story = { args: { plan: "team", source: "team" } }
+export const Explorer: Story = {
+  args: {
+    standing: "explorer",
+    acceptedContributions: 0,
+    recentlyActive: false,
+  },
+}
+export const Supporter: Story = {
+  args: { standing: "supporter", acceptedContributions: 120 },
+}

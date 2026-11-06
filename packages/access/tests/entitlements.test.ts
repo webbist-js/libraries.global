@@ -1,16 +1,24 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  API_REACH_PER_DAY,
+  API_REACH_PER_HOUR,
+  buildSessionAccess,
   can,
-  EARNED_PRO_ACTIVITY_DAYS,
-  EARNED_PRO_POINTS,
-  hasEarnedPro,
+  CONTRIBUTOR_MIN_ACCEPTED,
+  EXPLORER_FEATURES,
+  has,
+  isQualifyingContribution,
+  isRecentlyActive,
   limitOf,
+  recognitionOf,
   resolveEntitlements,
+  SUPPORTER_MIN_ACCEPTED,
   type EntitlementInput,
+  type SessionProfile,
 } from "../src"
 
-const NOW = new Date("2026-10-01T12:00:00Z")
+const NOW = new Date("2026-11-06T12:00:00Z")
 const days = (n: number) =>
   new Date(NOW.getTime() + n * 86_400_000).toISOString()
 const base = (over: Partial<EntitlementInput> = {}): EntitlementInput => ({
@@ -19,264 +27,171 @@ const base = (over: Partial<EntitlementInput> = {}): EntitlementInput => ({
   ...over,
 })
 
-it("gives active Team seats larger Reach without buying staff authority", () => {
-  const seat = {
-    libraryDocumentIds: ["one"],
-    expiresAt: days(1),
-    status: "active" as const,
-  }
-  const active = resolveEntitlements(base({ teams: [seat] }))
-  expect(active.plan).toBe("pro")
-  expect(active.limits.analysisAreaMultiplier).toBe(2)
-  expect(active.limits.analysisRunsPerHour).toBe(100)
-  expect(can(active, "team.workspace")).toBe(false)
-  for (const team of [
-    { ...seat, status: "lapsed" as const },
-    { ...seat, expiresAt: days(-1) },
-  ]) {
-    const expired = resolveEntitlements(
-      base({ teams: [team], grants: [{ plan: "pro", expiresAt: null }] })
-    )
-    expect(expired.limits.analysisAreaMultiplier).toBe(1)
-    expect(expired.limits.analysisRunsPerHour).toBe(20)
-  }
-})
-
-describe("Supporter digital tools plan", () => {
-  it("includes history and small exports, retains free community access and expires", () => {
-    const ent = resolveEntitlements(
-      base({ grants: [{ plan: "supporter", expiresAt: null }] })
-    )
-    expect(ent.plan).toBe("supporter")
-    expect([...ent.features].sort()).toEqual([
-      "atlas.export",
-      "library.history",
-    ])
-    expect(can(ent, "atlas.analysis")).toBe(false)
-    expect(ent.limits).toEqual({
-      analysisRunsPerHour: 0,
-      analysisAreaMultiplier: 0,
-      savedViews: 3,
-      savedSearches: 3,
-      exportRows: 500,
+describe("Explorer", () => {
+  it("is public with nothing when signed out, whatever else is passed", () => {
+    const e = resolveEntitlements({
+      signedIn: false,
+      now: NOW,
+      acceptedContributions: 1000,
+      apiAccounts: [{ role: "organiser", paidThrough: days(30) }],
     })
-    expect(
-      resolveEntitlements(
-        base({ grants: [{ plan: "supporter", expiresAt: days(-1) }] })
-      ).plan
-    ).toBe("free")
+    expect(e.standing).toBe("public")
+    expect(e.features.size).toBe(0)
+    expect(Object.values(e.limits).every((n) => n === 0)).toBe(true)
   })
 
-  it("recognizes paid Supporter and chooses Pro when it is also earned", () => {
+  it("gives every signed-in account the Explorer browse tools for free, without Reach", () => {
+    const e = resolveEntitlements(base())
+    expect(e.standing).toBe("explorer")
+    expect([...e.facts]).toEqual(["explorer"])
+    expect([...e.features].sort()).toEqual([...EXPLORER_FEATURES].sort())
+    expect(can(e, "atlas.contextLayers")).toBe(true)
+    expect(can(e, "index.export")).toBe(true)
+    expect(can(e, "atlas.reach")).toBe(false)
+    expect(can(e, "atlas.serviceReach")).toBe(false)
+    expect(can(e, "api.key")).toBe(false)
+    expect(limitOf(e, "exportRows")).toBe(10_000)
+    expect(limitOf(e, "exportsPerDay")).toBe(20)
+    expect(limitOf(e, "savedViews")).toBe(1000)
+    expect(limitOf(e, "reachRunsPerWeek")).toBe(0)
+    expect(limitOf(e, "analysisAreaMultiplier")).toBe(0)
+  })
+})
+
+describe("earned recognition", () => {
+  it("counts accepted contributions, not points", () => {
+    expect(recognitionOf({ acceptedContributions: 0 })).toBe("none")
     expect(
-      resolveEntitlements(
-        base({ subscription: { plan: "supporter", status: "active" } })
-      ).plan
+      recognitionOf({ acceptedContributions: CONTRIBUTOR_MIN_ACCEPTED })
+    ).toBe("contributor")
+    expect(
+      recognitionOf({ acceptedContributions: SUPPORTER_MIN_ACCEPTED - 1 })
+    ).toBe("contributor")
+    expect(
+      recognitionOf({ acceptedContributions: SUPPORTER_MIN_ACCEPTED })
     ).toBe("supporter")
     expect(
-      resolveEntitlements(
-        base({
-          grants: [{ plan: "supporter", expiresAt: null }],
-          rewardsTier: "Archivist",
-          rewardsPoints: 5000,
-          earnedProUntil: days(30),
-        })
-      ).plan
-    ).toBe("pro")
-    expect(
-      resolveEntitlements(
-        base({
-          subscription: {
-            plan: "supporter",
-            status: "canceled",
-            periodEnd: days(1),
-          },
-        })
-      ).plan
-    ).toBe("supporter")
-  })
-})
-
-describe("resolveEntitlements: plan baseline", () => {
-  it("is public when signed out, whatever else is passed", () => {
-    const e = resolveEntitlements(
-      base({ signedIn: false, subscription: { plan: "pro", status: "active" } })
-    )
-    expect(e.plan).toBe("public")
-    expect(e.source).toBe("none")
-    expect(e.features.size).toBe(0)
-  })
-
-  it("is free when signed in with nothing else (the P-B session)", () => {
-    const e = resolveEntitlements({ signedIn: true, now: NOW })
-    expect(e).toMatchObject({ plan: "free", source: "none" })
-    expect(e.features.size).toBe(0)
-    expect(limitOf(e, "savedViews")).toBe(3)
-  })
-})
-
-describe("resolveEntitlements: subscription status", () => {
-  it.each([
-    ["active", {}, "pro"],
-    ["trialing", {}, "pro"],
-    ["past_due", { pastDueSince: days(-6) }, "pro"],
-    ["past_due", { pastDueSince: days(-8) }, "free"],
-    ["past_due", {}, "free"],
-    ["canceled", { periodEnd: days(3) }, "pro"],
-    ["canceled", { periodEnd: days(-1) }, "free"],
-    ["canceled", {}, "free"],
-    ["incomplete", {}, "free"],
-    ["unpaid", {}, "free"],
-  ] as const)("%s %o resolves to %s", (status, extra, plan) => {
-    const e = resolveEntitlements(
-      base({ subscription: { plan: "pro", status, ...extra } })
-    )
-    expect(e.plan).toBe(plan)
-    expect(e.source).toBe(plan === "pro" ? "paid" : "none")
-  })
-
-  it("ignores an unknown subscription plan", () => {
-    expect(
-      resolveEntitlements(
-        base({ subscription: { plan: "platinum", status: "active" } })
-      ).plan
-    ).toBe("free")
-  })
-})
-
-describe("resolveEntitlements: grants, verifications and earned Pro", () => {
-  it("honours an unexpired grant and ignores an expired one", () => {
-    expect(
-      resolveEntitlements(
-        base({ grants: [{ plan: "pro", expiresAt: days(1) }] })
+      recognitionOf({ acceptedContributions: 500, recognitionRevoked: true })
+    ).toBe("none")
+    for (const bad of [-1, 1.5, Number.NaN, null, undefined])
+      expect(recognitionOf({ acceptedContributions: bad as number })).toBe(
+        "none"
       )
-    ).toMatchObject({ plan: "pro", source: "grant" })
-    expect(
-      resolveEntitlements(base({ grants: [{ plan: "pro", expiresAt: null }] }))
-        .plan
-    ).toBe("pro")
-    expect(
-      resolveEntitlements(
-        base({ grants: [{ plan: "pro", expiresAt: days(-1) }] })
-      ).plan
-    ).toBe("free")
   })
 
-  it("a team grant outranks paid pro", () => {
+  it("gives a Contributor two one-library Reach calculations a week and no service Reach", () => {
+    const e = resolveEntitlements(base({ acceptedContributions: 1 }))
+    expect(e.standing).toBe("contributor")
+    expect(has(e, "contributor")).toBe(true)
+    expect(can(e, "atlas.reach")).toBe(true)
+    expect(can(e, "atlas.serviceReach")).toBe(false)
+    expect(limitOf(e, "reachRunsPerWeek")).toBe(2)
+    expect(limitOf(e, "analysisRunsPerHour")).toBe(0)
+    expect(limitOf(e, "analysisServiceLibraries")).toBe(0)
+  })
+
+  it("Supporter is recognition only: no extra tools or quota", () => {
+    const contributor = resolveEntitlements(base({ acceptedContributions: 1 }))
+    const supporter = resolveEntitlements(base({ acceptedContributions: 100 }))
+    expect(supporter.standing).toBe("supporter")
+    expect(has(supporter, "supporter")).toBe(true)
+    expect([...supporter.features]).toEqual([...contributor.features])
+    expect(supporter.limits).toEqual(contributor.limits)
+  })
+
+  it("only counts substantive accepted actions", () => {
+    expect(isQualifyingContribution("new_library_approved", 50)).toBe(true)
+    expect(isQualifyingContribution("new_library_approved", 0)).toBe(false)
+    expect(isQualifyingContribution("daily_streak", 5)).toBe(false)
+    expect(isQualifyingContribution("admin_adjustment", 100)).toBe(false)
+  })
+
+  it("shows recent activity separately from recognition", () => {
+    expect(isRecentlyActive(days(-29), NOW)).toBe(true)
+    expect(isRecentlyActive(days(-31), NOW)).toBe(false)
+    expect(isRecentlyActive(null, NOW)).toBe(false)
+  })
+})
+
+describe("API customer browser bonus", () => {
+  const covered = { role: "organiser" as const, paidThrough: days(10) }
+
+  it("gives an API organiser the standard Reach allowance and key tools", () => {
+    const e = resolveEntitlements(base({ apiAccounts: [covered] }))
+    expect(has(e, "apiCustomer")).toBe(true)
+    expect(can(e, "api.key")).toBe(true)
+    expect(can(e, "atlas.serviceReach")).toBe(true)
+    expect(limitOf(e, "analysisRunsPerHour")).toBe(API_REACH_PER_HOUR)
+    expect(limitOf(e, "analysisRunsPerDay")).toBe(API_REACH_PER_DAY)
+    expect(limitOf(e, "analysisServiceLibraries")).toBe(50)
+    expect(limitOf(e, "analysisAreaMultiplier")).toBe(1)
+    // Independent of recognition.
+    expect(e.standing).toBe("explorer")
+  })
+
+  it("is not inherited by other members and ends with coverage", () => {
+    for (const account of [
+      { ...covered, role: "member" as const },
+      { ...covered, paidThrough: days(-1) },
+      { ...covered, paidThrough: null },
+      { ...covered, revoked: true },
+    ]) {
+      const e = resolveEntitlements(base({ apiAccounts: [account] }))
+      expect(has(e, "apiCustomer")).toBe(false)
+      expect(can(e, "api.key")).toBe(false)
+      expect(can(e, "atlas.reach")).toBe(false)
+    }
+  })
+
+  it("keeps Contributor Reach alongside the API bonus", () => {
     const e = resolveEntitlements(
-      base({
-        subscription: { plan: "pro", status: "active" },
-        grants: [{ plan: "team", expiresAt: null }],
-      })
+      base({ acceptedContributions: 3, apiAccounts: [covered] })
     )
-    expect(e).toMatchObject({ plan: "team", source: "grant" })
-    expect(can(e, "team.workspace")).toBe(true)
-  })
-
-  it("ignores a grant with an unknown plan (fails closed to free)", () => {
-    for (const plan of ["platinum", "PRO", "", "public", "free"]) {
-      const e = resolveEntitlements(
-        base({ grants: [{ plan, expiresAt: null }] })
-      )
-      expect(e).toMatchObject({ plan: "free", source: "none" })
-      expect(e.features.size).toBe(0)
-    }
-  })
-
-  it("an unexpired verification gives verified pro", () => {
-    expect(
-      resolveEntitlements(base({ verifications: [{ expiresAt: days(30) }] }))
-    ).toMatchObject({ plan: "pro", source: "verified" })
-    expect(
-      resolveEntitlements(base({ verifications: [{ expiresAt: days(-1) }] }))
-        .plan
-    ).toBe("free")
-  })
-
-  it.each([
-    [4999, days(30), "free"],
-    [5000, days(30), "pro"],
-    [9000, null, "free"],
-    [5000, days(0), "free"],
-    [5000, days(-1), "free"],
-    [5000, "invalid", "free"],
-  ] as const)(
-    "%s points with expiry %s resolves to %s",
-    (points, until, plan) => {
-      expect(
-        resolveEntitlements(
-          base({
-            rewardsTier: "Curator",
-            rewardsPoints: points,
-            earnedProUntil: until,
-          })
-        ).plan
-      ).toBe(plan)
-    }
-  )
-
-  it("prefers paid over grant over verified over earned at the same plan", () => {
-    const all = {
-      subscription: { plan: "pro", status: "active" },
-      grants: [{ plan: "pro" as const, expiresAt: null }],
-      verifications: [{ expiresAt: null }],
-      rewardsTier: "Curator",
-    }
-    expect(resolveEntitlements(base(all)).source).toBe("paid")
-    expect(
-      resolveEntitlements(base({ ...all, subscription: null })).source
-    ).toBe("grant")
-    expect(
-      resolveEntitlements(base({ ...all, subscription: null, grants: [] }))
-        .source
-    ).toBe("verified")
-  })
-
-  it("is deterministic for a fixed now", () => {
-    const input = base({ subscription: { plan: "pro", status: "active" } })
-    const a = resolveEntitlements(input)
-    const b = resolveEntitlements(input)
-    expect([...a.features]).toEqual([...b.features])
-    expect(a.limits).toEqual(b.limits)
+    expect(limitOf(e, "reachRunsPerWeek")).toBe(2)
+    expect(limitOf(e, "analysisRunsPerHour")).toBe(20)
   })
 })
 
-describe("earned Pro policy", () => {
-  it("requires 5,000 points and expires exactly 30 days after a contribution", () => {
-    expect(EARNED_PRO_POINTS).toBe(5000)
-    expect(EARNED_PRO_ACTIVITY_DAYS).toBe(30)
-    const until = "2026-02-01T12:00:00Z"
-    expect(
-      hasEarnedPro(5000, until, new Date("2026-02-01T11:59:59.999Z"))
-    ).toBe(true)
-    expect(hasEarnedPro(5000, until, new Date(until))).toBe(false)
-    expect(hasEarnedPro(Number.NaN, until, new Date("2026-01-01"))).toBe(false)
+describe("session projection", () => {
+  const profile = (over: Partial<SessionProfile> = {}): SessionProfile => ({
+    staff: [],
+    contributorRole: "reader",
+    username: "reader",
+    tier: null,
+    claims: [],
+    roleGrants: [],
+    dismissedPrompts: [],
+    teams: [],
+    ...over,
   })
-})
 
-describe("features", () => {
-  it("free has none of the Pro features; pro has the atlas and index set", () => {
-    const free = resolveEntitlements(base())
-    const pro = resolveEntitlements(
-      base({ subscription: { plan: "pro", status: "active" } })
+  it("projects standing, facts and API accounts", () => {
+    const s = buildSessionAccess(
+      profile({
+        acceptedContributions: 120,
+        lastContributionAt: days(-2),
+        apiAccounts: [
+          { teamId: "t1", role: "organiser", paidThrough: days(5) },
+          { teamId: "t2", role: "member", paidThrough: days(-5) },
+        ],
+      }),
+      NOW
     )
-    expect(can(free, "atlas.contextLayers")).toBe(false)
-    expect(can(pro, "atlas.contextLayers")).toBe(true)
-    expect(can(pro, "index.export")).toBe(true)
-    expect(can(pro, "team.workspace")).toBe(false)
+    expect(s.standing).toBe("supporter")
+    expect(s.facts.sort()).toEqual(
+      ["apiCustomer", "contributor", "explorer", "supporter"].sort()
+    )
+    expect(s.recentlyActive).toBe(true)
+    expect(s.apiAccounts).toEqual([
+      { teamId: "t1", role: "organiser", active: true },
+      { teamId: "t2", role: "member", active: false },
+    ])
   })
-})
 
-describe("library.history", () => {
-  it("supporter, pro and team see field-by-field history; free and public don't", () => {
-    const of = (plan: "supporter" | "pro" | "team") =>
-      resolveEntitlements(base({ grants: [{ plan, expiresAt: null }] }))
-    expect(can(of("pro"), "library.history")).toBe(true)
-    expect(can(of("supporter"), "library.history")).toBe(true)
-    expect(can(of("team"), "library.history")).toBe(true)
-    expect(can(resolveEntitlements(base()), "library.history")).toBe(false)
-    expect(
-      can(resolveEntitlements(base({ signedIn: false })), "library.history")
-    ).toBe(false)
+  it("a missing profile is an Explorer with no recognition", () => {
+    const s = buildSessionAccess(null, NOW)
+    expect(s.standing).toBe("explorer")
+    expect(s.features).toContain("atlas.contextLayers")
+    expect(s.features).not.toContain("atlas.reach")
   })
 })

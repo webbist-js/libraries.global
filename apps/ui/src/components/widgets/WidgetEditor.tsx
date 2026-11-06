@@ -160,14 +160,14 @@ export function WidgetEditor({
         <Notice
           tone="warn"
           icon="mdi:pause-circle-outline"
-          title="Team inactive — paid tools paused"
+          title="Workspace closed — editing paused"
         >
           <p>
             Drafts are retained. Organisers can still pause, unpublish or
             archive widgets.
           </p>
-          <Link className="font-semibold underline" href="/staff/teams/billing">
-            Manage billing and seats
+          <Link className="font-semibold underline" href="/contact">
+            Contact the site team
           </Link>
         </Notice>
       ) : null}

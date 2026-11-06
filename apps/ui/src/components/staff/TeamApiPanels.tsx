@@ -4,23 +4,14 @@ import { StaffPanel } from "@/components/staff/StaffPanel"
 import { TeamApiSubscribeDialog } from "@/components/staff/TeamApiSubscribeDialog"
 import { Button } from "@/components/ui/button"
 import { Link } from "@/lib/navigation"
-import { API_ROADMAP } from "@/lib/team-api/roadmap"
-import type { ApiDashboard } from "@/lib/team-api/types"
+import { API_ROADMAP, API_STAGED_RESOURCES } from "@/lib/team-api/roadmap"
+import type { ApiDashboard, ApiWarning } from "@/lib/team-api/types"
 
-export const formatApiBytes = (n: number, locale: string) => {
-  const gib = n >= 1024 ** 3
+import { formatApiBytes, formatPence, formatPeriodTime } from "./api-format"
 
-  return (
-    new Intl.NumberFormat(locale, {
-      minimumFractionDigits: gib ? 0 : 1,
-      maximumFractionDigits: gib ? 2 : 1,
-    }).format(n / 1024 ** (gib ? 3 : 2)) + (gib ? " GiB" : " MiB")
-  )
-}
+export { formatApiBytes, formatPence, formatPeriodTime } from "./api-format"
 const money = (amount: number, currency: string, locale: string) =>
-  new Intl.NumberFormat(locale, { style: "currency", currency }).format(
-    amount / 100
-  )
+  formatPence(amount, locale, currency)
 
 function maySubscribe(data: ApiDashboard) {
   if (!data.organiser || !data.teamActive) return false
@@ -30,6 +21,26 @@ function maySubscribe(data: ApiDashboard) {
     !data.active &&
     !data.membership.revoked &&
     ["canceled", "incomplete_expired"].includes(data.membership.status)
+  )
+}
+
+const DIMENSION_LABEL: Record<ApiWarning["dimension"], string> = {
+  requests: "successful requests",
+  bytes: "response data",
+  credits: "analysis credits",
+  cap: "overage cap",
+}
+
+/** The highest threshold reached per allowance, for a compact status list. */
+export function warningSummary(warnings: readonly ApiWarning[]) {
+  const top = new Map<ApiWarning["dimension"], number>()
+  for (const w of warnings)
+    top.set(w.dimension, Math.max(top.get(w.dimension) ?? 0, w.threshold))
+
+  return [...top].map(([dimension, threshold]) =>
+    dimension === "cap"
+      ? `${threshold}% of your overage cap`
+      : `${threshold}% of included ${DIMENSION_LABEL[dimension]}`
   )
 }
 
@@ -55,26 +66,22 @@ export function ApiSubscriptionPanel({
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
   const canSubscribe = maySubscribe(data) && !data.pendingPayment && !confirming
   const status = data.active
-    ? "API add-on active"
+    ? "API access active"
     : data.pendingPayment || confirming
       ? "Confirming payment"
       : !data.teamActive
-        ? "Team inactive"
-        : "API add-on not active"
+        ? "Organisation inactive"
+        : "API access not active"
   const summary = (
     <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 text-base text-(--t-ink-dim)">
       <Badge label={status} color={data.active ? "ok" : "warn"} dot />
       {data.membership ? (
         <span>
           {money(data.membership.unitAmount, data.membership.currency, locale)}{" "}
-          / month
+          / month, tax included
           {data.membership.paidThrough
             ? " · Paid through " +
-              new Date(data.membership.paidThrough).toLocaleDateString(locale, {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
+              formatPeriodTime(data.membership.paidThrough, locale)
             : ""}
         </span>
       ) : null}
@@ -93,12 +100,12 @@ export function ApiSubscriptionPanel({
   )
   if (data.active && !data.membership?.cancelAtPeriodEnd)
     return (
-      <section aria-label="Your API add-on">
+      <section aria-label="Your API subscription">
         {summary}
         {!data.organiser ? (
           <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
-            Team Organisers manage the subscription and API keys. You can view
-            usage.
+            Organisers manage the subscription, overage and API keys. You can
+            view usage.
           </p>
         ) : null}
       </section>
@@ -106,7 +113,7 @@ export function ApiSubscriptionPanel({
 
   return (
     <StaffPanel
-      title="Your API add-on"
+      title="Your API subscription"
       id="api-subscription"
       aside={
         canSubscribe ? (
@@ -138,18 +145,12 @@ export function ApiSubscriptionPanel({
             ? "Payment confirmation is pending. Access starts after your payment is verified."
             : data.active
               ? "API access stays active until the end of your paid period."
-              : "Connect your applications to published library records with the Team API add-on."}
+              : "Connect your applications to published library records with API access."}
         </p>
         {!data.teamActive ? (
           <p role="status">
-            Your Team is inactive. Keys cannot make requests until the Team is
-            renewed.{" "}
-            <Link
-              href="/staff/teams/billing"
-              className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
-            >
-              Open Team billing
-            </Link>
+            Your organisation is inactive. Keys cannot make requests until it is
+            restored. Contact us for help.
           </p>
         ) : null}
         {data.membership?.revoked ? (
@@ -160,28 +161,18 @@ export function ApiSubscriptionPanel({
             Cancellation is scheduled. Manage API billing to change it.
           </p>
         ) : null}
-        {!canSubscribe ? (
-          <p>
-            {count(data.limits.requests)} successful requests and{" "}
-            {formatApiBytes(data.limits.bytes, locale)} of response data each
-            calendar month; {count(data.limits.perMinute)} requests per minute,{" "}
-            {data.limits.concurrency} at once across the Team. Create as many
-            keys as you need; they all use this shared pool. There are no
-            automatic overage charges.
-          </p>
-        ) : (
-          <p className="m-0">
-            {count(data.limits.requests)} successful requests and{" "}
-            {formatApiBytes(data.limits.bytes, locale)} of response data each
-            calendar month, shared across unlimited keys and everyone in your
-            Team. Adding keys or seats does not increase this pool.
-          </p>
-        )}
+        <p className="m-0">
+          Each paid monthly period includes {count(data.limits.requests)}{" "}
+          successful requests, {formatApiBytes(data.limits.bytes, locale)} of
+          response data and {count(data.limits.analysisCredits)} analysis
+          credits, shared by every key. {count(data.limits.perMinute)} requests
+          a minute, {data.limits.concurrency} at once. Overage is off unless an
+          organiser turns it on with a spending cap.
+        </p>
       </div>
       {!data.organiser ? (
         <p className="mt-4 mb-0 text-base text-(--t-ink-dim)">
-          Team Organisers manage the subscription and API keys. You can view
-          usage.
+          Organisers manage the subscription and API keys. You can view usage.
         </p>
       ) : null}
     </StaffPanel>
@@ -283,12 +274,6 @@ export function ApiUsagePanel({
             timeZone: "UTC",
           }).format(new Date(firstDay))
         : "Requests per day"
-  const reset = new Intl.DateTimeFormat(locale, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(data.usage.resetsAt))
   const metrics = [
     {
       title: "Successful requests",
@@ -302,24 +287,34 @@ export function ApiUsagePanel({
       limit: data.limits.bytes,
       display: (n: number) => formatApiBytes(n, locale),
     },
+    {
+      title: "Analysis credits",
+      used: data.usage.credits,
+      limit: data.limits.analysisCredits,
+      display: count,
+    },
   ]
+  const warnings = warningSummary(data.warnings)
 
   return (
     <StaffPanel
-      title="This month"
+      title="This billing period"
       id="api-usage"
       aside={
         <p className="m-0 text-sm text-(--t-ink-dim)">
-          Resets {reset}, 00:00 UTC
+          {data.usage.resetsAt
+            ? "Resets " + formatPeriodTime(data.usage.resetsAt, locale)
+            : "No paid period is active"}
         </p>
       }
     >
       <p className="mt-0 mb-5 text-base leading-relaxed text-(--t-ink-dim)">
         One shared pool for {data.teamName}: every key and application uses the
-        same monthly allowance. Adding keys or members does not increase or
-        reset it.
+        same allowance. A new allowance starts only when the next monthly
+        payment is confirmed; adding keys or members never increases or resets
+        it.
       </p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         {metrics.map((metric) => (
           <div
             key={metric.title}
@@ -331,7 +326,7 @@ export function ApiUsagePanel({
             <p className="mt-2 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
               <span className="type-stat">{metric.display(metric.used)}</span>
               <span className="text-sm text-(--t-ink-dim)">
-                of {metric.display(metric.limit)}
+                of {metric.display(metric.limit)} included
               </span>
             </p>
             <progress
@@ -341,20 +336,27 @@ export function ApiUsagePanel({
               className="block h-2 w-full appearance-none overflow-hidden rounded-full bg-(--t-border-line) [&::-moz-progress-bar]:bg-(--t-action-primary) [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-(--t-border-line) [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-(--t-action-primary)"
             />
             <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
-              {metric.display(Math.max(0, metric.limit - metric.used))} left
-              this month
+              {metric.used > metric.limit
+                ? metric.display(metric.used - metric.limit) +
+                  " over, billed as overage"
+                : metric.display(metric.limit - metric.used) +
+                  " left this period"}
             </p>
           </div>
         ))}
       </div>
-      {data.warnings.length ? (
-        <p
+      {warnings.length ? (
+        <div
           role="status"
-          className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-base font-semibold"
+          className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-base"
         >
-          Your Team has used at least 80% of its {data.warnings.join(" and ")}{" "}
-          allowance.
-        </p>
+          <p className="m-0 font-semibold">Usage alerts this period</p>
+          <ul className="mt-2 mb-0 list-disc pl-5">
+            {warnings.map((text) => (
+              <li key={text}>You have used {text}.</li>
+            ))}
+          </ul>
+        </div>
       ) : null}
       <div className="mt-5">
         <BarSeries
@@ -371,7 +373,7 @@ export function ApiUsagePanel({
           emptyMessage={
             data.organiser && data.active
               ? "No requests yet. Create a key below and make your first call."
-              : "No requests yet. Your Team’s usage will appear here."
+              : "No requests yet. Your organisation’s usage will appear here."
           }
           dataTable={
             <UsageTable
@@ -385,13 +387,14 @@ export function ApiUsagePanel({
       </div>
       <p className="mt-5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         Response data is uncompressed JSON; media downloads aren’t counted.
-        Totals include capacity reserved for requests still in progress. Failed
-        responses don’t use your allowance.
+        Totals include capacity reserved for requests still in progress. Failed,
+        refused and timed-out requests don’t use your allowance.
       </p>
       <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         {count(data.limits.perMinute)} requests per minute ·{" "}
-        {data.limits.concurrency} at once across the Team · unlimited keys · no
-        automatic overage charges.
+        {data.limits.concurrency} at once · {count(data.limits.pageSize)}{" "}
+        records per page · {formatApiBytes(data.limits.responseBytes, locale)}{" "}
+        largest response · unlimited keys.
       </p>
       {data.endpoints.length ? (
         <div className="mt-6">
@@ -489,6 +492,42 @@ export function ApiGuidePanel() {
               </li>
             ))}
           </ul>
+          <h3 className="type-small-heading mt-6 mb-0">
+            Services, analysis and proposals
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
+            These routes are switched on in stages. While one is off it answers
+            404 <code translate="no">resource_not_enabled</code> and nothing is
+            charged. Analysis and proposal scopes must be chosen when you create
+            a key.
+          </p>
+          <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
+            {API_STAGED_RESOURCES.map((endpoint) => (
+              <li
+                key={`${endpoint.method} ${endpoint.path}`}
+                className="flex min-w-0 items-start gap-3 py-3"
+              >
+                <Badge
+                  label={endpoint.method}
+                  color={endpoint.method === "POST" ? "aurora" : "ok"}
+                />
+                <div className="min-w-0">
+                  <code
+                    translate="no"
+                    className="block font-mono text-sm break-all"
+                  >
+                    {endpoint.path}
+                  </code>
+                  <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                    {endpoint.detail}{" "}
+                    <code translate="no" className="text-xs">
+                      {endpoint.scope}
+                    </code>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
           <p className="mt-3 text-sm leading-relaxed text-(--t-ink-dim)">
             Encode the <code translate="no">entityRef</code> from a search or
             list as one path segment with{" "}
@@ -534,9 +573,12 @@ export function ApiGuidePanel() {
                 ["401", "The key is invalid or has expired."],
                 [
                   "403",
-                  "The key lacks that API, or the Team or add-on isn’t active.",
+                  "The key lacks that scope, or API access isn’t active.",
                 ],
-                ["429", "Rate limit or monthly allowance reached."],
+                [
+                  "429",
+                  "Rate, concurrency, allowance or overage cap reached; see error.code and Retry-After.",
+                ],
               ].map(([code, text]) => (
                 <div key={code} className="flex gap-4 py-2 first:pt-0">
                   <dt className="font-mono font-semibold text-(--t-accent-danger)">

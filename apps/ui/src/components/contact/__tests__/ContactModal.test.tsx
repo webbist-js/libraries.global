@@ -31,7 +31,7 @@ function mount(mode: "contact" | "feedback" | "atlas" = "feedback") {
       <ContactModal
         intent={
           mode === "contact"
-            ? { mode, type: "plans", sourceSubject: "Team plan" }
+            ? { mode, type: "plans", sourceSubject: "API Access" }
             : mode === "atlas"
               ? { mode: "feedback", product: "atlas" }
               : { mode }
@@ -140,8 +140,8 @@ describe("guided feedback and contact modal", () => {
     expect(
       screen.getByRole("combobox", { name: "What’s your message about?" })
         .textContent
-    ).toBe("Plans and membership")
-    expect(screen.getByText("Team plan")).toBeTruthy()
+    ).toBe("Plans and API Access")
+    expect(screen.getByText("API Access")).toBeTruthy()
     expect(
       (screen.getByLabelText("Email address") as HTMLInputElement).required
     ).toBe(true)
@@ -160,7 +160,7 @@ describe("guided feedback and contact modal", () => {
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toMatchObject({
       mode: "contact",
       type: "report_issue",
-      sourceSubject: "Team plan",
+      sourceSubject: "API Access",
       email: "reader@example.org",
     })
   })

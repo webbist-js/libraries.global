@@ -47,7 +47,7 @@ export function AtlasContributeCard({
           </h2>
           <p className="m-0" style={{ color: T.ink.dim }}>
             Add a missing library or fix one that’s out of date. Accepted
-            changes are credited to you, and regular contributors get Pro free.
+            changes are credited to you, and your first one unlocks Reach.
           </p>
         </div>
       </div>

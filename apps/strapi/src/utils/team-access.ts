@@ -1,38 +1,24 @@
-import { canForLibrary, type Feature, type TeamInput } from "@repo/access"
-
-import { resolveUserEntitlements } from "./entitlement-inputs"
-
 /**
- * Teams (R2-B): a Team organisation's active, unexpired membership gives Pro
- * personally (plan source `team`) and Team features on the Team's libraries
- * only. These readers feed `resolveEntitlements` in Strapi and the session
- * bridge, so both resolve the same answer.
+ * Teams are free staff workspaces (organisations). Membership is an
+ * administrative container: it never grants library editing or staff tools,
+ * which come only from the user's own verified staff claims (`canStaff`).
+ * A Team's `status` is an admin lifecycle flag.
  */
 
 export const TEAM_UID = "plugin::access.team"
 export const TEAM_MEMBER_UID = "plugin::access.team-member"
 
-/** One account holds one seat, including while its Team is lapsed. */
+/** One account holds one workspace membership. */
 export const MAX_TEAMS_PER_USER = 1
-/** Read legacy duplicates until an operator reconciles them; never hide billing responsibility. */
+/** Read legacy duplicates until an operator reconciles them. */
 const MEMBERSHIP_READ_LIMIT = 11
 
 /** Most libraries a Team may cover. */
 export const MAX_TEAM_LIBRARIES = 2000
 
-export function teamIsActive(team: {
-  status?: string | null
-  expiresAt?: string | null
-  source?: string | null
-  billingMode?: string | null
-}) {
-  return (
-    team.status === "active" &&
-    (!team.expiresAt || Date.parse(team.expiresAt) > Date.now()) &&
-    (team.source !== "checkout" ||
-      team.billingMode ===
-        (process.env.BILLING_ENV === "live" ? "live" : "sandbox"))
-  )
+/** Whether a workspace is usable: an admin may lapse it; payment never does. */
+export function teamIsActive(team: { status?: string | null }) {
+  return team.status === "active"
 }
 
 export type TeamMembership = {
@@ -42,9 +28,7 @@ export type TeamMembership = {
   slug: string
   teamRole: "organiser" | "member"
   status: "active" | "lapsed"
-  expiresAt: string | null
   verified: boolean
-  selfService?: boolean
   libraryDocumentIds: string[]
 }
 
@@ -56,19 +40,15 @@ type MemberRow = {
     name?: string | null
     slug?: string | null
     status?: string | null
-    expiresAt?: string | null
     verifiedAt?: string | null
-    source?: string | null
-    billingMode?: string | null
     libraries?: { documentId?: string }[] | null
   } | null
 }
 
 /**
  * The Teams `baUserId` is an active member of, with each Team's libraries.
- * Lapsed and expired Teams are included (status and expiry are reported),
- * so a caller can show them; `toTeamInputs` lets `resolveEntitlements`
- * decide what counts.
+ * Lapsed workspaces are included (status is reported) so a caller can show
+ * them.
  */
 export async function loadTeamMemberships(
   strapi: any,
@@ -99,16 +79,8 @@ export async function loadTeamMemberships(
         name: team.name ?? "Team",
         slug: team.slug ?? "",
         teamRole: row.teamRole === "organiser" ? "organiser" : "member",
-        status:
-          team.status === "lapsed" ||
-          (team.source === "checkout" &&
-            team.billingMode !==
-              (process.env.BILLING_ENV === "live" ? "live" : "sandbox"))
-            ? "lapsed"
-            : "active",
-        expiresAt: team.expiresAt ?? null,
+        status: teamIsActive(team) ? "active" : "lapsed",
         verified: !!team.verifiedAt,
-        ...(team.source === "checkout" ? { selfService: true } : {}),
         libraryDocumentIds: (team.libraries ?? [])
           .map((l) => l.documentId)
           .filter((id): id is string => typeof id === "string" && id.length > 0)
@@ -116,36 +88,4 @@ export async function loadTeamMemberships(
       },
     ]
   })
-}
-
-export const toTeamInputs = (memberships: TeamMembership[]): TeamInput[] =>
-  memberships.map((m) => ({
-    libraryDocumentIds: m.libraryDocumentIds,
-    expiresAt: m.expiresAt,
-    status: m.status,
-  }))
-
-/** `EntitlementInput.teams` for one user (for `loadEntitlementInputs`). */
-export async function loadTeamInputs(
-  strapi: any,
-  baUserId: string
-): Promise<TeamInput[]> {
-  return toTeamInputs(await loadTeamMemberships(strapi, baUserId))
-}
-
-/**
- * Whether `feature` is unlocked for `baUserId` on one library: a
- * library-scoped feature needs an active Team of theirs covering it; any
- * other feature is their personal plan. Resolved in Strapi on every call,
- * so the site's session is never the only check.
- */
-export async function hasLibraryFeature(
-  strapi: any,
-  baUserId: string,
-  feature: Feature,
-  libraryDocumentId: string
-): Promise<boolean> {
-  const entitlements = await resolveUserEntitlements(strapi, baUserId)
-
-  return canForLibrary(entitlements, feature, libraryDocumentId)
 }

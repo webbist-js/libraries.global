@@ -48,12 +48,215 @@ export async function analysisService(path: string, body?: unknown) {
   }
 }
 
+/**
+ * A new-calculation allowance the site resolved from the user's entitlements:
+ * a Contributor's rolling weekly allowance, or an API organiser's hourly
+ * allowance plus the API account's pooled daily allowance. Cached results
+ * never spend it.
+ */
+export type ReachAllowance =
+  | { kind: "contributor"; weekly: number }
+  | { kind: "api"; hourly: number; daily: number; accountKey: string }
+
+const HEX_KEY = /^[a-f0-9]{64}$/
+const intIn = (value: unknown, min: number, max: number) =>
+  Number.isInteger(value) &&
+  (value as number) >= min &&
+  (value as number) <= max
+
+/** Strict parse of the bridge's `allowance`; null when malformed. */
+export function parseReachAllowance(
+  value: unknown,
+  kinds: readonly ReachAllowance["kind"][] = ["contributor", "api"]
+): ReachAllowance | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null
+  const v = value as Record<string, unknown>
+  const keys = Object.keys(v)
+  if (
+    v.kind === "contributor" &&
+    kinds.includes("contributor") &&
+    keys.every((k) => ["kind", "weekly"].includes(k)) &&
+    intIn(v.weekly, 1, 10)
+  )
+    return { kind: "contributor", weekly: v.weekly as number }
+  if (
+    v.kind === "api" &&
+    kinds.includes("api") &&
+    keys.every((k) => ["kind", "hourly", "daily", "accountKey"].includes(k)) &&
+    intIn(v.hourly, 1, 100) &&
+    intIn(v.daily, 1, 1000) &&
+    typeof v.accountKey === "string" &&
+    HEX_KEY.test(v.accountKey)
+  )
+    return {
+      kind: "api",
+      hourly: v.hourly as number,
+      daily: v.daily as number,
+      accountKey: v.accountKey,
+    }
+
+  return null
+}
+
+export const isReachUserKey = (value: unknown): value is string =>
+  typeof value === "string" && HEX_KEY.test(value)
+
+const budgetKey = (scope: string, key: string) =>
+  createHash("sha256").update(`${scope}:${key}`).digest("hex")
+
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+/** Budget rows older than this are never read again. */
+const BUDGET_RETENTION = 8 * DAY
+
+export type ReachRefusal = {
+  status: 429
+  error: string
+  code: string
+  job?: undefined
+}
+
+/**
+ * Spends one new calculation from `allowance`, or refuses. Runs inside the
+ * admission transaction (after the advisory lock), only when no reusable job
+ * exists, so cached repeats stay free. Budget rows are hourly counters;
+ * weekly and daily allowances sum the rows inside their rolling window.
+ */
+export async function spendReachAllowance(
+  trx: Core.Strapi["db"]["connection"],
+  userKey: string,
+  allowance: ReachAllowance,
+  now: Date = new Date()
+): Promise<ReachRefusal | null> {
+  const window = new Date(Math.floor(now.getTime() / HOUR) * HOUR)
+  const used = async (key: string, since: Date | null) => {
+    const query = trx("atlas_analysis_budgets").where({ key })
+    const row = await (
+      since
+        ? query.where("window_start", ">", since)
+        : query.where({ window_start: window })
+    )
+      .sum({ n: "used" })
+      .first()
+
+    return Number(row?.n ?? 0)
+  }
+  const keys: string[] = []
+  if (allowance.kind === "contributor") {
+    const weekKey = budgetKey("reach-week", userKey)
+    if (
+      (await used(weekKey, new Date(now.getTime() - 7 * DAY))) >=
+      allowance.weekly
+    )
+      return {
+        status: 429,
+        error: "Weekly Reach allowance reached.",
+        code: "REACH_WEEKLY_LIMIT",
+      }
+    keys.push(weekKey)
+  } else {
+    if ((await used(userKey, null)) >= allowance.hourly)
+      return {
+        status: 429,
+        error: "Hourly Reach allowance reached.",
+        code: "REACH_HOURLY_LIMIT",
+      }
+    const dayKey = budgetKey("reach-day", allowance.accountKey)
+    if ((await used(dayKey, new Date(now.getTime() - DAY))) >= allowance.daily)
+      return {
+        status: 429,
+        error: "Daily Reach allowance for this API account reached.",
+        code: "REACH_DAILY_LIMIT",
+      }
+    keys.push(userKey, dayKey)
+  }
+  for (const key of keys) {
+    await trx("atlas_analysis_budgets")
+      .insert({ key, window_start: window, used: 1 })
+      .onConflict(["key", "window_start"])
+      .merge({ used: trx.raw("atlas_analysis_budgets.used + 1") })
+    await trx("atlas_analysis_budgets")
+      .where({ key })
+      .where("window_start", "<", new Date(now.getTime() - BUDGET_RETENTION))
+      .delete()
+  }
+
+  return null
+}
+
+/** Reach is for libraries people visit: not mobile, digital, closed or planned. */
+function isVisitorLibrary(type: unknown, operationalStatus: unknown) {
+  return (
+    !["Mobile", "Digital"].includes(type as string) &&
+    !["permanently_closed", "temporarily_closed", "planned"].includes(
+      operationalStatus as string
+    )
+  )
+}
+
+function isValidCoordinate(
+  coordinate: { lat: number; lng: number } | null
+): coordinate is { lat: number; lng: number } {
+  return (
+    !!coordinate &&
+    Number.isFinite(coordinate.lat) &&
+    Number.isFinite(coordinate.lng) &&
+    Math.abs(coordinate.lat) <= 90 &&
+    Math.abs(coordinate.lng) <= 180
+  )
+}
+
+/** Whether an installed release covers this country and origin point. */
+function releaseCovers(
+  release: { countries?: unknown; originBounds: number[] },
+  iso2: unknown,
+  coordinate: { lat: number; lng: number }
+) {
+  return (
+    Array.isArray(release.countries) &&
+    release.countries.includes(iso2) &&
+    release.originBounds[0] <= coordinate.lng &&
+    release.originBounds[2] >= coordinate.lng &&
+    release.originBounds[1] <= coordinate.lat &&
+    release.originBounds[3] >= coordinate.lat
+  )
+}
+
+/**
+ * The unexpired job for `key`, if any. A pending job moves to interactive
+ * priority; a failed one is retired (and none returned) when the caller
+ * asks to retry.
+ */
+async function reusableReachJob(
+  database: Core.Strapi["db"]["connection"],
+  key: string,
+  retry: unknown
+) {
+  const job = await database("atlas_analysis_jobs")
+    .where({ key })
+    .where("expires_at", ">", new Date())
+    .first()
+  if (job?.state === "pending" && job.priority < 10)
+    await database("atlas_analysis_jobs")
+      .where({ key, state: "pending" })
+      .update({ priority: 10 })
+  if (job?.state === "failed" && retry) {
+    await database("atlas_analysis_jobs")
+      .where({ key, state: "failed" })
+      .update({ expires_at: new Date(0) })
+
+    return null
+  }
+
+  return job
+}
+
 /** Called only behind the private Atlas bridge, after the UI's entitlement check. */
 export async function requestAtlasReach(
   strapi: Core.Strapi,
   input: unknown,
   userKey: string,
-  hourlyLimit: number
+  allowance: ReachAllowance
 ) {
   const request = parseAtlasReachRequest(input)
   const library = await strapi.documents("api::library.library").findOne({
@@ -73,15 +276,8 @@ export async function requestAtlasReach(
   })
   const coordinate = library.location as { lat: number; lng: number } | null
   if (
-    ["Mobile", "Digital"].includes(library.libraryType?.name) ||
-    ["permanently_closed", "temporarily_closed", "planned"].includes(
-      library.operationalStatus
-    ) ||
-    !coordinate ||
-    !Number.isFinite(coordinate.lat) ||
-    !Number.isFinite(coordinate.lng) ||
-    Math.abs(coordinate.lat) > 90 ||
-    Math.abs(coordinate.lng) > 180
+    !isVisitorLibrary(library.libraryType?.name, library.operationalStatus) ||
+    !isValidCoordinate(coordinate)
   )
     return unavailable(
       "unsupported",
@@ -90,14 +286,8 @@ export async function requestAtlasReach(
   const releases = await analysisService("/releases")
   if (!Array.isArray(releases) || releases.length > 512)
     throw new Error("Invalid analysis catalogue")
-  const matching = releases.filter(
-    (release) =>
-      Array.isArray(release.countries) &&
-      release.countries.includes(library.country?.iso2) &&
-      release.originBounds[0] <= coordinate.lng &&
-      release.originBounds[2] >= coordinate.lng &&
-      release.originBounds[1] <= coordinate.lat &&
-      release.originBounds[3] >= coordinate.lat
+  const matching = releases.filter((release) =>
+    releaseCovers(release, library.country?.iso2, coordinate)
   )
   if (matching.length !== 1)
     return unavailable(
@@ -120,33 +310,26 @@ export async function requestAtlasReach(
     )
     .digest("hex")
   const database = strapi.db.connection
-  let job = await database("atlas_analysis_jobs")
-    .where({ key })
-    .where("expires_at", ">", new Date())
-    .first()
-  if (job?.state === "pending" && job.priority < 10)
-    await database("atlas_analysis_jobs")
-      .where({ key, state: "pending" })
-      .update({ priority: 10 })
-  if (job?.state === "failed" && request.retry) {
-    await database("atlas_analysis_jobs")
-      .where({ key, state: "failed" })
-      .update({ expires_at: new Date(0) })
-    job = null
-  }
+  let job = await reusableReachJob(database, key, request.retry)
   if (!job) {
     const result = await admitReachJob(database, {
       request,
       key,
       userKey,
-      hourlyLimit,
+      allowance,
       coordinateHash,
       coordinate,
       country: library.country.iso2,
       releaseId: release.id,
     })
     if (result.status)
-      return { status: result.status, body: { error: result.error } }
+      return {
+        status: result.status,
+        body: {
+          error: result.error,
+          ...("code" in result && result.code ? { code: result.code } : {}),
+        },
+      }
     job = result.job
   }
   const ready = await readyReachResult(database, job, request, coordinateHash)
@@ -181,7 +364,7 @@ async function admitReachJob(
     request: ReturnType<typeof parseAtlasReachRequest>
     key: string
     userKey: string
-    hourlyLimit: number
+    allowance: ReachAllowance
     coordinateHash: string
     coordinate: { lat: number; lng: number }
     country: string
@@ -192,7 +375,7 @@ async function admitReachJob(
     request,
     key,
     userKey,
-    hourlyLimit,
+    allowance,
     coordinateHash,
     coordinate,
     country,
@@ -214,16 +397,8 @@ async function admitReachJob(
         status: 503,
         error: "Analysis cache is at capacity. Retry later.",
       }
-    const window = new Date(Math.floor(Date.now() / 3600000) * 3600000)
-    const budget = await trx("atlas_analysis_budgets")
-      .where({ key: userKey, window_start: window })
-      .first()
-    if ((budget?.used ?? 0) >= hourlyLimit)
-      return { status: 429, error: "Hourly analysis allowance reached." }
-    await trx("atlas_analysis_budgets")
-      .insert({ key: userKey, window_start: window, used: 1 })
-      .onConflict(["key", "window_start"])
-      .merge({ used: trx.raw("atlas_analysis_budgets.used + 1") })
+    const refused = await spendReachAllowance(trx, userKey, allowance)
+    if (refused) return refused
     const payload = {
       libraryId: request.libraryId,
       coordinateHash,

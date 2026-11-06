@@ -1,5 +1,6 @@
 "use client"
 
+import { CONTRIBUTOR_REACH_PER_WEEK } from "@repo/access"
 import {
   ATLAS_REACH_MINUTES,
   parseAtlasReachResult,
@@ -13,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
 import { SelectField } from "@/components/ds/SelectField"
 import { T } from "@/lib/design-tokens"
+import { Link } from "@/lib/navigation"
 
 import type { AtlasLibrary } from "./atlas.logic"
 import { AtlasAnalysisHeader } from "./AtlasAnalysisHeader"
@@ -145,6 +147,7 @@ export function AtlasReachAnalysis({
   canExport,
   calculationLimit = null,
   onZoomLocal,
+  hourlyAllowance = false,
 }: {
   readonly scopeControl?: ReactNode
   readonly library: AtlasLibrary | null
@@ -163,6 +166,8 @@ export function AtlasReachAnalysis({
   readonly canExport: boolean
   readonly calculationLimit?: "zoom" | "busy" | null
   readonly onZoomLocal?: () => void
+  /** The viewer's allowance is the API customer's hourly one, not weekly. */
+  readonly hourlyAllowance?: boolean
 }) {
   const t = useTranslations("atlasAnalysis")
   const result =
@@ -256,6 +261,7 @@ export function AtlasReachAnalysis({
               response={response}
               error={error}
               retry={retry}
+              hourlyAllowance={hourlyAllowance}
             />
           ) : null}
           {!result ? (
@@ -273,31 +279,56 @@ export function AtlasReachAnalysis({
   )
 }
 
+function reachErrorMessage(error: string) {
+  if (error === "rate") return "reachRateLimit"
+  if (error === "allowance") return "reachAllowance"
+
+  return "reachUnavailable"
+}
+
+function reachStateMessage(state: AtlasReachResponse["state"]) {
+  if (state === "unroutable") return "reachUnroutable"
+  if (state === "missing_population") return "reachMissingPopulation"
+  if (state === "failed") return "reachUnavailable"
+
+  return "reachUnsupported"
+}
+
 function ReachStatus({
   hasLibrary,
   response,
   error,
   retry,
+  hourlyAllowance = false,
 }: {
   readonly hasLibrary: boolean
   readonly response: AtlasReachResponse | null
   readonly error: string | null
   readonly retry: () => void
+  readonly hourlyAllowance?: boolean
 }) {
   const t = useTranslations("atlasAnalysis")
+  const tLock = useTranslations("accessLocks")
   if (!hasLibrary) return <p role="status">{t("chooseLibrary")}</p>
+  if (error === "allowance" && !hourlyAllowance)
+    return (
+      <div role="alert">
+        <p>{tLock("reachWeekUsed", { count: CONTRIBUTOR_REACH_PER_WEEK })}</p>
+        <p>
+          {tLock("reachApi")}{" "}
+          <Link
+            href="/developers"
+            className="font-semibold text-(--t-accent-primary) underline underline-offset-2"
+          >
+            {tLock("aboutApiAccess")}
+          </Link>
+        </p>
+      </div>
+    )
   if (error)
     return (
       <div role="alert">
-        <p>
-          {t(
-            error === "rate"
-              ? "reachRateLimit"
-              : error === "allowance"
-                ? "reachAllowance"
-                : "reachUnavailable"
-          )}
-        </p>
+        <p>{t(reachErrorMessage(error))}</p>
         <button
           type="button"
           className="min-h-12 w-full rounded-xl border border-(--t-border-line) px-4 py-3 text-left text-sm font-semibold text-(--t-ink-base) hover:bg-(--t-bg-surface)"
@@ -320,18 +351,10 @@ function ReachStatus({
         </button>
       </div>
     )
-  const message =
-    response.state === "unroutable"
-      ? "reachUnroutable"
-      : response.state === "missing_population"
-        ? "reachMissingPopulation"
-        : response.state === "failed"
-          ? "reachUnavailable"
-          : "reachUnsupported"
 
   return (
     <div role="status">
-      <p>{t(message)}</p>
+      <p>{t(reachStateMessage(response.state))}</p>
       {response.state === "failed" ? (
         <button
           type="button"

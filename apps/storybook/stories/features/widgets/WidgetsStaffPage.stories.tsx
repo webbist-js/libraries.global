@@ -23,7 +23,6 @@ const meta = {
             slug: "example-library-team",
             role: "organiser",
             libraryCount: 3,
-            status: "active",
           },
         ],
       },

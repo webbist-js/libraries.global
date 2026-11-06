@@ -193,6 +193,7 @@ export default async function RootLayout({
                       {
                         legal: tUi("legal_policies"),
                         plans: tUi("plans_and_pricing"),
+                        sponsor: tUi("sponsor"),
                       }
                     )}
                   >

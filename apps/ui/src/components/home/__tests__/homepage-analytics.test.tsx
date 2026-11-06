@@ -64,7 +64,7 @@ describe("homepage plan links after the pricing section moves", () => {
     )
     const plans = screen.getByRole("link", { name: /^Plans$/ })
     const teams = screen.getByRole("link", {
-      name: /^Explore Teams$/,
+      name: /^How verified staff access works$/,
     })
     const interests = () =>
       window

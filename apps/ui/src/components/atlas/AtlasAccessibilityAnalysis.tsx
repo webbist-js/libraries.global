@@ -1,11 +1,15 @@
 "use client"
 
+import { EXPLORER_LIMITS } from "@repo/access"
 import type { AtlasExportRequest } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import {
+  useTranslations,
+  useTranslations as useUiTranslations,
+} from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { ACCESS_GAP, ACCESS_MATCH } from "@/components/atlas/atlas-map.style"
-import { Chip, Icon, ProChip } from "@/components/atlas/atlas-ui"
+import { AccessChip, Chip, Icon } from "@/components/atlas/atlas-ui"
 import {
   accessibilityOptions,
   type AccessibilityView,
@@ -77,6 +81,7 @@ export function AtlasAccessibilityAnalysis({
   readonly onClose: () => void
 }) {
   const tUi = useUiTranslations("ui")
+  const tLock = useTranslations("accessLocks")
 
   const [catalogue, setCatalogue] = useState<string[]>([]),
     [query, setQuery] = useState(""),
@@ -86,7 +91,7 @@ export function AtlasAccessibilityAnalysis({
   const id = useId(),
     hasServerOptions = serverOptions !== undefined,
     canApply = tier !== "public",
-    canExport = tier === "pro"
+    canExport = tier === "explorer" || tier === "reach"
   const { busy, outcome, run } = useAtlasExport(onSeePlans ?? onSignIn)
   useEffect(() => {
     if (hasServerOptions) return
@@ -421,7 +426,10 @@ export function AtlasAccessibilityAnalysis({
                     !canExport ? `${id}-export-plan` : undefined
                   }
                   onClick={() => {
-                    if (!canExport) return (onSeePlans ?? onSignIn)()
+                    if (!canExport)
+                      return tier === "public"
+                        ? onSignIn()
+                        : (onSeePlans ?? onSignIn)()
                     void run(
                       "csv",
                       exportRequest ??
@@ -432,11 +440,13 @@ export function AtlasAccessibilityAnalysis({
                   style={{ borderColor: T.border.hi }}
                 >
                   {busy ? "Downloading…" : "Download CSV"}{" "}
-                  {!canExport ? <ProChip /> : null}
+                  {!canExport ? (
+                    <AccessChip>{tLock("signInChip")}</AccessChip>
+                  ) : null}
                 </button>
                 {!canExport ? (
                   <span id={`${id}-export-plan`} className="sr-only">
-                    CSV downloads are included with Pro and Team.
+                    {tLock("csvSignIn")}
                   </span>
                 ) : null}
                 {outcome ? (
@@ -511,8 +521,10 @@ export function AtlasAccessibilityAnalysis({
               </p>
               <p className="m-0">
                 The list and CSV follow your Filters, the map area, and the
-                selected Recorded, Both, or Not yet view. Downloads use the
-                existing Pro and Team export limits.
+                selected Recorded, Both, or Not yet view. Downloads follow the
+                account export limits: up to{" "}
+                {EXPLORER_LIMITS.exportRows.toLocaleString()} libraries per
+                download and {EXPLORER_LIMITS.exportsPerDay} downloads a day.
               </p>
             </div>
           </details>

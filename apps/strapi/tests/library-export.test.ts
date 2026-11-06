@@ -112,8 +112,8 @@ describe("library export (bridge)", () => {
     expect(fake.documents).not.toHaveBeenCalled()
   })
 
-  it("accepts up to 50,000 ids, the Team plan's row cap", () => {
-    expect(LIBRARY_EXPORT_MAX_IDS).toBe(50_000)
+  it("accepts up to 10,000 ids, the Explorer export row cap", () => {
+    expect(LIBRARY_EXPORT_MAX_IDS).toBe(10_000)
   })
 
   it("returns the export fields keyed by documentId, skipping unknown ids", async () => {

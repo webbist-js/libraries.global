@@ -1,5 +1,5 @@
-// "In the area": counted figures, the numbered nearby list and the Pro
-// reach teaser. Every figure here comes from the index (library-area.ts).
+// "In the area": counted figures, the numbered nearby list and the Reach
+// teaser. Every figure here comes from the index (library-area.ts).
 
 import { formatDistance } from "@/components/library/library-page.helpers"
 import { LibraryReachTeaser } from "@/components/library/LibraryReachTeaser"
@@ -199,15 +199,9 @@ export function LibraryAreaSection({
       )}
 
       {showReach ? (
-        <details
-          className="mt-5 border-t pt-2"
-          style={{ borderColor: T.border.line }}
-        >
-          <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold">
-            Explore travel-time reach
-          </summary>
+        <div className="mt-5">
           <LibraryReachTeaser libraryId={libraryId} />
-        </details>
+        </div>
       ) : null}
     </LibrarySectionCard>
   )

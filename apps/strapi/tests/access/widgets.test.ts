@@ -31,9 +31,7 @@ function setup() {
   const team = {
     documentId: TEAM,
     name: "A service",
-    source: "admin",
     status: "active",
-    expiresAt: null,
     libraries: [{ documentId: L1 }],
     primaryNetwork: { documentId: NET },
     widgetBranding: false,
@@ -290,10 +288,12 @@ describe("Team widgets authority", () => {
       code: "widget_unavailable",
     })
   })
-  it("blocks expired and wrong-billing-mode Teams but retains organiser containment", async () => {
+  it("blocks an admin-lapsed workspace and retains organiser containment", async () => {
     const f = setup(),
       w = await f.publish(await f.create())
-    f.store[TEAM_UID]![0]!.expiresAt = "2000-01-01T00:00:00.000Z"
+    await expect(f.widgets.public(w.publicId)).resolves.toBeTruthy()
+    await expect(f.create()).resolves.toBeTruthy()
+    f.store[TEAM_UID]![0]!.status = "lapsed"
     await expect(f.widgets.public(w.publicId)).rejects.toMatchObject({
       code: "widget_unavailable",
     })
@@ -305,11 +305,6 @@ describe("Team widgets authority", () => {
       version: w.draftVersion,
     })
     expect(paused.state).toBe("paused")
-    f.store[TEAM_UID]![0]!.expiresAt = null
-    f.store[TEAM_UID]![0]!.source = "checkout"
-    f.store[TEAM_UID]![0]!.billingMode = "live"
-    vi.stubEnv("BILLING_ENV", "sandbox")
-    await expect(f.create()).rejects.toMatchObject({ code: "team_inactive" })
   })
 })
 

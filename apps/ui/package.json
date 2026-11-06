@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "api:check": "node scripts/api-setup.mjs",
+    "api:setup": "node scripts/api-setup.mjs --apply",
     "billing:check": "node scripts/billing-setup.mjs",
     "billing:db:test": "node scripts/billing-db-test.mjs",
     "billing:migrate": "node scripts/billing-setup.mjs --migrate",
@@ -20,10 +22,6 @@
     "lint:fix": "pnpm lint --fix",
     "preview": "next build && next start",
     "start": "next start",
-    "team-api:check": "node scripts/team-api-setup.mjs",
-    "team-api:setup": "node scripts/team-api-setup.mjs --apply",
-    "team-billing:check": "node scripts/team-billing-setup.mjs",
-    "team-billing:setup": "node scripts/team-billing-setup.mjs --apply",
     "test": "vitest run --maxWorkers=1",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

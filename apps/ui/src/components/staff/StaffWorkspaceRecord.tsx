@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect } from "react"
 import type { StaffLibrarySummary } from "@/lib/access-server"
 
 export type StaffWorkspaceRecord = StaffLibrarySummary & {
-  readonly teamCovered: boolean
+  readonly canSeeTeam: boolean
   readonly suggestions: number
 }
 
@@ -23,7 +23,7 @@ export function useStaffWorkspaceRecord(record: StaffWorkspaceRecord) {
     libraryType,
     role,
     canGoLive,
-    teamCovered,
+    canSeeTeam,
     suggestions,
   } = record
   useEffect(
@@ -35,7 +35,7 @@ export function useStaffWorkspaceRecord(record: StaffWorkspaceRecord) {
         libraryType,
         role,
         canGoLive,
-        teamCovered,
+        canSeeTeam,
         suggestions,
       }),
     [
@@ -46,7 +46,7 @@ export function useStaffWorkspaceRecord(record: StaffWorkspaceRecord) {
       libraryType,
       role,
       canGoLive,
-      teamCovered,
+      canSeeTeam,
       suggestions,
     ]
   )

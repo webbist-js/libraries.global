@@ -81,7 +81,7 @@ import {
   loosenSuggestions,
   parseUrlState,
   type Tier,
-  tierForPlan,
+  tierForAccess,
   toggleLayer,
   withRequiredLibraryLocations,
   toUrlParams,
@@ -137,6 +137,7 @@ import {
   type AtlasPopulationDetail,
 } from "./AtlasPopulationDensity"
 import { AtlasReachAnalysis, useAtlasReach } from "./AtlasReach"
+import { AtlasReachLockDialog } from "./AtlasReachLockDialog"
 import {
   AtlasSearchTab,
   buildPlaces,
@@ -145,6 +146,7 @@ import {
 } from "./AtlasSearchTab"
 import { AtlasStopPanel } from "./AtlasStopPanel"
 import { useAtlasData, useAtlasRequest } from "./useAtlasData"
+import { useAtlasDataGapPrompt } from "./useAtlasDataGapPrompt"
 import { useAtlasDrawerSummaries } from "./useAtlasDrawerSummaries"
 import { useAtlasMotion } from "./useAtlasMotion"
 import { useMobileAtlas } from "./useMobileAtlas"
@@ -228,15 +230,20 @@ function useTier(): {
   tier: Tier
   ready: boolean
   capacity: AtlasReachCapacity
-  plan: ReturnType<typeof useEntitlements>["plan"]
+  canExport: boolean
+  canServiceReach: boolean
+  apiCustomer: boolean
 } {
-  const { plan, ready, analysisAreaMultiplier } = useEntitlements()
+  const access = useEntitlements()
 
   return {
-    tier: tierForPlan(plan),
-    ready,
-    capacity: analysisAreaMultiplier,
-    plan,
+    tier: tierForAccess(access),
+    ready: access.ready,
+    // Every Reach allowance uses the standard geographic envelope.
+    capacity: 1,
+    canExport: access.can("atlas.export"),
+    canServiceReach: access.can("atlas.serviceReach"),
+    apiCustomer: access.has("apiCustomer"),
   }
 }
 
@@ -322,7 +329,10 @@ export function AtlasExplorer({
     setGapEncounter((n) => n + 1)
     setExplicitGap(null)
   }, [])
+  const gapPrompt = useAtlasDataGapPrompt()
+  const handleHideGapPrompt = gapPrompt.hide
   const tNetwork = useUiTranslations("atlasNetwork")
+  const tLock = useUiTranslations("accessLocks")
   const tDrawers = useUiTranslations("atlasDrawers")
   const tInspect = useUiTranslations("atlasInspect")
   const tList = useUiTranslations("atlasList")
@@ -333,7 +343,14 @@ export function AtlasExplorer({
   const isMobile = useIsMobile(analysisRoot)
   const narrow = useIsMobile(analysisRoot, 1439)
   const animateAtlas = useAtlasMotion()
-  const { tier, ready: entitlementsReady, capacity, plan } = useTier()
+  const {
+    tier,
+    ready: entitlementsReady,
+    capacity,
+    canExport,
+    canServiceReach,
+    apiCustomer,
+  } = useTier()
 
   // ── State (hydrated from the URL after mount) ─────────────────────────────
   const [hydrated, setHydrated] = useState(false)
@@ -447,6 +464,11 @@ export function AtlasExplorer({
   const [populationOpacity, setPopulationOpacity] = useState(0.7)
   const networkSelection = useAtlasNetworkSelection(filters.networks?.[0] ?? "")
   const [reachScope, setReachScope] = useState<"library" | "network">("library")
+  // Service Reach is for API customers only; a shared link falls back.
+  useEffect(() => {
+    if (entitlementsReady && !canServiceReach && reachScope === "network")
+      setReachScope("library")
+  }, [entitlementsReady, canServiceReach, reachScope])
   const [networkGaps, setNetworkGaps] = useState(false)
   const [reachMode, setReachMode] = useState<AtlasReachMode>("walking")
   const [reachMinutes, setReachMinutes] = useState(15)
@@ -492,6 +514,14 @@ export function AtlasExplorer({
   const [mobileRouteLines, setMobileRouteLines] = useState(true)
   const [mobileOpacity, setMobileOpacity] = useState(1)
   const [plansOpen, setPlansOpen] = useState(false)
+  const [reachLockOpen, setReachLockOpen] = useState(false)
+  const [reachLockScope, setReachLockScope] = useState<"library" | "service">(
+    "library"
+  )
+  const openReachLock = (scope: "library" | "service") => {
+    setReachLockScope(scope)
+    setReachLockOpen(true)
+  }
   const [replaced, setReplaced] = useState<{
     removed: LayerId
     added: LayerId
@@ -634,7 +664,7 @@ export function AtlasExplorer({
     }
   }, [])
 
-  // Drop layers the viewer can't use (e.g. a Pro layer in a shared link).
+  // Drop layers the viewer can't use (e.g. Reach in a shared link).
   const usableLayers = useMemo(
     () =>
       withRequiredLibraryLocations(
@@ -1609,7 +1639,7 @@ export function AtlasExplorer({
     setMobileSurface("inspect")
     setReachScope("library")
     if (layerAccess(layerDef("reach"), tier) !== "available") {
-      setPlansOpen(true)
+      openReachLock("library")
 
       return
     }
@@ -1687,7 +1717,7 @@ export function AtlasExplorer({
   }
   const openContextReach = () => {
     if (layerAccess(layerDef("reach"), tier) !== "available") {
-      setPlansOpen(true)
+      openReachLock("library")
 
       return
     }
@@ -1722,7 +1752,9 @@ export function AtlasExplorer({
                 }
                 options={[
                   { value: "library", label: tNetwork("singleLibrary") },
-                  { value: "network", label: tNetwork("networkScope") },
+                  ...(canServiceReach
+                    ? [{ value: "network", label: tNetwork("networkScope") }]
+                    : []),
                 ]}
               />
             </div>
@@ -1764,7 +1796,7 @@ export function AtlasExplorer({
           response={networkReach.response}
           stale={networkReach.stale}
           calculate={networkReach.calculate}
-          canExport={tier === "pro"}
+          canExport={canExport}
         />
       ) : (
         <AtlasReachAnalysis
@@ -1783,9 +1815,23 @@ export function AtlasExplorer({
                 }
                 options={[
                   { value: "library", label: tNetwork("singleLibrary") },
-                  { value: "network", label: tNetwork("networkScope") },
+                  ...(canServiceReach
+                    ? [{ value: "network", label: tNetwork("networkScope") }]
+                    : []),
                 ]}
               />
+              {entitlementsReady && !canServiceReach ? (
+                <p className="m-0 text-xs text-(--t-ink-dim)">
+                  {tLock("serviceReachApi")}{" "}
+                  <button
+                    type="button"
+                    onClick={() => openReachLock("service")}
+                    className="font-semibold text-(--t-accent-primary) underline underline-offset-2"
+                  >
+                    {tLock("aboutApiAccess")}
+                  </button>
+                </p>
+              ) : null}
             </div>
           }
           library={selected}
@@ -1798,7 +1844,8 @@ export function AtlasExplorer({
           onMinutes={setReachMinutes}
           opacity={reachOpacity}
           onOpacity={setReachOpacity}
-          canExport={tier === "pro"}
+          canExport={canExport}
+          hourlyAllowance={apiCustomer}
           collapsed={false}
           onCollapse={closeAnalysis}
           onClose={closeAnalysis}
@@ -3223,12 +3270,15 @@ export function AtlasExplorer({
           : tGaps("scope"))
   const notices = (
     <>
-      {currentGap && (gapLayer || explicitGap) ? (
+      {currentGap && (gapLayer || explicitGap) && gapPrompt.ready ? (
         <AtlasDataGapNotice
           key={`${gapLayer}:${currentGap.id}:${gapEncounter}:${gapScope}:${gapLayer === "reach" ? `${reachScope}:${networkSelection.selected?.documentId ?? selectedId}:${reachMode}:${reachMinutes}` : ""}`}
           gap={currentGap}
           layer={layerDef(explicitGap ? "population" : gapLayer!).name}
           scope={gapScope}
+          hidden={gapPrompt.hidden}
+          signedIn={gapPrompt.signedIn}
+          onHide={handleHideGapPrompt}
         />
       ) : null}
       {overlays}
@@ -3295,6 +3345,7 @@ export function AtlasExplorer({
       onHover={setHovered}
       onShowMap={() => setList(false)}
       onSeePlans={() => setPlansOpen(true)}
+      onSignIn={signIn}
     />
   )
   const projectionControls = (
@@ -3360,13 +3411,21 @@ export function AtlasExplorer({
     </div>
   )
   const plans = (
-    <AtlasPlansSheet
-      open={plansOpen}
-      tier={tier}
-      currentPlan={capacity === 2 ? "team" : plan}
-      signInHref={signInHref}
-      onClose={() => setPlansOpen(false)}
-    />
+    <>
+      <AtlasPlansSheet
+        open={plansOpen}
+        tier={tier}
+        signInHref={signInHref}
+        onClose={() => setPlansOpen(false)}
+      />
+      <AtlasReachLockDialog
+        open={reachLockOpen}
+        onOpenChange={setReachLockOpen}
+        scope={reachLockScope}
+        signedIn={tier !== "public"}
+        onSignIn={signIn}
+      />
+    </>
   )
 
   if (isMobile) {

@@ -7,8 +7,6 @@ const SUBMISSION = "plugin::content-moderation.submission"
 const OPTION_VOTE = "plugin::content-moderation.option-vote"
 const AFFILIATION = "api::library-affiliation.library-affiliation"
 const SAVED_EVENT = "api::saved-event.saved-event"
-const ENTITLEMENT_GRANT = "api::entitlement-grant.entitlement-grant"
-const PRO_VERIFICATION = "api::pro-verification.pro-verification"
 const ROLE_GRANT = "api::role-grant.role-grant"
 const DRIVE_HOLD = "api::drive-hold.drive-hold"
 const SUBSCRIBER = "api::subscriber.subscriber"
@@ -34,9 +32,9 @@ type UnfinishedSubmission = {
 /**
  * Erase a deleted account's personal data, as the privacy notice promises:
  * the profile is anonymised and emptied (follows, languages, interests,
- * preferences, rewards, earned Pro), the avatar, saved events, claims,
- * votes, plan and role grants, verifications, upload ownership and the newsletter
- * subscription are deleted, unfinished submissions lose their content and
+ * preferences, rewards, recognition), the avatar, saved events, claims,
+ * votes, role and authority grants, affiliations, upload ownership and the
+ * newsletter subscription are deleted, unfinished submissions lose their content and
  * photos, and submissions, points, badges and leaderboard snapshots are
  * re-keyed to one random id that cannot be traced back to the person.
  * Approved contributions themselves stay in the public record.
@@ -61,9 +59,6 @@ export async function eraseAccount(
         })
       })
     }
-    await strapi.db
-      .query("api::paid-membership.paid-membership")
-      .deleteMany({ where: { baUserId } })
     await strapi.db.query("api::notification.notification").deleteMany({
       where: email
         ? {
@@ -102,7 +97,7 @@ export async function eraseAccount(
       ?.service("networks")
       ?.prepareErasure?.(baUserId, erasedId)
     await eraseNetworkIdentity(strapi, baUserId, erasedId)
-    // Team seats: invites by email go, active rows are anonymised.
+    // Team memberships: invites by email go, active rows are anonymised.
     await strapi
       .plugin("access")
       ?.service("teams")
@@ -170,7 +165,9 @@ export async function eraseAccount(
           tier: "Reader",
           streak: 0,
           lastActivityDate: null,
-          earnedProUntil: null,
+          acceptedContributions: 0,
+          lastContributionAt: null,
+          recognitionRevokedAt: null,
         },
       })
     }
@@ -251,8 +248,6 @@ export async function eraseAccount(
       "plugin::content-moderation.upload-reservation",
       SAVED_EVENT,
       OPTION_VOTE,
-      ENTITLEMENT_GRANT,
-      PRO_VERIFICATION,
       ROLE_GRANT,
       DRIVE_HOLD,
     ]) {

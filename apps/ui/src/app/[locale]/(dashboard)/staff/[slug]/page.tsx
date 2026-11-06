@@ -7,7 +7,7 @@ import { HealthList } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { staffHealthRows } from "@/components/staff/staff-health"
-import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { canStaffTool } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
 import { mobileConsoleHref } from "@/lib/mobile-app"
 import { Link } from "@/lib/navigation"
@@ -37,8 +37,7 @@ export default async function StaffOverviewPage({
   const mobile = overview.library.libraryType === "Mobile"
   const canGoLive =
     libraries.find((lib) => lib.id === documentId)?.canGoLive === true
-  const trafficCovered =
-    requireEntitlementForLibrary(user, "library.traffic", documentId) === null
+  const canSeeTraffic = canStaffTool(user, "traffic", documentId)
   const health = staffHealthRows(overview)
   const actions: QuickAction[] = [
     {
@@ -128,16 +127,16 @@ export default async function StaffOverviewPage({
             {tUi("traffic")}
           </h2>
           <p className="my-2 text-base" style={{ color: T.ink.dim }}>
-            {trafficCovered
+            {canSeeTraffic
               ? "See traffic reports for your library’s page."
-              : "See visits to your library’s page with the Team plan. Traffic reports are coming soon."}
+              : "Traffic reports are free for verified staff of this library."}
           </p>
           <Link
             href={`${base}/traffic`}
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            {trafficCovered ? "View traffic" : "What’s in Team"}
+            {canSeeTraffic ? "View traffic" : "About traffic reports"}
             <Icon
               aria-hidden="true"
               icon="mdi:arrow-right"

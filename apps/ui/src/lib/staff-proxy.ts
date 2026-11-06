@@ -7,8 +7,6 @@ import { headers } from "next/headers"
 import { sessionIsFresh, reauthenticationResponse } from "@/lib/fresh-auth"
 
 import {
-  requireEntitlement,
-  requireEntitlementForLibrary,
   requireStaff,
   staffLibrariesOf,
   type StaffLibrarySummary,
@@ -29,8 +27,6 @@ export type StaffProxyOptions = {
   path: string
   libraryDocumentId: string | null
   action: StaffAction | null
-  /** A library-scoped feature, checked for `libraryDocumentId` (402). */
-  entitlement?: "library.team" | "library.traffic"
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
   params?: Record<string, ParamRule>
   bodyKeys?: readonly string[]
@@ -193,24 +189,6 @@ export async function proxyStaff(
         )
       }
     }
-
-    if (denied) return denied
-  }
-
-  /*
-   * Entitlement checking.
-   *
-   * The existing behaviour supports both library-scoped and global
-   * entitlement checks, so retain that behaviour for drop-in compatibility.
-   */
-  if (opts.entitlement) {
-    const denied = opts.libraryDocumentId
-      ? requireEntitlementForLibrary(
-          user,
-          opts.entitlement,
-          opts.libraryDocumentId
-        )
-      : requireEntitlement(user, opts.entitlement)
 
     if (denied) return denied
   }

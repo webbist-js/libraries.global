@@ -28,37 +28,46 @@ afterEach(() => {
 describe("useEntitlements", () => {
   it("is public with nothing unlocked while signed out", () => {
     const { result } = renderHook(() => useEntitlements())
-    expect(result.current.plan).toBe("public")
+    expect(result.current.signedIn).toBe(false)
+    expect(result.current.standing).toBe("public")
     expect(result.current.can("atlas.export")).toBe(false)
-    expect(result.current.canForLibrary("library.team", ID)).toBe(false)
+    expect(result.current.has("explorer")).toBe(false)
+    expect(result.current.limitOf("reachRunsPerWeek")).toBe(0)
     expect(result.current.ready).toBe(true)
   })
 
-  it("unlocks library-scoped features only for the viewer's Team libraries", () => {
+  it("reads the session's standing, facts, features and limits", () => {
     session.data = {
       user: {
-        plan: "pro",
-        features: ["atlas.export", "library.team", "library.traffic"],
-        teamLibraryIds: [ID],
+        standing: "contributor",
+        facts: ["explorer", "contributor"],
+        features: ["atlas.export", "atlas.reach"],
+        limits: { reachRunsPerWeek: 2, analysisRunsPerHour: 0 },
       },
     }
     const { result } = renderHook(() => useEntitlements())
-    expect(result.current.plan).toBe("pro")
-    expect(result.current.can("library.team")).toBe(true)
-    expect(result.current.canForLibrary("library.team", ID)).toBe(true)
-    expect(result.current.canForLibrary("library.traffic", ID)).toBe(true)
-    // A personal Team feature never unlocks a library the Team doesn't cover.
-    expect(result.current.canForLibrary("library.team", OTHER)).toBe(false)
-    expect(result.current.canForLibrary("library.traffic", OTHER)).toBe(false)
-    // Personal features stay personal, whatever the library.
-    expect(result.current.canForLibrary("atlas.export", OTHER)).toBe(true)
+    expect(result.current.standing).toBe("contributor")
+    expect(result.current.has("contributor")).toBe(true)
+    expect(result.current.has("apiCustomer")).toBe(false)
+    expect(result.current.can("atlas.reach")).toBe(true)
+    expect(result.current.can("atlas.serviceReach")).toBe(false)
+    expect(result.current.limitOf("reachRunsPerWeek")).toBe(2)
   })
 
-  it("reads a missing plan as free and malformed team ids as none", () => {
-    session.data = { user: { features: [], teamLibraryIds: "nope" } }
+  it("reads missing or malformed fields as Explorer with nothing extra", () => {
+    session.data = {
+      user: {
+        standing: "patron",
+        facts: "apiCustomer",
+        features: "atlas.reach",
+        limits: { reachRunsPerWeek: "9" },
+      },
+    }
     const { result } = renderHook(() => useEntitlements())
-    expect(result.current.plan).toBe("free")
-    expect(result.current.canForLibrary("library.team", ID)).toBe(false)
+    expect(result.current.standing).toBe("explorer")
+    expect(result.current.has("apiCustomer")).toBe(false)
+    expect(result.current.can("atlas.reach")).toBe(false)
+    expect(result.current.limitOf("reachRunsPerWeek")).toBe(0)
   })
 })
 
@@ -86,7 +95,6 @@ describe("useStaff", () => {
             libraryCount: 1,
           },
         ],
-        teamLibraryIds: [ID],
       },
     }
     const { result } = renderHook(() => useStaff())
@@ -94,12 +102,15 @@ describe("useStaff", () => {
     expect(result.current.teams).toEqual([
       { id: "t1", name: "Kent", slug: "kent", role: "member", libraryCount: 1 },
     ])
-    expect(result.current.teamLibraryIds).toEqual([ID])
     expect(result.current.roleFor(ID)).toBe("editor")
     expect(result.current.roleFor(OTHER)).toBeNull()
     expect(result.current.can("goLive", ID)).toBe(true)
     expect(result.current.can("manageTeam", ID)).toBe(false)
     expect(result.current.can("edit", OTHER)).toBe(false)
+    // Free staff tools follow the viewer's own claim, never Team membership.
+    expect(result.current.can("embed", ID)).toBe(true)
+    expect(result.current.can("traffic", ID)).toBe(true)
+    expect(result.current.can("traffic", OTHER)).toBe(false)
   })
 
   it("is not ready while the session loads", () => {

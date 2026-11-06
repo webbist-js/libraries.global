@@ -88,7 +88,7 @@ const content = normaliseRoadmap({
       description: "Hear when its hours change.",
       stage: "next",
       area: "watching",
-      plans: [{ plan: "pro" }],
+      plans: [{ plan: "contributor" }],
     },
     {
       key: "embed",
@@ -96,7 +96,7 @@ const content = normaliseRoadmap({
       description: "A finder for your website.",
       stage: "later",
       area: "widgets",
-      plans: [{ plan: "team" }],
+      plans: [{ plan: "staff" }],
     },
   ],
   dataImports: [

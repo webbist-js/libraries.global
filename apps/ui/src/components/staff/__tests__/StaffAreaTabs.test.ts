@@ -18,11 +18,11 @@ describe("staff discovery navigation", () => {
       "/staff/claim",
     ])
   })
-  it("retains billing for existing Teams and adding for eligible staff", () => {
+  it("offers adding to eligible staff and never a billing tab", () => {
     const hrefs = staffAreaTabs((key) => key, "team", true).map(
       (tab) => tab.href
     )
-    expect(hrefs).toContain("/staff/teams/billing")
+    expect(hrefs).not.toContain("/staff/teams/billing")
     expect(hrefs).toContain("/staff/new")
   })
 })

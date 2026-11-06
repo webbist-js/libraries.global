@@ -1,6 +1,5 @@
 import { ContributionHeatmap } from "@/app/[locale]/profile/[username]/_components/ContributionHeatmap"
 import { Switch } from "@/components/atlas/atlas-ui"
-import { CheckoutSteps } from "@/components/billing/CheckoutPresentation"
 import { DriveProgressSummary } from "@/components/drives/DriveProgressSummary"
 import { EDITORIAL_DANGER_PILL } from "@/components/ds/EditorialToolbar"
 import CkEditorRenderer from "@/components/elementary/ck-editor"
@@ -29,9 +28,8 @@ function ThemeSurfaces() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-5 text-(--t-ink-base) md:grid-cols-2">
-      <Surface title="Checkout steps and actions">
-        <CheckoutSteps step="details" />
-        <div className="mt-5 flex items-center gap-4">
+      <Surface title="Switches and actions">
+        <div className="flex items-center gap-4">
           <Switch
             label="Show library locations"
             checked={checked}
