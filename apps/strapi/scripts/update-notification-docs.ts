@@ -213,7 +213,7 @@ async function main() {
       "deleting-your-account",
       "badges",
       "how-review-works",
-      "plans-and-pro",
+      "plans-and-pricing",
     ].includes(d.slug)
   )) {
     const body = clean(doc.body ?? [])
@@ -300,7 +300,7 @@ async function main() {
           ),
         ],
       })
-    if (doc.slug === "plans-and-pro") {
+    if (doc.slug === "plans-and-pricing") {
       for (const c of body)
         if (c.__component === "content.rich-text")
           for (const b of c.body)

@@ -12,9 +12,9 @@ describe("existing mail link rollout", () => {
     }
   )
   it.each([
-    "Team plan",
-    "Pro verification",
-    "Pro grant",
+    "Plans and pricing",
+    "API Access",
+    "API pricing",
     "Question about plans",
   ])("preserves and selects plans for %s", (subject) => {
     expect(
@@ -23,6 +23,20 @@ describe("existing mail link rollout", () => {
       )
     ).toEqual({ mode: "contact", type: "plans", sourceSubject: subject })
   })
+  it.each(["Sponsorship enquiry", "Sponsoring Libraries Global"])(
+    "selects sponsorship for %s",
+    (subject) => {
+      expect(
+        mailtoContactIntent(
+          `mailto:info@libraries.global?subject=${encodeURIComponent(subject)}`
+        )
+      ).toEqual({
+        mode: "contact",
+        type: "sponsorship",
+        sourceSubject: subject,
+      })
+    }
+  )
   it("covers configured beta contact aliases", () => {
     expect(
       mailtoContactIntent("mailto:beta@example.org", ["beta@example.org"])

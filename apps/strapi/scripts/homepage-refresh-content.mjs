@@ -17,7 +17,22 @@ const english = Object.fromEntries(
   fields.map((key) => [key, structuredClone(HOMEPAGE_DEFAULTS[key])])
 )
 english.finalCta.text =
-  "An open record, built together. Browsing and searching are free. Membership supports the servers, review tools and analysis that keep the record independent."
+  "An open record, built together. Browsing, searching and contributing are free. Sponsors and the paid API help fund the servers, review tools and analysis that keep the record independent."
+// Staff tools are free for verified staff; only the API is paid. Override the
+// UI defaults so a later run cannot restore paid Team labels.
+english.libraryTools = english.libraryTools.map((tool, i) =>
+  i === 3
+    ? {
+        ...tool,
+        title: "A free staff workspace for your service or network",
+        text: "Free for verified staff",
+      }
+    : i === 4
+      ? { ...tool, text: "Free for verified staff" }
+      : i === 5
+        ? { ...tool, text: "Paid API", href: "/developers" }
+        : tool
+)
 
 const translated = {
   fr: {
@@ -57,9 +72,15 @@ const translated = {
       ],
       ["Publier des avis et connecter un calendrier d’événements", "Gratuit"],
       ["Gérer les circuits et arrêts des bibliothèques mobiles", "Gratuit"],
-      ["Un espace d’équipe pour votre service ou réseau", "Team"],
-      ["Des outils de recherche et de comparaison intégrables", "Team"],
-      ["Connecter votre application à l’API", "Option API"],
+      [
+        "Un espace de travail gratuit pour votre service ou réseau",
+        "Gratuit pour le personnel vérifié",
+      ],
+      [
+        "Des outils de recherche et de comparaison intégrables",
+        "Gratuit pour le personnel vérifié",
+      ],
+      ["Connecter votre application à l’API", "API payante"],
     ].map(([title, text], i) => ({ ...english.libraryTools[i], title, text })),
     trustItems: [
       [
@@ -82,7 +103,7 @@ const translated = {
     finalCta: {
       ...english.finalCta,
       title: "Vous connaissez une bibliothèque ? *Ajoutez-la à la carte.*",
-      text: "Un répertoire ouvert, construit ensemble. La consultation et la recherche sont gratuites. Les adhésions financent les serveurs, les outils de relecture et les analyses.",
+      text: "Un répertoire ouvert, construit ensemble. La consultation, la recherche et les contributions sont gratuites. Les sponsors et l’API payante aident à financer les serveurs, les outils de relecture et les analyses.",
       primaryLabel: "Contribuer",
       secondaryLabel: "Soutenir le projet",
     },
@@ -131,9 +152,15 @@ const translated = {
       ["Správa otevírací doby, služeb a přístupnosti", "Zdarma"],
       ["Zveřejňování oznámení a připojení kalendáře akcí", "Zdarma"],
       ["Správa tras a zastávek mobilních knihoven", "Zdarma"],
-      ["Týmový prostor pro službu nebo síť", "Team"],
-      ["Vložitelné vyhledávače knihoven a srovnávací nástroje", "Team"],
-      ["Připojení vaší aplikace k API", "Doplněk API"],
+      [
+        "Bezplatný pracovní prostor pro službu nebo síť",
+        "Zdarma pro ověřené zaměstnance",
+      ],
+      [
+        "Vložitelné vyhledávače knihoven a srovnávací nástroje",
+        "Zdarma pro ověřené zaměstnance",
+      ],
+      ["Připojení vaší aplikace k API", "Placené API"],
     ].map(([title, text], i) => ({ ...english.libraryTools[i], title, text })),
     trustItems: [
       [
@@ -156,7 +183,7 @@ const translated = {
     finalCta: {
       ...english.finalCta,
       title: "Znáte knihovnu? *Přidejte ji na mapu.*",
-      text: "Otevřený přehled tvoříme společně. Prohlížení a vyhledávání je zdarma. Členství podporuje servery, nástroje pro kontrolu a analýzy.",
+      text: "Otevřený přehled tvoříme společně. Prohlížení, vyhledávání i přispívání je zdarma. Sponzoři a placené API pomáhají financovat servery, nástroje pro kontrolu a analýzy.",
       primaryLabel: "Přispět",
       secondaryLabel: "Podpořit projekt",
     },

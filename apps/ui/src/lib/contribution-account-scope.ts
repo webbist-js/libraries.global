@@ -1,7 +1,7 @@
 import {
+  apiAccountsOf,
   sessionCapabilities,
   sessionTeamsOf,
-  teamLibraryIdsOf,
 } from "./access-server"
 
 /** Only account and authorization shape matter; never profile labels or secrets. */
@@ -32,14 +32,10 @@ export function contributionAccountScope(user: unknown): string {
       .sort(),
     claims: [...caps.claimedLibraryIds].sort(),
     teams: sessionTeamsOf(user)
-      .map((team) => [
-        team.id,
-        team.role,
-        team.status ?? null,
-        team.expiresAt ?? null,
-        team.selfService ?? null,
-      ])
+      .map((team) => [team.id, team.role])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
-    teamLibraries: [...teamLibraryIdsOf(user)].sort(),
+    apiAccounts: apiAccountsOf(user)
+      .map((a) => `${a.teamId}:${a.role}:${a.active}`)
+      .sort(),
   })
 }

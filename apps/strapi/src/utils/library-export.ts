@@ -1,4 +1,4 @@
-import { resolveEntitlements } from "@repo/access"
+import { EXPLORER_LIMITS } from "@repo/access"
 import {
   libraryTypeName,
   appendSourceRecords,
@@ -9,14 +9,11 @@ import type { Core } from "@strapi/strapi"
 const LIBRARY = "api::library.library"
 
 /**
- * Most ids one export may ask for: the largest plan's row cap (Team), read
- * from the resolver so it can't drift. The Next route applies each plan's cap.
+ * Most ids one export may ask for: the Explorer row cap every signed-in
+ * account has, read from the resolver's limits so it can't drift. The Next
+ * route applies the caller's own cap.
  */
-export const LIBRARY_EXPORT_MAX_IDS = resolveEntitlements({
-  signedIn: true,
-  now: new Date(0),
-  grants: [{ plan: "team", expiresAt: null }],
-}).limits.exportRows
+export const LIBRARY_EXPORT_MAX_IDS = EXPLORER_LIMITS.exportRows
 
 /** documentIds per findMany: one `$in` of at most this many. */
 export const LIBRARY_EXPORT_BATCH = 500

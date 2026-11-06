@@ -1,5 +1,4 @@
 import { StaffPanel } from "@/components/staff/StaffPanel"
-import { TeamSeatUsage } from "@/components/staff/TeamSeatUsage"
 import { Button } from "@/components/ui/button"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { useId } from "react"
@@ -36,14 +35,14 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {}
 export const CompactSummary: Story = {
   args: {
-    title: "Your seats",
+    title: "Team details",
     compact: true,
-    children: <TeamSeatUsage used={1} total={5} />,
+    children: <p className="m-0">2 active · 1 invited</p>,
   },
 }
 export const HeaderAndFooterActions: Story = {
   args: {
-    aside: <span className="text-sm text-(--t-ink-dim)">1 of 5 seats</span>,
+    aside: <span className="text-sm text-(--t-ink-dim)">3 people</span>,
     footer: (
       <Button variant="surface" size="pill" onClick={fn()}>
         Invite a colleague

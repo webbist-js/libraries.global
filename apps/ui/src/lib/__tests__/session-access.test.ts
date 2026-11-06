@@ -1,15 +1,13 @@
-import type { Limit, SessionProfile } from "@repo/access"
+import {
+  EXPLORER_FEATURES,
+  EXPLORER_LIMITS,
+  type SessionProfile,
+} from "@repo/access"
 import { describe, expect, it } from "vitest"
 
 import { buildSessionAccess } from "../session-access"
 
-const FREE_LIMITS: Record<Limit, number> = {
-  analysisAreaMultiplier: 0,
-  analysisRunsPerHour: 0,
-  savedViews: 3,
-  savedSearches: 3,
-  exportRows: 0,
-}
+const NOW = new Date("2026-11-06T12:00:00Z")
 
 const baseProfile: SessionProfile = {
   contributorRole: "contributor",
@@ -17,17 +15,14 @@ const baseProfile: SessionProfile = {
   tier: null,
   claims: [],
   staff: [],
-  grants: [],
   roleGrants: [],
-  verifications: [],
-  earnedProUntil: null,
   dismissedPrompts: [],
   teams: [],
 }
 
 describe("buildSessionAccess", () => {
-  it("fails closed to a free reader with no capabilities when the bridge failed", () => {
-    expect(buildSessionAccess(null)).toEqual({
+  it("fails closed to an Explorer reader with no capabilities when the bridge failed", () => {
+    expect(buildSessionAccess(null, NOW)).toEqual({
       profileLoaded: false,
       contributorRole: "reader",
       username: null,
@@ -37,13 +32,15 @@ describe("buildSessionAccess", () => {
       staffLibraries: [],
       moderationScopes: [],
       editorLocales: { docs: [], journal: [] },
-      plan: "free",
-      planSource: "none",
-      features: [],
-      limits: FREE_LIMITS,
+      standing: "explorer",
+      facts: ["explorer"],
+      recentlyActive: false,
+      acceptedContributions: 0,
+      features: [...EXPLORER_FEATURES],
+      limits: { ...EXPLORER_LIMITS },
       dismissedPrompts: [],
       teams: [],
-      teamLibraryIds: [],
+      apiAccounts: [],
     })
   })
 
@@ -127,28 +124,29 @@ describe("buildSessionAccess", () => {
     expect(a.staffLibraries).toEqual([])
   })
 
-  it("an active team gives Pro via team and scopes its libraries", () => {
-    const a = buildSessionAccess({
-      ...baseProfile,
-      teams: [
-        {
-          id: "t1",
-          name: "Kent Libraries",
-          slug: "kent-libraries",
-          role: "organiser",
-          libraryCount: 2,
-          libraryDocumentIds: ["libA", "libB"],
-          expiresAt: null,
-          status: "active",
-          organiserName: null,
-        },
-      ],
-    })
-    expect(a.plan).toBe("pro")
-    expect(a.planSource).toBe("team")
-    expect(a.limits.analysisAreaMultiplier).toBe(2)
-    expect(a.limits.analysisRunsPerHour).toBe(100)
-    expect(a.teamLibraryIds).toEqual(["libA", "libB"])
+  it("a staff workspace grants nothing: no tools, limits or library scope", () => {
+    const a = buildSessionAccess(
+      {
+        ...baseProfile,
+        teams: [
+          {
+            id: "t1",
+            name: "Kent Libraries",
+            slug: "kent-libraries",
+            role: "organiser",
+            libraryCount: 2,
+            libraryDocumentIds: ["libA", "libB"],
+            organiserName: null,
+          },
+        ],
+      },
+      NOW
+    )
+    expect(a.facts).toEqual(["explorer"])
+    expect(a.features).not.toContain("atlas.reach")
+    expect(a.limits).toEqual(EXPLORER_LIMITS)
+    expect(a.capabilities).not.toContain("staff.area")
+    expect(a.staffLibraries).toEqual([])
     expect(a.teams).toEqual([
       {
         id: "t1",
@@ -156,8 +154,6 @@ describe("buildSessionAccess", () => {
         slug: "kent-libraries",
         role: "organiser",
         libraryCount: 2,
-        status: "active",
-        expiresAt: null,
       },
     ])
   })
@@ -173,61 +169,92 @@ describe("buildSessionAccess", () => {
     expect(a.capabilities).not.toContain("docs.directEdit")
   })
 
-  it("an unexpired pro grant resolves to the pro plan via grant", () => {
-    const a = buildSessionAccess({
-      ...baseProfile,
-      grants: [{ plan: "pro", expiresAt: null }],
-    })
-    expect(a.plan).toBe("pro")
-    expect(a.planSource).toBe("grant")
-    expect(a.features).toContain("atlas.export")
-    expect(a.limits.exportRows).toBe(10_000)
-  })
-
-  it("an unexpired verification resolves to pro via verified", () => {
-    const a = buildSessionAccess({
-      ...baseProfile,
-      verifications: [{ expiresAt: null }],
-    })
-    expect(a.plan).toBe("pro")
-    expect(a.planSource).toBe("verified")
-  })
-
-  it("an Archivist tier resolves to pro via earned", () => {
-    const a = buildSessionAccess({
-      ...baseProfile,
-      tier: "Archivist",
-      rewardsPoints: 5000,
-      earnedProUntil: "2099-01-01T00:00:00Z",
-    })
-    expect(a.plan).toBe("pro")
-    expect(a.planSource).toBe("earned")
-  })
-
-  it("earnedProUntil a day in the future resolves to pro via earned at 5,000 points regardless of tier", () => {
-    const now = new Date("2026-01-01T00:00:00Z")
+  it("one accepted contribution makes a Contributor with the weekly Reach allowance", () => {
     const a = buildSessionAccess(
       {
         ...baseProfile,
-        tier: "Cartographer",
-        rewardsPoints: 5000,
-        earnedProUntil: "2026-01-02T00:00:00Z",
+        acceptedContributions: 1,
+        lastContributionAt: "2026-11-01T00:00:00Z",
       },
-      now
+      NOW
     )
-    expect(a.plan).toBe("pro")
-    expect(a.planSource).toBe("earned")
+    expect(a.standing).toBe("contributor")
+    expect(a.facts).toEqual(["explorer", "contributor"])
+    expect(a.features).toContain("atlas.reach")
+    expect(a.features).not.toContain("atlas.serviceReach")
+    expect(a.limits.reachRunsPerWeek).toBe(2)
+    expect(a.limits.analysisRunsPerHour).toBe(0)
+    expect(a.recentlyActive).toBe(true)
+    expect(a.acceptedContributions).toBe(1)
   })
 
-  it("stays free with the free limits and profileLoaded false when the bridge failed", () => {
-    const a = buildSessionAccess(null)
-    expect(a.plan).toBe("free")
-    expect(a.planSource).toBe("none")
-    expect(a.limits).toEqual(FREE_LIMITS)
+  it("100 accepted contributions is Supporter; revocation removes recognition", () => {
+    const supporter = buildSessionAccess(
+      { ...baseProfile, acceptedContributions: 100 },
+      NOW
+    )
+    expect(supporter.standing).toBe("supporter")
+    expect(supporter.facts).toContain("supporter")
+    expect(supporter.recentlyActive).toBe(false)
+    const revoked = buildSessionAccess(
+      { ...baseProfile, acceptedContributions: 100, recognitionRevoked: true },
+      NOW
+    )
+    expect(revoked.standing).toBe("explorer")
+    expect(revoked.features).not.toContain("atlas.reach")
+  })
+
+  it("an API organiser with settled coverage gets the Reach bonus; members do not", () => {
+    const organiser = buildSessionAccess(
+      {
+        ...baseProfile,
+        apiAccounts: [
+          {
+            teamId: "t1",
+            role: "organiser",
+            paidThrough: "2026-12-01T00:00:00Z",
+          },
+        ],
+      },
+      NOW
+    )
+    expect(organiser.facts).toContain("apiCustomer")
+    expect(organiser.features).toEqual(
+      expect.arrayContaining(["api.key", "atlas.reach", "atlas.serviceReach"])
+    )
+    expect(organiser.limits.analysisRunsPerHour).toBe(20)
+    expect(organiser.limits.analysisRunsPerDay).toBe(100)
+    expect(organiser.limits.analysisServiceLibraries).toBe(50)
+    expect(organiser.apiAccounts).toEqual([
+      { teamId: "t1", role: "organiser", active: true },
+    ])
+    const member = buildSessionAccess(
+      {
+        ...baseProfile,
+        apiAccounts: [
+          { teamId: "t1", role: "member", paidThrough: "2026-12-01T00:00:00Z" },
+          {
+            teamId: "t2",
+            role: "organiser",
+            paidThrough: "2026-11-01T00:00:00Z",
+          },
+        ],
+      },
+      NOW
+    )
+    expect(member.facts).not.toContain("apiCustomer")
+    expect(member.features).not.toContain("api.key")
+    expect(member.apiAccounts.map((x) => x.active)).toEqual([true, false])
+  })
+
+  it("stays Explorer with Explorer limits and profileLoaded false when the bridge failed", () => {
+    const a = buildSessionAccess(null, NOW)
+    expect(a.standing).toBe("explorer")
+    expect(a.limits).toEqual(EXPLORER_LIMITS)
     expect(a.profileLoaded).toBe(false)
   })
 
-  it("keeps capabilities identical with and without grants", () => {
+  it("keeps capabilities identical whatever the recognition or API coverage", () => {
     const without = buildSessionAccess({
       ...baseProfile,
       contributorRole: "verified_librarian",
@@ -239,11 +266,19 @@ describe("buildSessionAccess", () => {
       contributorRole: "verified_librarian",
       claims: ["libA"],
       roleGrants: [{ role: "verified_librarian", queue: "all", locale: null }],
-      grants: [{ plan: "pro", expiresAt: null }],
+      acceptedContributions: 250,
+      apiAccounts: [
+        {
+          teamId: "t1",
+          role: "organiser",
+          paidThrough: "2999-01-01T00:00:00Z",
+        },
+      ],
     })
     expect(withGrant.capabilities).toEqual(without.capabilities)
     expect(withGrant.claimedLibraryIds).toEqual(without.claimedLibraryIds)
-    expect(withGrant.plan).not.toBe(without.plan)
+    expect(withGrant.staffLibraries).toEqual(without.staffLibraries)
+    expect(withGrant.facts).not.toEqual(without.facts)
   })
 
   it("a knowledge/fr moderator grant yields moderate.queue and the scope, no editor locales", () => {

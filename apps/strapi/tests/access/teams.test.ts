@@ -3,14 +3,11 @@ import { createHash, randomBytes } from "node:crypto"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import createTeams, {
+  TEAM_MEMBER_LIMIT,
   teamTransaction,
 } from "../../src/plugins/access/server/services/teams"
-import { AFFILIATION_UID } from "../../src/utils/staff"
-import {
-  hasLibraryFeature,
-  TEAM_MEMBER_UID,
-  TEAM_UID,
-} from "../../src/utils/team-access"
+import { AFFILIATION_UID, requireStaffMember } from "../../src/utils/staff"
+import { TEAM_MEMBER_UID, TEAM_UID } from "../../src/utils/team-access"
 import { makeFakeStrapi, materialiseRelations } from "../helpers/fake-strapi"
 
 const LIBRARY = "api::library.library"
@@ -40,11 +37,8 @@ const team = (over: Record<string, unknown> = {}) => ({
   documentId: TEAM,
   name: "Kent Libraries",
   slug: "kent-libraries",
-  seats: 3,
   status: "active",
-  source: "admin",
   verifiedAt: "2026-01-01T00:00:00.000Z",
-  expiresAt: null,
   notes: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   libraries: [libA, libB],
@@ -137,7 +131,7 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 
-describe("team seats and invites", () => {
+describe("team membership and invites", () => {
   it("uses the real invitation button URL even when the Team name starts with a URL", async () => {
     const { teams, services } = setup({ name: "https://attacker.example" })
     await teams.invite(TEAM, "new@example.org", "member", undefined, organiser)
@@ -166,7 +160,7 @@ describe("team seats and invites", () => {
     ])
     expect(work).toHaveBeenCalledOnce()
   })
-  it("does not accept another Team while an account holds a seat, including on a lapsed Team", async () => {
+  it("does not accept another Team while an account holds a membership, including on a lapsed Team", async () => {
     const { teams, store } = setup()
     const other = team({
       documentId: "team00000000000000000002",
@@ -193,7 +187,7 @@ describe("team seats and invites", () => {
     expect(invite.status).toBe("invited")
     expect(invite.tokenHash).toBe(sha256(token))
   })
-  it("holds a seat per invite, emails a hashed link, and refuses the invite past the seat count", async () => {
+  it("records each invite, emails a hashed link, and allows further invites", async () => {
     const { teams, store, services } = setup()
     const invited = await teams.invite(
       TEAM,
@@ -223,10 +217,10 @@ describe("team seats and invites", () => {
     await expect(
       teams.invite(TEAM, "mem@example.org", "member", undefined, organiser)
     ).rejects.toMatchObject({ status: 409, code: "already_member" })
-    // Three seats: the organiser, the member and the open invite fill them.
+    // Free workspaces: only the fixed member ceiling limits invites.
     await expect(
       teams.invite(TEAM, "fourth@example.org", "member", undefined, organiser)
-    ).rejects.toMatchObject({ status: 409, code: "no_seats" })
+    ).resolves.toMatchObject({ member: { status: "invited" } })
     await expect(
       teams.invite(
         TEAM,
@@ -236,6 +230,43 @@ describe("team seats and invites", () => {
         organiser
       )
     ).rejects.toMatchObject({ status: 400, code: "library_not_in_team" })
+  })
+  it("refuses an invite past the fixed member limit with 409 member_limit", async () => {
+    const { teams, store, team: t } = setup()
+    // Two active rows exist; fill to the limit with invited rows, plus a
+    // removed row that never counts.
+    for (let i = 0; i < TEAM_MEMBER_LIMIT - 2; i++)
+      store[TEAM_MEMBER_UID]!.push(
+        member(
+          `fill${String(i).padStart(20, "0")}`,
+          null,
+          `fill${i}@example.org`,
+          "member",
+          "invited",
+          t
+        )
+      )
+    store[TEAM_MEMBER_UID]!.push(
+      member(
+        "gone00000000000000000001",
+        null,
+        "gone@example.org",
+        "member",
+        "removed",
+        t
+      )
+    )
+    await expect(
+      teams.invite(TEAM, "over@example.org", "member", undefined, organiser)
+    ).rejects.toMatchObject({ status: 409, code: "member_limit" })
+    expect(
+      store[TEAM_MEMBER_UID]!.some((r) => r.email === "over@example.org")
+    ).toBe(false)
+    store[TEAM_MEMBER_UID]!.pop()
+    store[TEAM_MEMBER_UID]!.pop()
+    await expect(
+      teams.invite(TEAM, "over@example.org", "member", undefined, organiser)
+    ).resolves.toMatchObject({ member: { status: "invited" } })
   })
   it("accepts a join link only for the invited email, within 14 days, then applies the pre-assignment", async () => {
     const token = randomBytes(32).toString("hex")
@@ -393,9 +424,10 @@ describe("team assignments", () => {
         organiser
       )
     ).rejects.toMatchObject({ status: 400, code: "library_not_in_team" })
-    expect(await hasLibraryFeature(strapi, "mem", "library.team", LIB_A)).toBe(
-      true
-    )
+    // The assignment's own staff claim is what unlocks staff tools.
+    expect(
+      await requireStaffMember(strapi, "mem", LIB_A, "seeTeam")
+    ).toBeTruthy()
   })
   it("on an unverified Team an assignment files a vouched Library Claim for a Moderator instead", async () => {
     const { teams, store, services } = setup({ verifiedAt: null })
@@ -493,7 +525,7 @@ describe("team assignments", () => {
     })
     expect(await teams.listMine("mem")).toEqual([])
   })
-  it("lapsing flips the status and nothing else; the Team's features switch off until it is active again", async () => {
+  it("lapsing flips the status and nothing else; staff tools follow the member's own claim, not the workspace", async () => {
     const { teams, store, strapi } = setup(
       {},
       {
@@ -509,9 +541,8 @@ describe("team assignments", () => {
         ],
       }
     )
-    expect(await hasLibraryFeature(strapi, "mem", "library.team", LIB_A)).toBe(
-      true
-    )
+    const tools = () => requireStaffMember(strapi, "mem", LIB_A, "embed")
+    expect(await tools()).toBeTruthy()
     const lapsed = await teams.lapse(TEAM, true, 7)
     expect(lapsed.status).toBe("lapsed")
     expect(store[TEAM_UID]![0]).toMatchObject({
@@ -526,13 +557,9 @@ describe("team assignments", () => {
     expect(await teams.listMine("mem")).toEqual([
       expect.objectContaining({ id: TEAM, status: "lapsed" }),
     ])
-    expect(await hasLibraryFeature(strapi, "mem", "library.team", LIB_A)).toBe(
-      false
-    )
+    expect(await tools()).toBeTruthy()
     await teams.lapse(TEAM, false, 7)
-    expect(await hasLibraryFeature(strapi, "mem", "library.team", LIB_A)).toBe(
-      true
-    )
+    expect(await tools()).toBeTruthy()
   })
 })
 

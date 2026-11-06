@@ -1,23 +1,30 @@
 import { SESSION_PROFILE_MAX_CLAIMS } from "@repo/access"
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { makeFakeStrapi } from "./helpers/fake-strapi"
 import { sessionProfile } from "../src/auth/session-profile"
 import { NON_CLAIM_AFFILIATION_ROLES } from "../src/utils/affiliations"
 
+const apiRows = vi.hoisted(() => ({ rows: [] as Record<string, unknown>[] }))
+vi.mock("../src/auth/application-db", () => ({
+  applicationPool: () => ({
+    query: vi.fn(async () => ({ rows: apiRows.rows })),
+  }),
+}))
+
 const PROFILE = "api::user-profile.user-profile"
 const AFF = "api::library-affiliation.library-affiliation"
-const GRANT = "api::entitlement-grant.entitlement-grant"
-const VERIFY = "api::pro-verification.pro-verification"
 const ROLE_GRANT = "api::role-grant.role-grant"
 
 const FUTURE_ISO = "2099-01-01T00:00:00Z"
 
 describe("local session profile projection", () => {
   let fake: any
+  let fakeServices: ReturnType<typeof makeFakeStrapi>["services"]
+  let fakeStore: ReturnType<typeof makeFakeStrapi>["store"]
   beforeEach(() => {
     process.env.STRAPI_BRIDGE_SECRET = "s3cret"
-    const { strapi } = makeFakeStrapi({
+    const { strapi, services, store } = makeFakeStrapi({
       [PROFILE]: [
         {
           documentId: "p1",
@@ -28,7 +35,9 @@ describe("local session profile projection", () => {
           languages: [{ code: "es", proficiency: "native", id: 1 }],
           tier: "Indexer",
           points: 5000,
-          earnedProUntil: FUTURE_ISO,
+          acceptedContributions: 120,
+          lastContributionAt: "2026-11-01T00:00:00.000Z",
+          recognitionRevokedAt: null,
           dismissedPrompts: ["find-contribute", "not-a-prompt"],
         },
       ],
@@ -49,16 +58,6 @@ describe("local session profile projection", () => {
           role: null,
           library: { documentId: "libD" },
         },
-      ],
-      [GRANT]: [
-        { documentId: "g1", baUserId: "u1", plan: "pro", expiresAt: null },
-        {
-          documentId: "g2",
-          baUserId: "u1",
-          plan: "team",
-          expiresAt: "2020-01-01T00:00:00Z",
-        },
-        { documentId: "g3", baUserId: "u2", plan: "pro", expiresAt: null },
       ],
       [ROLE_GRANT]: [
         {
@@ -94,17 +93,12 @@ describe("local session profile projection", () => {
           expiresAt: null,
         },
       ],
-      [VERIFY]: [
-        {
-          documentId: "v1",
-          baUserId: "u1",
-          kind: "student",
-          expiresAt: FUTURE_ISO,
-        },
-      ],
     })
     ;(globalThis as any).strapi = strapi
     fake = strapi
+    fakeServices = services
+    fakeStore = store
+    apiRows.rows = []
   })
   afterEach(() => {
     delete (globalThis as any).strapi
@@ -120,15 +114,16 @@ describe("local session profile projection", () => {
       tier: "Indexer",
       claims: ["libA", "libD"],
       staff: [],
-      grants: [{ plan: "pro", expiresAt: null }],
       roleGrants: [
         { role: "verified_librarian", queue: "all", locale: null },
         { role: "moderator", queue: "knowledge", locale: "fr" },
       ],
-      verifications: [{ expiresAt: FUTURE_ISO }],
       teams: [],
+      apiAccounts: [],
       rewardsPoints: 5000,
-      earnedProUntil: FUTURE_ISO,
+      acceptedContributions: 120,
+      lastContributionAt: "2026-11-01T00:00:00.000Z",
+      recognitionRevoked: false,
       dismissedPrompts: ["find-contribute"],
     })
   })
@@ -143,12 +138,13 @@ describe("local session profile projection", () => {
       tier: null,
       claims: [],
       staff: [],
-      grants: [],
       roleGrants: [],
-      verifications: [],
       teams: [],
+      apiAccounts: [],
       rewardsPoints: 0,
-      earnedProUntil: null,
+      acceptedContributions: 0,
+      lastContributionAt: null,
+      recognitionRevoked: false,
       dismissedPrompts: [],
     })
   })
@@ -174,17 +170,59 @@ describe("local session profile projection", () => {
     expect(findMany.mock.calls[0][0].limit).toBe(50)
   })
 
-  it.each([
-    ["grants", GRANT],
-    ["verifications", VERIFY],
-  ])("reads at most 20 %s, scoped to this user", async (_label, uid) => {
-    await sessionProfile(fake, "u1")
-    const i = fake.documents.mock.calls.findIndex(([u]: [string]) => u === uid)
-    const { findMany } = fake.documents.mock.results[i].value
-    expect(findMany.mock.calls[0][0].limit).toBe(20)
-    expect(findMany.mock.calls[0][0].filters).toEqual({
-      baUserId: { $eq: "u1" },
-    })
+  it("sends free workspaces and API accounts from the Team API projection", async () => {
+    fakeServices["access.teams"] = {
+      listMine: async () => [
+        {
+          id: "team1",
+          name: "Central",
+          slug: "central",
+          role: "organiser",
+          libraryCount: 1,
+          status: "active",
+          verified: true,
+          organiserName: "Ada",
+          libraryDocumentIds: ["libA"],
+        },
+      ],
+    }
+    apiRows.rows = [
+      {
+        team_id: "team1",
+        paid_through: FUTURE_ISO,
+        revoked: "false",
+        mode: "sandbox",
+      },
+      // A row for an organisation the user is not in is ignored.
+      { team_id: "team9", paid_through: FUTURE_ISO, revoked: "false" },
+    ]
+    const result = await sessionProfile(fake, "u1")
+    expect(result.teams).toEqual([
+      {
+        id: "team1",
+        name: "Central",
+        slug: "central",
+        role: "organiser",
+        libraryCount: 1,
+        libraryDocumentIds: ["libA"],
+        organiserName: "Ada",
+      },
+    ])
+    expect(result.apiAccounts).toEqual([
+      {
+        teamId: "team1",
+        role: "organiser",
+        paidThrough: new Date(FUTURE_ISO).toISOString(),
+        revoked: false,
+      },
+    ])
+  })
+
+  it("reports revoked recognition as a boolean only", async () => {
+    fakeStore[PROFILE]![0]!.recognitionRevokedAt = "2026-10-01T00:00:00.000Z"
+    const result = await sessionProfile(fake, "u1")
+    expect(result.recognitionRevoked).toBe(true)
+    expect(result).not.toHaveProperty("recognitionRevokedAt")
   })
 })
 

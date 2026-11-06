@@ -3,6 +3,7 @@ import { afterEach, expect, it, vi } from "vitest"
 import { requestAtlasReach } from "../src/utils/atlas-analysis"
 
 const request = { schemaVersion: 1, libraryId: "one", mode: "walking" }
+const contributor = { kind: "contributor" as const, weekly: 2 }
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
@@ -16,7 +17,8 @@ it("rechecks the published canonical record before touching any job cache", asyn
     db: { connection: database },
   }
   expect(
-    (await requestAtlasReach(strapi, request, "a".repeat(64), 20)).status
+    (await requestAtlasReach(strapi, request, "a".repeat(64), contributor))
+      .status
   ).toBe(404)
   expect(findOne).toHaveBeenCalledWith(
     expect.objectContaining({ status: "published", documentId: "one" })
@@ -32,7 +34,8 @@ it("rechecks the published canonical record before touching any job cache", asyn
   ]) {
     findOne.mockResolvedValue(library)
     expect(
-      (await requestAtlasReach(strapi, request, "a".repeat(64), 20)).body.state
+      (await requestAtlasReach(strapi, request, "a".repeat(64), contributor))
+        .body.state
     ).toBe("unsupported")
   }
   expect(database).not.toHaveBeenCalled()
@@ -75,7 +78,7 @@ it.each([
       strapi,
       request,
       "a".repeat(64),
-      20
+      contributor
     )
     expect(response.status).toBe(200)
     expect(response.body).toMatchObject({
@@ -100,7 +103,12 @@ it("does not admit arbitrary coordinates or unsupported countries to the compute
     db: { connection: database },
   }
   await expect(
-    requestAtlasReach(strapi, { ...request, lat: 51 }, "a".repeat(64), 20)
+    requestAtlasReach(
+      strapi,
+      { ...request, lat: 51 },
+      "a".repeat(64),
+      contributor
+    )
   ).rejects.toThrow("Invalid Reach request")
   expect(findOne).not.toHaveBeenCalled()
   vi.stubEnv("ANALYSIS_SERVICE_URL", "http://analysis.test")
@@ -118,7 +126,8 @@ it("does not admit arbitrary coordinates or unsupported countries to the compute
     )
   )
   expect(
-    (await requestAtlasReach(strapi, request, "a".repeat(64), 20)).body.state
+    (await requestAtlasReach(strapi, request, "a".repeat(64), contributor)).body
+      .state
   ).toBe("unsupported")
   expect(database).not.toHaveBeenCalled()
 })

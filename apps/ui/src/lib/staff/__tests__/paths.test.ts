@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest"
 
-import { isStaffSlugParam, staffLibraryHref, teamWorkspaceHref } from "../paths"
+import { isStaffSlugParam, staffLibraryHref } from "../paths"
 
 describe("staff URLs", () => {
-  it("retains the locale and billing continuation without a Team selector", () => {
-    const query = { team: "legacy", payment: "updated", seats: "10" }
-    expect(teamWorkspaceHref("/billing", "fr", query)).toBe(
-      "/fr/staff/teams/billing?payment=updated&seats=10"
-    )
-    expect(teamWorkspaceHref("", "en")).toBe("/staff/teams")
-  })
   it("uses and encodes the library's slug, with deep links intact", () => {
     expect(staffLibraryHref("central-library", "/edit?step=hours")).toBe(
       "/staff/central-library/edit?step=hours"
@@ -29,11 +22,4 @@ describe("staff URLs", () => {
     for (const bad of ["", "-leading", "a/b", "a b", "../x", "a".repeat(256)])
       expect(isStaffSlugParam(bad)).toBe(false)
   })
-})
-
-it("sends legacy API bookmarks and checkout continuations to the dedicated workspace", () => {
-  expect(
-    teamWorkspaceHref("/api", "en", { payment: "confirming", setup: "1" })
-  ).toBe("/developers?payment=confirming&setup=1")
-  expect(teamWorkspaceHref("/api", "fr")).toBe("/fr/developers")
 })

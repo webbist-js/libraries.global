@@ -20,21 +20,17 @@
       "sonarjs/cognitive-complexity": 2
     },
     "apps/strapi/scripts/check-library-audit-compaction.cjs": {
-      "no-console": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "no-console": 1
     },
     "apps/strapi/scripts/check-library-sources-migration.cjs": {
-      "no-console": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "no-console": 1
     },
     "apps/strapi/scripts/check-library-types-migration.cjs": {
-      "no-console": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "no-console": 1
     },
     "apps/strapi/scripts/compact-library-audit-baselines.cjs": {
       "no-console": 1,
-      "sonarjs/cognitive-complexity": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "sonarjs/cognitive-complexity": 1
     },
     "apps/strapi/scripts/discussions-guide-content.mjs": {
       "sonarjs/slow-regex": 1
@@ -106,18 +102,16 @@
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/scripts/migrate-library-types.cjs": {
-      "no-console": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "no-console": 1
     },
     "apps/strapi/scripts/opening-schedule-upgrade.cjs": {
       "no-console": 1,
-      "sonarjs/cognitive-complexity": 1,
-      "turbo/no-undeclared-env-vars": 5
+      "sonarjs/cognitive-complexity": 1
     },
     "apps/strapi/scripts/publish-ready-libraries.cjs": {
       "no-console": 4,
       "sonarjs/cognitive-complexity": 2,
-      "turbo/no-undeclared-env-vars": 7
+      "turbo/no-undeclared-env-vars": 2
     },
     "apps/strapi/scripts/refresh-library-projections.ts": {
       "@typescript-eslint/no-explicit-any": 2
@@ -125,7 +119,7 @@
     "apps/strapi/scripts/repair-library-geography.cjs": {
       "no-console": 3,
       "sonarjs/cognitive-complexity": 1,
-      "turbo/no-undeclared-env-vars": 6,
+      "turbo/no-undeclared-env-vars": 1,
       "unicorn/consistent-destructuring": 1
     },
     "apps/strapi/scripts/seed-mobile-stops.ts": {
@@ -163,9 +157,9 @@
       "@typescript-eslint/no-explicit-any": 1
     },
     "apps/strapi/src/api/auth-bridge/controllers/auth-bridge.ts": {
-      "@typescript-eslint/no-explicit-any": 35,
+      "@typescript-eslint/no-explicit-any": 28,
       "sonarjs/cognitive-complexity": 1,
-      "sonarjs/no-duplicate-string": 2
+      "sonarjs/no-duplicate-string": 1
     },
     "apps/strapi/src/api/blog-article/controllers/blog-article.ts": {
       "@typescript-eslint/no-explicit-any": 2
@@ -234,10 +228,6 @@
     "apps/strapi/src/api/page/middlewares/populate-page.ts": {
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/strapi/src/api/paid-membership/controllers/paid-membership.ts": {
-      "@typescript-eslint/no-explicit-any": 2,
-      "unicorn/consistent-destructuring": 1
-    },
     "apps/strapi/src/api/region/controllers/region.ts": {
       "sonarjs/cognitive-complexity": 1
     },
@@ -279,15 +269,14 @@
     },
     "apps/strapi/src/documentMiddlewares/article-discovery.ts": {
       "@typescript-eslint/no-explicit-any": 4,
-      "sonarjs/cognitive-complexity": 2,
-      "unicorn/consistent-destructuring": 12
+      "sonarjs/cognitive-complexity": 2
     },
     "apps/strapi/src/documentMiddlewares/atlas-outbox.ts": {
       "@typescript-eslint/no-explicit-any": 5
     },
     "apps/strapi/src/documentMiddlewares/change-records.ts": {
       "@typescript-eslint/no-explicit-any": 6,
-      "unicorn/consistent-destructuring": 9
+      "unicorn/consistent-destructuring": 8
     },
     "apps/strapi/src/documentMiddlewares/library-publish-places.ts": {
       "sonarjs/cognitive-complexity": 1
@@ -325,16 +314,12 @@
       "@typescript-eslint/no-explicit-any": 1
     },
     "apps/strapi/src/plugins/access/server/controllers/api-data.ts": {
-      "@typescript-eslint/no-explicit-any": 9,
+      "@typescript-eslint/no-explicit-any": 3,
       "sonarjs/cognitive-complexity": 1,
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/src/plugins/access/server/controllers/people.ts": {
       "@typescript-eslint/no-explicit-any": 5
-    },
-    "apps/strapi/src/plugins/access/server/controllers/plans.ts": {
-      "@typescript-eslint/no-explicit-any": 5,
-      "unicorn/consistent-function-scoping": 3
     },
     "apps/strapi/src/plugins/access/server/controllers/team-api.ts": {
       "@typescript-eslint/no-explicit-any": 5,
@@ -350,9 +335,6 @@
     "apps/strapi/src/plugins/access/server/services/people.ts": {
       "@typescript-eslint/no-explicit-any": 4,
       "sonarjs/cognitive-complexity": 1
-    },
-    "apps/strapi/src/plugins/access/server/services/plans.ts": {
-      "@typescript-eslint/no-explicit-any": 9
     },
     "apps/strapi/src/plugins/access/server/services/teams.ts": {
       "@typescript-eslint/no-explicit-any": 8,
@@ -417,7 +399,7 @@
       "react-hooks/exhaustive-deps": 1
     },
     "apps/strapi/src/plugins/content-moderation/server/controllers/moderation.ts": {
-      "@typescript-eslint/no-explicit-any": 33,
+      "@typescript-eslint/no-explicit-any": 31,
       "sonarjs/cognitive-complexity": 3,
       "unicorn/consistent-function-scoping": 1
     },
@@ -459,7 +441,7 @@
     "apps/strapi/src/plugins/content-moderation/server/services/submission-policy.ts": {
       "@typescript-eslint/no-explicit-any": 14,
       "sonarjs/cognitive-complexity": 1,
-      "unicorn/consistent-destructuring": 37
+      "unicorn/consistent-destructuring": 32
     },
     "apps/strapi/src/plugins/content-moderation/server/services/submission.ts": {
       "@typescript-eslint/no-explicit-any": 47,
@@ -620,8 +602,7 @@
     },
     "apps/strapi/src/plugins/library-staff/server/notices-service.ts": {
       "@typescript-eslint/no-explicit-any": 5,
-      "sonarjs/no-nested-functions": 1,
-      "unicorn/consistent-function-scoping": 1
+      "sonarjs/no-nested-functions": 1
     },
     "apps/strapi/src/plugins/library-staff/server/service.ts": {
       "@typescript-eslint/no-explicit-any": 11,
@@ -694,7 +675,7 @@
       "sonarjs/cognitive-complexity": 2
     },
     "apps/strapi/src/utils/article-content.ts": {
-      "@typescript-eslint/no-explicit-any": 6
+      "@typescript-eslint/no-explicit-any": 5
     },
     "apps/strapi/src/utils/article-facet-ancestry.ts": {
       "@typescript-eslint/no-explicit-any": 4,
@@ -715,9 +696,6 @@
     },
     "apps/strapi/src/utils/atlas-source.ts": {
       "@typescript-eslint/no-explicit-any": 10,
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/strapi/src/utils/billing-notice.ts": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/strapi/src/utils/board.ts": {
@@ -745,7 +723,7 @@
       "@typescript-eslint/no-explicit-any": 1
     },
     "apps/strapi/src/utils/entitlement-inputs.ts": {
-      "@typescript-eslint/no-explicit-any": 5
+      "@typescript-eslint/no-explicit-any": 2
     },
     "apps/strapi/src/utils/erase-account.ts": {
       "@typescript-eslint/no-explicit-any": 2,
@@ -753,9 +731,6 @@
     },
     "apps/strapi/src/utils/leader-lock.ts": {
       "@typescript-eslint/no-explicit-any": 3
-    },
-    "apps/strapi/src/utils/library-access-plan-copy.ts": {
-      "@typescript-eslint/no-explicit-any": 7
     },
     "apps/strapi/src/utils/library-completeness.ts": {
       "sonarjs/cognitive-complexity": 1
@@ -799,9 +774,6 @@
       "@typescript-eslint/no-explicit-any": 1,
       "turbo/no-undeclared-env-vars": 2
     },
-    "apps/strapi/src/utils/paid-membership.ts": {
-      "@typescript-eslint/no-explicit-any": 1
-    },
     "apps/strapi/src/utils/population-ingest.ts": {
       "@typescript-eslint/no-explicit-any": 12
     },
@@ -812,7 +784,7 @@
       "@typescript-eslint/no-explicit-any": 1
     },
     "apps/strapi/src/utils/role-grants.ts": {
-      "@typescript-eslint/no-explicit-any": 10
+      "@typescript-eslint/no-explicit-any": 7
     },
     "apps/strapi/src/utils/service-secret.ts": {
       "@typescript-eslint/no-explicit-any": 1
@@ -827,11 +799,10 @@
       "@typescript-eslint/no-explicit-any": 10
     },
     "apps/strapi/src/utils/supporters.ts": {
-      "@typescript-eslint/no-explicit-any": 7,
-      "sonarjs/cognitive-complexity": 1
+      "@typescript-eslint/no-explicit-any": 6
     },
     "apps/strapi/src/utils/team-access.ts": {
-      "@typescript-eslint/no-explicit-any": 4
+      "@typescript-eslint/no-explicit-any": 2
     },
     "apps/strapi/src/utils/username.ts": {
       "@typescript-eslint/no-explicit-any": 2
@@ -896,9 +867,6 @@
       "@typescript-eslint/no-explicit-any": 12,
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/strapi/tests/auth-bridge-sync-user.test.ts": {
-      "@typescript-eslint/no-explicit-any": 7
-    },
     "apps/strapi/tests/beta-gate.test.ts": {
       "@typescript-eslint/no-explicit-any": 1
     },
@@ -912,12 +880,12 @@
       "unicorn/consistent-function-scoping": 5
     },
     "apps/strapi/tests/change-records-middleware.test.ts": {
-      "@typescript-eslint/no-explicit-any": 7,
+      "@typescript-eslint/no-explicit-any": 6,
       "unicorn/consistent-destructuring": 1
     },
     "apps/strapi/tests/community-publishing.integration.test.ts": {
       "@typescript-eslint/no-explicit-any": 2,
-      "turbo/no-undeclared-env-vars": 2,
+      "turbo/no-undeclared-env-vars": 1,
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/tests/content-moderation/admin-routes.test.ts": {
@@ -1129,7 +1097,7 @@
     "apps/strapi/tests/helpers/fake-strapi.ts": {
       "@typescript-eslint/no-explicit-any": 34,
       "sonarjs/cognitive-complexity": 2,
-      "sonarjs/no-nested-functions": 4,
+      "sonarjs/no-nested-functions": 1,
       "sonarjs/slow-regex": 1,
       "unicorn/consistent-function-scoping": 3
     },
@@ -1201,10 +1169,7 @@
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/tests/notification-delivery.test.ts": {
-      "@typescript-eslint/no-explicit-any": 6
-    },
-    "apps/strapi/tests/paid-membership.test.ts": {
-      "@typescript-eslint/no-explicit-any": 3
+      "@typescript-eslint/no-explicit-any": 5
     },
     "apps/strapi/tests/populate-middlewares.test.ts": {
       "@typescript-eslint/no-explicit-any": 6
@@ -1248,10 +1213,6 @@
       "sonarjs/no-nested-functions": 2,
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/strapi/tests/rewards/earned-pro-hold.test.ts": {
-      "@typescript-eslint/no-explicit-any": 13,
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/strapi/tests/rewards/leader-lock.test.ts": {
       "@typescript-eslint/no-explicit-any": 2,
       "unicorn/consistent-function-scoping": 1
@@ -1270,11 +1231,11 @@
       "@typescript-eslint/no-explicit-any": 3
     },
     "apps/strapi/tests/role-grants.test.ts": {
-      "@typescript-eslint/no-explicit-any": 6,
+      "@typescript-eslint/no-explicit-any": 4,
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/tests/session-profile.test.ts": {
-      "@typescript-eslint/no-explicit-any": 5
+      "@typescript-eslint/no-explicit-any": 4
     },
     "apps/strapi/tests/staff-overview-health.test.ts": {
       "@typescript-eslint/no-explicit-any": 3
@@ -1283,7 +1244,7 @@
       "@typescript-eslint/no-explicit-any": 2
     },
     "apps/strapi/tests/staff.test.ts": {
-      "@typescript-eslint/no-explicit-any": 7,
+      "@typescript-eslint/no-explicit-any": 6,
       "unicorn/consistent-function-scoping": 1
     },
     "apps/strapi/tests/strip-draft-status.test.ts": {
@@ -1313,9 +1274,6 @@
       "sonarjs/slow-regex": 1
     },
     "apps/ui/src/app/[locale]/(dashboard)/community/supporters/_components/SupportersDirectory.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/(dashboard)/contribute/index/[slug]/page.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/[locale]/(dashboard)/contribute/index/_components/__tests__/FindLibraryFirst.test.tsx": {
@@ -1357,9 +1315,6 @@
       "react/no-array-index-key": 1,
       "sonarjs/cognitive-complexity": 2
     },
-    "apps/ui/src/app/[locale]/(dashboard)/staff/[slug]/_components/TrafficPreview.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/app/[locale]/(dashboard)/staff/teams/join/[token]/_components/TeamJoin.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
@@ -1368,18 +1323,6 @@
     },
     "apps/ui/src/app/[locale]/auth/_components/pending-email.ts": {
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/[documentId]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/__tests__/moderation-pages.test.ts": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/contribute/moderation/staff/[libraryId]/page.tsx": {
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/[locale]/live/page.tsx": {
       "sonarjs/cognitive-complexity": 1
@@ -1405,9 +1348,6 @@
     },
     "apps/ui/src/app/[locale]/profile/settings/_components/SignInSecuritySection.tsx": {
       "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/[locale]/profile/settings/_components/__tests__/MembershipBillingSection.test.tsx": {
-      "unicorn/consistent-function-scoping": 1
     },
     "apps/ui/src/app/api/atlas/changes/route.ts": {
       "@typescript-eslint/no-explicit-any": 1
@@ -1440,9 +1380,6 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/api/profile/me/newsletter/route.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/app/api/profile/me/route.ts": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/app/api/relations/[type]/__tests__/route.test.ts": {
@@ -1561,12 +1498,6 @@
       "sonarjs/cognitive-complexity": 2,
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/ui/src/components/billing/CheckoutFlow.test.tsx": {
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/components/billing/CheckoutFlow.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/components/blog/ArticleBodyBlocks.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
@@ -1648,14 +1579,14 @@
       "@typescript-eslint/no-explicit-any": 4
     },
     "apps/ui/src/components/discussions/DiscussionFeed.tsx": {
-      "react-hooks/exhaustive-deps": 2,
+      "react-hooks/exhaustive-deps": 1,
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/discussions/DiscussionFeedItem.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/discussions/DiscussionPresentation.tsx": {
-      "@next/next/no-img-element": 2,
+      "@next/next/no-img-element": 1,
       "react/no-array-index-key": 2
     },
     "apps/ui/src/components/discussions/DiscussionRecordCard.tsx": {
@@ -1737,13 +1668,6 @@
     "apps/ui/src/components/ds/FilterPanel.tsx": {
       "react/jsx-handler-names": 2
     },
-    "apps/ui/src/components/ds/IndexPager.tsx": {
-      "react/no-array-index-key": 1,
-      "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/components/ds/LocationContributeCTA.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/components/ds/MetaRow.tsx": {
       "react/no-array-index-key": 1
     },
@@ -1769,15 +1693,8 @@
     "apps/ui/src/components/events/EventsPageClient.tsx": {
       "react/hook-use-state": 1
     },
-    "apps/ui/src/components/global/GlobalLoggedUserMenu.tsx": {
-      "@next/next/no-img-element": 1,
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/components/global/GlobalMobileMenu.tsx": {
       "react-hooks/exhaustive-deps": 1
-    },
-    "apps/ui/src/components/global/NavigationProgress.tsx": {
-      "react-hooks/exhaustive-deps": 2
     },
     "apps/ui/src/components/global/__tests__/GlobalNavbarAuthSection.test.tsx": {
       "@typescript-eslint/no-explicit-any": 7
@@ -1806,8 +1723,7 @@
     },
     "apps/ui/src/components/library-editor/IndexRecordWizard.tsx": {
       "sonarjs/cognitive-complexity": 1,
-      "unicorn/consistent-destructuring": 1,
-      "unicorn/consistent-function-scoping": 1
+      "unicorn/consistent-destructuring": 1
     },
     "apps/ui/src/components/library-editor/LocationLookup.tsx": {
       "unicorn/consistent-function-scoping": 1
@@ -1837,7 +1753,6 @@
       "unicorn/consistent-function-scoping": 1
     },
     "apps/ui/src/components/library-editor/__tests__/LocationPinMap.test.ts": {
-      "sonarjs/no-identical-functions": 1,
       "unicorn/consistent-function-scoping": 1
     },
     "apps/ui/src/components/library-index/types.ts": {
@@ -1883,8 +1798,8 @@
       "unicorn/consistent-function-scoping": 2
     },
     "apps/ui/src/components/library/LibrarySections.tsx": {
-      "react/no-array-index-key": 5,
-      "sonarjs/cognitive-complexity": 4,
+      "react/no-array-index-key": 4,
+      "sonarjs/cognitive-complexity": 2,
       "sonarjs/slow-regex": 1
     },
     "apps/ui/src/components/library/StrapiBlocksContent.tsx": {
@@ -1918,9 +1833,6 @@
     "apps/ui/src/components/location/location-page.helpers.ts": {
       "unicorn/consistent-function-scoping": 1
     },
-    "apps/ui/src/components/membership/PersonalBillingPanel.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
     "apps/ui/src/components/mobile/HomeLibraryPicker.tsx": {
       "sonarjs/redundant-type-aliases": 1
     },
@@ -1939,7 +1851,7 @@
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/mobile/TimetableEditor.tsx": {
-      "react/no-array-index-key": 5,
+      "react/no-array-index-key": 4,
       "sonarjs/cognitive-complexity": 3,
       "sonarjs/no-nested-functions": 2
     },
@@ -1969,21 +1881,14 @@
       "sonarjs/cognitive-complexity": 2
     },
     "apps/ui/src/components/moderation/DriveProposalPanel.tsx": {
-      "react/no-array-index-key": 4,
+      "react/no-array-index-key": 3,
       "sonarjs/cognitive-complexity": 1,
       "unicorn/consistent-destructuring": 5
     },
     "apps/ui/src/components/moderation/ModerationQueue.tsx": {
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/components/moderation/RecordChangesTable.tsx": {
-      "react/no-array-index-key": 1
-    },
     "apps/ui/src/components/moderation/ReviewDecisionForm.tsx": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/components/moderation/RoleApplicationPanel.tsx": {
-      "react/no-array-index-key": 1,
       "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/components/moderation/__tests__/EventFeedPanel.test.tsx": {
@@ -2033,9 +1938,6 @@
     "apps/ui/src/components/staff/TeamOrganiser.tsx": {
       "sonarjs/cognitive-complexity": 2,
       "sonarjs/no-nested-functions": 2
-    },
-    "apps/ui/src/components/staff/YourTeamCard.tsx": {
-      "react/hook-use-state": 1
     },
     "apps/ui/src/env.mjs": {
       "turbo/no-undeclared-env-vars": 1
@@ -2094,26 +1996,8 @@
       "@typescript-eslint/no-explicit-any": 10,
       "sonarjs/cognitive-complexity": 1
     },
-    "apps/ui/src/lib/auth.ts": {
-      "turbo/no-undeclared-env-vars": 2
-    },
     "apps/ui/src/lib/beta/__tests__/access.test.ts": {
       "unicorn/consistent-function-scoping": 1
-    },
-    "apps/ui/src/lib/billing/checkout.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/events.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/plan-change.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/plan-schedule.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/billing/projection.ts": {
-      "sonarjs/cognitive-complexity": 1
     },
     "apps/ui/src/lib/community/suggestions.ts": {
       "unicorn/consistent-function-scoping": 1
@@ -2187,15 +2071,6 @@
       "@typescript-eslint/no-explicit-any": 21
     },
     "apps/ui/src/lib/subscriptions.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/lib/team-api/__tests__/database.integration.test.ts": {
-      "@typescript-eslint/no-explicit-any": 1
-    },
-    "apps/ui/src/lib/team-api/billing.ts": {
-      "sonarjs/cognitive-complexity": 1
-    },
-    "apps/ui/src/proxy.ts": {
       "sonarjs/cognitive-complexity": 1
     },
     "packages/eslint-config/src/configs/sonarjs.js": {

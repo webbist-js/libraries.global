@@ -95,12 +95,12 @@ it("explains the limit instead of offering to save", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Saved searches" }))
   const drawer = await screen.findByRole("dialog", { name: "Saved searches" })
   expect(
-    await within(drawer).findByText(/the most your plan keeps/)
+    await within(drawer).findByText(/the most an account keeps/)
   ).toBeTruthy()
   expect(within(drawer).queryByLabelText("Name this search")).toBeNull()
-  expect(
-    within(drawer).getByRole("link", { name: "See plans" }).getAttribute("href")
-  ).toBe("/plans")
+  // The cap is the same for every account: nothing to buy.
+  expect(within(drawer).queryByRole("link", { name: /plan/i })).toBeNull()
+  expect(within(drawer).queryByText(/upgrade/i)).toBeNull()
 })
 
 it("asks a signed-out visitor to sign in", async () => {

@@ -8,13 +8,11 @@ import type { DriveTask } from "@/lib/drives/types"
 
 import {
   addSkip,
-  earnedProLine,
   evidenceProblem,
   facilitiesPayload,
   nextTask,
   panelGapsOf,
   photoPayload,
-  pointsToEarnedPro,
   quotaLine,
   quotaReason,
   randomTask,
@@ -377,7 +375,7 @@ describe("picking the next library", () => {
   })
 })
 
-describe("quota and earned Pro", () => {
+describe("quota", () => {
   it("counts what's waiting and says why sending stops at the limit", () => {
     expect(quotaLine({ pendingCount: 3, pendingLimit: 5 })).toBe(
       "3 of 5 waiting for review"
@@ -388,36 +386,6 @@ describe("quota and earned Pro", () => {
     )
     expect(quotaReason(null)).toBeNull()
     expect(quotaLine(null)).toBeNull()
-  })
-
-  it("counts points to 5,000 independently of recognition tiers", () => {
-    expect(
-      pointsToEarnedPro({
-        totalPoints: 1160,
-        tier: {
-          name: "Cartographer",
-          nextName: "Archivist",
-          nextThreshold: 1500,
-        },
-      })
-    ).toBe(3840)
-    expect(
-      pointsToEarnedPro({
-        totalPoints: 64,
-        tier: { name: "Indexer", nextName: "Cartographer", nextThreshold: 500 },
-      })
-    ).toBe(4936)
-    expect(
-      pointsToEarnedPro({
-        totalPoints: 1600,
-        tier: { name: "Archivist", nextName: "Scholar", nextThreshold: 4000 },
-      })
-    ).toBe(3400)
-    expect(pointsToEarnedPro({ totalPoints: 5000 })).toBe(0)
-    expect(pointsToEarnedPro(null)).toBeNull()
-    expect(earnedProLine(4936)).toBe(
-      "Drive work counts toward earned Pro: 4,936 points to 5,000. Keep contributing at least once every 30 days to retain it."
-    )
   })
 })
 

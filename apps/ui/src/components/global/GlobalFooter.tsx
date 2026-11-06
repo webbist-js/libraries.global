@@ -24,6 +24,7 @@ export function GlobalFooter({
   const { sections, links } = buildFooterNavigation(footer, legalDocuments, {
     legal: tUi("legal_policies"),
     plans: tUi("plans_and_pricing"),
+    sponsor: tUi("sponsor"),
   })
   const year = new Date().getFullYear()
   const brandTitle = footer?.title || SITE_NAME

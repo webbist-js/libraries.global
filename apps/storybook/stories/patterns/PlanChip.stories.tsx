@@ -4,12 +4,14 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 const meta = {
   title: "Patterns/PlanChip",
   component: PlanChip,
-  args: { plan: "free" },
+  args: { standing: "explorer" },
 } satisfies Meta<typeof PlanChip>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
-export const Team: Story = { args: { plan: "team" } }
-export const CoveredLibrary: Story = { args: { covered: true } }
+export const Explorer: Story = {}
+export const Contributor: Story = { args: { standing: "contributor" } }
+export const Supporter: Story = { args: { standing: "supporter" } }
+/** Signed out: nothing is shown. */
+export const SignedOut: Story = { args: { standing: "public" } }

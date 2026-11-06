@@ -3,6 +3,13 @@ import { expect, it, vi } from "vitest"
 
 import { requestAtlasNetworkReach } from "../src/utils/atlas-network-analysis"
 
+const api = {
+  kind: "api" as const,
+  hourly: 20,
+  daily: 100,
+  accountKey: "b".repeat(64),
+}
+
 const request = {
   schemaVersion: 1,
   networkId: "one",
@@ -18,7 +25,8 @@ it("rechecks the current network before accessing cached jobs", async () => {
     db = vi.fn()
   const strapi = { documents: () => ({ findOne }), db: { connection: db } }
   expect(
-    (await requestAtlasNetworkReach(strapi, request, "a".repeat(64), 20)).status
+    (await requestAtlasNetworkReach(strapi, request, "a".repeat(64), api))
+      .status
   ).toBe(404)
   expect(db).not.toHaveBeenCalled()
 })
@@ -30,7 +38,7 @@ it("rejects browser-supplied members, arbitrary polygons and map bounds", async 
       strapi,
       { ...request, members: [] },
       "a".repeat(64),
-      20
+      api
     )
   ).rejects.toThrow()
   await expect(
@@ -44,7 +52,7 @@ it("rejects browser-supplied members, arbitrary polygons and map bounds", async 
         },
       },
       "a".repeat(64),
-      20
+      api
     )
   ).rejects.toThrow()
   expect(documents).not.toHaveBeenCalled()
@@ -68,7 +76,7 @@ it("refuses oversized services before projection lookups, cache reads or job adm
     strapi,
     request,
     "a".repeat(64),
-    20
+    api
   )
   expect(response.body).toMatchObject({
     state: "unsupported",

@@ -14,7 +14,7 @@ import {
 import { TONES as NOTICE_TONES } from "@/components/ds/Notice"
 import { SelectField } from "@/components/ds/SelectField"
 import { useFeaturedDrive } from "@/hooks/useContributeMenu"
-import { useEntitlements, useStaff } from "@/lib/access-client"
+import { useStaff } from "@/lib/access-client"
 import { T } from "@/lib/design-tokens"
 import { driveHref } from "@/lib/drives/drive-view"
 import { searchLibraryNames } from "@/lib/meilisearch"
@@ -106,7 +106,6 @@ export function StaffDrawer({
   const staff = useStaff()
   const { libraries } = staff
   const teams = staff.teams ?? []
-  const { canForLibrary } = useEntitlements()
   const locale = useLocale()
   const { data: featuredDrive = null } = useFeaturedDrive(libraries.length > 0)
   const { libraryDocumentId: requested } = useStaffDrawer()
@@ -175,8 +174,9 @@ export function StaffDrawer({
   const live = data?.live ?? null
   const isLive = live?.state === "live"
   const canGoLive = staff.can("goLive", id)
-  const teamCovered = canForLibrary("library.team", id)
-  const trafficCovered = canForLibrary("library.traffic", id)
+  // Free staff tools: the viewer's own staff claim on this library decides.
+  const canSeeTeam = staff.can("seeTeam", id)
+  const canSeeTraffic = staff.can("traffic", id)
   const organises = teams.some((t) => t.role === "organiser")
   const claimHref = pageLibrary
     ? `/staff/claim?librarySlug=${encodeURIComponent(pageLibrary.slug)}&libraryName=${encodeURIComponent(pageLibrary.name)}&libraryDocumentId=${encodeURIComponent(pageLibrary.documentId)}`
@@ -467,14 +467,14 @@ export function StaffDrawer({
             href={`${base}/team`}
             icon="mdi:account-group-outline"
             label={tUi("team")}
-            tag={teamCovered ? undefined : "Team"}
+            lockedBy={canSeeTeam ? undefined : tUi("verified_staff")}
             onClick={closeStaffDrawer}
           />
           <DrawerAction
             href={`${base}/traffic`}
             icon="mdi:chart-bar"
             label={tUi("traffic")}
-            tag={trafficCovered ? undefined : "Team"}
+            lockedBy={canSeeTraffic ? undefined : tUi("verified_staff")}
             onClick={closeStaffDrawer}
           />
           {organises ? (
@@ -485,7 +485,7 @@ export function StaffDrawer({
               onClick={closeStaffDrawer}
             />
           ) : null}
-          {!teamCovered || !trafficCovered ? (
+          {!canSeeTeam || !canSeeTraffic ? (
             <p className="m-0 mt-2 border-t border-(--t-border-line) pt-2 text-xs leading-relaxed text-(--t-ink-dim)">
               {t("teamAccess")}
             </p>

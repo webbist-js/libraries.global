@@ -32,16 +32,29 @@ const initial: ApiDashboard = {
   membership: null,
   active: true,
   purchasing: true,
-  price: { unitAmount: 1500, currency: "gbp" },
+  overageAvailable: true,
+  price: { unitAmount: 10_000, currency: "gbp" },
   limits: {
-    requests: 100_000,
-    bytes: 10 * 1024 ** 3,
-    perMinute: 60,
-    concurrency: 5,
+    requests: 10_000,
+    bytes: 262_144_000,
+    analysisCredits: 100,
+    perMinute: 30,
+    concurrency: 2,
     keys: null,
-    responseBytes: 262144,
+    responseBytes: 131_072,
+    pageSize: 50,
   },
-  usage: { requests: 0, bytes: 0, resetsAt: "2026-11-01T00:00:00Z" },
+  rates: { requestPence: 1, mibPence: 10, creditPence: 50 },
+  overage: { enabled: false, capPence: 0, revision: 0, updatedAt: null },
+  usage: {
+    requests: 0,
+    bytes: 0,
+    credits: 0,
+    periodStart: "2026-11-03T09:30:00.000Z",
+    resetsAt: "2026-12-03T09:30:00.000Z",
+  },
+  accrued: { requestsPence: 0, bytesPence: 0, creditsPence: 0, totalPence: 0 },
+  projectedInvoicePence: 10000,
   keys: [],
   days: [],
   endpoints: [],
@@ -52,7 +65,7 @@ afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
 })
-describe("Team API staff dashboard", () => {
+describe("API account dashboard", () => {
   it("introduces the API before purchase without empty usage charts or credential controls", () => {
     render(
       <TeamApiDashboard
@@ -61,9 +74,11 @@ describe("Team API staff dashboard", () => {
       />
     )
     expect(
-      screen.getByRole("heading", { name: "Your API add-on" })
+      screen.getByRole("heading", { name: "Your API subscription" })
     ).toBeTruthy()
-    expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+    expect(
+      screen.queryByRole("heading", { name: "This billing period" })
+    ).toBeNull()
     expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
     expect(
       screen.getByRole("heading", { name: "More ways to use library data" })
@@ -77,7 +92,9 @@ describe("Team API staff dashboard", () => {
         confirming={false}
       />
     )
-    expect(screen.getByRole("heading", { name: "This month" })).toBeTruthy()
+    expect(
+      screen.getByRole("heading", { name: "This billing period" })
+    ).toBeTruthy()
     expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
     expect(
       screen.queryByRole("button", { name: "Subscribe to API access" })
@@ -94,9 +111,11 @@ describe("Team API staff dashboard", () => {
     expect(screen.queryByRole("checkbox")).toBeNull()
     fireEvent.click(screen.getByRole("button", { name: "Add API access" }))
     const dialog = screen.getByRole("dialog", { name: "Add API access" })
-    expect(within(dialog).getByText("£15.00")).toBeTruthy()
-    expect(within(dialog).getByText("100,000")).toBeTruthy()
-    expect(within(dialog).getByText("10 GiB")).toBeTruthy()
+    expect(within(dialog).getByText("£100.00")).toBeTruthy()
+    expect(within(dialog).getByText(/tax included/)).toBeTruthy()
+    expect(within(dialog).getByText("10,000")).toBeTruthy()
+    expect(within(dialog).getByText("250.0 MiB")).toBeTruthy()
+    expect(within(dialog).getByText("100")).toBeTruthy()
     const button = within(dialog).getByRole("button", {
       name: "Subscribe to API access",
     }) as HTMLButtonElement
@@ -229,11 +248,22 @@ describe("Team API staff dashboard", () => {
     fireEvent.change(within(dialog).getByLabelText("Expiry (optional)"), {
       target: { value: "2027-01-31" },
     })
+    // New keys default to the read scopes only.
+    expect(
+      (
+        within(dialog).getByRole("checkbox", {
+          name: /Run analysis/,
+        }) as HTMLInputElement
+      ).checked
+    ).toBe(false)
     fireEvent.click(
       within(dialog).getByRole("checkbox", { name: /Library search/ })
     )
     fireEvent.click(
       within(dialog).getByRole("checkbox", { name: /Library records/ })
+    )
+    fireEvent.click(
+      within(dialog).getByRole("checkbox", { name: /Read services/ })
     )
     expect(create.disabled).toBe(true)
     fireEvent.click(
@@ -305,7 +335,7 @@ describe("Team API staff dashboard", () => {
       <TeamApiDashboard
         initial={{
           ...initial,
-          usage: { ...initial.usage, requests: 29_527, bytes: 124 * 1024 ** 2 },
+          usage: { ...initial.usage, requests: 2527, bytes: 124 * 1024 ** 2 },
           days: [
             { day: "2026-10-20", requests: 500, bytes: 1024 ** 2, errors: 3 },
           ],
@@ -313,7 +343,7 @@ describe("Team API staff dashboard", () => {
         confirming={false}
       />
     )
-    expect(screen.getByText("70,473 left this month")).toBeTruthy()
+    expect(screen.getByText("7,473 left this period")).toBeTruthy()
     expect(
       screen.getByRole("heading", {
         name: "Requests per day · since Oct 20, 2026",
@@ -416,7 +446,9 @@ it("keeps the API overview free of key tooling and usage tables", () => {
     <TeamApiDashboard initial={initial} confirming={false} section="overview" />
   )
   expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
-  expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+  expect(
+    screen.queryByRole("heading", { name: "This billing period" })
+  ).toBeNull()
   expect(screen.queryByRole("heading", { name: "Using the API" })).toBeNull()
 })
 
@@ -425,7 +457,9 @@ it("keeps key creation on its own page and preserves Organiser permissions", () 
     <TeamApiDashboard initial={initial} confirming={false} section="keys" />
   )
   expect(screen.getByRole("button", { name: "Create key" })).toBeTruthy()
-  expect(screen.queryByRole("heading", { name: "This month" })).toBeNull()
+  expect(
+    screen.queryByRole("heading", { name: "This billing period" })
+  ).toBeNull()
   view.rerender(
     <TeamApiDashboard
       key="member"
@@ -435,4 +469,129 @@ it("keeps key creation on its own page and preserves Organiser permissions", () 
     />
   )
   expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
+})
+
+it("requires confirmation before a key may spend credits or submit proposals", async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(
+      Response.json({ error: "fixture_stop" }, { status: 400 })
+    )
+  vi.stubGlobal("fetch", fetcher)
+  render(
+    <TeamApiDashboard initial={initial} confirming={false} section="keys" />
+  )
+  fireEvent.click(screen.getByRole("button", { name: "Create key" }))
+  const dialog = within(
+    screen.getByRole("dialog", { name: "Create an API key" })
+  )
+  fireEvent.change(dialog.getByRole("textbox", { name: "Name" }), {
+    target: { value: "Analysis worker" },
+  })
+  fireEvent.click(dialog.getByRole("checkbox", { name: /Run analysis/ }))
+  const create = dialog.getByRole("button", {
+    name: "Create key",
+  }) as HTMLButtonElement
+  expect(create.disabled).toBe(true)
+  fireEvent.click(dialog.getByRole("checkbox", { name: /I confirm this key/ }))
+  expect(create.disabled).toBe(false)
+  fireEvent.submit(create.closest("form")!)
+  await waitFor(() => expect(fetcher).toHaveBeenCalled())
+  expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toMatchObject({
+    action: "create",
+    confirmScopes: true,
+    scopes: ["search:read", "libraries:read", "services:read", "analysis:run"],
+  })
+})
+
+describe("overage and period usage", () => {
+  it("shows three allowances, the paid-period reset and deduplicated alerts", () => {
+    render(
+      <TeamApiDashboard
+        initial={{
+          ...initial,
+          usage: { ...initial.usage, requests: 8000, credits: 50 },
+          warnings: [
+            { dimension: "requests", threshold: 50 },
+            { dimension: "requests", threshold: 80 },
+            { dimension: "credits", threshold: 50 },
+          ],
+        }}
+        confirming={false}
+        section="usage"
+      />
+    )
+    expect(
+      screen.getByRole("heading", { name: "Analysis credits" })
+    ).toBeTruthy()
+    expect(screen.getByText(/Resets Dec 3, 2026/)).toBeTruthy()
+    const alerts = screen
+      .getByText("Usage alerts this period")
+      .closest("[role=status]")!
+    expect(alerts.textContent).toContain("80% of included successful requests")
+    expect(alerts.textContent).not.toContain(
+      "50% of included successful requests"
+    )
+    expect(alerts.textContent).toContain("50% of included analysis credits")
+  })
+  it("preselects a £100 cap but never enables overage without an affirmative opt-in", async () => {
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(Response.json({ enabled: true, capPence: 10000 }))
+      .mockResolvedValueOnce(Response.json(initial))
+    vi.stubGlobal("fetch", fetcher)
+    render(
+      <TeamApiDashboard initial={initial} confirming={false} section="usage" />
+    )
+    expect(screen.getByText("Overage off")).toBeTruthy()
+    const turnOn = screen.getByRole("button", {
+      name: "Turn on overage",
+    }) as HTMLButtonElement
+    expect(turnOn.disabled).toBe(true)
+    expect(screen.getByText(/up to £100.00 a month before tax/)).toBeTruthy()
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: /I agree to pay for usage/ })
+    )
+    fireEvent.click(turnOn)
+    await waitFor(() => expect(fetcher).toHaveBeenCalled())
+    expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toEqual({
+      action: "overage",
+      enabled: true,
+      capPence: 10000,
+      termsVersion: "2.0",
+      confirm: true,
+    })
+  })
+  it("shows accrued overage, the projected invoice and a reached cap; members cannot change it", () => {
+    render(
+      <TeamApiDashboard
+        initial={{
+          ...initial,
+          organiser: false,
+          overage: {
+            enabled: true,
+            capPence: 1000,
+            revision: 2,
+            updatedAt: null,
+          },
+          accrued: {
+            requestsPence: 900,
+            bytesPence: 75,
+            creditsPence: 50,
+            totalPence: 1025,
+          },
+          projectedInvoicePence: 11_025,
+        }}
+        confirming={false}
+        section="usage"
+      />
+    )
+    expect(screen.getByText("£10.25")).toBeTruthy()
+    expect(screen.getByText("£110.25")).toBeTruthy()
+    expect(screen.getByText("Overage cap reached")).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Update cap" })).toBeNull()
+    expect(
+      screen.queryByRole("button", { name: "Turn off overage" })
+    ).toBeNull()
+  })
 })

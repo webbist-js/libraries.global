@@ -29,7 +29,7 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 describe("beta welcome", () => {
-  it("explains testing, the Team API pool and the data wipe with a dismissible dialog", () => {
+  it("explains testing, the shared API allowance and the data wipe with a dismissible dialog", () => {
     const close = vi.fn()
     render(<BetaWelcome sandbox onClose={close} />)
     expect(
@@ -38,7 +38,7 @@ describe("beta welcome", () => {
     expect(screen.getByText("4242 4242 4242 4242")).toBeTruthy()
     expect(screen.getByText(/Beta data will be wiped/)).toBeTruthy()
     expect(
-      screen.getByText(/Keys share one monthly Team allowance/)
+      screen.getByText(/Keys share one allowance per billing period/)
     ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Start testing" }))
     expect(close).toHaveBeenCalledOnce()

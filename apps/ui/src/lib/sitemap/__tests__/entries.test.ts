@@ -102,6 +102,7 @@ describe("sitemap coverage", () => {
       )
     ).toBe(false)
     expect(entries?.some((e) => e.url.endsWith("/plans"))).toBe(true)
+    expect(entries?.some((e) => e.url.endsWith("/sponsor"))).toBe(true)
   })
 
   it("answers 503 on failure and 404 for invalid or exhausted files", async () => {

@@ -174,7 +174,7 @@ describe("submission policy", () => {
       })
     ).toEqual({ ok: true })
   })
-  it("ignores plan fields on the profile (invariant 3)", async () => {
+  it("ignores recognition on the profile (invariant 3)", async () => {
     const { strapi } = makeFakeStrapi({
       [PROFILE]: [
         {
@@ -182,8 +182,7 @@ describe("submission policy", () => {
           baUserId: "u1",
           contributorRole: "reader",
           tier: "Reader",
-          plan: "pro",
-          planSource: "paid",
+          acceptedContributions: 500,
         },
       ],
     })

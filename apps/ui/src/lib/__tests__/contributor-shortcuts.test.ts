@@ -198,7 +198,6 @@ describe("buildContributeMenu", () => {
     expect(links(menu.work[0])).toEqual([
       ["Members & libraries", "/staff/teams"],
       ["API access", "/developers"],
-      ["Billing & seats", "/staff/teams/billing"],
     ])
     expect(menu.work[0]?.description).toBe("LibrariesGlobal · Organiser")
   })

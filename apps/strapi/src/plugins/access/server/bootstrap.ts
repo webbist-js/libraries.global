@@ -17,11 +17,5 @@ export async function registerPermissions(strapi: any): Promise<void> {
       uid: "manage-teams",
       pluginName: "access",
     },
-    {
-      section: "plugins",
-      displayName: "Manage plans",
-      uid: "manage-plans",
-      pluginName: "access",
-    },
   ])
 }

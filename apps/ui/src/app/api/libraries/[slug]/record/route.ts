@@ -52,7 +52,7 @@ const names = (items: unknown) =>
 /**
  * GET /api/libraries/{slug}/record?format=json|csv — one published library
  * record as open data, with its licence. Library facts are free, so this is
- * not gated; bulk export stays the Pro Atlas export.
+ * not gated; bulk export stays the signed-in Atlas export.
  */
 export async function GET(
   req: Request,

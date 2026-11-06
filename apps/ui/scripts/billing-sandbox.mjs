@@ -11,20 +11,9 @@ const ui = parseEnv(readFileSync(uiFile, "utf8"))
 const source = parseEnv(
   readFileSync(new URL("../../strapi/.env", import.meta.url), "utf8")
 )
-const catalogue = JSON.parse(
-  readFileSync(
-    new URL("./billing-sandbox-catalogue.json", import.meta.url),
-    "utf8"
-  )
-)
 const key = source.STRIPE_SANDBOX
-if (
-  catalogue.environment !== "sandbox" ||
-  (!key?.startsWith("sk_test_") && !key?.startsWith("rk_test_"))
-)
-  throw new Error("Only a sandbox key and catalogue are accepted")
-if (!catalogue.managedPaymentsProbe?.managedPaymentsAccepted)
-  throw new Error("Verify sandbox Managed Payments support first")
+if (!key?.startsWith("sk_test_") && !key?.startsWith("rk_test_"))
+  throw new Error("Only a sandbox key is accepted")
 
 function save(values) {
   let content = readFileSync(uiFile, "utf8")
@@ -38,29 +27,25 @@ function save(values) {
   chmodSync(uiFile, 0o600)
 }
 if (process.argv.includes("--configure-local")) {
-  const prices = Object.fromEntries(
-    catalogue.catalogue.map((p) => [
-      `STRIPE_PRICE_${p.plan.toUpperCase()}_${p.interval === "month" ? "MONTHLY" : "ANNUAL"}`,
-      p.priceId,
-    ])
+  // Written by `pnpm --filter @repo/ui api:setup --apply` (sandbox).
+  const catalogue = JSON.parse(
+    readFileSync(
+      new URL("./api-sandbox-catalogue.json", import.meta.url),
+      "utf8"
+    )
   )
+  if (catalogue.mode !== "sandbox" || !catalogue.configured)
+    throw new Error("Prepare the sandbox API catalogue with api:setup first")
+  // Purchases and overage stay disabled; enable them explicitly when testing.
   save({
-    ...prices,
+    ...catalogue.env,
     STRIPE_SECRET_KEY: key,
     BILLING_ENV: "sandbox",
-    PRO_ENABLED: "true",
-    STRIPE_MANAGED_PAYMENTS_ENABLED: "true",
-    STRIPE_SUPPORTER_APPROVED: String(
-      catalogue.supporterDigitalToolsConfigured === true
-    ),
-    STRIPE_PORTAL_CONFIGURATION: catalogue.portalConfigurationId,
-    STRIPE_PORTAL_CONFIGURATION_SUPPORTER:
-      catalogue.supporterPortalConfigurationId,
-    STRIPE_PORTAL_CONFIGURATION_RECOVERY:
-      catalogue.recoveryPortalConfigurationId,
     CRON_SECRET: ui.CRON_SECRET || randomBytes(32).toString("hex"),
   })
-  console.log("Local sandbox catalogue and credentials configured privately.")
+  console.log(
+    "Local sandbox API catalogue and credentials configured privately."
+  )
 }
 if (process.argv.includes("--work") || process.argv.includes("--watch")) {
   const watch = process.argv.includes("--watch")
@@ -102,7 +87,9 @@ if (process.argv.includes("--work") || process.argv.includes("--watch")) {
             "synced",
             "failed",
             "pendingEvents",
-            "pendingProjections",
+            "delivered",
+            "pendingMeters",
+            "deadMeters",
           ].map((name) => [name, data[name]])
         )
       )

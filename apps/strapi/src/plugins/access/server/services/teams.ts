@@ -27,22 +27,26 @@ import { emailConfigured } from "../../../content-moderation/server/utils/email-
 import { AccessError, isDocumentId, isEmail } from "../utils/admin"
 
 /**
- * Teams (spec §3): a Team organisation with seats, an organiser and
+ * Teams (spec §3): a free Team organisation with organisers, members and
  * libraries. An organiser invites colleagues by email, and assigns a member
  * to one of the Team's libraries as owner or editor. On a **verified** Team
  * (`verifiedAt` set by an admin, never by money) the assignment creates the
  * staff affiliation at once; on an unverified Team it files a vouched
  * Library Claim for a Moderator. Every write takes an advisory lock on the
- * Team, so two organisers can't overfill the seats or race a removal.
+ * Team, so two organisers can't overfill the member limit or race a removal.
  */
 
 const LIBRARY = "api::library.library"
 const SUBMISSION = "plugin::content-moderation.submission"
 
 export const INVITE_TTL_DAYS = 14
-/** Most rows one Team may hold (seats are capped below this). */
-export const MAX_SEATS = 500
-export const MAX_MEMBER_ROWS = MAX_SEATS + 50
+/**
+ * Abuse control for free workspaces: most active plus invited members one
+ * Team may hold. One fixed ceiling for every workspace.
+ */
+export const TEAM_MEMBER_LIMIT = 500
+/** Most member rows read for one Team (removed rows sit above the limit). */
+export const MAX_MEMBER_ROWS = TEAM_MEMBER_LIMIT + 50
 const NAME_MAX = 120
 const NOTES_MAX = 2000
 
@@ -106,12 +110,8 @@ export type TeamView = {
   documentId: string
   name: string
   slug: string
-  seats: number
-  used: number
   status: "active" | "lapsed"
-  source: "admin" | "checkout"
   verifiedAt: string | null
-  expiresAt: string | null
   notes: string | null
   libraries: TeamLibrary[]
   members: TeamMemberView[]
@@ -120,8 +120,6 @@ export type TeamView = {
   createdAt: string | null
   publicServiceApproved?: boolean
   widgetBranding?: boolean
-  pendingSeats?: number | null
-  billingSuspended?: boolean
 }
 
 export type TeamSummary = {
@@ -131,29 +129,20 @@ export type TeamSummary = {
   role: TeamRole
   libraryCount: number
   status: "active" | "lapsed"
-  expiresAt: string | null
   verified: boolean
-  selfService?: boolean
   organiserName: string | null
   libraryDocumentIds: string[]
 }
 
 type TeamRow = {
   primaryNetwork?: { documentId: string; name: string; slug: string } | null
-  pendingSeats?: number | null
-  billingSuspended?: boolean | null
   widgetBranding?: boolean | null
   publicServiceApproved?: boolean | null
-  billingMembership?: { accessUntil?: string | null; paidSeats?: number } | null
-  billingMode?: string | null
   documentId: string
   name?: string | null
   slug?: string | null
-  seats?: number | null
   status?: string | null
-  source?: string | null
   verifiedAt?: string | null
-  expiresAt?: string | null
   notes?: string | null
   createdAt?: string | null
   libraries?: TeamLibrary[] | null
@@ -201,19 +190,12 @@ const isTeamRole = (v: unknown): v is TeamRole =>
 
 const TEAM_FIELDS = [
   "widgetBranding",
-  "pendingSeats",
-  "billingSuspended",
   "publicServiceApproved",
-  "billingMode",
-  "billingMembership",
   "documentId",
   "name",
   "slug",
-  "seats",
   "status",
-  "source",
   "verifiedAt",
-  "expiresAt",
   "notes",
   "createdAt",
 ]
@@ -285,9 +267,7 @@ export function parseTeamInput(
       ok: true
       value: {
         name?: string
-        seats?: number
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
         publicServiceApproved?: boolean
@@ -299,9 +279,7 @@ export function parseTeamInput(
   const b = body as Record<string, unknown>
   const value: {
     name?: string
-    seats?: number
     libraryDocumentIds?: string[]
-    expiresAt?: string | null
     notes?: string | null
     status?: "active" | "lapsed"
     publicServiceApproved?: boolean
@@ -317,12 +295,6 @@ export function parseTeamInput(
       }
     value.name = name
   }
-  if (b.seats !== undefined) {
-    const seats = Number(b.seats)
-    if (!Number.isInteger(seats) || seats < 1 || seats > MAX_SEATS)
-      return { ok: false, message: `Seats must be 1 to ${MAX_SEATS}.` }
-    value.seats = seats
-  }
   if (b.libraryDocumentIds !== undefined) {
     if (!Array.isArray(b.libraryDocumentIds))
       return { ok: false, message: "Libraries must be a list of ids." }
@@ -335,18 +307,6 @@ export function parseTeamInput(
     if (!ids.every(isDocumentId))
       return { ok: false, message: "A library id is not valid." }
     value.libraryDocumentIds = ids as string[]
-  }
-  if (b.expiresAt !== undefined) {
-    if (b.expiresAt === null || b.expiresAt === "") value.expiresAt = null
-    else {
-      const at =
-        typeof b.expiresAt === "string"
-          ? new Date(b.expiresAt)
-          : new Date(Number.NaN)
-      if (Number.isNaN(at.getTime()))
-        return { ok: false, message: "The expiry must be a date." }
-      value.expiresAt = at.toISOString()
-    }
   }
   if (b.notes !== undefined) {
     if (b.notes !== null && typeof b.notes !== "string")
@@ -436,7 +396,7 @@ export default ({ strapi }: { strapi: any }) => {
       fields: MEMBER_FIELDS,
       populate: {
         team: {
-          fields: ["documentId", "verifiedAt", "status", "expiresAt", "name"],
+          fields: ["documentId", "verifiedAt", "status", "name"],
         },
       },
     })) as MemberRow | null
@@ -569,18 +529,11 @@ export default ({ strapi }: { strapi: any }) => {
       serviceScopes: await serviceScopes(team.documentId),
       name: team.name ?? "Team",
       slug: team.slug ?? "",
-      seats: team.seats ?? 0,
-      used: rows.length,
       status: teamIsActive(team) ? "active" : "lapsed",
-      billingSuspended:
-        viewer.role === "admin" ? team.billingSuspended === true : undefined,
-      source: team.source === "checkout" ? "checkout" : "admin",
       publicServiceApproved: team.publicServiceApproved === true,
       widgetBranding:
         viewer.role === "admin" ? team.widgetBranding === true : undefined,
-      pendingSeats: team.pendingSeats ?? null,
       verifiedAt: team.verifiedAt ?? null,
-      expiresAt: team.expiresAt ?? null,
       notes: viewer.role === "admin" ? (team.notes ?? null) : null,
       libraries: (team.libraries ?? []).map((l) => ({
         documentId: l.documentId,
@@ -880,31 +833,6 @@ export default ({ strapi }: { strapi: any }) => {
     return libraryIds.size
   }
 
-  async function paidBillingUpdate(
-    team: TeamRow,
-    input: {
-      seats?: number
-      expiresAt?: string | null
-      status?: "active" | "lapsed"
-    }
-  ) {
-    if (team.source !== "checkout") return {}
-    if (input.seats !== undefined || input.expiresAt !== undefined)
-      throw new AccessError(409, "team_seats_managed_by_billing")
-    if (input.status === undefined) return {}
-    const membership = team.billingMembership
-    const paid = Boolean(
-      membership?.accessUntil && Date.parse(membership.accessUntil) > Date.now()
-    )
-    const fits =
-      (await memberRows(team.documentId)).length <= (membership?.paidSeats ?? 0)
-
-    return {
-      billingSuspended: input.status === "lapsed",
-      status: input.status === "active" && paid && fits ? "active" : "lapsed",
-    }
-  }
-
   async function requireNewLibraryOwners(
     team: TeamRow,
     next: TeamLibrary[],
@@ -938,21 +866,14 @@ export default ({ strapi }: { strapi: any }) => {
       })) as TeamRow[]
       const out = []
       for (const team of rows) {
-        const rowsOf = await memberRows(team.documentId)
         out.push({
           documentId: team.documentId,
           name: team.name ?? "Team",
           slug: team.slug ?? "",
-          seats: team.seats ?? 0,
-          used: rowsOf.length,
           status: (team.status === "lapsed" ? "lapsed" : "active") as
             | "active"
             | "lapsed",
-          source: (team.source === "checkout" ? "checkout" : "admin") as
-            | "admin"
-            | "checkout",
           verifiedAt: team.verifiedAt ?? null,
-          expiresAt: team.expiresAt ?? null,
           libraries: (team.libraries ?? []).map((l) => ({
             documentId: l.documentId,
             name: l.name,
@@ -1035,9 +956,7 @@ export default ({ strapi }: { strapi: any }) => {
     async create(
       input: {
         name: string
-        seats?: number
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         verified?: boolean
         publicServiceApproved?: boolean
@@ -1065,11 +984,8 @@ export default ({ strapi }: { strapi: any }) => {
         data: {
           name: input.name,
           slug,
-          seats: input.seats ?? 5,
           status: "active",
-          source: "admin",
           verifiedAt: input.verified ? now() : null,
-          expiresAt: input.expiresAt ?? null,
           notes: input.notes ?? null,
           createdByAdmin: `admin:${adminId}`,
           publicServiceApproved: input.publicServiceApproved === true,
@@ -1097,9 +1013,7 @@ export default ({ strapi }: { strapi: any }) => {
       teamId: string,
       input: {
         name?: string
-        seats?: number
         libraryDocumentIds?: string[]
-        expiresAt?: string | null
         notes?: string | null
         status?: "active" | "lapsed"
         publicServiceApproved?: boolean
@@ -1110,13 +1024,10 @@ export default ({ strapi }: { strapi: any }) => {
         const team = await teamOf(teamId)
         const data: Record<string, unknown> = {}
         if (input.name !== undefined) data.name = input.name
-        if (input.seats !== undefined) data.seats = input.seats
-        if (input.expiresAt !== undefined) data.expiresAt = input.expiresAt
         if (input.notes !== undefined) data.notes = input.notes
         if (input.status !== undefined) data.status = input.status
         if (input.publicServiceApproved !== undefined)
           data.publicServiceApproved = input.publicServiceApproved
-        Object.assign(data, await paidBillingUpdate(team, input))
         let dropped: string[] = []
         if (input.libraryDocumentIds !== undefined) {
           const next = await librariesByIds(input.libraryDocumentIds)
@@ -1266,8 +1177,8 @@ export default ({ strapi }: { strapi: any }) => {
     },
 
     /**
-     * Invites by email, with a seat held from now. Seats: active + invited
-     * rows must stay within `seats` (409 `no_seats`). One row per email per
+     * Invites by email. Active plus invited rows must stay within
+     * `TEAM_MEMBER_LIMIT` (409 `member_limit`). One row per email per
      * Team: a removed row is revived; an invited one is 409
      * `invite_already_pending`; an active one is 409 `already_member`.
      */
@@ -1308,12 +1219,10 @@ export default ({ strapi }: { strapi: any }) => {
           throw new AccessError(409, "already_member")
         if (existing?.status === "invited")
           throw new AccessError(409, "invite_already_pending")
-        const used = rows.filter((r) => r.status !== "removed").length
-        if (
-          used >=
-          Math.min(team.seats ?? 0, team.pendingSeats ?? team.seats ?? 0)
-        )
-          throw new AccessError(409, "no_seats")
+        // Free workspaces: one fixed member ceiling for abuse control.
+        const memberCount = rows.filter((r) => r.status !== "removed").length
+        if (memberCount >= TEAM_MEMBER_LIMIT)
+          throw new AccessError(409, "member_limit")
         const data = {
           email,
           teamRole: role,
@@ -1509,7 +1418,7 @@ export default ({ strapi }: { strapi: any }) => {
           team: {
             // Preview needs only these fields; accept reloads the full Team.
             // Nested selection rejects private attributes such as notes.
-            fields: ["documentId", "name", "status", "expiresAt"],
+            fields: ["documentId", "name", "status"],
           },
         },
         limit: 1,
@@ -1523,7 +1432,7 @@ export default ({ strapi }: { strapi: any }) => {
      * Accepts an invite: the signed-in email must match the invited one,
      * the invite must be open and the Team active. The row becomes active
      * (token cleared), a pre-assignment is applied, and the session is
-     * refreshed so Pro and the Team's libraries show at once.
+     * refreshed so the Team's libraries show at once.
      */
     async accept(
       token: string,
@@ -1604,7 +1513,6 @@ export default ({ strapi }: { strapi: any }) => {
           role: result.member.teamRole === "organiser" ? "organiser" : "member",
           libraryCount: result.team.libraries?.length ?? 0,
           status: result.team.status === "lapsed" ? "lapsed" : "active",
-          expiresAt: result.team.expiresAt ?? null,
           verified: !!result.team.verifiedAt,
           organiserName: null,
           libraryDocumentIds: (result.team.libraries ?? []).map(
@@ -1847,9 +1755,7 @@ export default ({ strapi }: { strapi: any }) => {
           role: m.teamRole,
           libraryCount: m.libraryDocumentIds.length,
           status: m.status,
-          expiresAt: m.expiresAt,
           verified: m.verified,
-          ...(m.selfService ? { selfService: true } : {}),
           organiserName:
             (organiser?.baUserId && names.get(organiser.baUserId)) ||
             (organiser?.email ? mask(organiser.email) : null),
@@ -2004,7 +1910,7 @@ export default ({ strapi }: { strapi: any }) => {
           ],
         },
         fields: ["documentId", "status", "teamRole", "baUserId"],
-        populate: { team: { fields: ["documentId", "source"] } },
+        populate: { team: { fields: ["documentId"] } },
         limit: 100,
       })) as MemberRow[]
       for (const row of [...rows].sort((a, b) =>
@@ -2014,9 +1920,6 @@ export default ({ strapi }: { strapi: any }) => {
           const current = row.team?.documentId
             ? await memberOf(row.team.documentId, row.documentId)
             : row
-          const currentTeam = row.team?.documentId
-            ? await teamOf(row.team.documentId)
-            : null
           if (
             current.baUserId !== baUserId &&
             !(
@@ -2026,20 +1929,6 @@ export default ({ strapi }: { strapi: any }) => {
             )
           )
             return
-          if (
-            currentTeam?.source === "checkout" &&
-            current.status === "active" &&
-            current.teamRole === "organiser"
-          ) {
-            const others = (await memberRows(row.team.documentId)).filter(
-              (member) =>
-                member.status === "active" &&
-                member.teamRole === "organiser" &&
-                member.baUserId !== baUserId
-            )
-            if (!others.length)
-              throw new AccessError(409, "transfer_team_before_deletion")
-          }
           await members().update({
             documentId: row.documentId,
             data: {

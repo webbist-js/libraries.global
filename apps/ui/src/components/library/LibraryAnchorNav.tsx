@@ -79,17 +79,6 @@ export function LibraryAnchorNav({
                       {item.count}
                     </span>
                   ) : null}
-                  {item.pro ? (
-                    <span
-                      className="rounded-full px-1.5 text-xs font-bold"
-                      style={{
-                        background: T.accent.chip,
-                        color: T.accent.primary,
-                      }}
-                    >
-                      Pro
-                    </span>
-                  ) : null}
                 </a>
               </li>
             )

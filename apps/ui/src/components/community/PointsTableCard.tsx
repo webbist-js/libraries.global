@@ -1,5 +1,3 @@
-import { EARNED_PRO_ACTIVITY_DAYS, EARNED_PRO_POINTS } from "@repo/access"
-
 import { POINTS_TABLE } from "@/lib/community/points"
 import { T } from "@/lib/design-tokens"
 
@@ -45,23 +43,6 @@ export function PointsTableCard() {
       >
         How points work
       </h2>
-      <div className="my-4 rounded-2xl bg-(--t-accent-chip) p-4 text-sm leading-relaxed text-(--t-ink-base)">
-        <h3 className="type-small-heading m-0">
-          Earn Pro through contributions
-        </h3>
-        <p className="mt-2 mb-0">
-          With at least {EARNED_PRO_POINTS.toLocaleString("en-GB")} points, you
-          get Pro for {EARNED_PRO_ACTIVITY_DAYS} days from your latest accepted
-          contribution. Each accepted contribution restarts that window,
-          including discussions, event feeds and option suggestions.
-        </p>
-        <p className="mt-2 mb-0">
-          After {EARNED_PRO_ACTIVITY_DAYS} days without an accepted
-          contribution, earned Pro expires. Another accepted contribution
-          restores it if you still have at least{" "}
-          {EARNED_PRO_POINTS.toLocaleString("en-GB")} points.
-        </p>
-      </div>
       <dl className="m-0">{pointRows.slice(0, PREVIEW_COUNT)}</dl>
       {pointRows.length > PREVIEW_COUNT && (
         <details className="group">
@@ -78,8 +59,8 @@ export function PointsTableCard() {
         className="m-0 mt-[10px] text-sm leading-normal"
         style={{ color: T.ink.dim }}
       >
-        Daily streak and drive completion bonuses add points but don’t restart
-        the Pro window.
+        Daily streak and drive completion bonuses add points but don’t count as
+        accepted contributions towards Contributor or Supporter.
       </p>
       <p
         className="m-0 mt-[10px] text-sm leading-normal"

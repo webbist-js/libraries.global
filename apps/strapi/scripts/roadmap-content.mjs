@@ -17,7 +17,7 @@ const FEATURES = [
       "Keep an Atlas view, with its map position, layers and filters, and come back to it or share the link.",
     stage: "now",
     area: "atlas",
-    plans: [plan("free", "3 saved"), plan("pro", "unlimited")],
+    plans: [plan("free", "up to 1,000")],
     noteKind: "target",
     note: "Aiming for December",
   },
@@ -28,7 +28,7 @@ const FEATURES = [
       "Hours, services, accessibility and recent changes in one table. Add libraries from search, the Atlas or your lists.",
     stage: "now",
     area: "watching",
-    plans: [plan("pro")],
+    plans: [plan("free")],
     noteKind: "target",
     note: "Aiming for January",
   },
@@ -36,10 +36,10 @@ const FEATURES = [
     key: "more-widgets",
     title: "More widgets",
     description:
-      "Events and a mobile library timetable, ready to embed beside the finder, directory, charts and stats Teams already have. Pro gets opening times and events.",
+      "Events and a mobile library timetable, ready to embed beside the finder, directory, charts and stats that staff workspaces already have.",
     stage: "now",
     area: "widgets",
-    plans: [plan("team"), plan("pro", "limited")],
+    plans: [plan("free", "verified staff")],
     noteKind: "target",
     note: "Aiming for December",
   },
@@ -47,10 +47,10 @@ const FEATURES = [
     key: "traffic-reports",
     title: "Traffic reports",
     description:
-      "Page views, visitors and what people searched for before they found your library, for everyone on your Team.",
+      "Page views, visitors and what people searched for before they found your library, for the verified staff of that library.",
     stage: "now",
     area: "teams",
-    plans: [plan("team")],
+    plans: [plan("free", "verified staff")],
     noteKind: "testing",
     note: "In testing with 4 library services",
   },
@@ -61,7 +61,7 @@ const FEATURES = [
       "Follow any library and hear when its hours change, it moves, or it closes for a while or for good.",
     stage: "next",
     area: "watching",
-    plans: [plan("pro")],
+    plans: [plan("free")],
   },
   {
     key: "search-alerts",
@@ -70,7 +70,7 @@ const FEATURES = [
       "An email when a library inside one of your saved searches is added, closes or changes.",
     stage: "next",
     area: "atlas",
-    plans: [plan("pro")],
+    plans: [plan("free")],
     noteKind: "depends",
     note: "Builds on saved views and searches",
   },
@@ -90,7 +90,7 @@ const FEATURES = [
       "Download results with the source and licence of every record attached, ready to cite or publish.",
     stage: "next",
     area: "atlas",
-    plans: [plan("supporter"), plan("pro")],
+    plans: [plan("free")],
   },
   {
     key: "calendar-feed",
@@ -99,7 +99,7 @@ const FEATURES = [
       "Subscribe in Google, Apple or Outlook calendar to events from the libraries you follow.",
     stage: "next",
     area: "events",
-    plans: [plan("supporter"), plan("pro")],
+    plans: [plan("free")],
   },
   {
     key: "private-notes",
@@ -108,7 +108,7 @@ const FEATURES = [
       "Notes only you can see, kept alongside a library’s record and searchable in your lists.",
     stage: "next",
     area: "watching",
-    plans: [plan("pro")],
+    plans: [plan("free")],
   },
   {
     key: "bulk-updates",
@@ -117,7 +117,7 @@ const FEATURES = [
       "Upload hours or contact changes for many branches at once. Each row still goes through review.",
     stage: "later",
     area: "teams",
-    plans: [plan("team")],
+    plans: [plan("free", "verified staff")],
   },
   {
     key: "benchmark-services",
@@ -126,22 +126,22 @@ const FEATURES = [
       "See how a service compares on hours, branches and reach with others of a similar size and population.",
     stage: "later",
     area: "atlas",
-    plans: [plan("pro")],
+    plans: [plan("free")],
   },
   {
     key: "shared-workspace",
     title: "Shared Atlas workspace",
     description:
-      "Saved views, notes and library selections that your whole Team can see and edit together.",
+      "Saved views, notes and library selections that everyone in your staff workspace can see and edit together.",
     stage: "later",
     area: "teams",
-    plans: [plan("team")],
+    plans: [plan("free", "verified staff")],
   },
   {
     key: "api-allowances",
     title: "Higher API allowances",
     description:
-      "Larger monthly request limits on the API add-on, for apps, research projects and data journalism.",
+      "Larger allowances on the paid API, for apps, research projects and data journalism.",
     stage: "later",
     area: "data",
     plans: [plan("api")],
@@ -283,6 +283,6 @@ export function roadmapContent({ fixtures = false } = {}) {
     suggestPrompt:
       "Know an open dataset for your country or region? Tell us the source and its licence.",
     footnote:
-      "Plans shown are where each feature is intended to land; they can change as we learn. Votes help us order the work but don’t decide it alone. Everything factual about libraries stays free.",
+      "Labels show who each feature is intended for; they can change as we learn. Votes help us order the work but don’t decide it alone. Everything factual about libraries stays free, and staff tools are free for verified staff.",
   }
 }

@@ -55,9 +55,9 @@ const tabs = [
     href: "/staff/x/team",
     badge: h(
       "span",
-      { "data-tag": "team" },
+      { "data-tag": "locked" },
       h("i", { "data-icon": "mdi:lock-outline", "aria-hidden": "true" }),
-      "Team"
+      "Verified staff"
     ),
   },
 ]
@@ -85,11 +85,11 @@ describe("SectionTabs", () => {
     expect(within(notices).queryByText("0")).toBeNull()
   })
 
-  it("renders a tab's badge, such as the lock in a Team tag", () => {
+  it("renders a tab's badge, such as the lock in a Verified staff tag", () => {
     render(h(SectionTabs, { tabs, activeId: "team", label: "Staff area" }))
     const team = screen.getByRole("link", { name: /^Team/ })
-    const tag = team.querySelector("[data-tag='team']")!
-    expect(tag.textContent).toBe("Team")
+    const tag = team.querySelector("[data-tag='locked']")!
+    expect(tag.textContent).toBe("Verified staff")
     expect(tag.querySelector<HTMLElement>("[data-icon]")?.dataset.icon).toBe(
       "mdi:lock-outline"
     )

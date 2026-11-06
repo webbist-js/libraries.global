@@ -28,7 +28,6 @@ const team = {
   expiresAt: null,
   verifiedAt: "2026-01-01",
   libraries: [library],
-  seats: 4,
 }
 const affiliation = {
   documentId: "aff1",
@@ -172,7 +171,6 @@ describe("staff library creation access", () => {
   it.each([
     { ...membership, status: "removed" },
     { ...membership, team: { ...team, status: "lapsed" } },
-    { ...membership, team: { ...team, expiresAt: "2000-01-01" } },
     { ...membership, baUserId: "another-user" },
   ])("refuses coverage without current active membership", async (member) => {
     const { strapi } = setup({ [TEAM_MEMBER_UID]: [member] })
@@ -311,7 +309,7 @@ describe("approval applies staff ownership and existing Team coverage atomically
     })
     expect(store[TEAM_UID][0].libraries).toEqual([library])
   })
-  it("connects coverage additively, without altering billing or seats", async () => {
+  it("connects coverage additively, without altering status or verification", async () => {
     const sub = proposal(context)
     const { svc, strapi, store } = setup({ [SUB]: [sub] })
     const writes: any[] = []
@@ -344,7 +342,6 @@ describe("approval applies staff ownership and existing Team coverage atomically
       },
     ])
     expect(store[TEAM_UID][0]).toMatchObject({
-      seats: 4,
       status: "active",
       expiresAt: null,
       verifiedAt: "2026-01-01",

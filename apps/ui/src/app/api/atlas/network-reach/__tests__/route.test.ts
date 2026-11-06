@@ -5,6 +5,13 @@ const { session } = vi.hoisted(() => ({ session: vi.fn() }))
 vi.mock("@/lib/auth", () => ({ auth: { api: { getSession: session } } }))
 import { POST } from "../route"
 
+const API_ORGANISER = {
+  id: "one",
+  facts: ["explorer", "apiCustomer"],
+  features: ["atlas.analysis", "atlas.reach", "atlas.serviceReach"],
+  limits: { analysisRunsPerHour: 20, analysisRunsPerDay: 100 },
+  apiAccounts: [{ teamId: "team-a", role: "organiser", active: true }],
+}
 const fetcher = vi.fn()
 const body = {
   schemaVersion: 1,
@@ -28,24 +35,33 @@ beforeEach(() => {
   vi.stubEnv("STRAPI_URL", "http://strapi.test")
   vi.stubEnv("STRAPI_BRIDGE_SECRET", "private")
   vi.stubEnv("ATLAS_SERVICE_TOKEN", "private")
-  session.mockResolvedValue({
-    user: {
-      id: "one",
-      features: ["atlas.analysis"],
-      limits: { analysisRunsPerHour: 20 },
-    },
-  })
+  session.mockResolvedValue({ user: API_ORGANISER })
 })
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
   vi.clearAllMocks()
 })
-it("requires analysis entitlement before backend or cache access", async () => {
+it("requires service Reach before backend or cache access", async () => {
   session.mockResolvedValue(null)
   expect((await POST(request())).status).toBe(401)
   session.mockResolvedValue({ user: { id: "free", features: [] } })
   expect((await POST(request())).status).toBe(402)
+  // A Contributor has one-library Reach only.
+  session.mockResolvedValue({
+    user: {
+      id: "contributor",
+      facts: ["explorer", "contributor"],
+      features: ["atlas.analysis", "atlas.reach"],
+      limits: { reachRunsPerWeek: 2 },
+    },
+  })
+  expect((await POST(request())).status).toBe(402)
+  // A forged feature without the API account allowance never reaches the CMS.
+  session.mockResolvedValue({
+    user: { ...API_ORGANISER, apiAccounts: [], facts: ["explorer"] },
+  })
+  expect((await POST(request())).status).toBe(503)
   expect(fetcher).not.toHaveBeenCalled()
 })
 it("validates the network identity and keeps browser-supplied origins out", async () => {
@@ -145,7 +161,7 @@ it("rejects ready metrics calculated for different filters", async () => {
   expect((await POST(request())).status).toBe(503)
 })
 
-it("takes expanded capacity only from the authenticated session", async () => {
+it("sends only the session's API allowance, never a capacity", async () => {
   expect((await POST(request({ capacity: 2 }))).status).toBe(400)
   fetcher.mockImplementation(async () =>
     Response.json(
@@ -160,21 +176,12 @@ it("takes expanded capacity only from the authenticated session", async () => {
     )
   )
   expect((await POST(request({ minutes: 15 }))).status).toBe(202)
-  expect(JSON.parse(fetcher.mock.calls[0]![1].body)).toMatchObject({
-    capacity: 1,
+  const sent = JSON.parse(fetcher.mock.calls[0]![1].body)
+  expect(Object.keys(sent).sort()).toEqual(["allowance", "request", "userKey"])
+  expect(sent).toMatchObject({
+    allowance: { kind: "api", hourly: 20, daily: 100 },
     request: { minutes: 15 },
   })
-  session.mockResolvedValue({
-    user: {
-      id: "team",
-      features: ["atlas.analysis"],
-      limits: { analysisRunsPerHour: 100, analysisAreaMultiplier: 2 },
-    },
-  })
-  expect((await POST(request({ minutes: 30 }))).status).toBe(202)
-  expect(JSON.parse(fetcher.mock.calls[1]![1].body)).toMatchObject({
-    capacity: 2,
-    hourlyLimit: 100,
-    request: { minutes: 30 },
-  })
+  expect(sent.allowance.accountKey).toMatch(/^[a-f0-9]{64}$/)
+  expect(JSON.stringify(sent)).not.toContain("team-a")
 })

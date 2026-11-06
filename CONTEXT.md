@@ -69,7 +69,7 @@ A Submission in which a user asserts a trusted relationship to a specific Librar
 _Avoid_: ownership claim, takeover, invite (a Team invite joins a Team, not a Library)
 
 **Staff Role**:
-A Library-specific level on an approved affiliation: `owner` or `editor`. Both can edit the record, post Notices, connect Event Feeds and review other people’s community corrections. Owners also control live sharing; when the Library is covered by a Team they can change levels, remove staff and set who may go live, and the Team Organiser can invite colleagues and assign them. The first approved claimant of a Library becomes its owner and later ones editors, unless an assignment says otherwise; the last owner can't leave or be demoted. Staff Role is separate from Contributor Role and Plan; no payment grants Staff access, and a Team Seat gives none until the organiser assigns the person to a Library.
+A Library-specific level on an approved affiliation: `owner` or `editor`. Both can edit the record, post Notices, connect Event Feeds and review other people’s community corrections. Owners also control live sharing; when the Library is covered by a Team they can change levels, remove staff and set who may go live, and the Team Organiser can invite colleagues and assign them. The first approved claimant of a Library becomes its owner and later ones editors, unless an assignment says otherwise; the last owner can't leave or be demoted. Staff Role is separate from Contributor Role and Entitlements; no payment, sponsorship or recognition grants Staff access, and workspace membership gives none until the organiser assigns the person to a Library.
 _Avoid_: global staff role, admin, team role (that is organiser or member within a Team)
 
 **Staff Publish**:
@@ -81,31 +81,27 @@ The pull-out panel that opens from any page for someone with Staff access: a fix
 _Avoid_: sidebar, staff menu, panel (alone)
 
 **Contribute Menu**:
-The header's Contribute panel: one small card per kind of work the viewer can do, combined for someone with several roles (their own work first, then Drives and Contribute for everyone, with Membership as a row at the bottom). Built from the session's Capabilities, Staff access and Teams, never from the displayed Contributor Role or the Plan. It opens signed out too, with a sign-in card, and shows only the Everyone cards until the session has loaded. The mobile menu's Contribute section and the footer's editor pills read the same cards.
+The header's Contribute panel: one small card per kind of work the viewer can do, combined for someone with several roles (their own work first, then Drives and Contribute for everyone, with Membership as a row at the bottom). Built from the session's Capabilities, Staff access and Teams, never from the displayed Contributor Role or the Standing. It opens signed out too, with a sign-in card, and shows only the Everyone cards until the session has loaded. The mobile menu's Contribute section and the footer's editor pills read the same cards.
 _Avoid_: Contribute dropdown, role menu, shortcuts (alone)
 
 **Team**:
-A library service's organisation on the site, bought per service (`plugin::access.team`): a name, a number of Team Seats, the Libraries it covers, an organiser, and whether an admin has verified it (`verifiedAt`). An active, unexpired Team gives each active member Pro personally (Plan Source `team`) and the library-scoped Team features (Traffic, choosing who can go live, team management) on the Team's Libraries only. Verification is set only by an admin, never by payment: on a verified Team an assignment creates Staff access at once; on an unverified one it files a vouched Library Claim. A lapsed Team keeps every level and permission it set. Not a per-person grant: a personal `team` Entitlement Grant gives Pro but unlocks nothing library-scoped.
-_Avoid_: organisation (alone), workspace, group, team plan (the Plan is what a Team gives its members)
+An organisation on the site (`plugin::access.team`), shown to people as a **staff workspace**: a name, its Team Members, one or more organisers, the Libraries it covers, and whether an admin has verified it (`verifiedAt`). Any verified-email account can create one free of charge; covering a Library still needs verified owner authority on it. It has no seats or payment state. Verification is set only by an admin, never by payment: on a verified Team an assignment creates Staff access at once; on an unverified one it files a vouched Library Claim. Library-scoped staff tools (Traffic, choosing who can go live, team view, embeds, bulk upload) come from each person's own verified staff access (`canStaff`), never from membership. A Team can also own one API Account.
+_Avoid_: team plan, seat, paid workspace
 
 **Team Member**:
-A person's row in their one Team (`plugin::access.team-member`): their email, Better Auth id once they accept, a team role of `organiser` or `member`, and a status of `invited`, `active` or `removed`. An account can have one active membership row across Teams, even while its Team is lapsed or awaiting payment. Moving Teams requires removal from the previous Team and Organiser handover where needed. Invited by email, accepted by signing in with that address; a member holds a Team Seat but no Staff access until assigned to a Library. Removal deletes only the affiliations the Team created.
-_Avoid_: seat (that is the capacity), staff (that is per Library), employee
+A person's row in a Team (`plugin::access.team-member`): their email, Better Auth id once they accept, a team role of `organiser` or `member`, and a status of `invited`, `active` or `removed`. Invited by email, accepted by signing in with that address. A member has no Staff access until assigned to a Library. Removal deletes only the affiliations the Team created.
+_Avoid_: seat, staff (that is per Library), employee
 
 **Team Organiser**:
-The Team Member with `teamRole: organiser`. Invites colleagues by email (optionally pre-assigning them to a Library), resends and revokes invites, changes team roles, assigns and unassigns members to the Team's Libraries as owner or editor, and removes members, from `/staff/teams`. Other members see that page read only. The organiser's trust comes from the Team's verification, not from their Plan.
+The Team Member with `teamRole: organiser`. Invites colleagues, changes team roles, assigns and unassigns members to the Team's Libraries as owner or editor, and removes members, from `/staff/teams`; on an API Account, organisers also own billing, keys and overage settings. The organiser's trust comes from the Team's verification and their own staff access, never from payment. The last organiser must hand over before deleting their account.
 _Avoid_: admin, team owner, manager
 
-**Team Seat**:
-One place in a Team's capacity (`seats`, default 5). Active and invited members together never exceed it; an invite past the cap is refused. Each occupied seat gives its holder Pro.
-_Avoid_: licence, user slot
-
-**Team API Add-on**:
-A separate recurring API purchase owned by an active Team. Its organisers manage named API Keys and billing in `/staff/teams/api`; members can inspect usage. Settled payment gives versioned access to published public Library search and records, with a shared monthly request and response-data allowance. It gives no Staff access, Capability, user session or protected data. Limits are recorded with the purchase; creating or regenerating keys never resets usage.
-_Avoid_: personal API subscription, paid staff permission
+**API Account**:
+The paid machine-API subscription of one organisation (a Team; an individual buyer gets a single-member organisation at checkout). One active subscription per organisation, £100/month. Each settled billing period (`[start, end)` of the Stripe subscription item, UTC) pools 10,000 successful requests, 262,144,000 response bytes and 100 analysis credits across all keys. Overage is opt-in and capped by the organiser (£10–£500 before tax). Organisers manage it at `/developers`; members see usage. Organisers with settled coverage receive the browser Reach bonus (the `apiCustomer` fact). It gives no Staff access, Capability, user session or protected data. Limits are snapshotted with the purchase. See `apps/ui/TEAM-API.md`.
+_Avoid_: Team API add-on, personal API subscription, paid staff permission
 
 **API Key**:
-A Team-owned machine credential for selected public API operations. The full value is shown once; only its digest and display prefix are retained. An organiser can regenerate or revoke it. Key count is unlimited. The default 100,000 successful requests and 10 GiB response data are one shared monthly Team pool across keys and members, not a per-key or per-seat allowance. Each key shares the Team API Add-on's allowances; its creator is an audit actor, not the identity of API requests.
+An API Account's machine credential for scoped public API operations (`search:read`, `libraries:read`, `services:read`, `analysis:run`, `submissions:write`; new keys default to the read scopes). The full value is shown once; only its digest and display prefix are retained. An organiser can regenerate or revoke it. Key count is unlimited and every key shares the account's allowances; its creator is an audit actor, not the identity of API requests.
 _Avoid_: user token, Strapi token, Meilisearch key (those are separate upstream credentials)
 
 **Library Notice**:
@@ -145,7 +141,7 @@ The unit of contribution credit awarded when a Submission is approved. Drive Tie
 _Avoid_: credits, score, karma
 
 **Tier**:
-A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Scales contribution limits only (pending submissions, submissions per hour, uploads per day: `contributionLimits` in `@repo/access`; `wiki_editor`, `journal_editor`, `moderator` and `editorial_board` get Curator limits) and, from Archivist up, earns Pro (see Plan Source). Never confers trust: no Tier skips review or grants a Capability.
+A prestige level computed from a user's all-time Points — Reader (0), Indexer (100), Cartographer (500), Archivist (1 500), Scholar (4 000), Curator (9 000). Scales contribution limits only (pending submissions, submissions per hour, uploads per day: `contributionLimits` in `@repo/access`; `wiki_editor`, `journal_editor`, `moderator` and `editorial_board` get Curator limits). It never unlocks tools or Recognition, which count accepted contributions rather than Points. Never confers trust: no Tier skips review or grants a Capability.
 _Avoid_: level, rank, grade
 
 **Badge**:
@@ -161,7 +157,7 @@ A community member with authority to approve, reject, or request more informatio
 _Avoid_: admin, reviewer (alone — too generic)
 
 **Contributor Role**:
-A level of trust that gates privileged platform features, held through Role Grants. Distinct from Tier (earned with Points; changes limits only) and Plan (changes Entitlements only). Values in ascending privilege order: `reader` (no grants), `contributor`, `verified_librarian`, `wiki_editor`, `journal_editor`, `moderator`, `editorial_board`. A person can hold several at once, each with its own scope: `wiki_editor` and `journal_editor` edit Knowledge or Journal articles directly in the locales of their grants, `moderator` reviews Submissions in its Moderation Scope, and `editorial_board` does all of that in every queue and locale. Staff grant roles in Strapi admin; an approved Library Claim (or an email-domain auto-verification) grants `verified_librarian`, and an approved Role Application grants an editor role. They are never earned with Points or bought. The profile's `contributorRole` shows the highest role for display and is derived from the grants, never written directly. Grants reach the Better Auth session through the `session-profile` bridge, cached for 60 seconds per user; a grant change also asks the site to drop that cache, so it usually shows at once and always within a minute.
+A level of trust that gates privileged platform features, held through Role Grants. Distinct from Tier (earned with Points; changes limits only) and Entitlements (tools and limits from Access Facts). Values in ascending privilege order: `reader` (no grants), `contributor`, `verified_librarian`, `wiki_editor`, `journal_editor`, `moderator`, `editorial_board`. A person can hold several at once, each with its own scope: `wiki_editor` and `journal_editor` edit Knowledge or Journal articles directly in the locales of their grants, `moderator` reviews Submissions in its Moderation Scope, and `editorial_board` does all of that in every queue and locale. Staff grant roles in Strapi admin; an approved Library Claim (or an email-domain auto-verification) grants `verified_librarian`, and an approved Role Application grants an editor role. They are never earned with Points or bought. The profile's `contributorRole` shows the highest role for display and is derived from the grants, never written directly. Grants reach the Better Auth session through the `session-profile` bridge, cached for 60 seconds per user; a grant change also asks the site to drop that cache, so it usually shows at once and always within a minute.
 _Avoid_: permission, access level, tier (Tier is the Points-based system)
 
 **Role Grant**:
@@ -177,7 +173,7 @@ The (queue, locale) pairs a Moderator may review, one per `moderator` Role Grant
 _Avoid_: permission, remit
 
 **Role Application**:
-A Submission asking for an editor or scoped moderator role, for every language or only some, reviewed in the `applications` queue. Moderators may request Index, Knowledge, Journal or Discussions; discussion applications have no article-section selection. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Plan, Tier or Points. Approval creates the Role Grants and awards no Points.
+A Submission asking for an editor or scoped moderator role, for every language or only some, reviewed in the `applications` queue. Moderators may request Index, Knowledge, Journal or Discussions; discussion applications have no article-section selection. Open to anyone with five accepted Submissions, no open application for that role and no grant that already covers it; never related to Recognition, payment, Tier or Points. Approval creates the Role Grants and awards no Points.
 _Avoid_: promotion, role request
 
 **Review Event**:
@@ -189,7 +185,7 @@ A two-minute lease a Moderator holds on a Submission while its review page is op
 _Avoid_: claim (a Library Claim is something else), assignment
 
 **Change Record**:
-One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values require the Supporter-or-higher `library.history` Entitlement.
+One field of one Library changing once: previous value, next value, who, when, why (which Submission, if any) and from which source (a Submission, an admin, an API token, an import or the system). Recorded for every write, including admin edits and imports, and retained as audit history. Account erasure clears actor and reviewer identifiers without deleting the public changes. The Change Records from one write form a **Change Batch**. A Library's public Changes section names the fields; their values require the `library.history` Entitlement, which every signed-in Explorer has.
 _Avoid_: revision, audit log entry
 
 **Article Change**:
@@ -197,24 +193,32 @@ One edit event on a Knowledge or Journal article: who, when, locale and kind (cr
 _Avoid_: revision, version
 
 **Capability**:
-Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion or a Role Application; submit a `library_edit` or connect an event feed for a Library they are staff of (by claim or Team assignment); edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier and Plan never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
-_Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what a Plan gives)
+Something a signed-in user may do in the contribution system: submit a correction, a new Library, a Library Claim, a doc suggestion, a journal pitch, a topic suggestion or a Role Application; submit a `library_edit` or connect an event feed for a Library they are staff of (by claim or Team assignment); edit Wiki or Blog articles directly (`docs.directEdit`, `journal.directEdit`, in the locales of the editor's grants); or review Submissions (`moderate.queue`, within a Moderation Scope). Resolved only from Role Grants and Library Claims (`resolveCapabilities` in `@repo/access`); Tier, Recognition and Entitlements never feed it. Strapi's `submission-policy` is the real gate; the session's copy drives the UI and route pre-checks only.
+_Avoid_: permission (Strapi admin's word for its own roles), entitlement (that is what Access Facts give)
 
 **Entitlement**:
-A Plan-gated feature or numeric limit, such as the `atlas.export` feature or the `exportRows` limit (free 0, supporter 500, pro 10 000, team 50 000). Resolved by `resolveEntitlements` in `@repo/access` from the user's Plan and always enforced on the server (`requireEntitlement`); UI locks only explain. The library-scoped features (`library.team`, `library.traffic`) are checked per Library with `canForLibrary` and hold only on the Libraries of the user's active Teams. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role or moderation: money never buys trust.
-_Avoid_: capability, perk, permission
+A feature or numeric limit resolved from independent Access Facts, such as the `atlas.export` feature or the `exportRows` limit (Explorer 10 000 rows per export, 20 exports per rolling day). Resolved by `resolveEntitlements` in `@repo/access` and always enforced on the server (`requireEntitlement`); UI locks only explain. An Entitlement never grants a Capability or changes Points, Tier, Badges, Contributor Role, staff access or moderation: money never buys trust. Staff tools are not Entitlements; they are staff capabilities (`canStaff`) from verified staff claims on named Libraries.
+_Avoid_: capability, perk, permission, plan
 
-**Plan**:
-A user's membership level, which decides their Entitlements: `public` (signed out), `free` (any account), `supporter` (detailed library history and Atlas exports up to 500 libraries per download), `pro` and `team`. Resolved on the server for every session; when several Plan Sources apply, the highest Plan wins. Library facts are free on every Plan, including `public`.
-_Avoid_: tier (Tier is the Points ladder), subscription (only one way to hold a Plan)
+**Access Fact**:
+One independent reason an account has Entitlements, replacing the ranked Plan: `explorer` (any signed-in account: browse, comparison, context layers, alerts, notes, history, saved views and exports within fair-use limits; no Reach), `contributor` (Recognition at 1 accepted contribution: two new one-library Reach calculations per rolling seven days), `supporter` (Recognition at 100 accepted contributions: no tools or quota) and `apiCustomer` (organiser of an API Account with settled coverage: 20 new browser Reach calculations an hour, pooled 100 a day per API Account, service Reach up to 50 Libraries). The session carries `standing` (`public`, `explorer`, `contributor` or `supporter`), `facts`, `features` and `limits`; `plan`, `planSource` and `teamLibraryIds` are gone.
+_Avoid_: plan, tier, membership level
 
-**Supporter recognition**:
-Optional credit on `/community/supporters` and a Supporter mark on the profile, available with an active Supporter, Pro or Team Plan, including earned/verified Pro and active Team Seats. These are independent private preferences (`supporterListed`, `supporterBadgeVisible`), not contribution Badges or Contributor Roles. Only public profiles may be listed; a hidden public location stays hidden here. Moving a profile to private or limited also opts it out, and making it public again does not relist it without an explicit opt-in. Expired access removes both recognition surfaces. Monthly cost figures and the supporter hero copy live in the Site config single type.
-_Avoid_: trust badge, paid role
+**Explorer**:
+Any signed-in account, free. The customer-facing name for the `explorer` Access Fact.
+_Avoid_: free plan, basic
 
-**Plan Source**:
-How a user holds their Plan: `team` (an active Team Seat: Pro, plus the library-scoped Team features on that Team's Libraries), `grant` (an admin Entitlement Grant, for example for press or partners), `verified` (a Pro Verification for library staff, students and charities), `earned` (Archivist Tier or above, plus a 90-day hold after dropping below) or `paid` (settled personal membership). `public` and `free` have the source `none`. At equal Plan, `paid` beats `team`, which beats `grant`, which beats `verified`, which beats `earned`. Grants and verifications live in the admin-only `entitlement-grant` and `pro-verification` collections, and Teams in the `access` plugin's `team` and `team-member` types.
-_Avoid_: reason, plan type
+**Recognition**:
+Earned thanks for accepted, substantive contributions, counted per accepted submission or suggestion (`acceptedContributions` and `lastContributionAt` on the profile, incremented once per qualifying positive award) rather than from Points. **Contributor** from 1, **Supporter** from 100; durable, with a separate 30-day "recently active" status. Administrative adjustments, streaks and automatic bonuses never count. A moderator can revoke it for fraud or duplication (`recognitionRevokedAt`). Recognition never grants editing rights, staff verification, moderation or API access. Supporters can appear on `/community/supporters` and show a Supporter mark, subject to the independent privacy preferences `supporterListed` and `supporterBadgeVisible`; only public profiles are listed.
+_Avoid_: earned Pro, paid supporter, trust badge
+
+**Verified Staff**:
+The customer-facing name for people with Staff access through an approved Library Claim or a verified Team assignment. Their tools are free and scoped to their own Libraries.
+_Avoid_: Team plan, paid staff
+
+**Sponsor**:
+An organisation funding the public service under an annual agreement, recorded in the admin-only `sponsor` collection (organisation, tier anchor, term, recognition consent, logo, acknowledgement text, published flag) that drives the acknowledgement surface. Suggested anchors are £2,500, £5,000 and £10,000 a year. Not a charitable donation; it includes no API access and never feeds Entitlements, capabilities, ranking or moderation.
+_Avoid_: donor, patron, paid partner
 
 **Collection Stat**:
 A single data point describing what a Library _holds_ — volumes, manuscripts, maps, incunabula, digital objects, etc. Free-form `category` + `value` pairs today, with potential to become a structured collections API in the future.
@@ -298,12 +302,12 @@ _Avoid_: drive request
 - A **Library** belongs to a **Country** → **Region** → optionally an **Area**
 - An **Area** belongs to exactly one **Region**; not every **Region** has **Areas**
 - An approved **Library Claim**, or a **Team Organiser**'s assignment on a verified **Team**, links a user to a specific **Library** and grants its **Staff Role** and Staff access
-- A **Team** covers one or more **Libraries** and holds **Team Members** in **Team Seats**; one of them is the **Team Organiser**. A seat gives Pro; only an assignment gives a **Staff Role**
+- A **Team** (staff workspace) covers one or more **Libraries** and holds **Team Members**; at least one is the **Team Organiser**. Membership gives nothing by itself; only an assignment gives a **Staff Role**. A Team can own one **API Account**
 - A **Mobile Timetable** has one **Cycle**, many **Stops** and many **Visits**; a **Library Notice** can cancel a Visit's occurrences, and a **Live Session** reports progress along one day's Visits without changing them
 - A **Staff Publish** leaves a **Submission**, a **Review Event** and **Change Records**, like any other change, and earns no **Points**
 - **Points** accumulate per approved **Submission** and determine a user's **Tier** and **Badge** eligibility
-- A user's **Capabilities** come only from their **Role Grants** (their **Contributor Roles**) and **Library Claims**, and their **Entitlements** only from their **Plan**. The two never feed each other; **Tier** feeds only contribution limits and earned Pro
-- Every **Submission** moves through the **Submission States**; an audited staff publish uses `draft → approved` under ADR-0006. No **Plan** or **Tier** changes review authority
+- A user's **Capabilities** come only from their **Role Grants** (their **Contributor Roles**) and **Library Claims**, and their **Entitlements** only from their **Access Facts**. The two never feed each other; **Tier** feeds only contribution limits, and **Recognition** counts accepted contributions, not Points
+- Every **Submission** moves through the **Submission States**; an audited staff publish uses `draft → approved` under ADR-0006. No payment, **Recognition** or **Tier** changes review authority
 - Every **Submission** belongs to one **Moderation Queue**; a **Moderator** reviews it only when the queue and its locale are in their **Moderation Scope**, and never their own
 - Every change to a **Library**'s content leaves **Change Records**, whoever made it; every write to a Wiki or Blog article leaves an **Article Change**
 - A **Pillar Institution** is a **Library** flagged `featured: true` by editorial choice; there is no maximum per Region or Country
@@ -319,8 +323,8 @@ _Avoid_: drive request
 > **Dev:** "And if they get approved — do they earn **Points**?"
 > **Domain expert:** "Community contributions earn Points when accepted: minor edits (1–3 fields) earn 5 and major edits (4+ fields) earn 15. A staff member accepting a community correction awards its contributor the normal Points; publishing their own record earns none."
 >
-> **Dev:** "A council has bought Team. Does that make its librarians staff of every branch?"
-> **Domain expert:** "No. Team is the council's **Team**: its **Team Organiser** invites people into **Team Seats**, which gives them Pro, and then assigns each one to a **Library** as owner or editor. On a verified Team that assignment is the **Staff Role**; on an unverified one it's a vouched **Library Claim** for a Moderator. Nobody is staff of a branch they haven't been assigned to, and the Team's **Plan** never changes who reviews what."
+> **Dev:** "A council has set up a staff workspace and bought API access. Does that make its librarians staff of every branch?"
+> **Domain expert:** "No. The workspace is the council's **Team**: its **Team Organiser** invites colleagues and then assigns each one to a **Library** as owner or editor. On a verified Team that assignment is the **Staff Role**; on an unverified one it's a vouched **Library Claim** for a Moderator. The **API Account** only pays for machine access. Nobody is staff of a branch they haven't been assigned to, and no payment changes who reviews what."
 
 ## Model notes
 
@@ -333,14 +337,14 @@ _Avoid_: drive request
 
 ## Atlas library networks
 
-A **Library Network** is a sourced institutional grouping, such as a public library service, university system or consortium. Libraries have non-localised many-to-many `networks` memberships. The network has a stable source key, name, kind, countries and source reference. Its identity is independent of geographic placement and of paid Teams; membership grants no staff authority.
+A **Library Network** is a sourced institutional grouping, such as a public library service, university system or consortium. Libraries have non-localised many-to-many `networks` memberships. The network has a stable source key, name, kind, countries and source reference. Its identity is independent of geographic placement and of Teams; membership grants no staff authority.
 
 Network is a reusable Atlas filter. Network Reach combines the full analytical catchments of the selected published, mapped, fixed-location Libraries, then clips them to a service reporting area derived from all eligible mapped members, before filters apply. The default area unions the supported districts containing those members; it does not assert an official jurisdiction. Selecting a service focuses its bounding box. Unrelated reporting-area combinations are rejected. It integrates the union and the area's denominator against the same population edition. Missing routes or population remain explicit; incomplete results cannot establish population gaps. Saved analytical choices do not alter institutional memberships.
 
-The expanded Reach policy in PR #77 is pending release acceptance. Pro admits up to 50 eligible Libraries, with four travel times within a 2,500 km² / 75 km bounding envelope, or one selected time within 20,000 km² / 200 km. An active Team seat doubles those branch, area and span allowances and receives 100 new calculations per hour rather than Pro's 20, while retaining personal Pro features and existing staff permissions. Lapsed or expired Team membership falls back to independently held access. Larger services require an explicit recalculation when the selected time changes; they do not receive invented intermediate bands. Both the Libraries and the complete reporting area must fit. These are bounded query allowances, not land-area measurements or an unlimited national analysis feature. Capacity claims remain staged in the CMS until the matching release is accepted.
+Reach admits up to 50 eligible Libraries, with four travel times within a 2,500 km² / 75 km bounding envelope, or one selected time within 20,000 km² / 200 km. Who may start new calculations depends on Access Facts: Explorers none, Contributors two one-library calculations per rolling seven days (no service or network Reach), and organisers of a covered API Account 20 an hour, pooled 100 a day per API Account. Cached identical results are free. The machine API's analysis credits are a separate budget. Larger services require an explicit recalculation when the selected time changes; they do not receive invented intermediate bands. Both the Libraries and the complete reporting area must fit. These are bounded query allowances, not land-area measurements or an unlimited national analysis feature.
 
 ## Pricing and content operations
 
-The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: Supporter £3/£30, founding Pro £5/£50, future standard Pro £8/£80 as a separate later offer, Team £600/year for five seats and £120 per additional seat (ex VAT), with a 20% public-library-service discount. Shipping Reach does not activate the future offer or change existing prices. New Teams use self-service annual subscriptions when enabled; settled payment provisions seats, while staff authority and discount eligibility are assessed separately. Existing invoice agreements are preserved. Team API is a separate £15/month add-on. Existing subscriptions keep their original Price IDs. See `apps/ui/PRICING.md` and `apps/ui/TEAM-BILLING.md`.
+The agreed amounts are in `apps/ui/src/lib/membership-pricing.json`: the API at £100/month (tax-inclusive base GBP) with 10,000 requests, 250 MiB and 100 analysis credits per billing period, opt-in overage at 1p per request, 10p per MiB and 50p per credit under an organiser cap of £10–£500, and sponsorship anchors. Explorer, Recognition and Verified Staff are free. Personal Supporter/Pro purchases, paid Team seats, earned Pro and the £15 Team API add-on were removed in the November 2026 beta reset without grandfathering. See `apps/ui/PRICING.md`, `apps/ui/TEAM-API.md` and `apps/docs/docs/proposals/sponsored-access-decisions.md`.
 
 Routine content work targets production; feature work uses local explicitly. Use the selected environment's authorized content workflow in `apps/strapi/CONTENT-OPERATIONS.md`. Connection details, enabled transports, credentials and environment-specific permissions belong in private operator storage.

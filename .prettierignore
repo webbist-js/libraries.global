@@ -25,3 +25,5 @@ ui-debug.log
 **/.strapi/client/**
 # Deterministic generated source inventory
 apps/storybook/audit/
+# Generated legal review copies (compared byte-for-byte by tests)
+apps/docs/docs/proposals/legal-drafts/

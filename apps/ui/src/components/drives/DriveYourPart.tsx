@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
-import { earnedProLine, type PendingQuota, quotaLine } from "./task-panel.logic"
+import { type PendingQuota, quotaLine } from "./task-panel.logic"
 
 /** The signed-in reader's own counts; never cached with a public drive. */
 export type DriveMine = { sent: number; inReview: number; accepted: number }
@@ -10,11 +10,9 @@ export type DriveMine = { sent: number; inReview: number; accepted: number }
 export function DriveYourPart({
   mine,
   quota,
-  toEarnedPro,
 }: {
   readonly mine: DriveMine | null
   readonly quota: PendingQuota | null
-  readonly toEarnedPro: number | null
 }) {
   const t = useTranslations("drivePage")
   const ui = useTranslations("ui")
@@ -75,9 +73,6 @@ export function DriveYourPart({
           <p className="m-0">{t("nothingSent")}</p>
         ) : null}
         {line ? <p className="m-0">{line}</p> : null}
-        {toEarnedPro != null ? (
-          <p className="m-0">{earnedProLine(toEarnedPro)}</p>
-        ) : null}
       </div>
     </section>
   )

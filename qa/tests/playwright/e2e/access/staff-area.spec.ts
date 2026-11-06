@@ -19,13 +19,14 @@ import { NAVIGATION } from "../../helpers/ui-flows"
 
 // Local only, opt-in (the access project), after `pnpm seed:access`, which
 // creates the fixture libraries and the staff fixtures: `staff-owner` owns
-// the Public fixture library and the Second one (which no Team covers);
-// `staff-editor` edits the Public one and sits on the Team that covers it;
-// `moderator-global` reviews the index queue. Four sign-ins.
+// the Public fixture library and the Second one (which no staff workspace
+// covers); `staff-editor` edits the Public one by claim and belongs to the
+// free workspace that covers it; `moderator-global` reviews the index queue.
+// Four sign-ins.
 //
 // Covers the Staff section (`/staff`): a reader is told nothing exists; the
-// shell and tabs for an editor whose Team covers the library; the Team gate
-// on an uncovered library; publishing an hours change straight to the
+// shell and tabs for an editor whose own claim unlocks the free staff tools;
+// the free-workspace prompt on an uncovered library; publishing an hours change straight to the
 // public page; an address change filed as a pending Staff request for a
 // Moderator; and a stale `previous` refused with 409.
 
@@ -186,7 +187,7 @@ test("a reader sees the claim page and cannot access the staff API", async ({
   ).toHaveCount(0)
 })
 
-test("an editor on a Team-covered library sees the shell, its tabs and no Team lock", async ({
+test("an editor on a claimed library sees the shell, its tabs and no staff lock", async ({
   browser,
 }) => {
   const page = await pageAs(browser, editor, baseURL)
@@ -208,15 +209,16 @@ test("an editor on a Team-covered library sees the shell, its tabs and no Team l
   // Not a Mobile library: no Timetable or Go live tab.
   await expect(tabs.getByRole("link", { name: "Timetable" })).toHaveCount(0)
   await expect(tabs.getByRole("link", { name: "Go live" })).toHaveCount(0)
-  // Covered by the editor's Team: the Team and Traffic tabs carry no "Team"
-  // lock tag (locked, the tab reads "Team Team"), and the plan chip says so.
+  // The editor's own verified claim unlocks the free staff tools: the Team
+  // and Traffic tabs carry no "Verified staff" lock tag, and the chip says
+  // staff access is free.
   const teamTab = tabs.locator(`a[href$="/staff/${PUBLIC.slug}/team"]`)
   await expect(teamTab).toBeVisible()
   await expect(teamTab).toHaveText(/^\s*Team\s*$/)
   await expect(
     tabs.locator(`a[href$="/staff/${PUBLIC.slug}/traffic"]`)
   ).toHaveText(/^\s*Traffic\s*$/)
-  await expect(page.getByText("Team plan", { exact: true })).toBeVisible()
+  await expect(page.getByText("Staff access · free")).toBeVisible()
 
   await page.goto(`/staff/${PUBLIC.slug}/edit`, NAVIGATION)
   await expect(
@@ -231,7 +233,7 @@ test("an editor on a Team-covered library sees the shell, its tabs and no Team l
   ).toHaveCount(0)
 })
 
-test("an owner on an uncovered library sees the Team gate and who has access", async ({
+test("an owner on a library no workspace covers sees the free-workspace prompt and who has access", async ({
   browser,
 }) => {
   const page = await pageAs(browser, owner, baseURL)
@@ -246,12 +248,14 @@ test("an owner on an uncovered library sees the Team gate and who has access", a
   await expect(
     page.getByRole("heading", { name: "Who has staff access" })
   ).toBeVisible()
+  await expect(page.getByText("Free staff workspace")).toBeVisible()
   await expect(page.getByText("Staff access · free")).toBeVisible()
-  // The shell's Team tab is locked here: the label plus the "Team" tag.
+  // No workspace is needed for the tab itself: the owner's own verified
+  // claim unlocks it, so it carries no "Verified staff" lock tag.
   const tabs = page.getByRole("navigation", { name: "Staff area" })
   await expect(
     tabs.locator(`a[href$="/staff/${SECOND.slug}/team"]`)
-  ).toHaveText(/Team\s*Team/)
+  ).toHaveText(/^\s*Team\s*$/)
 })
 
 test("publishing an hours change shows on the public page at once", async ({

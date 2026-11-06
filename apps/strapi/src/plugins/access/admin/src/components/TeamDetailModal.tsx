@@ -133,15 +133,6 @@ export function TeamDetailModal({
                     "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
                 }}
               >
-                <Fact
-                  label="Seats"
-                  value={`${team.used} of ${team.seats} used`}
-                />
-                <Fact label="Expires" value={dateCell(team.expiresAt)} />
-                <Fact
-                  label="Source"
-                  value={team.source === "checkout" ? "Checkout" : "Admin"}
-                />
                 <Fact label="Created" value={dateCell(team.createdAt)} />
                 <Fact
                   label="Organisers"
@@ -487,19 +478,12 @@ export function TeamDetailModal({
                 <Button
                   startIcon={<Plus />}
                   loading={busy}
-                  disabled={busy || !email.trim() || team.used >= team.seats}
+                  disabled={busy || !email.trim()}
                   onClick={() => void invite()}
                 >
                   Send invite
                 </Button>
               </Flex>
-              {team.used >= team.seats && (
-                <Typography variant="pi" textColor="warning600">
-                  {team.source === "checkout"
-                    ? "Every available seat is taken. Add seats through Stripe billing or remove an unused member or invitation."
-                    : "Every seat is taken. Edit the Team to add seats, or remove an unused member or invitation."}
-                </Typography>
-              )}
             </Flex>
           </Modal.Body>
           <Modal.Footer>
@@ -526,7 +510,7 @@ export function TeamDetailModal({
             <Typography>
               {removing?.status === "invited"
                 ? `${removing ? memberLabel(removing) : ""} won't be able to join with their link.`
-                : `${removing ? memberLabel(removing) : ""} loses their seat, Pro from this team and every staff row this team created. They're emailed for each library.`}
+                : `${removing ? memberLabel(removing) : ""} leaves the team and loses every staff row this team created. They're emailed for each library.`}
             </Typography>
           </Dialog.Body>
           <Dialog.Footer>

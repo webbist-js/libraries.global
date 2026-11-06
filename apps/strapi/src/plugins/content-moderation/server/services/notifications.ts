@@ -6,6 +6,7 @@ import {
 } from "@repo/shared-data"
 
 import { verifiedEmailMap } from "../../../../utils/email-recipients"
+import { isApiSubmitter } from "../utils/api-proposals"
 import { emailConfigured } from "../utils/email-config"
 import {
   applicationDecidedEmail,
@@ -139,6 +140,23 @@ function alertSummary(s: SubmissionRow): string {
  * status change has committed, logs as `[notifications]`, and never throws:
  * an email that fails never undoes or blocks a transition.
  */
+/** The in-app activity for a decision, when the submitter has an account. */
+function decisionActivity(
+  s: SubmissionRow,
+  status: Decision,
+  note: string | null
+) {
+  if (!s.submittedByUserId) return
+
+  return {
+    baUserId: s.submittedByUserId,
+    eventKey: `decision:${s.documentId}:${status}:${note ?? ""}`,
+    kind: "submission_review" as const,
+    preference: "editsReviewed" as "editsReviewed" | "transactional",
+    href: "/contribute/submissions",
+  }
+}
+
 export default ({ strapi }: { strapi: any }) => {
   /** Sends one email, or logs why it didn't. Never throws. */
   async function send(
@@ -213,6 +231,8 @@ export default ({ strapi }: { strapi: any }) => {
 
     async submissionDecided(s: SubmissionRow, status: Decision): Promise<void> {
       const what = `the ${status} email for ${s.documentId}`
+      // API proposals have no person to tell; the account polls its status.
+      if (isApiSubmitter(s.submittedByUserId)) return
       try {
         const to = text(s.submittedByEmail, 320) ?? ""
         if (!to && !s.submittedByUserId) {
@@ -223,15 +243,7 @@ export default ({ strapi }: { strapi: any }) => {
         const url = appUrl("/contribute/submissions")
         const name = text(s.submittedByName)
         const note = s.reviewNote?.trim() || null
-        const activity = s.submittedByUserId
-          ? {
-              baUserId: s.submittedByUserId,
-              eventKey: `decision:${s.documentId}:${status}:${note ?? ""}`,
-              kind: "submission_review" as const,
-              preference: "editsReviewed" as "editsReviewed" | "transactional",
-              href: "/contribute/submissions",
-            }
-          : undefined
+        const activity = decisionActivity(s, status, note)
 
         if (s.submissionType === "role_application") {
           const { role, queue, locales } = roleApplicationFields(s.fields)

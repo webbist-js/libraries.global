@@ -18,7 +18,6 @@ export type AccessFeature = keyof typeof FEATURE_ENTRY_PATHS
 
 export const STAFF_DISCOVERY_PATHS = [
   "/staff",
-  "/staff/teams/api", // Legacy entry redirects to the API workspace.
   ...Object.values(FEATURE_ENTRY_PATHS).filter((path) =>
     path.startsWith("/staff/")
   ),

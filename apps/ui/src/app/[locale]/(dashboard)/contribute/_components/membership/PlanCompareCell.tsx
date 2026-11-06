@@ -5,28 +5,19 @@ import { T } from "@/lib/design-tokens"
 import { useMembershipContent } from "@/lib/localized-plans"
 import type { CompareCell } from "@/lib/plan-compare"
 
-/** One plan × feature cell: a tick, a "Soon" chip, or a dash (all labelled). */
+/** One offer × feature cell: a value, a tick, a "Soon" chip, or a dash (all labelled). */
 export function PlanCompareCell({
   cell,
   label,
-  isExport = false,
 }: {
   readonly cell: CompareCell
-  readonly isExport?: boolean
   readonly label?: string
 }) {
   const m = useMembershipContent()
   const tUi = useUiTranslations("ui")
 
   if (cell === "yes" && label)
-    return (
-      <span className="font-semibold">
-        {label}
-        {isExport ? (
-          <span className="sr-only"> {m("copy.perDownload")}</span>
-        ) : null}
-      </span>
-    )
+    return <span className="text-sm font-semibold">{label}</span>
 
   if (cell === "yes")
     return (

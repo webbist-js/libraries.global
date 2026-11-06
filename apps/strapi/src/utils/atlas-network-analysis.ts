@@ -21,7 +21,11 @@ import {
 } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
-import { analysisService } from "./atlas-analysis"
+import {
+  analysisService,
+  type ReachAllowance,
+  spendReachAllowance,
+} from "./atlas-analysis"
 import { atlasJson } from "./atlas-json"
 import {
   networkEligible,
@@ -40,10 +44,12 @@ export async function requestAtlasNetworkReach(
   strapi: Core.Strapi,
   input: unknown,
   userKey: string,
-  hourlyLimit: number,
-  capacity: AtlasReachCapacity = 1
+  allowance: ReachAllowance
 ) {
-  assertCapacity(capacity)
+  if (allowance.kind !== "api")
+    throw new RangeError("Service Reach needs an API account allowance")
+  // One standard envelope for everyone: the doubled Team capacity is gone.
+  const capacity: AtlasReachCapacity = 1
   const request = parseAtlasNetworkReachRequest(input)
   const network = await strapi
     .documents("api::library-network.library-network")
@@ -174,17 +180,12 @@ export async function requestAtlasNetworkReach(
     request,
     payload,
     userKey,
-    hourlyLimit,
+    allowance,
     areaName,
     areaCodes,
     serviceLibraries: rows.length,
     state,
   })
-}
-
-function assertCapacity(capacity: number) {
-  if (capacity !== 1 && capacity !== 2)
-    throw new RangeError("Invalid Reach capacity")
 }
 
 function selectionProblem(
@@ -212,7 +213,7 @@ async function admitNetworkJob(
   db: Core.Strapi["db"]["connection"],
   key: string,
   userKey: string,
-  hourlyLimit: number,
+  allowance: ReachAllowance,
   payload: {
     networkId: string
     selectionHash: string
@@ -227,18 +228,15 @@ async function admitNetworkJob(
       .where("expires_at", ">", new Date())
       .first()
     if (known) return { job: known }
-    const window = new Date(Math.floor(Date.now() / 3600000) * 3600000)
-    const budget = await trx("atlas_analysis_budgets")
-      .where({ key: userKey, window_start: window })
-      .first()
-    if ((budget?.used ?? 0) >= hourlyLimit) return { status: 429 }
     const count = await trx("atlas_analysis_jobs").count("key as n").first()
-    if (Number(count.n) >= 10000) return { status: 503 }
+    if (Number(count.n) >= 10000)
+      return {
+        status: 503,
+        error: "Analysis cache is at capacity. Retry later.",
+      }
+    const refused = await spendReachAllowance(trx, userKey, allowance)
+    if (refused) return refused
     await trx("atlas_analysis_jobs").where({ key }).delete()
-    await trx("atlas_analysis_budgets")
-      .insert({ key: userKey, window_start: window, used: 1 })
-      .onConflict(["key", "window_start"])
-      .merge({ used: trx.raw("atlas_analysis_budgets.used + 1") })
     const jobs = await trx("atlas_analysis_jobs")
       .insert({
         key,
@@ -335,13 +333,85 @@ async function networkMembers(
   return { members, excluded, error: null }
 }
 
+/** What to tell the user about a job that ended without a result. */
+function terminalMessage(job: { state: string; last_error?: string | null }) {
+  return job.state === "failed"
+    ? "Coverage could not be calculated. Please try again."
+    : (job.last_error ?? "Network analysis unavailable")
+}
+
+/**
+ * The stored result of a ready job, with its analysis and reporting-area
+ * provenance. A result the service no longer has retires the job (null).
+ */
+async function readyNetworkResult(
+  db: Core.Strapi["db"]["connection"],
+  key: string,
+  resultKey: string,
+  {
+    request,
+    payload,
+    areaName,
+    areaCodes,
+    serviceLibraries,
+  }: Pick<
+    Parameters<typeof networkJobResponse>[1],
+    "request" | "payload" | "areaName" | "areaCodes" | "serviceLibraries"
+  >
+) {
+  try {
+    const result = parseAtlasNetworkReachResult(
+      await analysisService(`/results/${resultKey}`)
+    )
+    verifyNetworkIdentity(result, request, payload)
+
+    return {
+      status: 200,
+      body: {
+        ...result,
+        areaCodes,
+        scope: request.scope,
+        analysis: {
+          schemaVersion: 2,
+          eligibleLibraries: payload.members,
+          serviceLibraries,
+          filteredOutLibraries:
+            serviceLibraries -
+            payload.excludedLibraries -
+            payload.members.length,
+          routingRelease: payload.release,
+          communityRelease: payload.communityRelease,
+        },
+        reportingArea: {
+          name: areaName,
+          version: atlasLocalGeography.version,
+          sourceUrl: atlasLocalGeography.boundaryUrl,
+          licence: atlasLocalGeography.boundaryLicence,
+        },
+      },
+    }
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !("status" in error) ||
+      error.status !== 404
+    )
+      throw error
+    await db("atlas_analysis_jobs")
+      .where({ key })
+      .update({ expires_at: new Date(0) })
+
+    return null
+  }
+}
+
 async function networkJobResponse(
   strapi: Core.Strapi,
   {
     request,
     payload,
     userKey,
-    hourlyLimit,
+    allowance,
     areaName,
     areaCodes,
     serviceLibraries,
@@ -359,7 +429,7 @@ async function networkJobResponse(
       communityRelease: string | null
     }
     userKey: string
-    hourlyLimit: number
+    allowance: ReachAllowance
     areaName: string
     areaCodes: string[]
     serviceLibraries: number
@@ -373,49 +443,15 @@ async function networkJobResponse(
     .where("expires_at", ">", new Date())
     .first()
   if (job?.state === "ready" && job.result_key) {
-    try {
-      const result = parseAtlasNetworkReachResult(
-        await analysisService(`/results/${job.result_key}`)
-      )
-      verifyNetworkIdentity(result, request, payload)
-
-      return {
-        status: 200,
-        body: {
-          ...result,
-          areaCodes,
-          scope: request.scope,
-          analysis: {
-            schemaVersion: 2,
-            eligibleLibraries: payload.members,
-            serviceLibraries,
-            filteredOutLibraries:
-              serviceLibraries -
-              payload.excludedLibraries -
-              payload.members.length,
-            routingRelease: payload.release,
-            communityRelease: payload.communityRelease,
-          },
-          reportingArea: {
-            name: areaName,
-            version: atlasLocalGeography.version,
-            sourceUrl: atlasLocalGeography.boundaryUrl,
-            licence: atlasLocalGeography.boundaryLicence,
-          },
-        },
-      }
-    } catch (error) {
-      if (
-        !(error instanceof Error) ||
-        !("status" in error) ||
-        error.status !== 404
-      )
-        throw error
-      await db("atlas_analysis_jobs")
-        .where({ key })
-        .update({ expires_at: new Date(0) })
-      job = null
-    }
+    const ready = await readyNetworkResult(db, key, job.result_key, {
+      request,
+      payload,
+      areaName,
+      areaCodes,
+      serviceLibraries,
+    })
+    if (ready) return ready
+    job = null
   }
   if (job?.state === "failed" && request.retry) {
     await db("atlas_analysis_jobs").where({ key, state: "failed" }).delete()
@@ -426,13 +462,18 @@ async function networkJobResponse(
       db,
       key,
       userKey,
-      hourlyLimit,
+      allowance,
       payload
     )
     if (admission.status)
       return {
         status: admission.status,
-        body: { error: "Network analysis allowance or capacity reached" },
+        body: {
+          error: admission.error,
+          ...("code" in admission && admission.code
+            ? { code: admission.code }
+            : {}),
+        },
       }
     job = admission.job
   }
@@ -441,12 +482,7 @@ async function networkJobResponse(
       job.state
     )
   )
-    return state(
-      job.state,
-      job.state === "failed"
-        ? "Coverage could not be calculated. Please try again."
-        : (job.last_error ?? "Network analysis unavailable")
-    )
+    return state(job.state, terminalMessage(job))
 
   return {
     status: 202,

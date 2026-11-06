@@ -3,7 +3,16 @@ import { describe, expect, it, beforeEach, afterEach, vi } from "vitest"
 
 import { BillingError } from "@/lib/billing/config"
 
-import { apiLibraries, apiPlaces, apiSearch, serveTeamApi } from "../gateway"
+import {
+  apiLibraries,
+  apiPlaces,
+  apiResult,
+  apiSearch,
+  serveApiRequest,
+  serveTeamApi,
+} from "../gateway"
+import type * as StoreModule from "../store"
+import { ApiRefusal } from "../store"
 
 const { find, reserve, finish, active } = vi.hoisted(() => ({
   find: vi.fn(),
@@ -11,7 +20,8 @@ const { find, reserve, finish, active } = vi.hoisted(() => ({
   finish: vi.fn(),
   active: vi.fn(),
 }))
-vi.mock("../store", () => ({
+vi.mock("../store", async (original) => ({
+  ...(await original<typeof StoreModule>()),
   findApiKey: find,
   reserveApiRequest: reserve,
   finishApiRequest: finish,
@@ -37,9 +47,12 @@ beforeEach(() => {
   reserve.mockResolvedValue({
     id: "request",
     teamId: "team",
+    keyId: "key",
+    periodStart: "2026-11-03T09:30:00.000Z",
     budget: 1000,
-    remaining: 999,
-    resetsAt: "2026-11-01T00:00:00Z",
+    credits: 0,
+    remaining: { requests: 999, bytes: 5000, credits: 100 },
+    resetsAt: "2026-12-03T09:30:00.000Z",
   })
   finish.mockResolvedValue(undefined)
 })
@@ -87,10 +100,48 @@ describe("machine API gateway", () => {
     expect(response.status).toBe(200)
     expect(response.headers.get("cache-control")).toBe("private, no-store")
     expect(response.headers.get("x-request-id")).toBe("request")
-    expect(finish.mock.calls[0]?.[2]).toBe(200)
-    expect(finish.mock.calls[0]?.[3]).toBe(
-      Buffer.byteLength(JSON.stringify({ name: "Česká knihovna" }))
+    const bytes = Buffer.byteLength(JSON.stringify({ name: "Česká knihovna" }))
+    expect(finish.mock.calls[0]?.[2]).toMatchObject({ status: 200, bytes })
+    // Remaining units reflect actual bytes, not the worst-case reservation.
+    expect(response.headers.get("x-api-requests-remaining")).toBe("999")
+    expect(response.headers.get("x-api-bytes-remaining")).toBe(
+      String(5000 + 1000 - bytes)
     )
+    expect(response.headers.get("x-api-analysis-credits-remaining")).toBe("100")
+    expect(response.headers.get("x-api-quota-reset")).toBe(
+      "2026-12-03T09:30:00.000Z"
+    )
+  })
+  it("reserves analysis credits with the request and settles fewer for cached work", async () => {
+    reserve.mockResolvedValueOnce({
+      id: "request",
+      teamId: "team",
+      keyId: "key",
+      periodStart: "2026-11-03T09:30:00.000Z",
+      budget: 1000,
+      credits: 5,
+      remaining: { requests: 999, bytes: 5000, credits: 95 },
+      resetsAt: "2026-12-03T09:30:00.000Z",
+    })
+    const response = await serveApiRequest(
+      {} as Pool,
+      request(),
+      {
+        scope: "analysis:run",
+        endpoint: "analysis.summary",
+        analysisCredits: 5,
+      },
+      async ({ credits, account }) => {
+        expect(credits).toBe(5)
+        expect(account).toEqual({ teamId: "team", keyId: "key" })
+
+        return apiResult({ cached: true }, { status: 202, credits: 0 })
+      }
+    )
+    expect(response.status).toBe(202)
+    expect(reserve.mock.calls[0]?.[5]).toEqual({ analysisCredits: 5 })
+    expect(finish.mock.calls[0]?.[2]).toMatchObject({ status: 202, credits: 0 })
+    expect(response.headers.get("x-api-analysis-credits-remaining")).toBe("100")
   })
   it("fails closed when successful usage cannot be committed", async () => {
     finish.mockRejectedValue(new Error("database unavailable"))
@@ -113,7 +164,7 @@ describe("machine API gateway", () => {
       async () => ({ value: "x".repeat(1001) })
     )
     expect(response.status).toBe(502)
-    expect(finish.mock.calls[0]?.slice(2, 4)).toEqual([502, 0])
+    expect(finish.mock.calls[0]?.[2]).toMatchObject({ status: 502, bytes: 0 })
   })
   it("rejects arbitrary Strapi queries, repeated parameters and search operations", async () => {
     await expect(
@@ -228,16 +279,22 @@ describe("machine API gateway", () => {
 })
 
 it.each([
-  ["api_addon_inactive", 403],
-  ["api_scope_refused", 403],
-  ["api_rate_limit", 429],
-  ["api_concurrency_limit", 429],
-  ["api_request_allowance_exhausted", 429],
-  ["api_byte_allowance_exhausted", 429],
+  ["api_access_inactive", 403, null],
+  ["api_scope_refused", 403, null],
+  ["rate_limit", 429, 37],
+  ["concurrency_limit", 429, 1],
+  ["quota_requests", 429, 3600],
+  ["quota_bytes", 429, 3600],
+  ["quota_analysis", 429, 3600],
+  ["overage_cap", 429, 3600],
 ] as const)(
-  "refuses metered playground traffic before upstream work when %s",
-  async (code, status) => {
-    reserve.mockRejectedValue(new BillingError(code, status))
+  "refuses metered traffic before upstream work when %s",
+  async (code, status, retryAfter) => {
+    reserve.mockRejectedValue(
+      retryAfter === null
+        ? new BillingError(code, status)
+        : new ApiRefusal(code, status, retryAfter, "2026-12-03T09:30:00.000Z")
+    )
     const work = vi.fn()
     const response = await serveTeamApi(
       {} as Pool,
@@ -248,9 +305,27 @@ it.each([
     )
     expect(response.status).toBe(status)
     expect(await response.json()).toEqual({ error: { code } })
+    expect(response.headers.get("retry-after")).toBe(
+      retryAfter === null ? null : String(retryAfter)
+    )
     expect(work).not.toHaveBeenCalled()
   }
 )
+
+it("caps list pages at 50 records", async () => {
+  await expect(
+    apiLibraries(at("/api/v1/libraries?limit=51"), 1000)
+  ).rejects.toMatchObject({ code: "invalid_limit", status: 400 })
+  await expect(
+    apiSearch(
+      new Request("https://libraries.global/api/v1/search/libraries", {
+        method: "POST",
+        body: JSON.stringify({ q: "x", limit: 51 }),
+      }),
+      1000
+    )
+  ).rejects.toThrow("invalid_search")
+})
 
 it("denies removed organisers before reserving quota or delivering data and retires their keys", async () => {
   active.mockRejectedValueOnce(new BillingError("api_key_owner_removed", 401))

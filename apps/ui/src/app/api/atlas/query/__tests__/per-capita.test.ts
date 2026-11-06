@@ -59,7 +59,7 @@ it.each(["perCapita", "libraryAccess"])(
     expect(execute).not.toHaveBeenCalled()
   }
 )
-it("serves Pro analysis privately while ordinary map counts stay public", async () => {
+it("serves Explorer analysis privately while ordinary map counts stay public", async () => {
   session.mockResolvedValue({ user: { features: ["atlas.analysis"] } })
   const result = await POST(request())
   expect(result.status).toBe(200)

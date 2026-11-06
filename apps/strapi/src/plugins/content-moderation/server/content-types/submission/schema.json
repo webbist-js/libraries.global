@@ -39,13 +39,7 @@
       "type": "enumeration",
       "required": true,
       "default": "draft",
-      "enum": [
-        "draft",
-        "pending",
-        "approved",
-        "rejected",
-        "needs_info"
-      ]
+      "enum": ["draft", "pending", "approved", "rejected", "needs_info"]
     },
     "targetEntityType": {
       "type": "enumeration",
@@ -79,11 +73,7 @@
     },
     "verificationMethod": {
       "type": "enumeration",
-      "enum": [
-        "email_domain",
-        "vouching",
-        "contact_us"
-      ]
+      "enum": ["email_domain", "vouching", "contact_us"]
     },
     "submittedByUserId": {
       "type": "string",
@@ -148,6 +138,24 @@
       "type": "integer",
       "default": 0,
       "private": true
+    },
+    "apiAccountId": {
+      "type": "string",
+      "private": true
+    },
+    "apiKeyId": {
+      "type": "string",
+      "private": true
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "private": true
+    },
+    "sourceLicence": {
+      "type": "string"
+    },
+    "sourceAttribution": {
+      "type": "string"
     }
   }
 }

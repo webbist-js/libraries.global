@@ -3,7 +3,7 @@ import { libraryTypeName, isDismissiblePrompt } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 import { claimAffiliationFilter } from "../utils/affiliations"
-import { loadPlanRows } from "../utils/entitlement-inputs"
+import { loadApiAccounts } from "../utils/api-accounts"
 import { internalNotifications } from "../utils/internal-notifications/service"
 import { activeGrants } from "../utils/role-grants"
 import { loadStaffClaims } from "../utils/staff"
@@ -16,15 +16,16 @@ type StaffLibrary = {
 }
 
 export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
-  const [[profile], affiliations, planRows, roleGrants] = await Promise.all([
+  const [[profile], affiliations, roleGrants, recognition] = await Promise.all([
     strapi.documents("api::user-profile.user-profile").findMany({
       filters: { baUserId: { $eq: baUserId } },
       fields: [
         "contributorRole",
         "username",
         "tier",
-        "earnedProUntil",
         "points",
+        "acceptedContributions",
+        "lastContributionAt",
         "dismissedPrompts",
         "country",
       ],
@@ -35,8 +36,9 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
         contributorRole?: string
         username?: string
         tier?: string
-        earnedProUntil?: string | null
         points?: number
+        acceptedContributions?: number | null
+        lastContributionAt?: string | null
         dismissedPrompts?: unknown
         country?: string | null
         languages?: { code: string; proficiency: string }[]
@@ -47,12 +49,13 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
       populate: { library: { fields: ["documentId"] } },
       limit: SESSION_PROFILE_MAX_CLAIMS,
     }) as Promise<{ library?: { documentId?: string } }[]>,
-    // Unexpired plan grants and Pro verifications (shared with the
-    // Strapi-side entitlement checks, utils/entitlement-inputs).
-    loadPlanRows(strapi, baUserId),
-    // Unexpired Role Grants, at most MAX_ACTIVE_GRANTS. `grants` above
-    // are plan grants; the two never mix.
+    // Unexpired Role Grants, at most MAX_ACTIVE_GRANTS.
     activeGrants(strapi, baUserId),
+    // Moderator revocation is private; the session carries only a boolean.
+    strapi.db.query("api::user-profile.user-profile").findOne({
+      where: { baUserId: { $eq: baUserId } },
+      select: ["recognitionRevokedAt"],
+    }) as Promise<{ recognitionRevokedAt?: string | null } | null>,
   ])
 
   if (profile && process.env.INTERNAL_NOTIFICATIONS_ENABLED === "true") {
@@ -63,8 +66,8 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
     }
   }
 
-  // Teams (R2-B): active memberships, with each Team's libraries, so the
-  // session resolves Pro (source `team`) and `teamLibraryIds` itself.
+  // Free staff workspaces the user belongs to. Membership never grants
+  // library authority; it only locates the user's API accounts.
   const teams: {
     id: string
     name: string
@@ -72,10 +75,7 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
     role: "organiser" | "member"
     libraryCount: number
     libraryDocumentIds: string[]
-    expiresAt: string | null
-    status: "active" | "lapsed"
     organiserName: string | null
-    selfService?: boolean
   }[] =
     (await strapi
       .plugin("access")
@@ -86,6 +86,12 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
 
         return []
       })) ?? []
+
+  // API accounts from each organisation's Team API paid projection.
+  const apiAccounts = await loadApiAccounts(
+    strapi,
+    teams.map((t) => ({ teamDocumentId: t.id, teamRole: t.role }))
+  )
 
   // Staff memberships, then one query for their libraries' names.
   const staffClaims = await loadStaffClaims(strapi, baUserId)
@@ -133,26 +139,21 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
     claims: affiliations
       .map((a) => a.library?.documentId)
       .filter((id): id is string => !!id),
-    grants: planRows.grants,
-    ...(planRows.paidMembership
-      ? { paidMembership: planRows.paidMembership }
-      : {}),
     roleGrants,
-    verifications: planRows.verifications,
     teams: teams.map((t) => ({
       id: t.id,
       name: t.name,
       slug: t.slug,
       role: t.role,
       libraryCount: t.libraryCount,
-      ...(t.selfService ? { selfService: true } : {}),
       libraryDocumentIds: t.libraryDocumentIds,
-      expiresAt: t.expiresAt,
-      status: t.status,
       organiserName: t.organiserName,
     })),
-    earnedProUntil: profile?.earnedProUntil ?? null,
+    apiAccounts,
     rewardsPoints: profile?.points ?? 0,
+    acceptedContributions: Math.max(0, profile?.acceptedContributions ?? 0),
+    lastContributionAt: profile?.lastContributionAt ?? null,
+    recognitionRevoked: recognition?.recognitionRevokedAt != null,
     dismissedPrompts: Array.isArray(profile?.dismissedPrompts)
       ? profile.dismissedPrompts.filter(isDismissiblePrompt)
       : [],

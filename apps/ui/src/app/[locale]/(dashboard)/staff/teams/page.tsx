@@ -1,5 +1,5 @@
 import { headers } from "next/headers"
-import { notFound, redirect } from "next/navigation"
+import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
@@ -15,34 +15,28 @@ import { TeamNameContext } from "@/components/staff/TeamNameContext"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
-import { teamWorkspaceHref } from "@/lib/staff/paths"
 import type { TeamDetail } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-function teamLead(
-  team: TeamDetail | null | undefined,
-  name: string,
-  organiser: boolean
-) {
+function teamLead(team: TeamDetail | null | undefined, organiser: boolean) {
   if (!organiser)
-    return `${team?.name ?? name} provides Pro while active. Library staff access requires verification. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your access.`
+    return `Your library access comes from your own verified staff claims, not from this workspace. Ask ${team?.organiserNames.join(" or ") || "your organiser"} to change your assignments.`
 
   return team?.verifiedAt
-    ? "Invite colleagues, assign them to your Libraries and manage their access. Add seats from Billing & seats when your Team grows."
-    : "Invite colleagues, connect your service and manage your Team’s libraries. Library access is reviewed separately."
+    ? "Invite colleagues, assign them to your libraries and manage their access. The workspace is free and has no member limit."
+    : "Invite colleagues, connect your service and choose the libraries you look after. Each library assignment is reviewed separately."
 }
 
 /**
- * The Team organiser: the Team's seats, libraries and members, with
- * invites, team roles, per-library assignments and removal for organisers.
- * Members see it read only. The account has one Team; no selection is carried in the URL.
+ * The free staff workspace: its libraries and members, with invites, team
+ * roles, per-library assignments and removal for organisers. Members see it
+ * read only. Membership never grants library editing; that comes only from
+ * each person's verified staff claims. The account has one workspace.
  */
 export default async function TeamOrganiserPage({
   params,
-  searchParams,
 }: {
   readonly params: Promise<{ locale: string }>
-  readonly searchParams: Promise<{ team?: string }>
 }) {
   const tUi = await getUiTranslations("ui")
   const t = await getUiTranslations("staffWorkspace")
@@ -56,7 +50,6 @@ export default async function TeamOrganiserPage({
   if (teams.length === 0)
     return <FeatureAccessLanding feature="teams" signedIn />
   if (teams.length > 1) return <TeamMembershipConflict />
-  if ((await searchParams).team) redirect(teamWorkspaceHref("", locale))
   const chosen = teams[0]!
   const result = await fetchStaff<TeamDetail>(
     session.user,
@@ -77,7 +70,7 @@ export default async function TeamOrganiserPage({
         title={t("membersLibraries")}
         context={<TeamNameContext name={team?.name ?? chosen.name} />}
         tabs={<StaffAreaTabs active="team" teamId={chosen.id} />}
-        lead={teamLead(team, chosen.name, organiser)}
+        lead={teamLead(team, organiser)}
         actions={
           <LearnMoreLink
             slug={KNOWLEDGE_SLUGS.teams}

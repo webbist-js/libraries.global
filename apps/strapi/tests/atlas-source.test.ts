@@ -59,7 +59,7 @@ describe("Atlas bounded source bridge", () => {
       const ctx = context({
         request: { schemaVersion: 1, libraryId: "one", mode: "walking" },
         userKey: "a".repeat(64),
-        hourlyLimit: 100,
+        allowance: { kind: "contributor", weekly: 2 },
       })
       ctx.request.headers[header] = ""
       await controller.reach(ctx)

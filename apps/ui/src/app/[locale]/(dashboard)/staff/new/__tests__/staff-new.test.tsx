@@ -56,7 +56,6 @@ const team = {
   role: "member",
   libraryCount: 0,
   status: "active",
-  expiresAt: null,
   verified: true,
   libraryDocumentIds: [],
 }
@@ -115,16 +114,12 @@ describe("staff creation page", () => {
       initialData: { name: "New Library" },
     })
   })
-  it("offers only active unexpired Teams as coverage choices", async () => {
+  it("offers free workspaces as coverage choices, never a legacy lapsed row", async () => {
     mocks.session.mockResolvedValue(session([library], [team]))
     mocks.teams.mockResolvedValue({
       status: 200,
       body: {
-        teams: [
-          team,
-          { ...team, id: "expired", expiresAt: "2000-01-01" },
-          { ...team, id: "lapsed", status: "lapsed" },
-        ],
+        teams: [team, { ...team, id: "lapsed", status: "lapsed" }],
       },
     })
     render(await staffPage(query))

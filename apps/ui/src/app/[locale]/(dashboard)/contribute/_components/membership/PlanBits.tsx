@@ -3,16 +3,10 @@ import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
 import { useMembershipContent } from "@/lib/localized-plans"
-import type { PlanCard, PlanInclude } from "@/lib/plans"
+import type { OfferItem } from "@/lib/plans"
 
-const SOON_SUFFIX = " (coming soon)"
-
-/** An include's text without its "(coming soon)" suffix; the chip says it. */
-export function includeLabel(item: PlanInclude): string {
-  return item.text.endsWith(SOON_SUFFIX)
-    ? item.text.slice(0, -SOON_SUFFIX.length)
-    : item.text
-}
+/** One translated line of an offer's list. */
+export type IncludeLine = Pick<OfferItem, "status"> & { text: string }
 
 export function ComingSoonChip({ label }: { label?: string }) {
   const m = useMembershipContent()
@@ -27,9 +21,9 @@ export function ComingSoonChip({ label }: { label?: string }) {
   )
 }
 
-/** A built include gets a green tick; an unbuilt one a clock and a chip. */
-export function IncludeItem({ item }: { readonly item: PlanInclude }) {
-  const soon = item.kind === "soon"
+/** A built include gets a green tick; a planned one a clock and a chip. */
+export function IncludeItem({ item }: { readonly item: IncludeLine }) {
+  const soon = item.status === "soon"
 
   return (
     <li
@@ -45,7 +39,7 @@ export function IncludeItem({ item }: { readonly item: PlanInclude }) {
         width={16}
       />
       <span>
-        {includeLabel(item)}
+        {item.text}
         {soon ? (
           <>
             {" "}
@@ -71,25 +65,26 @@ export function CurrentPlanBadge() {
   )
 }
 
+/** An offer's list: what's included (built and planned), then its notes. */
 export function PlanFeatures({
-  plan,
+  items,
   children,
 }: {
-  readonly plan: PlanCard
+  readonly items: readonly IncludeLine[]
   readonly children?: ReactNode
 }) {
   const m = useMembershipContent()
-  const live = plan.includes.filter((item) => item.kind === "feature")
-  const notes = plan.includes.filter((item) => item.kind === "note")
+  const included = items.filter((item) => item.status !== "note")
+  const notes = items.filter((item) => item.status === "note")
 
   return (
     <div
       className="flex flex-col gap-3 border-t pt-5"
       style={{ borderColor: T.border.divider }}
     >
-      <p className="m-0 text-sm font-bold">{m("copy.includedNow")}</p>
+      <p className="m-0 text-sm font-bold">{m("copy.includes")}</p>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
-        {live.map((item) => (
+        {included.map((item) => (
           <IncludeItem key={item.text} item={item} />
         ))}
       </ul>
@@ -110,7 +105,6 @@ export function PlanFeatures({
     </div>
   )
 }
-
 export const H2_STYLE = {
   color: T.ink.base,
 } as const

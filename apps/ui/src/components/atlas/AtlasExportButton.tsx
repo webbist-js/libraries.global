@@ -1,7 +1,11 @@
 "use client"
 
+import { EXPLORER_LIMITS } from "@repo/access"
 import type { AtlasExportRequest } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import {
+  useTranslations,
+  useTranslations as useUiTranslations,
+} from "next-intl"
 import { useId, useState } from "react"
 
 import {
@@ -57,8 +61,8 @@ function saveFile(blob: Blob, name: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 30_000)
 }
 
-/** Posts the listed ids and saves the file. The server re-checks Pro. */
-export function useAtlasExport(onUpgrade: () => void) {
+/** Posts the listed ids and saves the file. The server re-checks access. */
+export function useAtlasExport(onLocked: () => void) {
   const [busy, setBusy] = useState(false)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
 
@@ -101,7 +105,7 @@ export function useAtlasExport(onUpgrade: () => void) {
       })
       if (res.status === 402) {
         blocked()
-        onUpgrade()
+        onLocked()
 
         return
       }
@@ -130,30 +134,34 @@ export function useAtlasExport(onUpgrade: () => void) {
 }
 
 /**
- * Exports the libraries in the list, in its order. Pro members get a CSV or
- * GeoJSON menu; everyone else gets a locked "Export · Pro" button, which
- * opens the plans sheet. The lock only explains: the route enforces it.
+ * Exports the libraries in the list, in its order. Signed-in accounts get a
+ * CSV or GeoJSON menu; a visitor gets a locked "Export · Sign in" button
+ * (sign-in when `onSignIn` is given, else the access sheet). The lock only
+ * explains: the route enforces it.
  */
 export function AtlasExportButton({
   libraries,
   onSeePlans,
+  onSignIn,
   request,
   total,
 }: {
   readonly libraries: AtlasLibrary[]
   readonly onSeePlans: () => void
+  readonly onSignIn?: () => void
   readonly request?: AtlasExportRequest
   readonly total?: number
 }) {
   const tUi = useUiTranslations("ui")
+  const tLock = useTranslations("accessLocks")
 
-  const { can, ready } = useEntitlements()
+  const { can, ready, signedIn } = useEntitlements()
   const { busy, outcome, run } = useAtlasExport(onSeePlans)
   const [open, setOpen] = useState(false)
   const noteId = useId()
   const style = { borderColor: T.border.hi, color: T.ink.base }
 
-  // Neutral until the session loads, so Pro members never see the lock flash.
+  // Neutral until the session loads, so signed-in viewers never see the lock flash.
   if (!ready)
     return (
       <button type="button" disabled className={BUTTON} style={style}>
@@ -167,21 +175,23 @@ export function AtlasExportButton({
       <>
         <button
           type="button"
-          onClick={onSeePlans}
+          onClick={!signedIn && onSignIn ? onSignIn : onSeePlans}
           aria-describedby={noteId}
           className={BUTTON}
           style={style}
         >
           <Icon name="lock" size={16} />
-          Export · Membership
+          {tLock("exportLocked")}
         </button>
         <p
           id={noteId}
           className="order-last m-0 basis-full text-sm"
           style={{ color: T.ink.dim }}
         >
-          Supporter exports up to 500 libraries per download; Pro exports up to
-          10,000.
+          {tLock("exportNote", {
+            rows: EXPLORER_LIMITS.exportRows,
+            perDay: EXPLORER_LIMITS.exportsPerDay,
+          })}
         </p>
       </>
     )

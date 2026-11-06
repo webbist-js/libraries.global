@@ -5,11 +5,9 @@ import { isDocumentIdParam } from "@/lib/bridge-params"
 import type { TeamDetail } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-export function teamActive(team: Pick<TeamDetail, "status" | "expiresAt">) {
-  return (
-    team.status === "active" &&
-    (!team.expiresAt || Date.parse(team.expiresAt) > Date.now())
-  )
+/** Whether the workspace is open: only the site team can lapse one. */
+export function teamActive(team: Pick<TeamDetail, "status">) {
+  return team.status === "active"
 }
 
 export async function requireApiTeam(

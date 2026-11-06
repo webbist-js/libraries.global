@@ -120,7 +120,10 @@ export type TeamLibrary = {
   libraryType: string
 }
 
-/** `GET /api/staff/team/[teamId]`: the organiser's (or a member's) view. */
+/**
+ * `GET /api/staff/team/[teamId]`: the organiser's (or a member's) view of a
+ * free staff workspace.
+ */
 export type TeamDetail = {
   primaryNetwork?: { documentId: string; name: string; slug: string } | null
   serviceScopes?: {
@@ -129,17 +132,13 @@ export type TeamDetail = {
     approvedLibraryIds: string[]
     ownerLibraryIds: string[]
   }[]
-  pendingSeats?: number | null
-  source?: "admin" | "checkout"
   publicServiceApproved?: boolean
   documentId: string
   name: string
   slug: string
-  seats: number
-  used: number
+  /** `lapsed` only when the site team has closed the free workspace. */
   status: "active" | "lapsed"
   verifiedAt: string | null
-  expiresAt: string | null
   libraries: TeamLibrary[]
   members: TeamMemberRow[]
   viewerRole: TeamRole | null
@@ -154,8 +153,8 @@ export type TeamSummary = {
   slug: string
   role: TeamRole
   libraryCount: number
-  status: "active" | "lapsed"
-  expiresAt: string | null
+  /** `lapsed` only when the site team has closed the workspace; may be omitted. */
+  status?: "active" | "lapsed"
   verified: boolean
   organiserName: string | null
   libraryDocumentIds: string[]

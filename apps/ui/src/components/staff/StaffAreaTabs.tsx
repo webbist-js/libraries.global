@@ -8,7 +8,6 @@ import { SectionTabs, type SectionTab } from "@/components/ds/SectionTabs"
 export type StaffAreaTab =
   | "overview"
   | "team"
-  | "billing"
   | "api"
   | "widgets"
   | "networks"
@@ -22,7 +21,6 @@ export function staffAreaTabs(
       | "yourLibraries"
       | "networks"
       | "membersLibraries"
-      | "billing"
       | "widgets"
       | "apiAccess"
       | "claimLibrary"
@@ -51,16 +49,6 @@ export function staffAreaTabs(
       href: "/staff/teams",
       icon: "mdi:account-group-outline",
     },
-    ...(teamId
-      ? [
-          {
-            id: "billing",
-            label: t("billing"),
-            href: "/staff/teams/billing",
-            icon: "mdi:credit-card-outline",
-          },
-        ]
-      : []),
     {
       id: "widgets",
       label: t("widgets"),

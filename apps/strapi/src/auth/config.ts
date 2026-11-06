@@ -2,7 +2,6 @@ import { passkey } from "@better-auth/passkey"
 import {
   buildSessionAccess,
   isContributorRole,
-  isPaidMembership,
   type SessionProfile,
 } from "@repo/access"
 import {
@@ -300,11 +299,6 @@ export const auth = betterAuth({
             SessionProfile["compositionPreferences"]
           >["languages"],
         },
-        paidMembership:
-          isPaidMembership(data.paidMembership) &&
-          data.paidMembership.mode === (process.env.BILLING_ENV ?? "sandbox")
-            ? data.paidMembership
-            : null,
       }
 
       return { user: { ...user, ...buildSessionAccess(profile) }, session }

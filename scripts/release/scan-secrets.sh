@@ -14,4 +14,4 @@ curl --fail --silent --show-error --location --proto '=https' \
   "https://github.com/gitleaks/gitleaks/releases/download/v$version/gitleaks_${version}_${platform}.tar.gz" -o "$archive"
 echo "$digest  $archive" | sha256sum --check --status
 tar -xzf "$archive" -C "$task_dir" gitleaks
-"$task_dir/gitleaks" git --redact --no-banner --exit-code 1 .
+"$task_dir/gitleaks" git --redact --verbose --no-banner --exit-code 1 .

@@ -4,7 +4,6 @@ export type SupporterEntry = {
   initials: string
   city: string | null
   country: string | null
-  since: string | null
 }
 
 export type SupporterCosts = {
@@ -17,7 +16,6 @@ export type SupporterCosts = {
 
 export type SupportersResponse = {
   entries: SupporterEntry[]
-  newThisMonth: SupporterEntry[]
   total: number
   listed: number
   unlisted: number

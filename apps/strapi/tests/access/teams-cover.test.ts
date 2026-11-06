@@ -50,11 +50,8 @@ const team = (over: Record<string, unknown> = {}) => ({
   documentId: TEAM,
   name: "Kent Libraries",
   slug: "kent-libraries",
-  seats: 5,
   status: "active",
-  source: "admin",
   verifiedAt: "2026-01-01T00:00:00.000Z",
-  expiresAt: null,
   notes: null,
   createdAt: "2026-01-01T00:00:00.000Z",
   libraries: [libA, libB],
@@ -278,11 +275,6 @@ describe("teams.forLibrary", () => {
 
     const lapsed = setup({ status: "lapsed" })
     expect(await lapsed.teams.forLibrary(LIB_A, "outsider")).toBeNull()
-
-    const expired = setup({
-      expiresAt: new Date(Date.now() - DAY).toISOString(),
-    })
-    expect(await expired.teams.forLibrary(LIB_A, "outsider")).toBeNull()
   })
 
   it("gives a member the full view, with only the invites pre-assigned to that library", async () => {

@@ -29,32 +29,20 @@ export async function GET() {
       termsVersion?: string | null
       termsAcceptedAt?: Date | string | null
     }
-    let memberships: unknown[] = []
-    let membershipChanges: unknown[] = []
-    let membershipConsents: unknown[] = []
-    let teamMembershipConsents: unknown[] = []
+    // API Access is the only purchase: its checkout and overage consents are
+    // recorded against the organiser who gave them.
+    let apiCheckouts: unknown[] = []
+    let apiOverageChanges: unknown[] = []
     try {
-      memberships = (
+      apiCheckouts = (
         await authDbPool.query(
-          "select snapshot,updated_at from billing_memberships where user_id=$1",
+          "select team_id,price_id,locale,state,created_at from api_attempts where actor_id=$1 order by created_at limit 1000",
           [user.id]
         )
       ).rows
-      membershipChanges = (
+      apiOverageChanges = (
         await authDbPool.query(
-          "select price_id,period_end,state,created_at from billing_plan_changes where user_id=$1",
-          [user.id]
-        )
-      ).rows
-      membershipConsents = (
-        await authDbPool.query(
-          "select plan,interval,price_id,terms_version,created_at,state from billing_attempts where user_id=$1 order by created_at",
-          [user.id]
-        )
-      ).rows
-      teamMembershipConsents = (
-        await authDbPool.query(
-          "select a.team_id,t.price_id,t.seats,t.terms_version,t.created_at,t.state from team_billing_attempts t join team_billing_accounts a on a.id=t.account_id where t.actor_id=$1 order by t.created_at",
+          "select team_id,revision,enabled,cap_pence,terms_version,created_at from api_overage_changes where actor_id=$1 order by created_at limit 1000",
           [user.id]
         )
       ).rows
@@ -62,10 +50,8 @@ export async function GET() {
       if ((error as { code?: string }).code !== "42P01") throw error
     }
     const payload = {
-      memberships,
-      membershipChanges,
-      membershipConsents,
-      teamMembershipConsents,
+      apiCheckouts,
+      apiOverageChanges,
       exportedAt: new Date().toISOString(),
       account: {
         email: user.email,

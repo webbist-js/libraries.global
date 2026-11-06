@@ -19,7 +19,7 @@ export type FooterNavigation = {
 export function buildFooterNavigation(
   footer: FooterData,
   documents: LegalDocumentNavItem[],
-  labels: { legal: string; plans: string }
+  labels: { legal: string; plans: string; sponsor: string }
 ): FooterNavigation {
   const sections = (Array.isArray(footer?.sections) ? footer.sections : []).map(
     (section, index) => ({
@@ -72,6 +72,11 @@ export function buildFooterNavigation(
     }
   )
 
+  // A fixed code-side destination, so the sponsor page never depends on CMS edits.
+  const sponsor = cms.some((link) => link.href === "/sponsor")
+    ? []
+    : [{ key: "sponsor", label: labels.sponsor, href: "/sponsor" }]
+
   return {
     sections,
     links: [
@@ -80,6 +85,7 @@ export function buildFooterNavigation(
         : []),
       ...legal,
       ...cms,
+      ...sponsor,
     ],
   }
 }

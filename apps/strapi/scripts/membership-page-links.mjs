@@ -4,6 +4,7 @@ const labels = {
   en: "Plans and pricing",
   fr: "Formules et tarifs",
   cs: "Plány a ceny",
+  es: "Planes y precios",
 }
 
 /** Rewrite targets only; preserve component IDs, publication state and editorial copy. */

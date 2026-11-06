@@ -1,8 +1,8 @@
 import type { Locale } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
+import { membershipPropsOf } from "@/components/membership/membership-props"
 import { MembershipDashboard } from "@/components/membership/MembershipDashboard"
-import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getContributionSession } from "@/lib/contribution-session-server"
 import { readMembershipData } from "@/lib/membership-page-server"
 import { redirect } from "@/lib/navigation"
@@ -15,7 +15,7 @@ export async function generateMetadata() {
   return { title: t("title"), robots: { index: false, follow: false } }
 }
 
-/** The same live billing and recognition controls used by the profile drawer. */
+/** The same standing, staff and API sections as the profile drawer. */
 export default async function ContributionMembershipPage({
   params,
 }: {
@@ -32,7 +32,7 @@ export default async function ContributionMembershipPage({
       locale,
     })
   const user = session.user
-  const { profile, asOf } = await readMembershipData(user)
+  const { profile } = await readMembershipData(user)
 
   return (
     <>
@@ -42,11 +42,7 @@ export default async function ContributionMembershipPage({
         lead={t("lead")}
       />
       <MembershipDashboard
-        plan={user.plan ?? "free"}
-        source={user.planSource ?? "none"}
-        teams={sessionTeamsOf(user)}
-        asOf={asOf}
-        staffCount={staffLibrariesOf(user).length}
+        {...membershipPropsOf(user)}
         recognition={
           profile
             ? {

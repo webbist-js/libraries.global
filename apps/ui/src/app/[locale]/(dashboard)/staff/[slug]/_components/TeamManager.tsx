@@ -350,7 +350,7 @@ export function TeamManager({
                     </p>
                     <p className="m-0 text-base" style={{ color: T.ink.dim }}>
                       {invite.staffRole === "owner" ? "Owner" : "Editor"} ·
-                      holds a seat until {date(invite.expiresAt)}
+                      invite open until {date(invite.expiresAt)}
                     </p>
                   </div>
                 </div>
@@ -497,7 +497,8 @@ export function TeamManager({
         {!full ? (
           <p className="mt-4 mb-0 text-sm" style={{ color: T.ink.dim }}>
             Each person claimed access on their own and a moderator checked it.
-            With the Team plan an organiser manages this list.
+            When a free staff workspace covers this library, its organiser can
+            invite colleagues here.
           </p>
         ) : null}
         {full && !organiser ? (

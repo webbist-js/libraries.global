@@ -1,203 +1,199 @@
-import { FEATURES } from "@repo/access"
+import {
+  API_REACH_PER_HOUR,
+  CONTRIBUTOR_REACH_PER_WEEK,
+  FEATURES,
+  SUPPORTER_MIN_ACCEPTED,
+} from "@repo/access"
 import { describe, expect, it } from "vitest"
 
+import { MEMBERSHIP_FAQ_COUNT } from "../localized-plans"
 import {
-  PLANS,
-  PRICES_ARE_PLACEHOLDERS,
-  PRO_FEATURE_COPY,
-  planCard,
-  planStatusCopy,
-  priceHeadline,
-  showPlanCta,
+  API_OFFER,
+  FEATURE_STATUS,
+  OFFER_KEYS,
+  OFFERS,
+  offer,
+  offerValues,
+  RECOGNITION,
+  SPONSOR_ENQUIRY_HREF,
+  standingName,
+  standingProgress,
 } from "../plans"
 
-const plan = (key: string) => {
-  const card = PLANS.find((p) => p.key === key)
-  if (!card) throw new Error(`no ${key} plan`)
+import cs from "../../../locales/cs.json"
+import en from "../../../locales/en.json"
+import es from "../../../locales/es.json"
+import fr from "../../../locales/fr.json"
+import pricing from "../membership-pricing.json"
 
-  return card
-}
+const LOCALES = { en, fr, cs, es } as const
+const get = (messages: unknown, path: string): unknown =>
+  path
+    .split(".")
+    .reduce<unknown>(
+      (o, k) =>
+        o && typeof o === "object"
+          ? (o as Record<string, unknown>)[k]
+          : undefined,
+      messages
+    )
 
-describe("PLANS", () => {
-  it("lists public, free, supporter, pro and team, in that order", () => {
-    expect(PLANS.map((p) => p.key)).toEqual([
-      "public",
-      "free",
-      "supporter",
-      "pro",
-      "team",
+describe("OFFERS", () => {
+  it("lists the five offers in order", () => {
+    expect(OFFERS.map((o) => o.key)).toEqual([
+      "explorer",
+      "contributor",
+      "staff",
+      "api",
+      "sponsor",
     ])
+    expect(OFFER_KEYS).toEqual(OFFERS.map((o) => o.key))
   })
 
-  it("uses the agreed launch membership prices", () => {
-    expect(PRICES_ARE_PLACEHOLDERS).toBe(false)
+  it("keeps Explorer, Contributor and Verified Staff free; only API Access is a monthly purchase", () => {
+    expect(offer("explorer").price).toEqual({ kind: "free" })
+    expect(offer("contributor").price).toEqual({ kind: "earned" })
+    expect(offer("staff").price).toEqual({ kind: "free" })
+    expect(offer("api").price).toEqual({
+      kind: "monthly",
+      pence: pricing.api.month,
+      taxInclusive: true,
+    })
+    // Sponsorship is agreed in conversation; no amount appears on the site.
+    expect(offer("sponsor").price).toEqual({ kind: "conversation" })
+    expect(offer("sponsor").cta.href).toBe(SPONSOR_ENQUIRY_HREF)
+    expect(pricing).not.toHaveProperty("sponsor")
   })
 
-  it("uses the pricing spec's amounts", () => {
-    expect(plan("public").price).toBe("free")
-    expect(plan("free").price).toBe("free")
-    expect(plan("supporter").price).toEqual({
-      monthly: "£3/month",
-      yearly: "£30/year",
-    })
-    expect(plan("pro").price).toMatchObject({
-      monthly: "£5/month",
-      yearly: "£50/year",
-    })
-    expect(plan("team").price).toMatchObject({ yearly: "£600/year ex VAT" })
+  it("reads amounts and allowances from the pricing file and resolver", () => {
+    expect(API_OFFER.monthPence).toBe(10_000)
+    expect(API_OFFER.requests).toBe(10_000)
+    expect(API_OFFER.mib).toBe(250)
+    expect(API_OFFER.analysisCredits).toBe(100)
+    expect(RECOGNITION.supporterAt).toBe(SUPPORTER_MIN_ACCEPTED)
+    expect(RECOGNITION.reachPerWeek).toBe(CONTRIBUTOR_REACH_PER_WEEK)
   })
 
-  it("gives Supporter delivered history and capped exports, preserving Pro analysis", () => {
-    const text = plan("supporter")
-      .includes.map((i) => i.text)
-      .join("\n")
-    expect(text).toContain(PRO_FEATURE_COPY["library.history"].label)
-    expect(text).toContain("500 libraries per download")
-    expect(text).not.toContain(PRO_FEATURE_COPY["atlas.analysis"].label)
+  it("states that payment, sponsorship and recognition never grant authority", () => {
+    for (const key of ["contributor", "staff", "api", "sponsor"] as const)
+      expect(offer(key).items.some((i) => i.status === "note")).toBe(true)
   })
 
-  it("keeps payment separate from community authority", () => {
-    const notes = plan("supporter").includes.filter((i) => i.kind === "note")
-    expect(notes).toHaveLength(1)
-    expect(notes[0]?.text).toContain("community role")
-  })
-
-  it("summarises inherited Supporter features while keeping Pro's higher export limit explicit", () => {
-    expect(plan("pro").includes).toContainEqual({
-      text: "Everything in Supporter",
-      kind: "feature",
-    })
-    expect(plan("pro").includes.map((item) => item.text)).not.toContain(
-      PRO_FEATURE_COPY["library.history"].label
-    )
-    expect(plan("pro").includes.map((item) => item.text)).toContain(
-      `${PRO_FEATURE_COPY["atlas.export"].label} (up to 10,000 libraries per download)`
-    )
-  })
-
-  it("tags exactly the unbuilt items as coming soon", () => {
-    for (const card of PLANS)
-      for (const item of card.includes)
-        expect(item.text.endsWith(" (coming soon)")).toBe(item.kind === "soon")
-  })
-
-  it("keeps personal catalogue defaults gated and offers self-service Team setup", () => {
-    expect(plan("supporter").cta).toMatchObject({
-      kind: "soon",
-      label: "Coming soon",
-    })
-    expect(plan("pro").cta).toMatchObject({
-      kind: "soon",
-      label: "Coming soon",
-    })
-    expect(plan("team").cta).toMatchObject({
-      kind: "signup",
-      label: "Create your Team",
-      href: "/staff/teams/new",
-    })
-    expect(plan("free").cta).toMatchObject({
-      kind: "signup",
-      href: "/auth/register?callbackUrl=/plans",
-    })
-  })
-
-  it("builds Pro's list from the feature copy, flagging what isn't built", () => {
-    const includes = plan("pro").includes
-    expect(includes).toContainEqual({
-      text: `${PRO_FEATURE_COPY["atlas.export"].label} (up to 10,000 libraries per download)`,
-      kind: "feature",
-    })
-    expect(includes).toContainEqual({
-      text: `${PRO_FEATURE_COPY["library.notes"].label} (coming soon)`,
-      kind: "soon",
-    })
-    const texts = (key: string) =>
-      plan(key)
-        .includes.map((i) => i.text)
-        .join("\n")
-    expect(texts("pro")).not.toContain(PRO_FEATURE_COPY["team.workspace"].label)
-    expect(texts("pro")).not.toContain(PRO_FEATURE_COPY["api.key"].label)
-    expect(texts("team")).toContain(PRO_FEATURE_COPY["team.workspace"].label)
+  it("gives every feature a status", () => {
+    expect(Object.keys(FEATURE_STATUS).sort()).toEqual([...FEATURES].sort())
   })
 })
 
-describe("priceHeadline", () => {
-  it("shows Free, else the monthly price, else the yearly one", () => {
-    expect(priceHeadline(planCard("free").price)).toBe("Free")
-    expect(priceHeadline(planCard("pro").price)).toBe("£5/month")
-    expect(priceHeadline(planCard("team").price)).toBe("£600/year ex VAT")
+describe("offerValues", () => {
+  it("formats prices and allowances for the locale", () => {
+    const en = offerValues("en-GB")
+    expect(en.apiPrice).toBe("£100")
+    expect(en.requestPrice).toBe("£0.01")
+    expect(en.contactEmail).toBe("info@libraries.global")
+    expect(en.apiRequests).toBe("10,000")
+    expect(en.apiMib).toBe("250")
+    expect(en.apiReachPerHour).toBe(API_REACH_PER_HOUR)
+    expect(offerValues("fr").apiRequests).not.toBe("10,000")
   })
 })
 
-describe("showPlanCta", () => {
-  it("offers sign-up only to visitors", () => {
-    expect(showPlanCta(planCard("free"), undefined)).toBe(true)
-    expect(showPlanCta(planCard("free"), "public")).toBe(true)
-    expect(showPlanCta(planCard("free"), "free")).toBe(false)
-    expect(showPlanCta(planCard("free"), "pro")).toBe(false)
+describe("offer and comparison messages", () => {
+  const values = offerValues("en-GB")
+  it.each(Object.entries(LOCALES))("%s has every offer message", (_, m) => {
+    for (const o of OFFERS) {
+      const prefix = `membershipContent.offers.${o.key}`
+      for (const key of ["name", "who", "price", "priceNote"])
+        expect(get(m, `${prefix}.${key}`), `${prefix}.${key}`).toBeTypeOf(
+          "string"
+        )
+      expect(get(m, `${prefix}.cta.${o.cta.id}`)).toBeTypeOf("string")
+      for (const item of o.items)
+        expect(
+          get(m, `${prefix}.items.${item.id}`),
+          `${prefix}.items.${item.id}`
+        ).toBeTypeOf("string")
+    }
+    for (let i = 0; i < MEMBERSHIP_FAQ_COUNT; i++) {
+      expect(get(m, `membershipContent.faq.${i}.q`)).toBeTypeOf("string")
+      expect(get(m, `membershipContent.faq.${i}.a`)).toBeTypeOf("string")
+    }
   })
 
-  it("drops 'coming soon' on the plan the member already holds", () => {
-    expect(showPlanCta(planCard("pro"), "free")).toBe(true)
-    expect(showPlanCta(planCard("pro"), "pro")).toBe(false)
-    expect(showPlanCta(planCard("public"), "public")).toBe(false)
+  it("only interpolates values offerValues provides", () => {
+    const text = JSON.stringify(get(en, "membershipContent"))
+    const used = new Set(
+      [...text.matchAll(/\{(\w+)(?:[,}])/g)].map((match) => match[1]!)
+    )
+    for (const name of used)
+      if (!["count", "group", "first", "second"].includes(name))
+        expect(Object.keys(values), name).toContain(name)
   })
 
-  it("hides Team signup for existing members while offering it to visitors", () => {
-    expect(showPlanCta(planCard("team"), "team")).toBe(false)
-    expect(showPlanCta(planCard("team"), undefined)).toBe(true)
+  it("never offers a personal paid plan", () => {
+    const text = JSON.stringify(get(en, "membershipContent.offers"))
+    expect(text).not.toMatch(/\bPro\b|Team plan|seat price|£[358]\b/)
   })
 })
 
-describe("PRO_FEATURE_COPY", () => {
-  it("has copy for every feature", () => {
-    for (const f of FEATURES) expect(PRO_FEATURE_COPY[f]?.label).toBeTruthy()
-    expect(Object.keys(PRO_FEATURE_COPY).sort()).toEqual([...FEATURES].sort())
+describe("standingProgress", () => {
+  it("starts signed-in accounts as Explorer, one contribution from Contributor", () => {
+    expect(standingProgress({ signedIn: true })).toEqual({
+      standing: "explorer",
+      accepted: 0,
+      next: { standing: "contributor", at: 1 },
+      remaining: 1,
+      percent: 0,
+    })
   })
 
-  it("marks delivered features as live", () => {
-    const live = Object.entries(PRO_FEATURE_COPY)
-      .filter(([, c]) => c.status === "live")
-      .map(([f]) => f)
-    expect(live.sort()).toEqual([
-      "atlas.analysis",
-      "atlas.compare",
-      "atlas.contextLayers",
-      "atlas.export",
-      "library.history",
-      "library.team",
-      "team.embed",
-    ])
+  it("counts towards Supporter once a Contributor", () => {
+    expect(
+      standingProgress({ signedIn: true, acceptedContributions: 37 })
+    ).toEqual({
+      standing: "contributor",
+      accepted: 37,
+      next: { standing: "supporter", at: 100 },
+      remaining: 63,
+      percent: 37,
+    })
+  })
+
+  it("reaches Supporter at 100 and caps progress", () => {
+    const progress = standingProgress({
+      signedIn: true,
+      acceptedContributions: 250,
+    })
+    expect(progress.standing).toBe("supporter")
+    expect(progress.next).toBeNull()
+    expect(progress.remaining).toBe(0)
+    expect(progress.percent).toBe(100)
+  })
+
+  it("resets on revocation and ignores malformed counts", () => {
+    expect(
+      standingProgress({
+        signedIn: true,
+        acceptedContributions: 120,
+        recognitionRevoked: true,
+      })
+    ).toMatchObject({ standing: "explorer", accepted: 0, remaining: 1 })
+    expect(
+      standingProgress({ signedIn: true, acceptedContributions: -4 }).accepted
+    ).toBe(0)
+    expect(
+      standingProgress({ signedIn: true, acceptedContributions: 2.5 }).accepted
+    ).toBe(0)
+  })
+
+  it("reports signed-out viewers as public", () => {
+    expect(standingProgress({ signedIn: false }).standing).toBe("public")
   })
 })
 
-describe("planStatusCopy", () => {
-  it("names how the member got Pro", () => {
-    expect(planStatusCopy("pro", "grant")).toBe(
-      "You have Pro, granted by the libraries.global team."
-    )
-    expect(planStatusCopy("pro", "earned")).toBe(
-      "You have Pro for earning 5,000 points and contributing within the last 30 days."
-    )
-    expect(planStatusCopy("pro", "verified")).toBe(
-      "You have Pro as verified library staff, student or charity."
-    )
-    expect(planStatusCopy("pro", "paid")).toBe("You're on Pro.")
-  })
-
-  it("names Team when the plan is Team", () => {
-    expect(planStatusCopy("team", "grant")).toBe(
-      "You have Team, granted by the libraries.global team."
-    )
-    expect(planStatusCopy("team", "paid")).toBe("You're on Team.")
-  })
-
-  it("says nothing for free, public or unknown values", () => {
-    expect(planStatusCopy("free", "none")).toBeNull()
-    expect(planStatusCopy("public", "none")).toBeNull()
-    expect(planStatusCopy(undefined, undefined)).toBeNull()
-    expect(planStatusCopy("pro", undefined)).toBeNull()
-    expect(planStatusCopy("pro", "none")).toBeNull()
-    expect(planStatusCopy("gold", "grant")).toBeNull()
+describe("standingName", () => {
+  it("maps unknown values to public", () => {
+    expect(standingName("supporter")).toBe("supporter")
+    expect(standingName("patron")).toBe("public")
+    expect(standingName(undefined)).toBe("public")
   })
 })

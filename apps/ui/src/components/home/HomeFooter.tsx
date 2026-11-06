@@ -37,6 +37,7 @@ export function HomeFooter({
   const navigation = buildFooterNavigation(footer, legalDocuments, {
     legal: t("legal_policies"),
     plans: t("plans_and_pricing"),
+    sponsor: t("sponsor"),
   })
   const links = [
     ...navigation.links,

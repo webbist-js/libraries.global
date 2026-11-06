@@ -19,6 +19,7 @@ import {
   runWithChangeContext,
 } from "../../../../utils/change-context"
 import { createGrant } from "../../../../utils/role-grants"
+import { isApiProposal } from "../utils/api-proposals"
 import {
   type ApplyArticleOutcome,
   type ApplyArticleResult,
@@ -1370,7 +1371,12 @@ export default ({ strapi }: { strapi: any }) => ({
 
               // Ordinary proposals grant no staff access. A staff creation
               // includes a claim in the moderator's review, applied atomically.
-              if (submission.submittedByUserId && newLibrary?.documentId) {
+              // An API proposal has no attributable person: no affiliation.
+              if (
+                submission.submittedByUserId &&
+                !isApiProposal(submission) &&
+                newLibrary?.documentId
+              ) {
                 const creation = staffCreationOf(submission.draftData)
                 await (creation
                   ? applyStaffLibraryCreation(

@@ -14,8 +14,8 @@ const contact: ContactSubmission = {
   type: "plans",
   name: "Reader",
   email: "reader@example.org",
-  message: "We’re interested in a Team plan.",
-  sourceSubject: "Pro grant",
+  message: "We’re interested in API Access.",
+  sourceSubject: "API pricing question",
   context: { page: "/contribute", locale: "en" },
 }
 beforeEach(() => {
@@ -32,9 +32,9 @@ it("uses a programmatic title and the contact system email variant", () => {
     "reference",
     new Date("2026-10-11T12:00:00Z")
   )
-  expect(email.subject).toBe("[Contact] Plans and membership · /contribute")
+  expect(email.subject).toBe("[Contact] Plans and API Access · /contribute")
   expect(email.text).toContain("System notification · Contact request")
-  expect(email.text).toContain("Pro grant")
+  expect(email.text).toContain("API pricing question")
   expect(email.text).toContain("Browser / OS: Chrome test")
   expect(email.text).toContain("Reference: reference")
   expect(email.html).not.toContain("Unsubscribe")
@@ -140,10 +140,11 @@ it.each<[ContactType, string]>([
   ["report_issue", "Issue report"],
   ["general_inquiry", "General inquiry"],
   ["account_support", "Account support"],
-  ["membership_support", "Membership support"],
+  ["membership_support", "API Access and billing"],
   ["library_correction", "Library correction"],
-  ["plans", "Plans and membership"],
+  ["plans", "Plans and API Access"],
   ["partnership", "Partnership"],
+  ["sponsorship", "Sponsorship enquiry"],
   ["privacy", "Privacy inquiry"],
 ])("routes %s to info with its set subject", async (type, label) => {
   await sendContactNotification(

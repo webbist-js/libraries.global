@@ -63,7 +63,7 @@ describe("beta welcome lifecycle", () => {
     state.path = "/auth/signin"
     rerender(<BetaWelcomeMount sandbox />)
     expect(sessionStorage.length).toBe(0)
-    state.path = "/staff/teams/billing"
+    state.path = "/staff/teams/new"
     rerender(<BetaWelcomeMount sandbox />)
     expect(screen.queryByRole("dialog")).toBeNull()
     state.path = "/staff/teams"

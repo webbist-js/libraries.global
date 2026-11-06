@@ -87,3 +87,42 @@ it("restores the saved switch state when saving fails", async () => {
   fireEvent.click(toggle)
   await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("true"))
 })
+
+it("lets every signed-in reader turn Atlas data gap explanations back on, or off", async () => {
+  const fetch = vi.fn().mockResolvedValue(Response.json({ ok: true }))
+  vi.stubGlobal("fetch", fetch)
+  render(
+    <NotificationsSection
+      hasTeam={false}
+      profile={{ dismissedPrompts: ["atlas-data-gap"] } as UserProfile}
+    />
+  )
+  const toggle = screen.getByRole("switch", {
+    name: "Atlas data gap explanations",
+  })
+  expect(
+    screen.getByText(/“Data gap details” button always stays/)
+  ).toBeTruthy()
+  expect(toggle.getAttribute("aria-checked")).toBe("false")
+  fireEvent.click(toggle)
+  await waitFor(() =>
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/profile/me/prompts",
+      expect.objectContaining({
+        body: JSON.stringify({ prompt: "atlas-data-gap", dismissed: false }),
+      })
+    )
+  )
+  expect(toggle.getAttribute("aria-checked")).toBe("true")
+  await waitFor(() => expect(toggle.hasAttribute("disabled")).toBe(false))
+  fireEvent.click(toggle)
+  await waitFor(() =>
+    expect(fetch).toHaveBeenLastCalledWith(
+      "/api/profile/me/prompts",
+      expect.objectContaining({
+        body: JSON.stringify({ prompt: "atlas-data-gap", dismissed: true }),
+      })
+    )
+  )
+  expect(toggle.getAttribute("aria-checked")).toBe("false")
+})

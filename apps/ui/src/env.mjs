@@ -14,22 +14,21 @@ export const env = createEnv({
    * require them to be present at build time, which is not always desired or possible (see README).
    */
   server: {
-    TEAM_BILLING_ENABLED: optionalZodBoolean(),
-    STRIPE_PRICE_TEAM_SEAT_ANNUAL: z.string().optional(),
-    STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL: z.string().optional(),
-    STRIPE_PORTAL_CONFIGURATION_TEAM: z.string().optional(),
-    STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC: z.string().optional(),
-    PRO_ENABLED: optionalZodBoolean(),
     BILLING_ENV: z.enum(["sandbox", "live"]).optional(),
     STRIPE_MANAGED_PAYMENTS_ENABLED: optionalZodBoolean(),
-    STRIPE_SUPPORTER_APPROVED: optionalZodBoolean(),
     STRIPE_SECRET_KEY: z.string().optional(),
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
-    STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
-    STRIPE_PRICE_PRO_ANNUAL: z.string().optional(),
-    STRIPE_PRICE_SUPPORTER_MONTHLY: z.string().optional(),
-    STRIPE_PRICE_SUPPORTER_ANNUAL: z.string().optional(),
-    STRIPE_PORTAL_CONFIGURATION: z.string().optional(),
+    API_ENABLED: optionalZodBoolean(),
+    API_OVERAGE_ENABLED: optionalZodBoolean(),
+    API_SERVICE_READS_ENABLED: optionalZodBoolean(),
+    API_SUBMISSIONS_ENABLED: optionalZodBoolean(),
+    API_ANALYSIS_ENABLED: optionalZodBoolean(),
+    API_NETWORK_REACH_ENABLED: optionalZodBoolean(),
+    STRIPE_PRICE_API_MONTHLY: z.string().optional(),
+    STRIPE_PRICE_API_OVERAGE_REQUESTS: z.string().optional(),
+    STRIPE_PRICE_API_OVERAGE_BYTES: z.string().optional(),
+    STRIPE_PRICE_API_OVERAGE_CREDITS: z.string().optional(),
+    STRIPE_PORTAL_CONFIGURATION_API: z.string().optional(),
     APP_PUBLIC_URL: z.string().url().optional(),
     MOBILE_APP_URL: z.string().url().optional(),
     DEBUG_STATIC_PARAMS_GENERATION: optionalZodBoolean(),
@@ -93,26 +92,25 @@ export const env = createEnv({
    * You'll get type errors if not all variables from `server` & `client` are included here.
    */
   runtimeEnv: {
-    TEAM_BILLING_ENABLED: process.env.TEAM_BILLING_ENABLED,
-    STRIPE_PRICE_TEAM_SEAT_ANNUAL: process.env.STRIPE_PRICE_TEAM_SEAT_ANNUAL,
-    STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL:
-      process.env.STRIPE_PRICE_TEAM_PUBLIC_SEAT_ANNUAL,
-    STRIPE_PORTAL_CONFIGURATION_TEAM:
-      process.env.STRIPE_PORTAL_CONFIGURATION_TEAM,
-    STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC:
-      process.env.STRIPE_PORTAL_CONFIGURATION_TEAM_PUBLIC,
-    PRO_ENABLED: process.env.PRO_ENABLED,
     BILLING_ENV: process.env.BILLING_ENV,
     STRIPE_MANAGED_PAYMENTS_ENABLED:
       process.env.STRIPE_MANAGED_PAYMENTS_ENABLED,
-    STRIPE_SUPPORTER_APPROVED: process.env.STRIPE_SUPPORTER_APPROVED,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-    STRIPE_PRICE_PRO_MONTHLY: process.env.STRIPE_PRICE_PRO_MONTHLY,
-    STRIPE_PRICE_PRO_ANNUAL: process.env.STRIPE_PRICE_PRO_ANNUAL,
-    STRIPE_PRICE_SUPPORTER_MONTHLY: process.env.STRIPE_PRICE_SUPPORTER_MONTHLY,
-    STRIPE_PRICE_SUPPORTER_ANNUAL: process.env.STRIPE_PRICE_SUPPORTER_ANNUAL,
-    STRIPE_PORTAL_CONFIGURATION: process.env.STRIPE_PORTAL_CONFIGURATION,
+    API_ENABLED: process.env.API_ENABLED,
+    API_OVERAGE_ENABLED: process.env.API_OVERAGE_ENABLED,
+    API_SERVICE_READS_ENABLED: process.env.API_SERVICE_READS_ENABLED,
+    API_SUBMISSIONS_ENABLED: process.env.API_SUBMISSIONS_ENABLED,
+    API_ANALYSIS_ENABLED: process.env.API_ANALYSIS_ENABLED,
+    API_NETWORK_REACH_ENABLED: process.env.API_NETWORK_REACH_ENABLED,
+    STRIPE_PRICE_API_MONTHLY: process.env.STRIPE_PRICE_API_MONTHLY,
+    STRIPE_PRICE_API_OVERAGE_REQUESTS:
+      process.env.STRIPE_PRICE_API_OVERAGE_REQUESTS,
+    STRIPE_PRICE_API_OVERAGE_BYTES: process.env.STRIPE_PRICE_API_OVERAGE_BYTES,
+    STRIPE_PRICE_API_OVERAGE_CREDITS:
+      process.env.STRIPE_PRICE_API_OVERAGE_CREDITS,
+    STRIPE_PORTAL_CONFIGURATION_API:
+      process.env.STRIPE_PORTAL_CONFIGURATION_API,
     // server
     APP_PUBLIC_URL: process.env.APP_PUBLIC_URL,
     MOBILE_APP_URL: process.env.MOBILE_APP_URL,

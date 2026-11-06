@@ -1,13 +1,8 @@
-import { authDbPool } from "@/lib/auth"
-import { apiLibraries, serveTeamApi } from "@/lib/team-api/gateway"
+import { apiLibraries, withApiRequest } from "@/lib/team-api/gateway"
 
 export const runtime = "nodejs"
-export async function GET(request: Request) {
-  return serveTeamApi(
-    authDbPool,
-    request,
-    "libraries:read",
-    "libraries.list",
-    (maximum) => apiLibraries(request, maximum)
-  )
-}
+
+export const GET = withApiRequest(
+  { scope: "libraries:read", endpoint: "libraries.list" },
+  ({ request, maximum }) => apiLibraries(request, maximum)
+)

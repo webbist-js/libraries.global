@@ -106,8 +106,8 @@ export function DataAccountSection({
               Download your data
             </p>
             <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-              A JSON summary of your profile, preferences, account and billing
-              details. For a complete personal-data copy, contact
+              A JSON summary of your profile, preferences, account and API
+              Access consents. For a complete personal-data copy, contact
               legal@libraries.global.
             </p>
           </div>

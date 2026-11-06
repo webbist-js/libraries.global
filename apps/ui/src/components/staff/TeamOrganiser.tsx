@@ -10,13 +10,12 @@ import { SelectField } from "@/components/ds/SelectField"
 import { TeamNetworkConnection } from "@/components/networks/TeamNetworkConnection"
 import { LibraryAccessBadge } from "@/components/staff/LibraryAccessBadge"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
-import { TeamSeatUsage } from "@/components/staff/TeamSeatUsage"
 import { TeamStatusBadges } from "@/components/staff/TeamStatusBadges"
 import { Button } from "@/components/ui/button"
 import { useStaff } from "@/lib/access-client"
+import { CONTACT_EMAIL } from "@/lib/constants"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
-import { TEAM_CONTACT_HREF } from "@/lib/plans"
 import { staffRequest } from "@/lib/staff/client"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import type { TeamDetail, TeamMemberRow, TeamRole } from "@/lib/staff/types"
@@ -38,6 +37,7 @@ const CONTACT_LINK =
   "inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-4"
 const INPUT = STAFF_FIELD
 const NONE = "__none__"
+const SITE_TEAM_HREF = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Staff workspace")}`
 const LEVELS = [
   { value: "owner", label: "Owner" },
   { value: "editor", label: "Editor" },
@@ -83,8 +83,10 @@ function MemberLibraryAccess({
 }
 
 /**
- * The Team organiser's page body: seats, the libraries covered, the
- * members list with each person's library access and review states, invites and removal.
+ * The staff workspace page body: the libraries covered, the members list
+ * with each person's library access and review states, invites and removal.
+ * The workspace is free; membership never grants library editing, which
+ * comes only from each person's own verified staff claims.
  * An organiser changes a member's libraries and levels in one sheet,
  * "Libraries for {name}", saved as a single request. Members (not
  * organisers) get the same view read only.
@@ -115,13 +117,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
   const staffOf = new Set(mine.map((l) => l.id))
   const libraryName = (id: string) =>
     team.libraries.find((l) => l.documentId === id)?.name ?? "Library"
-  const seatsLeft = Math.max(
-    0,
-    Math.min(team.seats, team.pendingSeats ?? team.seats) - team.used
-  )
-  const active =
-    team.status === "active" &&
-    (!team.expiresAt || Date.parse(team.expiresAt) > Date.now())
+  // Free workspaces never lapse for payment; only a closed row reads as inactive.
+  const active = team.status !== "lapsed"
 
   async function request(
     path: string,
@@ -193,8 +190,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           title={tUi("invite_created_but_email_isnt_configured")}
         >
           <span style={{ color: T.ink.base }}>
-            The seat is held and the invite shows below. Nobody was emailed: the
-            site team needs to configure email before invites can be sent.
+            The invite shows below. Nobody was emailed: the site team needs to
+            configure email before invites can be sent.
           </span>
         </Notice>
       ) : null}
@@ -213,9 +210,12 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           tone="warn"
           title={tUi("this_team_isnt_active")}
         >
-          {team.status === "lapsed"
-            ? "It has lapsed: members keep their seats but Pro and Team features are off until it’s renewed."
-            : "It has expired. Members keep their seats but Pro and Team features are off."}
+          The site team has closed this workspace, so invitations and shared
+          tools are paused. Each person’s own library staff access is not
+          affected.{" "}
+          <a href={SITE_TEAM_HREF} className={CONTACT_LINK}>
+            Contact the site team
+          </a>
         </Notice>
       ) : null}
 
@@ -246,7 +246,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         >
           Assignments need moderator review unless they are covered by an
           approved service delegation.{" "}
-          <a href={TEAM_CONTACT_HREF} className={CONTACT_LINK}>
+          <a href={SITE_TEAM_HREF} className={CONTACT_LINK}>
             Contact the site team
           </a>
         </Notice>
@@ -260,7 +260,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             aside={
               <div className="flex flex-wrap items-center gap-4">
                 <span className="text-sm text-(--t-ink-dim)">
-                  {team.used} of {team.seats} seats
+                  {team.members.length}{" "}
+                  {team.members.length === 1 ? "person" : "people"}
                 </span>
                 {organiser ? (
                   <Link href="#team-invite" className={CONTACT_LINK}>
@@ -345,7 +346,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                                   body:
                                     value === "organiser"
                                       ? "Organisers invite colleagues, assign them to libraries and can remove anyone from the team."
-                                      : "Members keep their seat and their library access, but can’t change the team.",
+                                      : "Members keep their library access, but can’t change the team.",
                                   path: `${base}/members/${member.documentId}`,
                                   method: "PUT",
                                   payload: { teamRole: value },
@@ -393,7 +394,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                               onClick={() =>
                                 setConfirm({
                                   title: `Revoke the invite for ${member.email}?`,
-                                  body: "Their link stops working and the seat is freed.",
+                                  body: "Their invitation link stops working.",
                                   path: `${base}/invites/${member.documentId}`,
                                   method: "DELETE",
                                 })
@@ -416,7 +417,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                             onClick={() =>
                               setConfirm({
                                 title: `Remove ${member.name ?? member.email} from ${team.name}?`,
-                                body: "They lose their seat, Pro from this team and staff access at every library this team gave them. They’re emailed for each library.",
+                                body: "They leave the workspace and lose the library assignments it gave them. Staff access they claimed themselves is kept. They’re emailed for each library.",
                                 path: `${base}/members/${member.documentId}`,
                                 method: "DELETE",
                                 danger: true,
@@ -520,8 +521,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             }
           >
             <p className="mt-0 text-sm leading-relaxed text-(--t-ink-dim)">
-              Team coverage enables shared features. Each person’s library staff
-              access is assigned and checked separately.
+              The libraries this workspace looks after. Each person’s library
+              staff access is assigned and checked separately.
             </p>
             {team.libraries.length ? (
               <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
@@ -583,7 +584,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                     No libraries yet.
                   </strong>{" "}
                   {organiser
-                    ? "Choose the libraries your Team covers, then assign members. Staff authority is checked separately."
+                    ? "Choose the libraries your workspace covers, then assign members. Staff authority is checked separately."
                     : "Your organiser can add libraries and assign your access."}
                 </p>
                 {organiser ? (
@@ -600,13 +601,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             footer={organiser ? <TeamConfiguration team={team} /> : undefined}
             aside={
               <TeamStatusBadges
-                membership={
-                  active
-                    ? "active"
-                    : team.status === "lapsed"
-                      ? "lapsed"
-                      : "expired"
-                }
+                workspace={active ? "open" : "closed"}
                 verified={Boolean(team.verifiedAt)}
               />
             }
@@ -617,10 +612,13 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                   className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
-                  Seats
+                  Members
                 </dt>
-                <dd className="m-0 mt-2">
-                  <TeamSeatUsage used={team.used} total={team.seats} />
+                <dd className="m-0 text-base tabular-nums">
+                  {team.members.filter((m) => m.status === "active").length}{" "}
+                  active ·{" "}
+                  {team.members.filter((m) => m.status === "invited").length}{" "}
+                  invited
                 </dd>
               </div>
               <div>
@@ -634,18 +632,21 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                   {team.organiserNames.join(", ") || "None yet"}
                 </dd>
               </div>
-              <div>
-                <dt
-                  className="text-sm font-semibold"
-                  style={{ color: T.ink.dim }}
-                >
-                  Runs until
-                </dt>
-                <dd className="m-0 text-base">
-                  {team.expiresAt ? date(team.expiresAt) : "Open ended"}
-                </dd>
-              </div>
             </dl>
+          </Card>
+
+          <Card compact title="API access">
+            <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
+              API access is bought separately on the Developers page. It never
+              grants library editing.
+            </p>
+            <Link
+              href="/developers"
+              className={`${CONTACT_LINK} mt-2 text-(--t-accent-primary)`}
+            >
+              Open Developers
+              <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
+            </Link>
           </Card>
 
           {organiser ? (
@@ -654,29 +655,10 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               className="scroll-mt-(--sticky-content-top)"
               compact
               title={tUi("invite_a_colleague")}
-              aside={
-                <span className="text-sm" style={{ color: T.ink.dim }}>
-                  {seatsLeft} {seatsLeft === 1 ? "seat" : "seats"} left
-                </span>
-              }
             >
-              {seatsLeft === 0 ? (
+              {!active ? (
                 <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                  Every available seat is taken. Remove a member or invitation,
-                  or add seats.{" "}
-                  {team.source === "checkout" ? (
-                    <Link href="/staff/teams/billing" className={CONTACT_LINK}>
-                      Manage billing and seats
-                    </Link>
-                  ) : (
-                    <a
-                      href={TEAM_CONTACT_HREF}
-                      className={CONTACT_LINK}
-                      style={{ color: T.accent.primary }}
-                    >
-                      Contact the site team
-                    </a>
-                  )}
+                  Invitations are paused while this workspace is closed.
                 </p>
               ) : (
                 <form
@@ -792,8 +774,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       className="mt-3 mb-0 text-base"
                       style={{ color: T.ink.dim }}
                     >
-                      They sign in with that email and accept the link. The
-                      invite holds a seat for 14 days.
+                      They sign in with that email and accept the link within 14
+                      days. Library editing still needs verified access.
                     </p>
                   </div>
                 </form>

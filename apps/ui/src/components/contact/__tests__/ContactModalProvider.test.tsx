@@ -41,16 +41,16 @@ afterEach(() => {
 it("covers mail links nested in CMS-style content and infers plan inquiries", () => {
   render(
     <ContactModalProvider>
-      <a href="mailto:info@libraries.global?subject=Pro%20grant">
-        <span>Ask for a grant</span>
+      <a href="mailto:info@libraries.global?subject=API%20Access">
+        <span>Ask about API Access</span>
       </a>
     </ContactModalProvider>
   )
-  fireEvent.click(screen.getByText("Ask for a grant"))
+  fireEvent.click(screen.getByText("Ask about API Access"))
   expect(JSON.parse(screen.getByTestId("intent").textContent!)).toEqual({
     mode: "contact",
     type: "plans",
-    sourceSubject: "Pro grant",
+    sourceSubject: "API Access",
   })
   expect(
     JSON.parse(screen.getByTestId("context").textContent!).viewport.width

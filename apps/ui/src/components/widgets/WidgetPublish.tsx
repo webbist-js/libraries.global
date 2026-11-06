@@ -263,8 +263,8 @@ function publicationChecks(
     },
     {
       label: active
-        ? "Team access is active"
-        : "An active Team is required to publish",
+        ? "Your workspace is open"
+        : "Publishing is paused while your workspace is closed",
       tone: active ? "ok" : "warn",
       blocks: !active,
     },

@@ -13,13 +13,8 @@ export const ROADMAP_AREAS = [
 ] as const
 export type RoadmapArea = (typeof ROADMAP_AREAS)[number]
 
-export const ROADMAP_PLANS = [
-  "free",
-  "supporter",
-  "pro",
-  "team",
-  "api",
-] as const
+/** Offer a feature is intended for: Explorer (free), Contributor, Verified Staff or API. */
+export const ROADMAP_PLANS = ["free", "contributor", "staff", "api"] as const
 export type RoadmapPlan = (typeof ROADMAP_PLANS)[number]
 
 /** Where a dataset is: on our list, one of the four steps, or in the index. */

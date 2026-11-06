@@ -1,66 +1,34 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
-import {
-  type BillingSummary,
-  formatBillingDate,
-  membershipStatusKey,
-} from "@/components/billing/types"
 import { SupporterPreferences } from "@/components/community/SupporterPreferences"
 import { Badge } from "@/components/ds/Badge"
 import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
-import { PersonalBillingPanel } from "@/components/membership/PersonalBillingPanel"
 import { StaffPanel, STAFF_LINK } from "@/components/staff/StaffPanel"
-import { Button, buttonVariants } from "@/components/ui/button"
-import type { SessionTeam } from "@/lib/access-server"
+import { buttonVariants } from "@/components/ui/button"
+import type {
+  SessionApiAccount,
+  SessionTeam,
+  StaffLibrarySummary,
+} from "@/lib/access-server"
 import { CONTACT_EMAIL } from "@/lib/constants"
-import { featuresOf, PRO_FEATURE_COPY } from "@/lib/plans"
-
-import {
-  type MembershipBillingController,
-  useMembershipBilling,
-} from "./useMembershipBilling"
-
-const FEATURE_DESTINATIONS = {
-  "atlas.export": {
-    icon: "mdi:download-outline",
-    href: "/map",
-    copy: "atlas_export",
-  },
-  "atlas.contextLayers": {
-    icon: "mdi:layers-outline",
-    href: "/map",
-    copy: "atlas_contextLayers",
-  },
-  "atlas.analysis": {
-    icon: "mdi:map-marker-radius-outline",
-    href: "/map",
-    copy: "atlas_analysis",
-  },
-  "atlas.compare": {
-    icon: "mdi:compare-horizontal",
-    href: "/map",
-    copy: "atlas_compare",
-  },
-  "library.history": {
-    icon: "mdi:history",
-    href: "/libraries",
-    copy: "library_history",
-  },
-} as const
+import { useMembershipContent, useOfferValues } from "@/lib/localized-plans"
+import { RECOGNITION, standingName, standingProgress } from "@/lib/plans"
 
 export type MembershipDashboardProps = {
   /** The parent workspace provides the page gutters and section spacing. */
   readonly embedded?: boolean
-  readonly plan: string
-  readonly source: string
+  readonly acceptedContributions: number
+  /** A moderator revoked recognition; the count no longer applies. */
+  readonly recognitionRevoked?: boolean
+  readonly recentlyActive: boolean
+  readonly staffLibraries: StaffLibrarySummary[]
   readonly teams: SessionTeam[]
-  readonly asOf: number
-  readonly staffCount: number
+  readonly apiAccounts: SessionApiAccount[]
   readonly recognition: {
     listed: boolean
     badgeVisible: boolean
@@ -68,62 +36,21 @@ export type MembershipDashboardProps = {
   } | null
 }
 
+/**
+ * Three separate things, never merged into a "plan": earned standing from
+ * accepted contributions, verified staff authority from staff claims, and API
+ * accounts (managed on /developers). Nothing here can be bought.
+ */
 export function MembershipDashboard({
   embedded = false,
-  plan,
-  source,
+  acceptedContributions,
+  recognitionRevoked = false,
+  recentlyActive,
+  staffLibraries,
   teams,
-  staffCount,
+  apiAccounts,
   recognition,
-  asOf,
 }: MembershipDashboardProps) {
-  const copy = useMembershipCopy()
-  const { t, b } = copy
-  const billing = useMembershipBilling()
-  const { summary, error } = billing
-  const effective = summary?.effectivePlan ?? plan
-  const current =
-    effective === "supporter" || effective === "pro" || effective === "team"
-      ? effective
-      : "free"
-  const accessSource = summary?.accessSource ?? source
-  const hasTools = current !== "free"
-  const activeTeam = teams.find(
-    (entry) =>
-      entry.status === "active" &&
-      (!entry.expiresAt || Date.parse(entry.expiresAt) > asOf)
-  )
-  const team = activeTeam ?? teams[0]
-  const membership = summary?.membership
-  const status = membership ? membershipStatusKey(membership) : null
-  const sourceKey =
-    accessSource === "grant" ||
-    accessSource === "earned" ||
-    accessSource === "verified" ||
-    accessSource === "team" ||
-    accessSource === "paid"
-      ? accessSource
-      : "none"
-  const sourceLabel =
-    sourceKey === "none" ? t("freeAccount") : b(`accessSources.${sourceKey}`)
-  const personalBilling =
-    !summary ||
-    error ||
-    membership ||
-    summary.confirmationPending ||
-    summary.invoices.length > 0
-
-  const view: MembershipView = {
-    current,
-    sourceKey,
-    sourceLabel,
-    hasTools,
-    team,
-    activeTeam,
-    membership,
-    status,
-  }
-
   return (
     <Container
       hideDefaultPadding={embedded}
@@ -131,460 +58,309 @@ export function MembershipDashboard({
     >
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,0.85fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          {team ? (
-            <TeamMembershipPanel
-              team={team}
-              active={Boolean(activeTeam)}
-              copy={copy}
-            />
-          ) : null}
-
-          <CurrentPlanPanel view={view} copy={copy} staffCount={staffCount} />
-
-          <IncludedToolsPanel view={view} copy={copy} />
-
-          <RecognitionPanel view={view} copy={copy} recognition={recognition} />
-          {personalBilling ? (
-            <PersonalBillingPanel billing={billing} billingOnly />
-          ) : !team ? (
-            <StaffPanel id="billing" title={t("billing")}>
-              <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
-                {t(hasTools ? "complimentaryBilling" : "freeBilling")}
-              </p>
-              <GlobalLink
-                className={`${STAFF_LINK} mt-4 inline-flex min-h-11 items-center`}
-                href="/plans"
-              >
-                {t("comparePlans")}
-              </GlobalLink>
-            </StaffPanel>
-          ) : null}
+          <StandingPanel
+            acceptedContributions={acceptedContributions}
+            recognitionRevoked={recognitionRevoked}
+            recentlyActive={recentlyActive}
+            recognition={recognition}
+          />
+          <StaffAuthorityPanel libraries={staffLibraries} teams={teams} />
+          <ApiAccountsPanel accounts={apiAccounts} teams={teams} />
         </div>
-
-        <MembershipSidebar
-          current={current}
-          staffCount={staffCount}
-          copy={copy}
-          billing={billing}
-        />
+        <MembershipSidebar />
       </div>
     </Container>
   )
 }
 
-function Benefit({
-  icon,
-  title,
-  href,
-  action,
-  description,
-}: {
-  readonly icon: string
-  readonly title: string
-  readonly href: string
-  readonly action: string
-  readonly description?: string
-}) {
-  return (
-    <div className="flex min-w-0 flex-col items-start rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
-      <span
-        aria-hidden
-        className="mb-4 flex size-10 items-center justify-center rounded-xl bg-(--t-accent-chip) text-(--t-accent-primary)"
-      >
-        <Icon icon={icon} className="size-5" />
-      </span>
-      <h3 className="type-card-title m-0">{title}</h3>
-      {description ? (
-        <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-          {description}
-        </p>
-      ) : null}
-      <GlobalLink
-        aria-label={`${action}: ${title}`}
-        href={href}
-        className={`${STAFF_LINK} mt-auto inline-flex min-h-11 items-center gap-1.5 pt-3 text-sm`}
-      >
-        {action}
-        <Icon aria-hidden icon="mdi:arrow-right" className="size-4" />
-      </GlobalLink>
-    </div>
-  )
-}
-
-function useMembershipCopy() {
-  return {
-    t: useTranslations("membershipPage"),
-    b: useTranslations("billing"),
-    tStatus: useTranslations("membershipStatus"),
-    locale: useLocale(),
-  }
-}
-type MembershipCopy = ReturnType<typeof useMembershipCopy>
-type MembershipView = {
-  current: "free" | "supporter" | "pro" | "team"
-  sourceKey: "none" | "grant" | "earned" | "verified" | "team" | "paid"
-  sourceLabel: string
-  hasTools: boolean
-  team: SessionTeam | undefined
-  activeTeam: SessionTeam | undefined
-  membership: BillingSummary["membership"] | undefined
-  status: ReturnType<typeof membershipStatusKey> | null
-}
-function accessDescription(view: MembershipView, copy: MembershipCopy) {
-  if (view.sourceKey === "team")
-    return copy.t("teamAccess", { name: view.team?.name ?? copy.t("yourTeam") })
-  if (view.sourceKey === "none") return copy.t("freeAccess")
-
-  return copy.tStatus(`${view.sourceKey}Detail`)
-}
-
-function CurrentPlanPanel({
-  view,
-  copy,
-  staffCount,
-}: {
-  view: MembershipView
-  copy: MembershipCopy
-  staffCount: number
-}) {
-  const { t, b, locale } = copy
-  const {
-    current,
-    sourceKey,
-    sourceLabel,
-    hasTools,
-    team,
-    membership,
-    status,
-  } = view
-
-  return (
-    <StaffPanel
-      id="current-plan"
-      title={t("currentPlan")}
-      aside={<Badge label={sourceLabel} color={hasTools ? "aurora" : "dim"} />}
-    >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <p className="type-stat m-0">{b(`accessPlans.${current}`)}</p>
-        <Badge
-          color={hasTools ? "ok" : "dim"}
-          label={hasTools ? t("activeAccess") : t("freeAccount")}
-        />
-      </div>
-      <p className="mt-4 mb-0 max-w-[62ch] text-base leading-relaxed text-(--t-ink-dim)">
-        {accessDescription(view, copy)}
-      </p>
-      <dl className="mt-6 mb-0 grid gap-5 border-y border-(--t-border-line) py-5 text-sm sm:grid-cols-2">
-        <div>
-          <dt className="text-(--t-ink-dim)">{t("accessFrom")}</dt>
-          <dd className="m-0 mt-1 font-semibold">
-            {sourceKey === "team" && team ? team.name : sourceLabel}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-(--t-ink-dim)">{t("libraryPermissions")}</dt>
-          <dd className="m-0 mt-1 font-semibold">
-            {staffCount
-              ? t("approvedLibraries", { count: staffCount })
-              : t("noStaffAccess")}
-          </dd>
-        </div>
-        {membership?.paidThrough ? (
-          <div>
-            <dt className="text-(--t-ink-dim)">{t("paidThrough")}</dt>
-            <dd className="m-0 mt-1 font-semibold">
-              {formatBillingDate(membership.paidThrough, locale)}
-            </dd>
-          </div>
-        ) : null}
-        {status && sourceKey === "paid" ? (
-          <div>
-            <dt className="text-(--t-ink-dim)">{t("subscription")}</dt>
-            <dd className="m-0 mt-1 font-semibold">{b(status)}</dd>
-          </div>
-        ) : null}
-      </dl>
-      <CurrentPlanActions hasTools={hasTools} copy={copy} />
-    </StaffPanel>
-  )
-}
-function CurrentPlanActions({
-  hasTools,
-  copy,
-}: {
-  hasTools: boolean
-  copy: MembershipCopy
-}) {
-  const { t } = copy
-
-  return (
-    <div className="mt-6 flex flex-wrap gap-3">
-      <GlobalLink
-        href={hasTools ? "/map" : "/plans"}
-        className={buttonVariants({ variant: "primary", size: "pill" })}
-      >
-        <Icon
-          aria-hidden
-          icon={hasTools ? "mdi:map-outline" : "mdi:sparkles"}
-        />
-        {hasTools ? t("openAtlas") : t("explorePlans")}
-      </GlobalLink>
-      <GlobalLink
-        href={hasTools ? "/plans" : "/contribute"}
-        className={buttonVariants({ variant: "surface", size: "pill" })}
-      >
-        {hasTools ? t("comparePlans") : t("startContributing")}
-      </GlobalLink>
-    </div>
-  )
-}
-function IncludedToolsPanel({
-  view,
-  copy,
-}: {
-  view: MembershipView
-  copy: MembershipCopy
-}) {
-  const { t } = copy
-  const { current, hasTools, activeTeam } = view
-
-  return (
-    <StaffPanel
-      id="included"
-      title={t("included")}
-      aside={
-        <span className="text-sm text-(--t-ink-dim)">{t("availableNow")}</span>
-      }
-    >
-      <p className="-mt-1 mb-5 text-base leading-relaxed text-(--t-ink-dim)">
-        {hasTools ? t("toolsLead") : t("freeToolsLead")}
-      </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {current !== "free" ? (
-          featuresOf(current)
-            .filter(
-              (feature): feature is keyof typeof FEATURE_DESTINATIONS =>
-                Object.hasOwn(FEATURE_DESTINATIONS, feature) &&
-                PRO_FEATURE_COPY[feature].status === "live"
-            )
-            .map((feature) => {
-              const target = FEATURE_DESTINATIONS[feature]!
-
-              return (
-                <Benefit
-                  key={feature}
-                  icon={target.icon}
-                  title={t(`features.${target.copy}`)}
-                  href={target.href}
-                  action={t("openTool")}
-                />
-              )
-            })
-        ) : (
-          <>
-            <Benefit
-              icon="mdi:map-search-outline"
-              title={t("findLibraries")}
-              href="/libraries"
-              action={t("browseLibraries")}
-            />
-            <Benefit
-              icon="mdi:pencil-outline"
-              title={t("contributeRecords")}
-              href="/contribute"
-              action={t("startContributing")}
-            />
-          </>
-        )}
-        {activeTeam ? (
-          <Benefit
-            icon="mdi:widgets-outline"
-            title={t("teamTools")}
-            description={t("teamToolsDescription")}
-            href="/staff/teams/widgets"
-            action={t("openTeam")}
-          />
-        ) : null}
-      </div>
-      <p className="mt-5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-        {t("apiSeparate")}
-      </p>
-    </StaffPanel>
-  )
-}
-function RecognitionPanel({
-  view,
-  copy,
+export function StandingPanel({
+  acceptedContributions,
+  recognitionRevoked = false,
+  recentlyActive,
   recognition,
-}: {
-  view: MembershipView
-  copy: MembershipCopy
-  recognition: MembershipDashboardProps["recognition"]
-}) {
-  const { t } = copy
-  const { hasTools } = view
-
-  return (
-    <StaffPanel id="recognition" title={t("recognition")}>
-      <p className="-mt-1 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
-        {t("recognitionLead")}
-      </p>
-      {hasTools ? (
-        recognition ? (
-          <SupporterPreferences {...recognition} />
-        ) : (
-          <p role="status" className="text-sm text-(--t-ink-dim)">
-            {t("recognitionUnavailable")}
-          </p>
-        )
-      ) : (
-        <p className="text-sm leading-relaxed text-(--t-ink-dim)">
-          {t("recognitionFree")}
-        </p>
-      )}
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-        <GlobalLink
-          href="/community/supporters"
-          className={`${STAFF_LINK} inline-flex min-h-11 items-center`}
-        >
-          {t("meetSupporters")}
-        </GlobalLink>
-        <GlobalLink
-          href="/profile/settings#privacy"
-          className={`${STAFF_LINK} inline-flex min-h-11 items-center`}
-        >
-          {t("profilePrivacy")}
-        </GlobalLink>
-      </div>
-    </StaffPanel>
-  )
-}
-function TeamMembershipPanel({
-  team,
-  active,
-  copy,
-}: {
-  team: SessionTeam
-  active: boolean
-  copy: MembershipCopy
-}) {
-  const { t } = copy
-  const organiser = team.role === "organiser"
+}: Pick<
+  MembershipDashboardProps,
+  | "acceptedContributions"
+  | "recognitionRevoked"
+  | "recentlyActive"
+  | "recognition"
+>) {
+  const t = useTranslations("membershipPage")
+  const m = useMembershipContent()
+  const values = useOfferValues()
+  const progress = standingProgress({
+    signedIn: true,
+    acceptedContributions,
+    recognitionRevoked,
+  })
+  const name = standingName(progress.standing)
+  const supporter = progress.standing === "supporter"
 
   return (
     <StaffPanel
-      id="team-billing"
-      title={t(active ? "inTeamTitle" : "teamMembership")}
+      id="standing"
+      title={t("standingTitle")}
       aside={
         <Badge
-          color={active ? "aurora" : "dim"}
-          label={t(active ? "teamSeat" : "teamInactive")}
+          color={recentlyActive ? "ok" : "dim"}
+          label={t(recentlyActive ? "recentlyActive" : "notRecentlyActive")}
         />
       }
     >
-      <h3 className="type-card-title m-0 [overflow-wrap:anywhere]">
-        {team.name}
-      </h3>
-      {active ? (
-        <p className="mt-2 mb-0 text-base font-semibold">
-          {t(organiser ? "inTeamOrganiser" : "inTeamMember", {
-            team: team.name,
-          })}
+      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+        <p className="type-stat m-0">{m(`standing.${name}`)}</p>
+        <p className="m-0 text-base text-(--t-ink-dim)">
+          {t("acceptedCount", { count: progress.accepted })}
         </p>
-      ) : null}
-      <p className="mt-3 mb-5 text-base leading-relaxed text-(--t-ink-dim)">
-        {t(
-          !active
-            ? "inactiveTeamBilling"
-            : organiser
-              ? "organiserBilling"
-              : "memberBilling"
-        )}
+      </div>
+      <p className="mt-3 mb-0 max-w-[62ch] text-base leading-relaxed text-(--t-ink-dim)">
+        {t(`standingBody.${name}`, values)}
       </p>
-      <div className="flex flex-wrap gap-3">
+
+      <div className="mt-5">
+        <div className="flex flex-wrap justify-between gap-2 text-sm">
+          <span id="supporter-progress-label" className="font-semibold">
+            {t("progressLabel", values)}
+          </span>
+          <span className="text-(--t-ink-dim) tabular-nums">
+            {t("progressValue", {
+              count: Math.min(progress.accepted, RECOGNITION.supporterAt),
+              total: RECOGNITION.supporterAt,
+            })}
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-labelledby="supporter-progress-label"
+          aria-valuemin={0}
+          aria-valuemax={RECOGNITION.supporterAt}
+          aria-valuenow={Math.min(progress.accepted, RECOGNITION.supporterAt)}
+          className="mt-2 h-2.5 rounded-full bg-(--t-bg-muted)"
+        >
+          <div
+            className="h-full rounded-full bg-(--t-accent-primary)"
+            style={{ width: `${progress.percent}%` }}
+          />
+        </div>
+        <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
+          {progress.next
+            ? t(`nextMilestone.${progress.next.standing}`, {
+                count: progress.remaining,
+              })
+            : t("milestoneReached")}
+        </p>
+      </div>
+
+      <p className="mt-4 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+        {t("activityNote", values)}
+      </p>
+
+      {supporter ? (
+        <div className="mt-6 border-t border-(--t-border-line) pt-5">
+          <h3 className="type-card-title m-0">{t("recognition")}</h3>
+          <p className="mt-2 mb-4 text-sm leading-relaxed text-(--t-ink-dim)">
+            {t("recognitionLead")}
+          </p>
+          {recognition ? (
+            <SupporterPreferences {...recognition} />
+          ) : (
+            <p role="status" className="m-0 text-sm text-(--t-ink-dim)">
+              {t("recognitionUnavailable")}
+            </p>
+          )}
+        </div>
+      ) : null}
+
+      <div className="mt-6 flex flex-wrap gap-3">
         <GlobalLink
-          href="/staff/teams"
+          href="/contribute"
           className={buttonVariants({ variant: "primary", size: "pill" })}
         >
-          {t(organiser ? "manageTeam" : "openTeam")}
+          <Icon aria-hidden icon="mdi:pencil-outline" />
+          {t("startContributing")}
         </GlobalLink>
-        {organiser ? (
+        <GlobalLink
+          href="/contribute/submissions"
+          className={buttonVariants({ variant: "surface", size: "pill" })}
+        >
+          {t("yourContributions")}
+        </GlobalLink>
+      </div>
+      <p className="mt-4 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+        {t("standingIndependence")}
+      </p>
+    </StaffPanel>
+  )
+}
+
+export function StaffAuthorityPanel({
+  libraries,
+  teams,
+}: {
+  readonly libraries: StaffLibrarySummary[]
+  readonly teams: SessionTeam[]
+}) {
+  const t = useTranslations("membershipPage")
+
+  return (
+    <StaffPanel
+      id="staff-authority"
+      title={t("staffTitle")}
+      aside={
+        <Badge
+          color={libraries.length ? "aurora" : "dim"}
+          label={
+            libraries.length
+              ? t("approvedLibraries", { count: libraries.length })
+              : t("noStaffAccess")
+          }
+        />
+      }
+    >
+      <p className="-mt-1 mb-5 max-w-[62ch] text-base leading-relaxed text-(--t-ink-dim)">
+        {t(libraries.length ? "staffLead" : "claimExplanation")}
+      </p>
+      {libraries.length ? (
+        <ul className="m-0 mb-5 flex list-none flex-col gap-2 p-0">
+          {libraries.map((library) => (
+            <li
+              key={library.id}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) px-4 py-3"
+            >
+              <GlobalLink
+                href={`/staff/${library.slug}`}
+                className={`${STAFF_LINK} min-w-0 [overflow-wrap:anywhere]`}
+              >
+                {library.name}
+              </GlobalLink>
+              <span className="text-sm text-(--t-ink-dim)">
+                {t(`staffRoles.${library.role}`)}
+                {library.canGoLive ? ` · ${t("canGoLive")}` : ""}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {teams.length ? (
+        <div className="mb-5">
+          <h3 className="type-small-heading m-0 mb-2">{t("organisations")}</h3>
+          <ul className="m-0 flex list-none flex-col gap-1.5 p-0 text-sm">
+            {teams.map((team) => (
+              <li key={team.id} className="[overflow-wrap:anywhere]">
+                <strong>{team.name}</strong>{" "}
+                <span className="text-(--t-ink-dim)">
+                  ·{" "}
+                  {t(
+                    team.role === "organiser"
+                      ? "organisationOrganiser"
+                      : "organisationMember"
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
+            {t("organisationNote")}
+          </p>
+        </div>
+      ) : null}
+      <div className="flex flex-wrap gap-3">
+        <GlobalLink
+          href={libraries.length ? "/staff" : "/contribute/claim"}
+          className={buttonVariants({ variant: "surface", size: "pill" })}
+        >
+          {t(libraries.length ? "manageLibraries" : "claimLibrary")}
+        </GlobalLink>
+        {teams.length ? (
           <GlobalLink
-            href="/staff/teams/billing"
+            href="/staff/teams"
             className={buttonVariants({ variant: "surface", size: "pill" })}
           >
-            {t("manageTeamBilling")}
+            {t("openOrganisation")}
           </GlobalLink>
         ) : null}
       </div>
+    </StaffPanel>
+  )
+}
+
+export function ApiAccountsPanel({
+  accounts,
+  teams,
+}: {
+  readonly accounts: SessionApiAccount[]
+  readonly teams: SessionTeam[]
+}) {
+  const t = useTranslations("membershipPage")
+  const values = useOfferValues()
+  const nameOf = (teamId: string) =>
+    teams.find((team) => team.id === teamId)?.name ?? t("organisationUnnamed")
+
+  return (
+    <StaffPanel id="api-accounts" title={t("apiTitle")}>
+      <p className="-mt-1 mb-5 max-w-[62ch] text-base leading-relaxed text-(--t-ink-dim)">
+        {t(accounts.length ? "apiLead" : "apiNone", values)}
+      </p>
+      {accounts.length ? (
+        <ul className="m-0 mb-5 flex list-none flex-col gap-2 p-0">
+          {accounts.map((account) => (
+            <li
+              key={account.teamId}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) px-4 py-3"
+            >
+              <span className="min-w-0 font-semibold [overflow-wrap:anywhere]">
+                {nameOf(account.teamId)}
+              </span>
+              <span className="flex flex-wrap items-center gap-2 text-sm text-(--t-ink-dim)">
+                {t(
+                  account.role === "organiser"
+                    ? "organisationOrganiser"
+                    : "organisationMember"
+                )}
+                <Badge
+                  color={account.active ? "ok" : "dim"}
+                  label={t(account.active ? "apiActive" : "apiInactive")}
+                />
+              </span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <GlobalLink
+        href="/developers"
+        className={buttonVariants({ variant: "surface", size: "pill" })}
+      >
+        <Icon aria-hidden icon="mdi:code-braces" />
+        {t("openDevelopers")}
+      </GlobalLink>
       <p className="mt-4 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-        {t("apiSeparate")}
+        {t("apiIndependence")}
       </p>
     </StaffPanel>
   )
 }
-function MembershipSidebar({
-  current,
-  staffCount,
-  copy,
-  billing,
-}: {
-  current: MembershipView["current"]
-  staffCount: number
-  copy: MembershipCopy
-  billing: MembershipBillingController
-}) {
-  const { t, b } = copy
-  const { error, summary, reload: handleReload } = billing
+
+function MembershipSidebar() {
+  const t = useTranslations("membershipPage")
 
   return (
     <aside
       aria-label={t("helpAndAccess")}
       className="flex min-w-0 flex-col gap-5 lg:sticky lg:top-(--sticky-content-top)"
     >
-      <StaffPanel
-        compact
-        id="library-access"
-        title={t("libraryStaff")}
-        aside={<Badge color="dim" label={t("separate")} />}
-      >
-        <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
-          {t(staffCount ? "approvedStaff" : "staffOptional")}
+      <StaffPanel compact id="membership-plans" title={t("waysToTakePart")}>
+        <p className="m-0 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
+          {t("waysLead")}
         </p>
-        {!staffCount ? (
-          <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
-            {t("claimExplanation")}
-          </p>
-        ) : null}
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
-          <GlobalLink
-            href={staffCount ? "/staff" : "/contribute/claim"}
-            className={buttonVariants({ variant: "surface", size: "pill" })}
-          >
-            {t(staffCount ? "manageLibraries" : "claimLibrary")}
-          </GlobalLink>
-          <GlobalLink
-            href="/plans#library-staff-h"
-            className={`${STAFF_LINK} inline-flex min-h-11 items-center text-base`}
-          >
-            {t("howItWorks")}
-          </GlobalLink>
-        </div>
+        <SidebarLinks>
+          <li>
+            <GlobalLink href="/plans">{t("comparePlans")}</GlobalLink>
+          </li>
+          <li>
+            <GlobalLink href="/sponsor">{t("sponsorLink")}</GlobalLink>
+          </li>
+        </SidebarLinks>
       </StaffPanel>
-      {current === "free" || current === "supporter" ? (
-        <StaffPanel compact id="complimentary" title={t("getProFree")}>
-          <p className="m-0 mb-4 text-base leading-relaxed text-(--t-ink-dim)">
-            {t("getProFreeLead")}
-          </p>
-          <SidebarLinks>
-            <li>
-              <GlobalLink href="/plans#get-pro-free">
-                {t("seeEligibility")}
-              </GlobalLink>
-            </li>
-          </SidebarLinks>
-        </StaffPanel>
-      ) : null}
       <StaffPanel compact id="membership-help" title={t("termsAndHelp")}>
         <SidebarLinks>
           <li>
@@ -597,7 +373,7 @@ function MembershipSidebar({
           </li>
           <li>
             <a
-              href={`mailto:${CONTACT_EMAIL}?subject=Membership%20question`}
+              href={`mailto:${CONTACT_EMAIL}?subject=Account%20question`}
               data-contact-type="membership_support"
             >
               {t("askQuestion")}
@@ -605,11 +381,6 @@ function MembershipSidebar({
           </li>
         </SidebarLinks>
       </StaffPanel>
-      {error && summary ? (
-        <Button variant="surface" size="pill" onClick={handleReload}>
-          {b("retry")}
-        </Button>
-      ) : null}
     </aside>
   )
 }

@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
-import { PRO_FEATURE_COPY } from "@/lib/plans"
+import { FEATURE_STATUS } from "@/lib/plans"
 
 // Access and delivery status belong to the product, rather than editorial CMS copy.
 const GROUPS = [
@@ -36,23 +36,23 @@ const GROUPS = [
       {
         key: "access",
         Icon: Globe,
-        access: "pro",
+        access: "account",
         href: "/map",
-        live: PRO_FEATURE_COPY["atlas.compare"].status === "live",
+        live: FEATURE_STATUS["atlas.compare"] === "live",
       },
       {
         key: "reach",
         Icon: Target,
-        access: "pro",
+        access: "contributor",
         href: "/map",
-        live: PRO_FEATURE_COPY["atlas.analysis"].status === "live",
+        live: FEATURE_STATUS["atlas.reach"] === "live",
       },
       {
         key: "export",
         Icon: Download,
-        access: "pro",
+        access: "account",
         href: "/map",
-        live: PRO_FEATURE_COPY["atlas.export"].status === "live",
+        live: FEATURE_STATUS["atlas.export"] === "live",
       },
       { key: "staff", Icon: Library, access: "staff", href: "/staff/claim" },
     ],

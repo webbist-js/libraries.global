@@ -170,3 +170,23 @@ describe("points.award", () => {
     expect(profile.points).toBe(0) // Points not updated
   })
 })
+
+describe("machine API proposals", () => {
+  it("never award points to an API account submitter", async () => {
+    const query = vi.fn()
+    const points = createPoints({
+      strapi: {
+        db: { query, transaction: vi.fn(), connection: vi.fn() },
+      } as never,
+    })
+    const result = await points.award(
+      "api:team00000000000000000001",
+      "new_library_approved",
+      50,
+      { submissionId: "s1" },
+      "s1:new_library_approved"
+    )
+    expect(result).toEqual({ awarded: false })
+    expect(query).not.toHaveBeenCalled()
+  })
+})

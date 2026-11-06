@@ -97,7 +97,6 @@ vi.mock(
 import ContributeClaim from "@/app/[locale]/(dashboard)/contribute/claim/page"
 import Claim from "@/app/[locale]/(dashboard)/staff/claim/page"
 import Networks from "@/app/[locale]/(dashboard)/staff/networks/page"
-import Api from "@/app/[locale]/(dashboard)/staff/teams/api/page"
 import Teams from "@/app/[locale]/(dashboard)/staff/teams/page"
 import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { WidgetsStaffPage } from "@/components/widgets/WidgetsStaffPage"
@@ -116,9 +115,7 @@ beforeEach(() => {
 const teams = () =>
   Teams({
     params: Promise.resolve({ locale: "en" }),
-    searchParams: Promise.resolve({}),
   })
-const api = () => Api({ searchParams: Promise.resolve({}) })
 const expectLanding = (
   element: ReactElement,
   feature: string,
@@ -142,16 +139,14 @@ describe("staff discovery routes before private reads", () => {
       returnTo: "/staff/networks?network=network&request=request",
     })
   })
-  it("offers guest introductions for Teams, widgets and API", async () => {
+  it("offers guest introductions for Teams and widgets", async () => {
     expectLanding(await teams(), "teams")
-    await expect(api()).rejects.toThrow("REDIRECT:/cs/developers")
     expectLanding(await WidgetsStaffPage({ mode: "overview" }), "widgets")
     expect(state.privateRead).not.toHaveBeenCalled()
   })
   it("explains access to members without a Team rather than bouncing them elsewhere", async () => {
     state.user = { id: "member", email: "member@example.test", teams: [] }
     expectLanding(await teams(), "teams", true)
-    await expect(api()).rejects.toThrow("REDIRECT:/cs/developers")
     expectLanding(await WidgetsStaffPage({ mode: "overview" }), "widgets", true)
     expect(state.privateRead).not.toHaveBeenCalled()
   })

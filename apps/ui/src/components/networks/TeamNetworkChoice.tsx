@@ -142,7 +142,7 @@ export function TeamNetworkChoice({
             <strong className="block text-(--t-ink-base)">
               Set up your Team
             </strong>
-            Name your Team and review annual billing.
+            Name your Team. Workspaces are free.
           </li>
           <li>
             <strong className="block text-(--t-ink-base)">

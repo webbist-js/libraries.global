@@ -2,13 +2,12 @@ import type { Locale } from "next-intl"
 import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
-import { Notice, PlanGatePanel } from "@/components/ds"
+import { FeatureGatePanel, Notice } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
-import { requireEntitlementForLibrary } from "@/lib/access-server"
+import { canStaffTool, sessionTeamsOf } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
-import { TEAM_CONTACT_HREF } from "@/lib/plans"
 import { loadStaffPage } from "@/lib/staff/server"
 import type { StaffTeam } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
@@ -59,8 +58,9 @@ function TeamPreview() {
 }
 
 /**
- * The library's Team tab. Uncovered (no active Team of the viewer's covers
- * this library): the plan gate, who has staff access, Leave and Report.
+ * The library's Team tab. Uncovered (no staff workspace of the viewer's
+ * covers this library): how a free workspace helps, who has staff access,
+ * Leave and Report.
  * Covered: the staff list with levels and live permission, invites to the
  * Team pre-assigned here (organisers), pending invites and recent changes.
  * A Team that covers the library without the viewer in it: a line naming
@@ -85,13 +85,12 @@ export default async function TeamPage({
   if (result.status !== 200 || !result.body)
     return <StaffLoadError what="The staff list" status={result.status} />
   // The session's pre-check and Strapi's answer must both agree.
-  const full =
-    result.body.covered &&
-    requireEntitlementForLibrary(user, "library.team", documentId) === null
+  const full = result.body.covered && canStaffTool(user, "seeTeam", documentId)
   // A Team covers the library but the viewer isn't in it (`coveringTeam`,
   // absent from older responses): name its organiser instead of the gate.
   const covering = result.body.coveringTeam ?? null
   const outsideTeam = !full && !!covering && !covering.viewerIsMember
+  const hasWorkspace = sessionTeamsOf(user).length > 0
 
   return (
     <div className="max-w-[1180px] space-y-6">
@@ -106,8 +105,9 @@ export default async function TeamPage({
             {covering.organiserEmailMasked
               ? ` (${covering.organiserEmailMasked})`
               : ""}{" "}
-            to add you to the team. Members get Pro and staff access on its
-            libraries, and the organiser sets Owner and Editor levels.
+            to add you to the workspace. The organiser can assign you to its
+            libraries at Owner or Editor level; each assignment is checked
+            before you can edit.
           </p>
           <LearnMoreLink
             slug={KNOWLEDGE_SLUGS.teams}
@@ -116,20 +116,26 @@ export default async function TeamPage({
         </Notice>
       ) : !full ? (
         <>
-          <PlanGatePanel
+          <FeatureGatePanel
+            badge="Free staff workspace"
             title={tUi("manage_your_librarys_staff")}
-            lead="Invite colleagues, give them roles, and choose who can edit or go live. Your Team organiser manages access. Without Team, each staff member claims access on their own."
+            lead="Set up a free staff workspace to invite colleagues, give them roles and choose who can edit or go live. Without one, each colleague claims access on their own."
             points={[
-              "Invite colleagues through your Team organiser",
+              "Invite colleagues by email",
               "Owner and Editor levels per library",
               "Choose who can go live on mobile libraries",
             ]}
-            compareHref="/plans"
-            contactHref={TEAM_CONTACT_HREF}
+            note="Workspaces are free. Adding a library to one still needs your verified owner access, and each colleague’s assignment is checked."
+            action={
+              hasWorkspace
+                ? { href: "/staff/teams", label: "Open your workspace" }
+                : { href: "/staff/teams/new", label: "Create a free workspace" }
+            }
             preview={<TeamPreview />}
+            previewCaption="Illustration of a staff list"
           />
           <LearnMoreLink
-            slug={KNOWLEDGE_SLUGS.plans}
+            slug={KNOWLEDGE_SLUGS.teams}
             locale={locale as Locale}
           />
         </>

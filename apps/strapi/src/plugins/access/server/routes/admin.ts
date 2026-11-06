@@ -1,4 +1,4 @@
-const can = (action: "manage-roles" | "manage-teams" | "manage-plans") => [
+const can = (action: "manage-roles" | "manage-teams") => [
   "admin::isAuthenticatedAdmin",
   {
     name: "admin::hasPermissions",
@@ -10,7 +10,7 @@ const route = (
   method: string,
   path: string,
   handler: string,
-  action: "manage-roles" | "manage-teams" | "manage-plans"
+  action: "manage-roles" | "manage-teams"
 ) => ({ method, path, handler, config: { policies: can(action) } })
 
 export default [
@@ -59,32 +59,4 @@ export default [
   ),
   route("POST", "/teams/:id/assign", "teams.assign", "manage-teams"),
   route("POST", "/teams/:id/unassign", "teams.unassign", "manage-teams"),
-
-  // Plans: complimentary plans and Pro verifications.
-  route("GET", "/plans/grants", "plans.listGrants", "manage-plans"),
-  route("POST", "/plans/grants", "plans.createGrant", "manage-plans"),
-  route(
-    "POST",
-    "/plans/grants/:documentId/revoke",
-    "plans.revokeGrant",
-    "manage-plans"
-  ),
-  route(
-    "GET",
-    "/plans/verifications",
-    "plans.listVerifications",
-    "manage-plans"
-  ),
-  route(
-    "POST",
-    "/plans/verifications",
-    "plans.createVerification",
-    "manage-plans"
-  ),
-  route(
-    "POST",
-    "/plans/verifications/:documentId/revoke",
-    "plans.revokeVerification",
-    "manage-plans"
-  ),
 ]
