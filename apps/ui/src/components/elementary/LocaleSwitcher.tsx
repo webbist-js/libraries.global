@@ -24,6 +24,7 @@ const localeTranslation = {
   en: "English",
   es: "Español",
   fr: "Français",
+  ja: "日本語",
 }
 
 function LocaleSwitcher({

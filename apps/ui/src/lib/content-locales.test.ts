@@ -30,6 +30,8 @@ describe("fully supported content languages", () => {
       "fr",
     ])
     expect(supportedContentLanguage("FR_ca")).toBe("fr")
+    expect(supportedContentLanguage("ja-JP")).toBe("ja")
+    expect(supportedContentLanguage("jp")).toBeNull()
     expect(supportedContentLanguage("de-AT")).toBeNull()
   })
   it.each(SUPPORTED_LOCALES)(

@@ -4663,7 +4663,7 @@ export interface ApiSubscriberSubscriber extends Struct.CollectionTypeSchema {
   attributes: {
     baUserId: Schema.Attribute.String & Schema.Attribute.Private
     communicationLocale: Schema.Attribute.Enumeration<
-      ["en", "cs", "es", "fr"]
+      ["en", "cs", "es", "fr", "ja"]
     > &
       Schema.Attribute.DefaultTo<"en">
     confirmationSentAt: Schema.Attribute.DateTime & Schema.Attribute.Private
