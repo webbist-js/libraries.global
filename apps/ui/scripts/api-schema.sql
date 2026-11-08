@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS api_attempts (
   -- Immutable purchase snapshot: offer version, price, tax behaviour, limits,
   -- overage rates and prices, and consent version.
   offer jsonb NOT NULL,
-  locale text NOT NULL CHECK (locale IN ('cs','en','es','fr')),
+  locale text NOT NULL CHECK (locale IN ('cs','en','es','fr','ja')),
   session_id text UNIQUE,
   subscription_id text,
   checkout_url text,

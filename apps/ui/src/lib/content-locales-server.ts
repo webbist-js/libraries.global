@@ -13,7 +13,7 @@ export async function fetchContentLocales(): Promise<ContentLocale[] | null> {
   try {
     const response = await fetch(`${STRAPI}/api/content-moderation/locales`, {
       headers: strapiServiceHeaders(),
-      next: { revalidate: 3600 },
+      next: { revalidate: 3600, tags: ["content-locales"] },
     })
     if (!response.ok) return null
     const json = (await response.json()) as { data?: ContentLocale[] }
