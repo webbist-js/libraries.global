@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import path from "node:path"
 
 import { flag, parseArgs } from "./_shared/cli"
+import { EXPANSION_FEEDS } from "./_shared/expansion-feeds"
 import { IRISH_FEEDS } from "./ireland/councils/feeds"
 
 async function run() {
@@ -11,6 +12,9 @@ async function run() {
   const args = parseArgs()
   if (flag(args, "help") || !args.dataset) {
     console.log(
+      `Prepared file-backed imports: ${EXPANSION_FEEDS.map((feed) => feed.key).join(" | ")}\nUse --file=<publisher export> --retrieved-at=<UTC ISO timestamp>. First run prepares candidates and a review template without CMS access. See ingests/EXPANSION.md.`
+    )
+    console.log(
       "pnpm ingest --dataset=it-census2023|it-iccu|ie-fingal-libraries|ie-roscommon-libraries|ie-galway-libraries|ie-south-dublin-libraries|kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|mx-sic-rnbp|ca-statcan-odcaf|imls-pls|libraryon|de-isil|es-mcu-libraries|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Ireland/Italy CMS checks and writes require --local or --production. Wikidata: --country=SE|NO|DK. Finland: --year=2025. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
     )
 
@@ -18,6 +22,12 @@ async function run() {
   }
   if (flag(args, "apply") && flag(args, "dry-run"))
     throw new Error("Choose --apply or --dry-run")
+  if (EXPANSION_FEEDS.some((feed) => feed.key === args.dataset)) {
+    const { runExpansion } = await import("./_shared/expansion")
+    await runExpansion(args)
+
+    return
+  }
   if (args.dataset === "it-census2023") {
     const { runItalyPopulation } = await import("./italy/population")
     await runItalyPopulation(args)

@@ -10,6 +10,7 @@ import type {
   AtlasSearchResponse,
   AtlasSuggestionsResponse,
 } from "@repo/shared-data"
+import { useLocale } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { atlasListLibrary, atlasPointLibrary } from "./atlas-data-adapter"
@@ -94,6 +95,7 @@ export function useAtlasData(
   now: Date,
   densitySettings?: AtlasDensitySettings
 ) {
+  const locale = useLocale()
   const [refresh, setRefresh] = useState(0),
     retry = useCallback(() => setRefresh((n) => n + 1), [])
   const [facilityQuery, setFacilityQuery] = useState(""),
@@ -227,6 +229,7 @@ export function useAtlasData(
   )
   const [selection, setSelection] = useState<{
     key: string
+    locale: string
     library: AtlasLibrary | null
     revision: number
     error?: string
@@ -235,7 +238,7 @@ export function useAtlasData(
     if (!enabled || !selectedId) return
     const controller = new AbortController()
     fetch(
-      `/api/atlas/library?${new URLSearchParams({ key: selectedId, locale: document.documentElement.lang || "en" })}`,
+      `/api/atlas/library?${new URLSearchParams({ key: selectedId, locale })}`,
       {
         signal: AbortSignal.any([
           controller.signal,
@@ -257,6 +260,7 @@ export function useAtlasData(
         if (!controller.signal.aborted)
           setSelection({
             key: selectedId,
+            locale,
             revision: refresh,
             library: data.library,
           })
@@ -265,6 +269,7 @@ export function useAtlasData(
         if (!controller.signal.aborted)
           setSelection({
             key: selectedId,
+            locale,
             revision: refresh,
             library: null,
             error: reason.message,
@@ -272,7 +277,7 @@ export function useAtlasData(
       })
 
     return () => controller.abort()
-  }, [enabled, selectedId, refresh])
+  }, [enabled, selectedId, refresh, locale])
   const points = useMemo(
     () => (population: "listed" | "closures") => {
       const value = generation?.viewport.populations[population]
@@ -333,7 +338,9 @@ export function useAtlasData(
       error ??
       counts.error ??
       search.error ??
-      (selection?.key === selectedId && selection.revision === refresh
+      (selection?.key === selectedId &&
+      selection.locale === locale &&
+      selection.revision === refresh
         ? selection.error
         : undefined),
     counts: counts.value,
@@ -343,16 +350,22 @@ export function useAtlasData(
     listed,
     closures,
     selected:
-      selection?.key === selectedId && selection.revision === refresh
+      selection?.key === selectedId &&
+      selection.locale === locale &&
+      selection.revision === refresh
         ? selection.library
         : null,
     selectionLoading: Boolean(
       enabled &&
       selectedId &&
-      (selection?.key !== selectedId || selection.revision !== refresh)
+      (selection?.key !== selectedId ||
+        selection.locale !== locale ||
+        selection.revision !== refresh)
     ),
     selectionError:
-      selection?.key === selectedId && selection.revision === refresh
+      selection?.key === selectedId &&
+      selection.locale === locale &&
+      selection.revision === refresh
         ? selection.error
         : undefined,
     fit,

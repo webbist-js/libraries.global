@@ -1,0 +1,13 @@
+SELECT ?library ?country ?libraryLabel ?address ?website ?placeLabel ?kind WHERE {
+  VALUES ?country { wd:Q55 }
+  ?library wdt:P17 ?country; wdt:P31/wdt:P279* wd:Q7075.
+  FILTER NOT EXISTS { ?library wdt:P576 ?end }
+  FILTER NOT EXISTS { ?library wdt:P31/wdt:P279* wd:Q212805 }
+  FILTER NOT EXISTS { ?library wdt:P31/wdt:P279* wd:Q28324850 }
+  FILTER NOT EXISTS { ?library wdt:P31/wdt:P279* wd:Q720920 }
+  OPTIONAL { ?library wdt:P6375 ?address }
+  OPTIONAL { ?library wdt:P856 ?website }
+  OPTIONAL { ?library wdt:P131 ?place }
+  OPTIONAL { VALUES ?kind { wd:Q28564 wd:Q1622062 wd:Q856234 wd:Q22806 } ?library wdt:P31/wdt:P279* ?kind }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "nl,en" }
+} ORDER BY ?library
