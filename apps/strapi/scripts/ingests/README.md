@@ -14,6 +14,8 @@ ingests/
   canada/      Statistics Canada ODCAF library subset (historical, partial coverage)
   ireland/     Four licensed council feeds (partial national coverage)
   italy/       ICCU national directory (CC0)
+  switzerland/ Swiss National Library ISIL Directory (open use)
+  japan/       National Diet Library ISIL registry (public domain)
   usa/         states.ts (every US ingest), plus one folder per dataset
     imls-pls/
 ```
@@ -40,6 +42,8 @@ pnpm ingest --dataset=mx-sic-rnbp --check-cms
 pnpm ingest --dataset=ca-statcan-odcaf --check-cms
 pnpm ingest --dataset=it-iccu --local --check-cms
 pnpm ingest --dataset=ie-fingal-libraries --local --check-cms
+pnpm ingest --dataset=ch-isil --local --check-cms
+pnpm ingest --dataset=jp-ndl-isil --local --check-cms
 
 # Existing adapters retain their own flags and mapping rules
 pnpm ingest --dataset=imls-pls --state=NY
