@@ -38,17 +38,36 @@ export function identity(parts: unknown[]) {
     .slice(0, 24)
 }
 
-export function object(value: unknown): Record<string, any> {
+/** A publisher object whose fields are checked where they are read. */
+export type SourceObject = Record<string, unknown>
+
+export function object(value: unknown): SourceObject {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new Error("Expected a source object")
 
-  return value as Record<string, any>
+  return value as SourceObject
 }
 
-export function array(value: unknown): any[] {
+export function array(value: unknown): unknown[] {
   if (!Array.isArray(value)) throw new Error("Expected a complete source array")
 
   return value
+}
+
+/** Reads an optional nested source field, like `value?.a?.b`. */
+export function at(value: unknown, ...path: (string | number)[]): unknown {
+  let current = value
+  for (const key of path) {
+    if (current === null || typeof current !== "object") return undefined
+    current = (current as Record<string | number, unknown>)[key]
+  }
+
+  return current
+}
+
+/** A source string field, or "" when it is missing. */
+export function sourceString(value: unknown): string {
+  return value === null || value === undefined ? "" : String(value)
 }
 
 /** Missing columns are schema drift, not an empty/partially successful import. */

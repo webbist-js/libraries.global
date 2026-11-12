@@ -116,24 +116,24 @@ export function applyExpansionReview(
       })
       continue
     }
+    const regionName = decision.regionName
+    const areaName = decision.areaName
     if (
       decision.action !== "import" ||
-      typeof decision.regionName !== "string" ||
-      !decision.regionName.trim()
+      typeof regionName !== "string" ||
+      !regionName.trim()
     )
       throw new Error(`Unreviewed library or region: ${row.recordId}`)
     const type = decision.libraryType ?? row.data.libraryType
     if (
-      !DEFAULT_LIBRARY_TYPES.includes(type) ||
+      typeof type !== "string" ||
+      !(DEFAULT_LIBRARY_TYPES as readonly string[]).includes(type) ||
       ["Mobile", "Digital", "Archive"].includes(type)
     )
       throw new Error(
         `Select a supported physical library type for ${row.recordId}`
       )
-    if (
-      decision.areaName !== undefined &&
-      typeof decision.areaName !== "string"
-    )
+    if (areaName !== undefined && typeof areaName !== "string")
       throw new Error("Invalid reviewed area")
     const usePoint = Boolean(decision.coordinateEvidence)
     if (
@@ -146,8 +146,9 @@ export function applyExpansionReview(
     libraries.push({
       recordId: row.recordId,
       countryCode: feed.country,
-      regionName: decision.regionName.trim(),
-      areaName: decision.areaName?.trim() || undefined,
+      regionName: regionName.trim(),
+      areaName:
+        typeof areaName === "string" ? areaName.trim() || undefined : undefined,
       warnings: [
         ...row.warnings,
         ...(usePoint

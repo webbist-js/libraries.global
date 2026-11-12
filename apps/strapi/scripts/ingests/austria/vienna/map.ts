@@ -9,7 +9,7 @@ export function mapVienna(raw: unknown) {
   return geoFeatures(raw).map((feature) => {
     const row = feature.properties
     columns(row, ["NAME", "ADRESSE", "WEBLINK1", "BEZIRK"])
-    if (!/^BUECHEREIOGD\.\d+$/.test(feature.id))
+    if (!/^BUECHEREIOGD\.\d+$/.test(String(feature.id ?? "")))
       throw new Error("Missing Vienna feature identity")
 
     return candidate(

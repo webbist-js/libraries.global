@@ -1,10 +1,12 @@
 import { directoryPoint, directoryText, directoryUrl } from "./directory-fields"
 import {
   array,
+  at,
   columns,
   identity,
   object,
   type ExpansionCandidate,
+  type SourceObject,
 } from "./expansion-contract"
 
 const text = (value: unknown) => {
@@ -77,62 +79,79 @@ export function candidate(
   }
 }
 
-export function geoFeatures(raw: unknown) {
+/** A validated GeoJSON feature with optional point geometry. */
+export type GeoFeature = {
+  readonly id: unknown
+  readonly properties: SourceObject
+  readonly geometry?: { readonly coordinates: readonly unknown[] }
+}
+
+export function geoFeatures(raw: unknown): GeoFeature[] {
   const root = object(raw)
   if (root.type !== "FeatureCollection")
     throw new Error("Expected GeoJSON FeatureCollection")
-  if (root.crs && !/(?:4326|CRS84)/i.test(root.crs.properties?.name ?? ""))
+  if (
+    root.crs &&
+    !/(?:4326|CRS84)/i.test(String(at(root.crs, "properties", "name") ?? ""))
+  )
     throw new Error("GeoJSON must use WGS84")
   const features = array(root.features)
   for (const key of ["totalFeatures", "numberMatched", "numberReturned"])
     if (root[key] !== undefined && Number(root[key]) !== features.length)
       throw new Error(`Incomplete GeoJSON: ${key}`)
 
-  return features.map((f) => {
-    object(f)
-    object(f.properties)
+  return features.map((value) => {
+    const f = object(value)
+    const properties = object(f.properties)
     if (f.type !== "Feature") throw new Error("Invalid GeoJSON feature")
+    const coordinates = at(f.geometry, "coordinates")
     if (
       f.geometry &&
-      (f.geometry.type !== "Point" || !Array.isArray(f.geometry.coordinates))
+      (at(f.geometry, "type") !== "Point" || !Array.isArray(coordinates))
     )
       throw new Error("Expected point geometry")
 
-    return f
+    return {
+      ...f,
+      id: f.id,
+      properties,
+      geometry: f.geometry
+        ? { ...object(f.geometry), coordinates: coordinates as unknown[] }
+        : undefined,
+    }
   })
 }
+
+const decodeNlbCell = (v: string) =>
+  v
+    .replaceAll(/<[^<>]*>/g, "")
+    .replaceAll(/&#(x[0-9a-f]+|\d+);/gi, (_, n) => {
+      const point =
+        n[0].toLowerCase() === "x" ? Number.parseInt(n.slice(1), 16) : Number(n)
+
+      return point > 0 &&
+        point <= 0x10ffff &&
+        !(point >= 0xd800 && point <= 0xdfff)
+        ? String.fromCodePoint(point)
+        : ""
+    })
+    .replaceAll("&amp;", "&")
+    .replaceAll("&quot;", '"')
+    .replaceAll(/&#39;|&apos;/g, "'")
+    .replaceAll("&nbsp;", " ")
+    .trim()
 
 /** NLB embeds its attributes in an HTML table inside each GeoJSON feature. */
 export function nlbAttributes(html: unknown): Record<string, string> {
   if (typeof html !== "string") throw new Error("Missing NLB Description table")
-  const decode = (v: string) =>
-    v
-      .replaceAll(/<[^>]*>/g, "")
-      .replaceAll(/&#(x[0-9a-f]+|\d+);/gi, (_, n) => {
-        const point =
-          n[0].toLowerCase() === "x"
-            ? Number.parseInt(n.slice(1), 16)
-            : Number(n)
-
-        return point > 0 &&
-          point <= 0x10ffff &&
-          !(point >= 0xd800 && point <= 0xdfff)
-          ? String.fromCodePoint(point)
-          : ""
-      })
-      .replaceAll("&amp;", "&")
-      .replaceAll("&quot;", '"')
-      .replaceAll(/&#39;|&apos;/g, "'")
-      .replaceAll("&nbsp;", " ")
-      .trim()
   const result: Record<string, string> = {}
   for (const match of html.matchAll(
     /<th\b[^>]*>([\s\S]*?)<\/th>\s*<td\b[^>]*>([\s\S]*?)<\/td>/gi
   )) {
-    const key = decode(match[1])
+    const key = decodeNlbCell(match[1])
     if (Object.hasOwn(result, key))
       throw new Error(`Duplicate NLB attribute ${key}`)
-    result[key] = decode(match[2])
+    result[key] = decodeNlbCell(match[2])
   }
   columns(result, ["NAME", "ADDRESSSTREETNAME", "ADDRESSPOSTALCODE"])
 
@@ -148,18 +167,18 @@ export function mapWikidata(
   country: "Q55" | "Q664"
 ): ExpansionCandidate[] {
   const bindings = array(object(object(raw).results).bindings)
-  const groups = new Map<string, Record<string, any>[]>()
+  const groups = new Map<string, SourceObject[]>()
   for (const rawRow of bindings) {
     const row = object(rawRow)
     if (
       !new RegExp(
         String.raw`^https?://www\.wikidata\.org/entity/${country}$`
-      ).test(row.country?.value ?? "")
+      ).test(String(at(row, "country", "value") ?? ""))
     )
       throw new Error(
         "Wikidata row belongs to another country or lacks the country binding"
       )
-    const qid = String(row.library?.value ?? "").match(
+    const qid = String(at(row, "library", "value") ?? "").match(
       /^https?:\/\/www\.wikidata\.org\/entity\/(Q[1-9]\d*)$/
     )?.[1]
     if (!qid) throw new Error("Invalid Wikidata identity")
@@ -169,7 +188,9 @@ export function mapWikidata(
   return [...groups].map(([qid, rows]) => {
     const values = (field: string) =>
       [
-        ...new Set(rows.map((r) => text(r[field]?.value)).filter(Boolean)),
+        ...new Set(
+          rows.map((r) => text(at(r, field, "value"))).filter(Boolean)
+        ),
       ].sort()
     const names = values("libraryLabel").filter((v) => v !== qid)
     if (!names.length) throw new Error(`Wikidata ${qid} has no readable label`)

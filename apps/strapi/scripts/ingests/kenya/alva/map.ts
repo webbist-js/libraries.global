@@ -1,4 +1,9 @@
-import { array, columns, object } from "../../_shared/expansion-contract"
+import {
+  array,
+  columns,
+  object,
+  sourceString,
+} from "../../_shared/expansion-contract"
 import { candidate } from "../../_shared/expansion-map"
 
 export function mapKenya(raw: unknown) {
@@ -12,7 +17,7 @@ export function mapKenya(raw: unknown) {
       return row[keys[0]]
     }
     columns(row, ["OBJECTID"])
-    if (field("Country / ").trim() !== "Kenya") return []
+    if (sourceString(field("Country / ")).trim() !== "Kenya") return []
     if (!/^\d+$/.test(String(row.OBJECTID)))
       throw new Error("Invalid ALVA OBJECTID")
     const address = field("Street Address / ")
@@ -22,7 +27,9 @@ export function mapKenya(raw: unknown) {
       "https://osf.io/entpf/",
       {
         type: "Other",
-        address: /p\.?\s*o\.?\s*box/i.test(address) ? undefined : address,
+        address: /p\.?\s*o\.?\s*box/i.test(sourceString(address))
+          ? undefined
+          : address,
         city: field("Name of community or town / "),
       }
     )

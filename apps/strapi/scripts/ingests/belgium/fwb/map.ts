@@ -1,4 +1,4 @@
-import { array, columns, object } from "../../_shared/expansion-contract"
+import { array, at, columns, object } from "../../_shared/expansion-contract"
 import { candidate, syntheticId } from "../../_shared/expansion-map"
 
 export function mapBelgium(raw: unknown) {
@@ -27,8 +27,8 @@ export function mapBelgium(raw: unknown) {
         postcode: row.cp,
         phone: row.telephone,
         website: row.web,
-        lat: row.geolocalisation?.lat,
-        lon: row.geolocalisation?.lon,
+        lat: at(row.geolocalisation, "lat"),
+        lon: at(row.geolocalisation, "lon"),
         bounds: [49.4, 51.6, 2.4, 6.5],
       }
     )

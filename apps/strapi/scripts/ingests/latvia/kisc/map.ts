@@ -1,4 +1,9 @@
-import { array, columns, object } from "../../_shared/expansion-contract"
+import {
+  array,
+  columns,
+  object,
+  sourceString,
+} from "../../_shared/expansion-contract"
 import { candidate, syntheticId } from "../../_shared/expansion-map"
 
 export function mapLatvia(raw: unknown) {
@@ -14,8 +19,8 @@ export function mapLatvia(raw: unknown) {
       "Objekta veids",
       "Objekta URL",
     ])
-    if (row.Nozare.trim() !== "Bibliotēkas") return []
-    const kind = row["Objekta veids"]
+    if (sourceString(row.Nozare).trim() !== "Bibliotēkas") return []
+    const kind = sourceString(row["Objekta veids"])
     const type = kind.startsWith("Latvijas Nacionālā")
       ? "National"
       : kind.startsWith("Publiskā bibliotēka")
@@ -27,7 +32,7 @@ export function mapLatvia(raw: unknown) {
             : kind.startsWith("Speciālā")
               ? "Special"
               : "Other"
-    const isil = row["ISIL kods"].trim()
+    const isil = sourceString(row["ISIL kods"]).trim()
     if (isil && !/^LV-[\w-]+$/.test(isil))
       throw new Error("Invalid Latvian ISIL")
 

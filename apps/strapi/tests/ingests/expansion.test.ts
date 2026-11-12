@@ -49,6 +49,8 @@ const binding = (country: string) => ({
   coord: { value: "Point(174 -41)" },
   website: { value: "https://example.org/" },
 })
+type SourceRow = Record<string, unknown>
+
 const fixtures: Record<string, unknown> = {
   "lv-kisc-libraries": [
     {
@@ -169,7 +171,7 @@ describe("separate expansion sources", () => {
     }
   )
   it("selects Latvian libraries without importing other cultural institutions", () => {
-    const library = (fixtures["lv-kisc-libraries"] as any[])[0]
+    const library = (fixtures["lv-kisc-libraries"] as SourceRow[])[0]
     expect(
       EXPANSION_MAPPERS["lv-kisc-libraries"]([
         library,
@@ -228,7 +230,9 @@ describe("separate expansion sources", () => {
     )
   })
   it("keeps same-name branches at different addresses distinct; ignores transient Graz OIDs", () => {
-    const raw = structuredClone(fixtures["at-graz-libraries"]) as any
+    const raw = structuredClone(fixtures["at-graz-libraries"]) as {
+      features: { attributes: SourceRow }[]
+    }
     const first = EXPANSION_MAPPERS["at-graz-libraries"](raw)[0]
     raw.features[0].attributes.OBJEKT_ID = 999
     expect(EXPANSION_MAPPERS["at-graz-libraries"](raw)[0].recordId).toBe(
@@ -253,7 +257,7 @@ describe("separate expansion sources", () => {
     expect(expansionWikidataQuery("NL")).not.toContain("LIMIT")
   })
   it("filters other ALVA countries and omits personal contacts, PO boxes and coordinates", () => {
-    const kenya = (fixtures["ke-alva"] as any[])[0]
+    const kenya = (fixtures["ke-alva"] as SourceRow[])[0]
     const rows = EXPANSION_MAPPERS["ke-alva"]([
       kenya,
       { ...kenya, "Country / Pays": "Ghana" },
