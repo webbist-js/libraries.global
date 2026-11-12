@@ -2,6 +2,9 @@
 # example placeholders, generated curl syntax and captured public search fixtures.
 # Each entry is bound to one commit, file, rule and line; future matches still fail.
 # Fixed UUID used only as a resource-test key ID; it is not an API credential.
+0870bb3a41242992b952ddb50024ab3c609248d2:apps/ui/src/lib/team-api/__tests__/resources.test.ts:generic-api-key:49
+08e0283532df849424e8ffbab6736d6045667fd2:apps/ui/src/lib/team-api/__tests__/resources.test.ts:generic-api-key:49
+411d41db4fb37390575c01047bb4a77e89b28f16:apps/ui/src/lib/team-api/__tests__/resources.test.ts:generic-api-key:49
 1fd787512156ad36f31de23d11c3a9563450a628:apps/ui/src/lib/team-api/__tests__/resources.test.ts:generic-api-key:49
 05407223285d94f911d251ae117aa4d740a8f845:apps/ui/src/components/staff/TeamApiPanels.tsx:curl-auth-header:419
 283a42cee1956b1d81625713c51f92dbc87ed1b9:packages/catalogues/tests/fixtures/enterprise/advanced.html:generic-api-key:27
@@ -35,3 +38,5 @@ ceebf975bc9b97467ba11f90388b9995a45d1a5d:apps/strapi/.env.example:generic-api-ke
 e2f01918fdd4ae92681739e93bffdc5c6ebb7ee8:apps/ui/src/lib/appearance.ts:generic-api-key:6
 f8641adf3913e3ab9ca89254d2452234a1f29d96:docs/superpowers/specs/2026-04-25-better-auth-migration-design.md:generic-api-key:245
 f8d930bc548f3e2984c7bb4f4837dfeb171625de:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
+# Placeholder key in the API offer's example curl command.
+81e6b85f3d014eead397c8ae924fcf62d7d6646c:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
