@@ -234,9 +234,7 @@ describe("separate expansion sources", () => {
       "Missing source column"
     )
     expect(nlbName("Tom &amp;quot;s &#38;amp; Co")).toBe("Tom &quot;s &amp; Co")
-    expect(nlbName("<scr<b>ipt>alert(1)</scr<b>ipt>")).toBe(
-      "scriptalert(1)/script"
-    )
+    expect(nlbName("<scr<b>ipt>alert(1)</scr<b>ipt>")).toBe("alert(1)")
     expect(nlbName("&#60;img src=x&#62;")).toBe("img src=x")
   })
   it("keeps same-name branches at different addresses distinct; ignores transient Graz OIDs", () => {

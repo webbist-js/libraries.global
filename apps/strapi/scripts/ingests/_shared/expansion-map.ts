@@ -147,9 +147,19 @@ function decodeEntity(entity: string) {
  * decoded `&` is never decoded again, and no angle bracket survives, so the
  * result can never carry markup.
  */
+function stripTags(value: string) {
+  let text = value
+  let previous
+  do {
+    previous = text
+    text = text.replaceAll(/<[^<>]*>/g, "")
+  } while (text !== previous)
+
+  return text
+}
+
 const decodeNlbCell = (v: string) =>
-  v
-    .replaceAll(/<[^<>]*>/g, "")
+  stripTags(v)
     .replaceAll(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|nbsp);/gi, (_, entity) =>
       decodeEntity(entity)
     )
