@@ -11,7 +11,7 @@ async function run() {
   const args = parseArgs()
   if (flag(args, "help") || !args.dataset) {
     console.log(
-      "pnpm ingest --dataset=it-census2023|it-iccu|ie-fingal-libraries|ie-roscommon-libraries|ie-galway-libraries|ie-south-dublin-libraries|kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|mx-sic-rnbp|ca-statcan-odcaf|imls-pls|libraryon|de-isil|es-mcu-libraries|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Ireland/Italy CMS checks and writes require --local or --production. Wikidata: --country=SE|NO|DK. Finland: --year=2025. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
+      "pnpm ingest --dataset=it-census2023|it-iccu|ie-fingal-libraries|ie-roscommon-libraries|ie-galway-libraries|ie-south-dublin-libraries|kirjastot-fi|wikidata|au-public-libraries|slq-directory|fr-culture-libraries|nkp-cadr|mx-sic-rnbp|ca-statcan-odcaf|imls-pls|libraryon|de-isil|es-mcu-libraries|ch-isil|jp-ndl-isil|gazetteer [--dry-run] [--check-cms] [--apply] [--limit=N]\nDefaults to a dry run. Ireland/Italy CMS checks and writes require --local or --production. Wikidata: --country=SE|NO|DK. Finland: --year=2025. Japan: --release=YYYYMMDD. New adapters support --concurrency=1..4 (default 1). Use --refresh or --snapshot=directory. Legacy adapters keep their own dataset flags."
     )
 
     return
@@ -87,6 +87,18 @@ async function run() {
   if (args.dataset === "de-isil") {
     const { runGermany } = await import("./germany/isil/ingest")
     await runGermany(args)
+
+    return
+  }
+  if (args.dataset === "ch-isil") {
+    const { runSwitzerland } = await import("./switzerland/isil/ingest")
+    await runSwitzerland(args)
+
+    return
+  }
+  if (args.dataset === "jp-ndl-isil") {
+    const { runJapan } = await import("./japan/ndl-isil/ingest")
+    await runJapan(args)
 
     return
   }
