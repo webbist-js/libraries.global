@@ -332,9 +332,11 @@ const routeId = (file) =>
 /** The id passed to `withMessages`, if the file wraps its default export. */
 function wrappedId(file) {
   const text = fs.readFileSync(file, "utf8")
-  const match = text.match(/withMessages\(\s*[\s\S]*?,\s*"([^"]+)"\s*\)/)
+  const start = text.indexOf("withMessages(")
 
-  return match?.[1]
+  return start === -1
+    ? undefined
+    : text.slice(start).match(/,\s*"([^"]+)"\s*\)/)?.[1]
 }
 
 export function generate() {

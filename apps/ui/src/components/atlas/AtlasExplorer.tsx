@@ -1364,7 +1364,7 @@ export function AtlasExplorer({
       })
       if (isMobile) setSheet(expandAtlasSheet)
     },
-    [remember, isMobile]
+    [remember, isMobile, tStatic]
   )
 
   const restoreListFocus = () =>

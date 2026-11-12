@@ -169,6 +169,40 @@ function sourceFiles(directory) {
 }
 
 /** Candidates are review evidence, not a claim that every literal needs translating. */
+
+/** Names bound to a translator created by one of `factories` in `source`. */
+function collectTranslators(source, factories) {
+  const translators = new Set()
+  const collect = (node) => {
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      const initializer = ts.isAwaitExpression(node.initializer)
+        ? node.initializer.expression
+        : node.initializer
+      if (
+        ts.isCallExpression(initializer) &&
+        factories.has(initializer.expression.getText(source))
+      )
+        translators.add(node.name.getText(source))
+    }
+    ts.forEachChild(node, collect)
+  }
+  collect(source)
+
+  return translators
+}
+
+/** Whether `node` is the key argument of a translator call. */
+function isTranslationKey(node, source, translators) {
+  const parent = node.parent
+  if (!parent || !ts.isCallExpression(parent) || parent.arguments[0] !== node)
+    return false
+  const expression = ts.isPropertyAccessExpression(parent.expression)
+    ? parent.expression.expression
+    : parent.expression
+
+  return translators.has(expression.getText(source))
+}
+
 export function staticContentInventory() {
   const rows = []
   const labels = new Set([
@@ -213,37 +247,9 @@ export function staticContentInventory() {
           translatorFactories.add(specifier.name.text)
       }
     }
-    const translators = new Set()
-    function collectTranslators(node) {
-      if (ts.isVariableDeclaration(node) && node.initializer) {
-        const initializer = ts.isAwaitExpression(node.initializer)
-          ? node.initializer.expression
-          : node.initializer
-        if (
-          ts.isCallExpression(initializer) &&
-          translatorFactories.has(initializer.expression.getText(source))
-        )
-          translators.add(node.name.getText(source))
-      }
-      ts.forEachChild(node, collectTranslators)
-    }
-    collectTranslators(source)
-    function isTranslationKey(node) {
-      const parent = node.parent
-      if (
-        !parent ||
-        !ts.isCallExpression(parent) ||
-        parent.arguments[0] !== node
-      )
-        return false
-      const expression = ts.isPropertyAccessExpression(parent.expression)
-        ? parent.expression.expression
-        : parent.expression
-
-      return translators.has(expression.getText(source))
-    }
+    const translators = collectTranslators(source, translatorFactories)
     function visit(node) {
-      if (isTranslationKey(node)) return
+      if (isTranslationKey(node, source, translators)) return
       let text, kind
       if (ts.isJsxText(node)) {
         text = node.text.trim().replaceAll(/\s+/g, " ")

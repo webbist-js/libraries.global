@@ -175,6 +175,47 @@ export function ApiPlayground(props: ApiPlaygroundProps) {
   )
 }
 
+/** Runs `onChange` during render when the sidebar selects another request. */
+function useOnSelectionChange(selectionVersion: number, onChange: () => void) {
+  const [previous, setPrevious] = useState(selectionVersion)
+  if (previous !== selectionVersion) {
+    setPrevious(selectionVersion)
+    onChange()
+  }
+}
+
+/** The inline request picker; the sidebar replaces it on large screens. */
+function PlaygroundOperationSelect({
+  label,
+  operation,
+  operations,
+  pending,
+  sidebar,
+  onSelect,
+}: {
+  readonly label: string
+  readonly operation: PlaygroundOperation
+  readonly operations: readonly { id: PlaygroundOperation; label: string }[]
+  readonly pending: boolean
+  readonly sidebar: boolean
+  readonly onSelect: (operation: PlaygroundOperation) => void
+}) {
+  return (
+    <div className={sidebar ? "lg:hidden" : undefined}>
+      <SelectField
+        label={label}
+        value={operation}
+        disabled={pending}
+        options={operations.map((item) => ({
+          value: item.id,
+          label: item.label,
+        }))}
+        onValueChange={(value) => onSelect(value as PlaygroundOperation)}
+      />
+    </div>
+  )
+}
+
 function ApiPlaygroundBody({
   teamName,
   showUsageWarning = true,
@@ -196,7 +237,6 @@ function ApiPlaygroundBody({
     selectOperation,
     sidebar,
   } = navigation
-  const [previousSelection, setPreviousSelection] = useState(selectionVersion)
   const [query, setQuery] = useState("Central")
   const [entityRef, setEntityRef] = useState("")
   const [limit, setLimit] = useState(10)
@@ -219,11 +259,10 @@ function ApiPlaygroundBody({
   const [result, setResult] = useState<Result | null>(null)
   // Sidebar changes clear the response, while preserving the key and parameters.
   // Internal result navigation uses setOperation and retains its result list.
-  if (previousSelection !== selectionVersion) {
-    setPreviousSelection(selectionVersion)
+  useOnSelectionChange(selectionVersion, () => {
     setResult(null)
     setError("")
-  }
+  })
   const controller = useRef<AbortController | null>(null)
   const keyInput = useRef<HTMLInputElement>(null)
   useEffect(() => () => controller.current?.abort(), [])
@@ -343,20 +382,14 @@ function ApiPlaygroundBody({
         usage for {teamName}. This includes requests made with “Read this
         record”.
       </p>
-      <div className={sidebar ? "lg:hidden" : undefined}>
-        <SelectField
-          label={tStatic("common.requestType")}
-          value={operation}
-          disabled={pending}
-          options={operations.map((item) => ({
-            value: item.id,
-            label: item.label,
-          }))}
-          onValueChange={(value) =>
-            selectOperation(value as PlaygroundOperation)
-          }
-        />
-      </div>
+      <PlaygroundOperationSelect
+        label={tStatic("common.requestType")}
+        operation={operation}
+        operations={operations}
+        pending={pending}
+        sidebar={sidebar}
+        onSelect={selectOperation}
+      />
       <form
         onSubmit={(event) => {
           event.preventDefault()
