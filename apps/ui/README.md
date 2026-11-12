@@ -44,7 +44,7 @@ Query caches include account identity and relevant permission scope. Never put p
 
 Use the warm-paper tokens in `src/lib/design-tokens.ts` and primitives in `src/components/ds`. Preserve keyboard focus, reduced motion, useful loading/error states and status conveyed through text as well as color.
 
-Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech and French). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` loads messages from `locales/`. UI translations and CMS content enablement are separate. Keep message keys aligned across locales.
+Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech, French and Spanish). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` loads messages from `locales/`. UI translations and CMS content enablement are separate. Keep message keys aligned across locales.
 
 `src/proxy.ts` composes request gates and redirects. Check its current order and the individual files in `src/lib/proxies/` when changing public/guest/account behavior. A beta pass does not replace an account session.
 
