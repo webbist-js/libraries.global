@@ -7,7 +7,10 @@ import { betaInvitationNotice } from "./beta-invitation-notice.mjs"
 import { stripComponentIds } from "./cms-component-ids.mjs"
 
 const source = parseEnv(
-  readFileSync(new URL("../.env", import.meta.url), "utf8")
+  readFileSync(
+    process.env.CMS_ENV_FILE || new URL("../.env", import.meta.url),
+    "utf8"
+  )
 )
 const origin =
   process.env.STRAPI_PRODUCTION_URL ||
@@ -15,8 +18,13 @@ const origin =
   "http://127.0.0.1:18013"
 if (new URL(origin).port === "1337")
   throw new Error("Use the production CMS connection")
-const token = source.STRAPI_PRODUCTION_MCP_TOKEN || source.STRAPI_MCP_TOKEN
-if (!token) throw new Error("The production content Admin Token is missing")
+// Production never falls back to the local development token.
+const token =
+  process.env.STRAPI_PRODUCTION_MCP_TOKEN || source.STRAPI_PRODUCTION_MCP_TOKEN
+if (!token)
+  throw new Error(
+    "STRAPI_PRODUCTION_MCP_TOKEN is missing; production never uses the local STRAPI_MCP_TOKEN"
+  )
 async function api(path, method = "GET", data) {
   const res = await fetch(new URL(`/content-manager/${path}`, origin), {
     method,

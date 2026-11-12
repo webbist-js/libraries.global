@@ -30,10 +30,13 @@ assert.notEqual(
   "1337",
   "This helper targets production; local snapshots are preview-only"
 )
+// Production never falls back to the local development token. Offline
+// previews read local snapshots and need no credential.
 const token =
-  process.env.STRAPI_PRODUCTION_MCP_TOKEN ||
-  env.STRAPI_PRODUCTION_MCP_TOKEN ||
-  env.STRAPI_MCP_TOKEN
+  process.env.STRAPI_PRODUCTION_MCP_TOKEN || env.STRAPI_PRODUCTION_MCP_TOKEN
+const missingToken =
+  "STRAPI_PRODUCTION_MCP_TOKEN is missing; production never uses the local STRAPI_MCP_TOKEN"
+if (!offline && !token) throw new Error(missingToken)
 const folder = new URL(
   "../../../.scratch/dashboard-guide-rollout/",
   import.meta.url
@@ -45,7 +48,7 @@ const save = (name, value) =>
   })
 const base = "collection-types/api::wiki-article.wiki-article"
 async function api(path, locale, method = "GET", data) {
-  assert.ok(token, "The production editorial credential is unavailable")
+  assert.ok(token, missingToken)
   const url = new URL(`/content-manager/${path}`, origin)
   url.searchParams.set("locale", locale)
   const response = await fetch(url, {

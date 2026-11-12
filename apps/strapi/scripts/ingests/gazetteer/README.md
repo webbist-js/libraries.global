@@ -108,9 +108,12 @@ cat scripts/ingests/gazetteer/.runs/*.json
 STRAPI_API_TOKEN=… STRAPI_BRIDGE_SECRET=… \
   npx tsx scripts/ingests/gazetteer/import.ts
 
-# 5. Reindex, so library search facets pick up the new Region labels.
-pnpm --filter @repo/strapi seed:meilisearch
+# 5. Refresh the affected library documents so search facets pick up the
+#    new Region labels. Upserts only; never clears the index.
+pnpm --filter @repo/strapi exec tsx scripts/refresh-library-projections.ts --country=<slug>
 ```
+
+Never clear or reseed the production search index; see [Search after publishing](../README.md#search-after-publishing). `seed:meilisearch` is a local-development rebuild only.
 
 Options:
 
@@ -140,5 +143,5 @@ For each Country: the label changes made (or that a dry run would make); `labels
 
 1. **Deploy first.** The `geonames_id` indexes on Region and Area (`HOT_PATH_INDEXES`) and the new schema fields this import writes — `geonamesId` and `sourceAttribution` on Region; `geonamesId`, `gssCode` and `sourceAttribution` on Area — must already be live before the import runs against that environment — this script doesn't create them.
 2. Review the bulk invalidation/load strategy with the operator before applying a large import. Verify that the selected release supports its intended revalidation behavior; retain environment-specific toggle commands and acceptance evidence in private operator storage.
-3. **Run `pnpm --filter @repo/strapi seed:meilisearch` after the import.** Find libraries reads library search facets (Region names, Place Labels) from the Meilisearch index, not Strapi directly, so new places and label edits don't show there until a reseed.
-4. A Place Label edited by hand in Strapi admin, same as an import-written one, only reaches Find libraries after that reseed.
+3. **Refresh the affected library documents after the import.** Find libraries reads library search facets (Region names, Place Labels) from the Meilisearch index, not Strapi directly, so new places and label edits don't show there until the library documents are re-indexed. Run `scripts/refresh-library-projections.ts --country=<slug>` (or `--region=<slug>`) for each imported Country, or repair the plugin's Library registration as described in [Search after publishing](../README.md#search-after-publishing). Both upsert without deleting. Never clear or reseed the production index; `seed:meilisearch` is for local development only.
+4. A Place Label edited by hand in Strapi admin, same as an import-written one, only reaches Find libraries after that refresh.
