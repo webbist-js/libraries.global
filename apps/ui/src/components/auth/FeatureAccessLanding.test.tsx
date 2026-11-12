@@ -7,7 +7,7 @@ import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { FEATURE_ENTRY_PATHS, type AccessFeature } from "@/lib/feature-access"
 import { cleanup, render, screen } from "@/test/render"
 
-import messages from "../../../locales/en.json"
+import messages from "../../../locales/en"
 
 vi.mock("next-intl/server", () => ({
   getLocale: async () => "fr",

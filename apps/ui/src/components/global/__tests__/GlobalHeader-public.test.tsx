@@ -3,11 +3,10 @@ import type { AnchorHTMLAttributes } from "react"
 import { renderToString } from "react-dom/server"
 import { beforeEach, expect, it, vi } from "vitest"
 
+import cs from "../../../../locales/cs"
+import en from "../../../../locales/en"
+import fr from "../../../../locales/fr"
 import { GlobalHeader } from "../GlobalHeader"
-
-import cs from "../../../../locales/cs.json"
-import en from "../../../../locales/en.json"
-import fr from "../../../../locales/fr.json"
 
 vi.mock("next-intl/server", () => ({
   getTranslations: async ({

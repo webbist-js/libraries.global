@@ -1,9 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import {
-  getLocale,
-  getTranslations as getUiTranslations,
-} from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Notice } from "@/components/ds/Notice"
@@ -11,6 +8,7 @@ import { Container } from "@/components/elementary/Container"
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
 import { StaffAccessRequired } from "@/components/staff/StaffAccessRequired"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
@@ -27,7 +25,7 @@ import { fetchStaff } from "@/lib/staff-proxy"
 
 export const metadata = privateMetadata("Add a library as staff")
 
-export default async function StaffNewLibraryPage({
+async function StaffNewLibraryPage({
   searchParams,
 }: {
   readonly searchParams: Promise<{
@@ -39,7 +37,11 @@ export default async function StaffNewLibraryPage({
     area?: string
   }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const params = await searchParams
   const locale = await getLocale()
@@ -78,7 +80,7 @@ export default async function StaffNewLibraryPage({
       <>
         <WorkspacePageHeader
           density="task"
-          title="Add a library"
+          title={tExisting("ui.add_a_library")}
           tabs={
             <StaffAreaTabs active="new" adding teamId={memberships[0]?.id} />
           }
@@ -89,7 +91,9 @@ export default async function StaffNewLibraryPage({
             tone="warn"
             title={tUi("team_coverage_couldnt_be_loaded")}
           >
-            Reload this page to choose the Team for your new library.
+            {tStatic(
+              "staffRoute.reload_this_page_to_choose_the_team_for_your_new_library"
+            )}
           </Notice>
         </Container>
       </>
@@ -106,9 +110,11 @@ export default async function StaffNewLibraryPage({
           { label: tUi("staff_area"), href: "/staff" },
           { label: tUi("add_a_library") },
         ]}
-        title="Add a library"
+        title={tExisting("ui.add_a_library")}
         tabs={<StaffAreaTabs active="new" adding teamId={memberships[0]?.id} />}
-        lead="Fill in what you know. An editor reviews the new library and your staff access before it goes live."
+        lead={tStatic(
+          "staffRoute.fill_in_what_you_know_an_editor_reviews_the_new_library_and_your_staff_access_before_it_goes_live"
+        )}
       />
       <Container className="py-10">
         <IndexRecordWizard
@@ -127,3 +133,8 @@ export default async function StaffNewLibraryPage({
     </>
   )
 }
+
+export default withMessages(
+  StaffNewLibraryPage,
+  "[locale]/(dashboard)/staff/new/page"
+)

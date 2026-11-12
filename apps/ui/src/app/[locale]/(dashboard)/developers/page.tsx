@@ -6,6 +6,7 @@ import {
   ApiWorkspacePage,
   type ApiWorkspaceQuery,
 } from "@/components/developers/ApiWorkspacePage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { offerValues } from "@/lib/plans"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -25,10 +26,15 @@ export async function generateMetadata({
   })
 }
 
-export default async function DevelopersPage({
+async function DevelopersPage({
   searchParams,
 }: {
   readonly searchParams: Promise<ApiWorkspaceQuery>
 }) {
   return <ApiWorkspacePage section="overview" query={await searchParams} />
 }
+
+export default withMessages(
+  DevelopersPage,
+  "[locale]/(dashboard)/developers/page"
+)

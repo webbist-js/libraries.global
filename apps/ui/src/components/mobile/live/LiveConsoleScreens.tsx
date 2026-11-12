@@ -1,6 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -153,7 +153,7 @@ export function NextStopCard({
   readonly onAction: () => void
   readonly busy?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -191,9 +191,13 @@ export function DelayButtons({
   readonly onDelay: (minutes: number) => void
   readonly busy?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <fieldset className="m-0 my-5 border-0 p-0">
-      <legend className="mb-2 text-base font-semibold">Running late?</legend>
+      <legend className="mb-2 text-base font-semibold">
+        {tStatic("mobile.running_late")}
+      </legend>
       <div className="grid grid-cols-4 gap-1.5">
         {[5, 10, 15, 30].map((delay) => (
           <button
@@ -233,15 +237,17 @@ export function ExceptionButtons({
   readonly onSkip: () => void
   readonly onBreakdown: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="grid grid-cols-2 gap-2">
       <button
         type="button"
         className="live-button rounded-[18px] py-0 text-base"
-        aria-label="Skip stop: skip this stop"
+        aria-label={tStatic("mobile.skip_stop_skip_this_stop")}
         onClick={onSkip}
       >
-        Skip this stop
+        {tStatic("mobile.skip_this_stop")}
       </button>
       <button
         type="button"
@@ -251,10 +257,12 @@ export function ExceptionButtons({
           borderColor: T.accent.danger,
           color: T.accent.danger,
         }}
-        aria-label="Not running: breakdown or not running for the rest of today"
+        aria-label={tStatic(
+          "mobile.not_running_breakdown_or_not_running_for_the_rest_of_today"
+        )}
         onClick={onBreakdown}
       >
-        Not running / breakdown
+        {tStatic("mobile.not_running_breakdown")}
       </button>
     </div>
   )
@@ -270,7 +278,9 @@ export function StopList({
   readonly title?: string
   readonly heading?: HeadingTag
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <>
@@ -342,11 +352,11 @@ export function StopList({
                 </span>
                 <span className="block font-semibold">
                   {s.state === "skipped"
-                    ? "Not stopping today"
+                    ? tStatic("mobile.not_stopping_today")
                     : s.state === "done"
                       ? tUi("done")
                       : here
-                        ? "Here now"
+                        ? tStatic("mobile.here_now")
                         : s.expected && s.expected !== s.arrive
                           ? `Expected ${s.expected}`
                           : ""}
@@ -372,6 +382,8 @@ export function EntryCard({
   readonly action: ReactNode
   readonly heading?: HeadingTag
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section className="rounded-[20px] border p-5" style={panel}>
       <span
@@ -379,7 +391,7 @@ export function EntryCard({
         style={{ background: TYPE_TINT.public.bg, color: TYPE_TINT.public.fg }}
       >
         <Icon aria-hidden="true" icon="mdi:bus-side" width={14} />
-        Mobile library
+        {tStatic("common.mobileLibrary")}
       </span>
       <Heading className="type-panel-title my-2">{name}</Heading>
       <p className="my-3 text-base" style={{ color: T.ink.dim }}>
@@ -401,7 +413,9 @@ export function ConfirmIdentityLook({
   /** False when the sheet around it already carries the title. */
   readonly showTitle?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <div className="live-controls space-y-4">
@@ -411,7 +425,7 @@ export function ConfirmIdentityLook({
         </Heading>
       ) : null}
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        Needed each day before you share live updates.
+        {tStatic("mobile.needed_each_day_before_you_share_live_updates")}
       </p>
       {children}
     </div>
@@ -453,6 +467,8 @@ export function BeforeYouStartScreen({
   readonly extra?: ReactNode
   readonly heading?: HeadingTag
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const choice = (
     value: "checkins" | "approximate",
     title: string,
@@ -496,7 +512,9 @@ export function BeforeYouStartScreen({
 
   return (
     <section>
-      <Heading className="type-panel-title m-0">Before you start</Heading>
+      <Heading className="type-panel-title m-0">
+        {tStatic("mobile.before_you_start")}
+      </Heading>
       {intro ? (
         <p className="my-3 text-base" style={{ color: T.ink.dim }}>
           {intro}
@@ -511,7 +529,7 @@ export function BeforeYouStartScreen({
             className="m-0 text-sm font-semibold tracking-wide uppercase"
             style={{ color: T.ink.dim }}
           >
-            Today’s route
+            {tStatic("mobile.today_s_route")}
           </p>
           <p className="m-0 text-base font-semibold">{routeLabel}</p>
           <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
@@ -524,11 +542,11 @@ export function BeforeYouStartScreen({
           className="live-button w-full shrink-0 rounded-full px-4 sm:w-auto"
           onClick={onChangeRoute}
         >
-          Change route
+          {tStatic("mobile.change_route")}
         </button>
       </div>
       <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
-        <legend className="sr-only">What to share</legend>
+        <legend className="sr-only">{tStatic("mobile.what_to_share")}</legend>
         {choice(
           "checkins",
           "Check-ins only",
@@ -551,8 +569,9 @@ export function BeforeYouStartScreen({
               width={16}
               className="mt-0.5 shrink-0"
             />
-            Your library shares stops only. An owner can allow approximate
-            position in the Go live settings.
+            {tStatic(
+              "mobile.your_library_shares_stops_only_an_owner_can_allow_approximate_position_in_the_go_live_settings"
+            )}
           </p>
         )}
       </fieldset>
@@ -562,7 +581,7 @@ export function BeforeYouStartScreen({
             className="m-0 text-sm font-semibold tracking-wide uppercase"
             style={{ color: T.ink.dim }}
           >
-            What the public sees
+            {tStatic("mobile.what_the_public_sees")}
           </p>
           <p className="m-0 mt-1 flex flex-wrap items-center gap-2 text-base">
             <span

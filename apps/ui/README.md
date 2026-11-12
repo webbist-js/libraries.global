@@ -44,7 +44,11 @@ Query caches include account identity and relevant permission scope. Never put p
 
 Use the warm-paper tokens in `src/lib/design-tokens.ts` and primitives in `src/components/ds`. Preserve keyboard focus, reduced motion, useful loading/error states and status conveyed through text as well as color.
 
-Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech and French). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` loads messages from `locales/`. UI translations and CMS content enablement are separate. Keep message keys aligned across locales.
+Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech, Spanish, French and Japanese). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` gives the server each locale's whole catalogue. UI translations and CMS content enablement are separate.
+
+Messages live in one JSON file per feature under `locales/<locale>/` (`common`, `atlas`, `staff`, …), listed in `locales/catalogue.ts`. Each file owns whole namespaces (for `staticUi`, whole sub-namespaces such as `staticUi.atlas`), and every locale has the same files holding the same keys. `pnpm --filter @repo/ui i18n:check` verifies parity, ICU arguments and file placement.
+
+The browser never receives a whole catalogue. `scripts/i18n-scopes.mjs` follows each route's imports into client components and writes `src/i18n/client-scopes.generated.json`: the root layout sends the shell's messages, and each page and layout, wrapped in `withMessages(Component, "<route id>")`, adds only what its client components use. Copy used only on the server stays there. Drawers opened on demand load their code and messages together with `withDeferredMessages` (served from `/api/i18n/<locale>/<scope>`). The embed widget reads only `widget-public.json`. `dev` and `build` regenerate the scopes; after changing which messages a client component uses, run `pnpm --filter @repo/ui i18n:scopes` (it prints the per-route payload) and commit the manifest. A stale manifest fails the test suite. Wrap new pages and layouts in `withMessages`; an unwrapped one still works, but its messages are added to its parent layout's scope and load on more pages.
 
 `src/proxy.ts` composes request gates and redirects. Check its current order and the individual files in `src/lib/proxies/` when changing public/guest/account behavior. A beta pass does not replace an account session.
 

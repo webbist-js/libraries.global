@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { hubHref } from "@/components/contribute/wizard.logic"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -16,12 +16,14 @@ export type IncompleteRecord = {
 export type ContinentCount = { name: string; count: number }
 
 function MissingChip({ label }: { label: string }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <span
       className="rounded-full px-2.5 py-1 text-sm font-semibold"
       style={{ background: "var(--tint-special-bg)", color: T.accent.danger }}
     >
-      Missing: {label}
+      {tStatic("common.missing")} {label}
     </span>
   )
 }
@@ -35,7 +37,9 @@ export function RecordsThatNeedYou({
   readonly continents: ContinentCount[]
   readonly totalPublished: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const populated = continents.filter((c) => c.count > 0)
   const singleContinent = populated.length === 1 ? populated[0] : null
@@ -52,14 +56,14 @@ export function RecordsThatNeedYou({
                 color: T.ink.base,
               }}
             >
-              Records that need you
+              {tStatic("contributeRoute.records_that_need_you")}
             </h2>
             <GlobalLink
               href="/libraries?needs=hours,photo,facilities&sort=gaps"
               className="text-sm font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              See all incomplete records
+              {tStatic("contributeRoute.see_all_incomplete_records")}
             </GlobalLink>
           </div>
 
@@ -135,7 +139,7 @@ export function RecordsThatNeedYou({
                     background: T.bg.deep,
                   }}
                 >
-                  Help fill this in
+                  {tStatic("contributeRoute.help_fill_this_in")}
                 </GlobalLink>
               </div>
             ))}
@@ -148,7 +152,7 @@ export function RecordsThatNeedYou({
           style={{ background: T.bg.inverse, color: "#fff" }}
         >
           <h2 className="type-h2 m-0">
-            Most of the world isn&rsquo;t here yet
+            {tStatic("contributeRoute.most_of_the_world_isn_rsquo_t_here_yet")}
           </h2>
           <p
             className="mt-3 mb-5 text-sm leading-[1.6]"

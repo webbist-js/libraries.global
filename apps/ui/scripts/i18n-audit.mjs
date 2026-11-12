@@ -64,6 +64,97 @@ export function checkMessages(catalogues) {
   return errors
 }
 
+export const LOCALES = ["en", "cs", "es", "fr", "ja"]
+const localesDir = path.join(root, "locales")
+
+function mergeTree(target, source, file, prefix = "") {
+  for (const [key, value] of Object.entries(source)) {
+    const name = prefix + key
+    if (!(key in target)) target[key] = value
+    else if (typeof target[key] === "object" && typeof value === "object") {
+      target[key] = { ...target[key] }
+      mergeTree(target[key], value, file, `${name}.`)
+    } else
+      throw new Error(`${file}: "${name}" is already defined in another file`)
+  }
+
+  return target
+}
+
+/** Read each locale's feature files (`locales/<locale>/*.json`). */
+export function readCatalogueFiles(directory = localesDir) {
+  return Object.fromEntries(
+    LOCALES.map((locale) => {
+      const dir = path.join(directory, locale)
+      const files = fs
+        .readdirSync(dir)
+        .filter((name) => name.endsWith(".json"))
+        .sort()
+
+      return [
+        locale,
+        Object.fromEntries(
+          files.map((name) => [
+            name.slice(0, -5),
+            JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")),
+          ])
+        ),
+      ]
+    })
+  )
+}
+
+/** Merge feature files into one catalogue per locale, as the app does. */
+export function mergeCatalogueFiles(files) {
+  return Object.fromEntries(
+    Object.entries(files).map(([locale, parts]) => [
+      locale,
+      Object.entries(parts).reduce(
+        (merged, [name, part]) => mergeTree(merged, part, `${locale}/${name}`),
+        {}
+      ),
+    ])
+  )
+}
+
+/** Every locale has the same feature files, each owning the same messages. */
+export function checkCatalogueFiles(files, directory = localesDir) {
+  const errors = []
+  for (const locale of LOCALES)
+    if (fs.existsSync(path.join(directory, `${locale}.json`)))
+      errors.push(
+        `locales/${locale}.json exists: catalogues are split by feature under locales/${locale}/. Move its messages into those files.`
+      )
+  const index = fs.readFileSync(path.join(directory, "catalogue.ts"), "utf8")
+  const listed = [
+    ...index
+      .match(/CATALOGUE_FILES = \[([\s\S]*?)\]/)[1]
+      .matchAll(/"([^"]+)"/g),
+  ].map((match) => match[1])
+  for (const [locale, parts] of Object.entries(files)) {
+    const names = Object.keys(parts)
+    for (const name of listed)
+      if (!names.includes(name))
+        errors.push(`${locale}: missing feature file ${name}.json`)
+    for (const name of names) {
+      if (!listed.includes(name))
+        errors.push(
+          `${locale}: ${name}.json is not listed in CATALOGUE_FILES (locales/catalogue.ts)`
+        )
+      if (locale === "en" || !files.en[name]) continue
+      const english = Object.keys(flattenMessages(files.en[name]))
+      const own = new Set(Object.keys(flattenMessages(parts[name])))
+      const misplaced = english.filter((key) => !own.has(key))
+      if (misplaced.length)
+        errors.push(
+          `${locale}/${name}.json: ${misplaced.length} message(s) not in the same file as English, e.g. ${misplaced[0]}`
+        )
+    }
+  }
+
+  return errors
+}
+
 const excluded = /(?:__tests__|\.test\.|\.d\.ts$|\/test\/)/
 function sourceFiles(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -104,7 +195,55 @@ export function staticContentInventory() {
       ts.ScriptTarget.Latest,
       true
     )
+    const translatorFactories = new Set([
+      "useTranslations",
+      "getTranslations",
+      "createTranslator",
+    ])
+    for (const statement of source.statements) {
+      if (!ts.isImportDeclaration(statement)) continue
+      const bindings = statement.importClause?.namedBindings
+      if (!bindings || !ts.isNamedImports(bindings)) continue
+      for (const specifier of bindings.elements) {
+        if (
+          translatorFactories.has(
+            specifier.propertyName?.text ?? specifier.name.text
+          )
+        )
+          translatorFactories.add(specifier.name.text)
+      }
+    }
+    const translators = new Set()
+    function collectTranslators(node) {
+      if (ts.isVariableDeclaration(node) && node.initializer) {
+        const initializer = ts.isAwaitExpression(node.initializer)
+          ? node.initializer.expression
+          : node.initializer
+        if (
+          ts.isCallExpression(initializer) &&
+          translatorFactories.has(initializer.expression.getText(source))
+        )
+          translators.add(node.name.getText(source))
+      }
+      ts.forEachChild(node, collectTranslators)
+    }
+    collectTranslators(source)
+    function isTranslationKey(node) {
+      const parent = node.parent
+      if (
+        !parent ||
+        !ts.isCallExpression(parent) ||
+        parent.arguments[0] !== node
+      )
+        return false
+      const expression = ts.isPropertyAccessExpression(parent.expression)
+        ? parent.expression.expression
+        : parent.expression
+
+      return translators.has(expression.getText(source))
+    }
     function visit(node) {
+      if (isTranslationKey(node)) return
       let text, kind
       if (ts.isJsxText(node)) {
         text = node.text.trim().replaceAll(/\s+/g, " ")
@@ -184,15 +323,9 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const catalogues = Object.fromEntries(
-    ["en", "cs", "es", "fr", "ja"].map((locale) => [
-      locale,
-      JSON.parse(
-        fs.readFileSync(path.join(root, "locales", `${locale}.json`), "utf8")
-      ),
-    ])
-  )
-  const errors = checkMessages(catalogues)
+  const files = readCatalogueFiles()
+  const catalogues = mergeCatalogueFiles(files)
+  const errors = [...checkCatalogueFiles(files), ...checkMessages(catalogues)]
   if (errors.length) {
     console.error(errors.join("\n"))
     process.exitCode = 1

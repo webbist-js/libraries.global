@@ -2,7 +2,7 @@
 
 import { WIDGET_ACCENTS } from "@repo/shared-data"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react"
 
 import { EmptyState } from "@/components/ds/EmptyState"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
@@ -17,13 +17,21 @@ import { WidgetLibraryCard } from "@/components/widgets/WidgetLibraryCard"
 import { useMounted } from "@/hooks/useMounted"
 import { widgetCopy } from "@/lib/widgets/copy"
 
+const WidgetMapLocale = createContext("en")
+
+function WidgetMapLoading() {
+  const locale = useContext(WidgetMapLocale)
+
+  return (
+    <p role="status" className="min-h-80 p-6">
+      {widgetCopy(locale, "Loading map…")}
+    </p>
+  )
+}
+
 const WidgetMap = dynamic(() => import("@/components/widgets/WidgetMap"), {
   ssr: false,
-  loading: () => (
-    <p role="status" className="min-h-80 p-6">
-      Loading map…
-    </p>
-  ),
+  loading: WidgetMapLoading,
 })
 
 export function useWidgetFinder(data: WidgetPresentationData) {
@@ -249,16 +257,18 @@ function WidgetMapPane({
       className={`${view === "map" ? "block" : "hidden"} ${c.mapMode === "both" ? "@min-[720px]:block" : ""}`}
     >
       {view === "map" || (wide && c.mapMode === "both") ? (
-        <WidgetMap
-          rows={rows}
-          selected={selected}
-          onSelect={setSelected}
-          accent={accent}
-          clusters={c.clusters}
-          labels={c.labels}
-          reset={c.reset}
-          locale={c.locale}
-        />
+        <WidgetMapLocale.Provider value={c.locale}>
+          <WidgetMap
+            rows={rows}
+            selected={selected}
+            onSelect={setSelected}
+            accent={accent}
+            clusters={c.clusters}
+            labels={c.labels}
+            reset={c.reset}
+            locale={c.locale}
+          />
+        </WidgetMapLocale.Provider>
       ) : null}
       {picked ? (
         <aside

@@ -1,10 +1,11 @@
 import { fromMinutes, localDateTime, scheduleState } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
+import { withMessages } from "@/i18n/scoped-messages"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -15,12 +16,12 @@ import { greetingFor, weekdayCopy } from "@/lib/staff/format"
 import { staffLibraryHref } from "@/lib/staff/paths"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-export default async function LiveEntry({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
-  const tUi = await getUiTranslations("ui")
+async function LiveEntry({ params }: { params: Promise<{ locale: string }> }) {
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const { locale } = await params
   const requestHeaders = await headers()
@@ -83,7 +84,7 @@ export default async function LiveEntry({
       <header className="mb-6 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-            Staff area · Your libraries
+            {tExisting("staticUi.mobile.staff_area_your_libraries")}
           </p>
           <h1 className="type-h1 my-3">
             {greetingFor(hour)}, {session.user.name.split(" ")[0]}.
@@ -96,7 +97,9 @@ export default async function LiveEntry({
       </header>
       {!rows.length ? (
         <section>
-          <h2 className="type-h2">You’re not set up to go live</h2>
+          <h2 className="type-h2">
+            {tExisting("staticUi.mobile.you_re_not_set_up_to_go_live")}
+          </h2>
           <p className="my-4">
             Claim your mobile library first. Once a Moderator approves the
             claim, an owner of the library can allow live updates.
@@ -120,7 +123,7 @@ export default async function LiveEntry({
                   color: TYPE_TINT.public.fg,
                 }}
               >
-                Mobile library
+                {tStatic("common.mobileLibrary")}
               </p>
               <h2 className="type-h2 my-2">{l.name}</h2>
               <p className="my-3">
@@ -131,7 +134,7 @@ export default async function LiveEntry({
                     : !result.body.settings.enabled
                       ? "The owner needs to allow live updates."
                       : result.body.activeSession
-                        ? `Live now, started by ${result.body.activeSession.startedByName ?? "Library staff"} at ${fromMinutes(localDateTime(new Date(result.body.activeSession.startedAt), result.body.library.timezone).minute)} · taking over stops the other phone’s updates.`
+                        ? `Live now, started by ${result.body.activeSession.startedByName ?? tExisting("staffOnboarding.eyebrow")} at ${fromMinutes(localDateTime(new Date(result.body.activeSession.startedAt), result.body.library.timezone).minute)} · taking over stops the other phone’s updates.`
                         : result.body.route.length
                           ? `${result.body.route.length} stops · ${result.body.route[0]!.arrive}–${result.body.route.at(-1)!.depart}`
                           : nextCopy(result.body)}
@@ -147,7 +150,7 @@ export default async function LiveEntry({
                 }
               >
                 {result.body?.activeSession
-                  ? "Take over"
+                  ? tExisting("staticUi.moderation.take_over")
                   : l.canGoLive && result.body?.settings.enabled
                     ? tUi("go_live")
                     : "Go to settings"}
@@ -157,7 +160,9 @@ export default async function LiveEntry({
         </div>
       )}
       <p className="mt-4 text-sm" style={{ color: T.ink.dim }}>
-        Also on the library page, in the “You run this mobile library” card.
+        {tExisting(
+          "staticUi.mobile.also_on_the_library_page_in_the_you_run_this_mobile_library_card"
+        )}
       </p>
       <Link className="live-button mt-4 rounded-full" href={`${site}/staff`}>
         {tUi("staff_area")}
@@ -165,3 +170,5 @@ export default async function LiveEntry({
     </>
   )
 }
+
+export default withMessages(LiveEntry, "[locale]/live/page")

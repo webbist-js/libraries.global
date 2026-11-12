@@ -1,0 +1,489 @@
+{
+  "membershipContent": {
+    "standing": {
+      "public": "Not signed in",
+      "explorer": "Explorer",
+      "contributor": "Contributor",
+      "supporter": "Supporter"
+    },
+    "offers": {
+      "explorer": {
+        "name": "Explorer",
+        "who": "Anyone with a free account.",
+        "price": "Free",
+        "priceNote": "Sign up with an email address. No card and no trial period.",
+        "cta": {
+          "signUp": "Create a free account"
+        },
+        "items": {
+          "records": "Every library record, the map and lists, with or without an account",
+          "contribute": "Suggest corrections, photos and new libraries",
+          "follow": "Follow libraries, save events and join discussions",
+          "contextLayers": "Atlas context layers: deprivation and households without a car in supported UK areas",
+          "libraryAccess": "Library access: population comparisons for countries and supported local areas",
+          "history": "Every change to a library, field by field",
+          "savedViews": "Up to {savedViews} saved views and {savedViews} saved searches",
+          "export": "Atlas exports of up to {exportRows} rows, {exportsPerDay} a day",
+          "alerts": "Alerts on saved searches",
+          "notes": "Private notes on any library"
+        }
+      },
+      "contributor": {
+        "name": "Contributor",
+        "who": "Anyone with at least one accepted contribution.",
+        "price": "Free",
+        "priceNote": "Earned with your first accepted contribution.",
+        "cta": {
+          "contribute": "Start contributing"
+        },
+        "items": {
+          "everythingExplorer": "Everything in Explorer",
+          "reach": "{reachPerWeek} new one-library Reach calculations every 7 days; opening a result you already have is free",
+          "credit": "Credit for every accepted change, and your contribution history",
+          "supporter": "Supporter recognition at {supporterAt} accepted contributions",
+          "noAuthority": "Recognition never grants editing rights or staff verification. Points and badges are counted separately."
+        }
+      },
+      "staff": {
+        "name": "Verified Staff",
+        "who": "People who work at a library or library service.",
+        "price": "Free",
+        "priceNote": "Once we have checked your role with the library.",
+        "cta": {
+          "claim": "Claim your library"
+        },
+        "items": {
+          "workspace": "The staff area for each library you are verified for",
+          "editing": "Edit your library’s record, post notices and answer suggested changes",
+          "organisation": "A free organisation for inviting colleagues and organising libraries",
+          "widgets": "Embeddable library finders, directories, charts and stats",
+          "traffic": "Traffic reports for your library’s pages",
+          "scope": "Authority covers only the libraries you are verified for. Joining an organisation never grants editing on its own."
+        }
+      },
+      "api": {
+        "name": "API Access",
+        "who": "Developers, researchers and organisations connecting their own tools.",
+        "price": "{apiPrice} a month",
+        "priceNote": "Tax included. Stripe shows the final charge before you pay.",
+        "cta": {
+          "developers": "Go to Developers"
+        },
+        "items": {
+          "allowance": "{apiRequests} requests, {apiMib} MiB of response data and {apiCredits} analysis credits each billing period",
+          "keys": "Unlimited keys, a usage dashboard, the request reference and the playground",
+          "overage": "Optional overage with a monthly cap you choose ({capMin} to {capMax}). It stays off unless you switch it on.",
+          "reach": "Organisers get more Atlas Reach: {apiReachPerHour} new calculations an hour, and service Reach of up to {apiReachLibraries} libraries",
+          "noOrganisation": "Buy for yourself or for an organisation.",
+          "noAuthority": "An API key identifies your application. It never grants library editing, verification or a better place in search."
+        }
+      },
+      "sponsor": {
+        "name": "Sponsor",
+        "who": "Organisations that want to fund the public service.",
+        "price": "By arrangement",
+        "priceNote": "Agreed with you: the work it funds, for how long and how we report on it.",
+        "cta": {
+          "contact": "Talk to us about sponsorship",
+          "sponsor": "About sponsorship"
+        },
+        "items": {
+          "programmes": "Fund public access, data quality, translation, geographic coverage or open tooling",
+          "reporting": "Quarterly activity updates and an annual impact report",
+          "acknowledgement": "An optional name and logo on our sponsor page",
+          "independence": "Sponsors have no say over records, ranking, verification or editorial review. Sponsorship is not a charitable donation."
+        }
+      }
+    },
+    "columns": {
+      "public": {
+        "name": "No account",
+        "price": "Free"
+      },
+      "explorer": {
+        "name": "Explorer",
+        "price": "Free"
+      },
+      "contributor": {
+        "name": "Contributor",
+        "price": "Free, earned"
+      },
+      "staff": {
+        "name": "Verified Staff",
+        "price": "Free"
+      },
+      "api": {
+        "name": "API Access",
+        "price": "{apiPrice}/month"
+      }
+    },
+    "groups": {
+      "facts": "Library facts",
+      "account": "Taking part",
+      "atlas": "Atlas analysis",
+      "watching": "Watching and comparing libraries",
+      "staff": "For library staff",
+      "api": "For developers"
+    },
+    "rows": {
+      "records": "Every library record, with hours and services",
+      "map": "Search, the map and lists",
+      "reading": "Journal, Knowledge, events, noticeboard and public discussions",
+      "downloads": "Library record downloads",
+      "apiReference": "API documentation and request reference",
+      "contribute": "Suggest corrections, photos and new libraries",
+      "follow": "Follow libraries and save events",
+      "discussions": "Start discussions, reply and react",
+      "drives": "Join community drives",
+      "savedViews": "Saved views and saved searches",
+      "atlas_contextLayers": "Context layers: deprivation and households without a car (supported UK areas)",
+      "atlas_analysis": "Library access: population comparisons",
+      "atlas_compare": "Compare library access between two areas",
+      "atlas_export": "Export Atlas results as CSV or GeoJSON",
+      "atlas_reach": "One-library travel-time Reach",
+      "atlas_serviceReach": "Service Reach across several libraries",
+      "library_history": "Every change to a library, field by field",
+      "library_watch": "Watch a library for changes and closures",
+      "index_alerts": "Alerts on saved searches",
+      "index_compare": "Compare up to six libraries side by side",
+      "library_notes": "Private notes on any library",
+      "events_personalFeed": "A personal calendar feed",
+      "index_export": "Export search results with attribution",
+      "data_benchmark": "Benchmark a service against similar ones",
+      "data_explorerExport": "Export derived metrics",
+      "staffWorkspace": "Staff area for your verified libraries",
+      "staffEditing": "Edit records, post notices and answer suggestions",
+      "staffOrganisation": "A free organisation with invitations",
+      "staffWidgets": "Embeddable widgets for your website",
+      "staffTraffic": "Traffic reports",
+      "api_key": "API keys and a usage dashboard",
+      "apiAllowance": "Included API allowance per billing period",
+      "apiOverage": "Optional overage with a cap you set",
+      "apiPlayground": "Playground requests with your own key"
+    },
+    "cells": {
+      "savedViews": "{savedViews}",
+      "exportRows": "{exportRows} rows",
+      "reachWeek": "{reachPerWeek} a week",
+      "reachHour": "{apiReachPerHour} an hour",
+      "serviceLibraries": "Up to {apiReachLibraries}",
+      "apiAllowance": "{apiRequests} requests"
+    },
+    "copy": {
+      "lead": "Library facts are free, and so are the tools to explore and improve them. API Access and sponsorship pay for running the service.",
+      "metaDescription": "Explorer, Contributor and Verified Staff are free. API Access is {apiPrice} a month. Organisations can sponsor the public service. Payment never buys trust.",
+      "promiseAds": "No ads, ever",
+      "promiseTrust": "Money never buys trust",
+      "promiseData": "Open data stays open",
+      "offersTitle": "Ways to take part",
+      "offersLead": "Most of Libraries Global is free. The paid options fund the service; none of them changes how records are reviewed or ranked.",
+      "independence": "Paying for API Access or sponsoring us never changes your community role, how your edits are reviewed, or where a library appears.",
+      "compare": "Compare everything side by side",
+      "current": "You have this",
+      "includes": "What’s included",
+      "signedIn": "You’re signed in",
+      "openStaff": "Open the staff area",
+      "manageApi": "Manage API access",
+      "soon": "Coming soon",
+      "soonShort": "Soon",
+      "included": "Included",
+      "notIncluded": "Not included",
+      "feature": "Feature",
+      "compareTwo": "Compare two options",
+      "comparisonCaption": "{group}: {first} and {second}",
+      "availableCount": "{count, number} available now",
+      "roadmapCount": "{count, number} on the roadmap",
+      "questions": "Questions",
+      "contactLead": "Something else? The maintainers reply within 5 working days.",
+      "ask": "Ask a question",
+      "supporterEyebrow": "Earned, never bought",
+      "supporterTitle": "Supporter: {supporterAt} accepted contributions",
+      "supporterBody": "Supporter is recognition for people who have had {supporterAt} contributions accepted. It adds a profile mark and optional credit on the supporters page. It adds no tools, quota or authority, and it can’t be bought.",
+      "meetSupporters": "Meet the supporters",
+      "freeGroupTitle": "Free for everyone",
+      "freeGroupLead": "No card, no trial. Your tools grow as you take part.",
+      "paidGroupTitle": "For organisations",
+      "paidGroupLead": "The two ways to fund the service.",
+      "moreInComparison": "{count, plural, one {# more} other {# more}} in the comparison"
+    },
+    "policies": {
+      "heading": "Terms and refunds",
+      "lead": "Read these before buying API Access. You can print or save each page.",
+      "languageNote": "These policies are currently available in English.",
+      "terms": "Membership and API terms",
+      "termsBody": "The monthly charge, included allowances, optional overage, billing periods and your account.",
+      "refunds": "Cancellation and refunds",
+      "refundsBody": "Stopping renewal, refund requests and your statutory cancellation rights."
+    },
+    "faq": {
+      "0": {
+        "q": "What do I get for free?",
+        "a": "Everything except API Access. Without an account you can read every library record and use the map. A free account (Explorer) adds context layers, comparisons, change history, saved views and exports of up to {exportRows} rows. Your first accepted contribution makes you a Contributor, with {reachPerWeek} Reach calculations a week."
+      },
+      "1": {
+        "q": "How does Supporter work?",
+        "a": "Each accepted, substantive contribution counts once: new libraries, corrections, photos, translations, articles and similar. Daily streaks, bonuses and administrative adjustments don’t count. Your profile shows your count and your progress to {supporterAt}. Supporter adds no tools or authority."
+      },
+      "2": {
+        "q": "What does API Access cost?",
+        "a": "{apiPrice} a month, tax included, for {apiRequests} requests, {apiMib} MiB of response data and {apiCredits} analysis credits in each billing period. Overage is off unless you switch it on; then it costs {requestPrice} per extra request, {mibPrice} per extra MiB and {creditPrice} per extra analysis credit, up to a monthly cap of {capMin} to {capMax}."
+      },
+      "3": {
+        "q": "Do I need an organisation to buy API Access?",
+        "a": "No. If you buy for yourself we set up a free organisation with you as its only Organiser, so you can add colleagues later. Organisers manage keys and billing; members can see usage."
+      },
+      "4": {
+        "q": "Does paying or sponsoring give me editing rights?",
+        "a": "No. Editing a library record needs verified staff authority for that library, which we check with the library. API Access, sponsorship, recognition and organisation membership never grant it."
+      },
+      "5": {
+        "q": "What does sponsorship include?",
+        "a": "Sponsorship funds a programme of work, such as data quality or translation, with quarterly activity updates and an annual impact report. We agree the amount with each sponsor: email {contactEmail} or use the contact form. It is not a charitable donation and doesn’t include API Access."
+      },
+      "6": {
+        "q": "Can I cancel API Access?",
+        "a": "Yes, at any time from billing management on the Developers page. Access continues until the end of the paid period. See the cancellation and refund policy for your statutory rights."
+      }
+    },
+    "sheet": {
+      "title": "Library facts are free.",
+      "titleEmphasis": "Always.",
+      "lead": "Addresses, hours, services and every community record stay open to everyone. Sign in for the Atlas tools, contribute once for Reach, or buy API Access for more.",
+      "here": "You’re here",
+      "signIn": "Sign in",
+      "contribute": "Contribute",
+      "api": "About API Access",
+      "reachTitle": "Contribute once to unlock two Reach calculations a week.",
+      "reachBody": "API customers get {apiReachPerHour} an hour and service Reach.",
+      "allPlans": "See all options",
+      "openTitle": "Open source, open data.",
+      "openBody": "Library records are community-maintained open data, and the Atlas code is open source.",
+      "layers": {
+        "basics": "Density, open-late and closures layers",
+        "mobile": "Mobile library routes and stops",
+        "population": "Population density and supported grids",
+        "access": "Accessibility, events and completeness layers"
+      }
+    }
+  },
+  "membershipPage": {
+    "title": "Your standing",
+    "hero": "Your *standing*",
+    "lead": "Your contributions, your staff access and any API accounts, each shown separately.",
+    "plansTitle": "Plans and pricing",
+    "plansEyebrow": "Plans and pricing",
+    "plansHero": "Free for everyone, *paid only for API access*",
+    "offersNav": "Ways to take part",
+    "comparePlans": "Compare plans",
+    "questionsPoliciesNav": "Questions and policies",
+    "membershipQuestions": "Questions?",
+    "plansHelpLead": "Compare what’s included, read the answers below, or ask us.",
+    "askQuestion": "Ask a question",
+    "settingsLead": "Your standing, staff access and API accounts are on your profile.",
+    "plansLink": "Plans and pricing",
+    "yourStanding": "Your standing",
+    "acceptedCount": "{count, plural, one {# accepted contribution} other {# accepted contributions}}",
+    "recentlyActive": "Recently active",
+    "notRecentlyActive": "Not recently active",
+    "viewStanding": "View your standing",
+    "standingTitle": "Your standing",
+    "standingBody": {
+      "public": "Sign in to see your standing.",
+      "explorer": "You can use every free tool. Your first accepted contribution makes you a Contributor, with {reachPerWeek} Reach calculations a week.",
+      "contributor": "You can run {reachPerWeek} new one-library Reach calculations every 7 days. Supporter recognition comes at {supporterAt} accepted contributions.",
+      "supporter": "Thank you. You have reached {supporterAt} accepted contributions. Supporter is recognition only: your tools and Reach allowance are the same as a Contributor’s."
+    },
+    "progressLabel": "Progress to Supporter",
+    "progressValue": "{count, number} of {total, number}",
+    "nextMilestone": {
+      "contributor": "{count, plural, one {# accepted contribution to Contributor} other {# accepted contributions to Contributor}}",
+      "supporter": "{count, plural, one {# more accepted contribution to Supporter} other {# more accepted contributions to Supporter}}"
+    },
+    "milestoneReached": "You’ve reached Supporter.",
+    "activityNote": "“Recently active” means you’ve had a contribution accepted in the last {activityDays} days. It’s shown separately and doesn’t change your standing.",
+    "recognition": "Public recognition",
+    "recognitionLead": "Choose whether to appear on the supporters page and show the Supporter mark on your profile. Each preference saves on its own.",
+    "recognitionUnavailable": "We couldn’t load your profile preferences. Reload this page to try again, or open account settings.",
+    "startContributing": "Start contributing",
+    "yourContributions": "Your contributions",
+    "standingIndependence": "Standing is counted from accepted contributions, not points or payment. It never grants editing rights or staff verification.",
+    "staffTitle": "Verified staff access",
+    "approvedLibraries": "{count, plural, one {# library} other {# libraries}}",
+    "noStaffAccess": "None",
+    "staffLead": "You can edit and manage these libraries because we verified your role with each one.",
+    "claimExplanation": "If you work at a library, claim it to update its record. Claiming is free, and a moderator checks your role first.",
+    "staffRoles": {
+      "owner": "Owner",
+      "editor": "Editor"
+    },
+    "canGoLive": "Can go live",
+    "organisations": "Your organisations",
+    "organisationOrganiser": "Organiser",
+    "organisationMember": "Member",
+    "organisationNote": "Organisations are free workspaces for colleagues. Being in one never grants editing on a library.",
+    "manageLibraries": "Manage your libraries",
+    "claimLibrary": "Claim a library",
+    "openOrganisation": "Open your organisation",
+    "apiTitle": "API accounts",
+    "organisationUnnamed": "Your organisation",
+    "apiLead": "Keys, usage and billing for these accounts are managed on the Developers page.",
+    "apiNone": "You don’t have an API account. API Access is {apiPrice} a month and can be bought on the Developers page.",
+    "apiActive": "Active",
+    "apiInactive": "Not active",
+    "openDevelopers": "Go to Developers",
+    "apiIndependence": "API Access is billed separately. It never grants library editing or staff verification.",
+    "helpAndAccess": "Help and other options",
+    "waysToTakePart": "Ways to take part",
+    "waysLead": "Explorer, Contributor and Verified Staff are free. API Access and sponsorship are the paid options.",
+    "sponsorLink": "Sponsor the service",
+    "termsAndHelp": "Terms and help",
+    "terms": "Membership and API terms",
+    "cancellationAndRefunds": "Cancellation and refunds"
+  },
+  "membershipStaff": {
+    "eyebrow": "For library staff",
+    "title": "Look after your library’s record, <em>free.</em>",
+    "lead": "Verification gives you free staff tools for your library. Staff access is never sold, and paying for anything never grants it.",
+    "step0Title": "Claim your library",
+    "step0Body": "From the library’s page, with your work email.",
+    "step1Title": "We check with the library",
+    "step1Body": "Usually within 5 working days.",
+    "step2Title": "Your staff tools switch on",
+    "step2Body": "In the Staff area, for that library only.",
+    "benefit0": "Edit your library’s record directly",
+    "benefit1": "Post notices and closures",
+    "benefit2": "See and answer suggested changes",
+    "benefit3": "Keep a timetable and go live",
+    "benefit4": "A free organisation for your colleagues and embeddable widgets",
+    "openStaff": "Open the staff area",
+    "claim": "Claim your library",
+    "team": "Running a whole service? Set up a free organisation",
+    "eachLibrary": "For each library you’re approved for.",
+    "endorsement": "A verified record means a member of staff looks after its details; it never means the library endorses Libraries Global."
+  },
+  "membershipPreferences": {
+    "saved": "Supporter preference saved",
+    "failed": "Couldn’t save your preference. Please try again.",
+    "listedCompact": "Show me on this page",
+    "listed": "Show me on the supporters page",
+    "listedDescription": "Your name and public location. You can opt out at any time.",
+    "settings": "Supporter mark settings",
+    "badgeDescription": "The mark shows earned recognition only. It never shows your roles or anything you pay for.",
+    "privateProfile": "Private and limited profiles are not listed. Make your profile public in Settings, then choose whether to be listed."
+  },
+  "membershipCompare": {
+    "lead": "Each column is a separate way to take part, not a step up. Features marked “Soon” are still on the roadmap.",
+    "controls": "Comparison controls",
+    "availability": "Feature availability",
+    "allFeatures": "All features",
+    "availableNow": "Available now",
+    "expandAll": "Expand all groups",
+    "collapseAll": "Collapse all groups",
+    "showing": "Showing {count} of {total} features",
+    "highlightHint": "Select a column heading to highlight it.",
+    "firstPlan": "First option",
+    "secondPlan": "Second option",
+    "roadmapLink": "On the roadmap"
+  },
+  "sponsorPage": {
+    "metaTitle": "Sponsorship",
+    "metaDescription": "Sponsor public access, data quality, translation, geographic coverage or open tooling at Libraries Global: what sponsorship funds, what sponsors receive and our independence rules. Every sponsorship starts with a conversation.",
+    "title": "Sponsorship",
+    "eyebrow": "Sponsorship",
+    "heroTitle": "Fund an open record of the world’s *libraries*",
+    "lead": "Libraries Global is an independent, open index of libraries. Sponsorship pays for specific public work on it, and we report on how the money is used. It never buys influence over the records.",
+    "nav": {
+      "programmes": "What sponsorship funds",
+      "recognition": "What sponsors receive",
+      "independence": "Independence",
+      "sponsors": "Current sponsors",
+      "enquire": "Talk to us"
+    },
+    "programmes": {
+      "title": "What sponsorship funds",
+      "lead": "Each sponsorship supports one or more programmes. We agree which ones with you before anything is signed.",
+      "items": {
+        "publicAccess": {
+          "title": "Public access",
+          "body": "Keeping the index, map and library pages free for everyone to use, without advertising."
+        },
+        "dataQuality": {
+          "title": "Data quality",
+          "body": "Checking, sourcing and correcting library records, and reviewing what the community sends in."
+        },
+        "translation": {
+          "title": "Translation",
+          "body": "Translating the site and its guides so more people can use them in their own language."
+        },
+        "coverage": {
+          "title": "Geographic coverage",
+          "body": "Bringing in and maintaining library data for countries and regions the index doesn’t yet cover well."
+        },
+        "tooling": {
+          "title": "Open tooling",
+          "body": "Open-source code, open data exports and documentation that anyone can reuse."
+        }
+      },
+      "reportingTitle": "Quarterly and annual reporting",
+      "reportingBody": "Every sponsor receives a quarterly activity report and an annual impact report on the programmes they fund."
+    },
+    "recognition": {
+      "title": "What sponsors receive",
+      "items": {
+        "acknowledgement": {
+          "title": "Name and logo acknowledgement",
+          "body": "If you agree, we show your organisation’s name and logo on this page. Nothing is shown without your consent."
+        },
+        "entry": {
+          "title": "A factual sponsor entry",
+          "body": "A short, factual description on this page of the work your sponsorship funds."
+        },
+        "briefings": {
+          "title": "Briefings",
+          "body": "Regular briefings on the programme’s progress, alongside the quarterly and annual reports."
+        }
+      }
+    },
+    "independence": {
+      "title": "Independence",
+      "summary": "Sponsorship buys no influence",
+      "items": {
+        "influence": "Sponsors have no say over library records, ranking, search results, verification or editorial review.",
+        "charity": "Sponsorship is not a charitable donation, and we make no claim that it is tax-deductible.",
+        "api": "Sponsorship does not include API capacity. API access is a separate offer at {price} a month, on the <link>developers page</link>."
+      }
+    },
+    "sponsors": {
+      "title": "Current sponsors",
+      "lead": "Organisations currently sponsoring Libraries Global that have agreed to be named.",
+      "empty": "No sponsors are listed yet.",
+      "emptyDetail": "Sponsors appear here once they have agreed to be named.",
+      "unavailable": "The sponsor list isn’t available right now.",
+      "unavailableDetail": "Please try again later.",
+      "tiers": {
+        "founding": "Founding Sponsor",
+        "service": "Service Sponsor",
+        "community": "Community Sponsor",
+        "custom": "Sponsor"
+      }
+    },
+    "enquire": {
+      "title": "Talk to us about sponsorship",
+      "body": "Every sponsorship starts with a conversation: the work you’d like to fund, for how long, and how we report on it. We agree the amount together.",
+      "action": "Talk to us about sponsorship",
+      "email": "Or email us at <link>{email}</link>.",
+      "terms": {
+        "contract": "Each sponsorship is quoted and contracted separately.",
+        "invoice": "Sponsorships are usually invoiced.",
+        "tax": "How tax applies is confirmed in each agreement."
+      }
+    },
+    "sidebar": {
+      "title": "Sponsorship enquiries",
+      "body": "Talk to us about funding public access, data quality, translation, coverage or open tooling.",
+      "action": "Talk to us",
+      "api": "API access"
+    },
+    "heroHow": "How sponsorship works"
+  }
+}

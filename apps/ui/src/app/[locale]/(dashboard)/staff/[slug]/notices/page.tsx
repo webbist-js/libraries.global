@@ -4,12 +4,13 @@ import {
   StaffNotices,
   type StaffNoticesData,
 } from "@/components/staff/StaffNotices"
+import { withMessages } from "@/i18n/scoped-messages"
 import { privateMetadata } from "@/lib/seo/metadata"
 import { loadStaffPage } from "@/lib/staff/server"
 import { fetchStaff } from "@/lib/staff-proxy"
 
 export const metadata = privateMetadata("Library notices")
-export default async function NoticesPage({
+async function NoticesPage({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>
@@ -35,3 +36,8 @@ export default async function NoticesPage({
     />
   )
 }
+
+export default withMessages(
+  NoticesPage,
+  "[locale]/(dashboard)/staff/[slug]/notices/page"
+)

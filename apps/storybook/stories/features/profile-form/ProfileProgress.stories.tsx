@@ -9,6 +9,13 @@ import {
 const meta = {
   title: "Features/Profile form/ProfileProgress",
   component: ProfileProgress,
+  decorators: [
+    (Story) => (
+      <div className="max-w-sm">
+        <Story />
+      </div>
+    ),
+  ],
   args: {
     title: "Your profile",
     steps: [
@@ -24,7 +31,8 @@ const meta = {
         label: "Interests",
         required: false,
         done: false,
-        detail: "Choose a few topics.",
+        detail:
+          "Choose a few topics to help us suggest libraries and discussions that match your interests.",
       },
     ],
     children: <button type="button">Save profile</button>,

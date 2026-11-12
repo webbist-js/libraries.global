@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds/SearchField"
@@ -34,6 +35,8 @@ export function CatalogueSearch<T extends Option>({
   readonly describe: (row: T) => string
   readonly onSelect: (row: T) => void
 }) {
+  const t = useTranslations("catalogueSearch")
+  const ui = useTranslations("ui")
   const id = useId()
   const input = useRef<HTMLInputElement>(null)
   const [open, setOpen] = useState(false)
@@ -102,7 +105,7 @@ export function CatalogueSearch<T extends Option>({
           </Button>
         </PopoverTrigger>
         <PopoverContent
-          aria-label={`Search ${label.toLowerCase()}`}
+          aria-label={t("label", { label })}
           align="start"
           sideOffset={8}
           collisionPadding={16}
@@ -133,20 +136,20 @@ export function CatalogueSearch<T extends Option>({
           />
           <div role="status" className="px-2 py-3 text-xs text-(--t-ink-dim)">
             {busy || (!result && !error)
-              ? "Finding matches…"
+              ? t("loading")
               : error
-                ? "Search unavailable"
-                : `${result?.rows.length ?? 0} results · Page ${page}`}
+                ? t("unavailable")
+                : t("results", { count: result?.rows.length ?? 0, page })}
           </div>
           {error ? (
             <div role="alert" className="p-3 text-sm">
-              <p>{error}</p>
+              <p>{t("failed")}</p>
               <Button
                 variant="surface"
                 size="pill"
                 onClick={() => setAttempt((n) => n + 1)}
               >
-                Try again
+                {ui("try_again")}
               </Button>
             </div>
           ) : null}
@@ -201,9 +204,7 @@ export function CatalogueSearch<T extends Option>({
               ))}
           </ul>
           {result && !result.rows.length && !busy && !error ? (
-            <p className="px-3 py-6 text-sm text-(--t-ink-dim)">
-              No matches. Try another name or a broader search.
-            </p>
+            <p className="px-3 py-6 text-sm text-(--t-ink-dim)">{t("empty")}</p>
           ) : null}
           <div className="mt-3 flex items-center justify-between border-t border-(--t-border-line) pt-3">
             <Button
@@ -215,10 +216,10 @@ export function CatalogueSearch<T extends Option>({
                 setResult(null)
               }}
             >
-              Previous
+              {ui("previous")}
             </Button>
             <Button variant="link" onClick={() => setOpen(false)}>
-              Close
+              {ui("close")}
             </Button>
             <Button
               variant="surface"
@@ -229,7 +230,7 @@ export function CatalogueSearch<T extends Option>({
                 setResult(null)
               }}
             >
-              Next
+              {ui("next")}
             </Button>
           </div>
         </PopoverContent>

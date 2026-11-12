@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 
 import { MainContent } from "@/components/ds/MainContent"
@@ -10,7 +10,11 @@ export const utilityButtonClass =
 
 /** A quiet, self-contained page for email actions and recovery states. */
 export function UtilityPage({ children }: { children: ReactNode }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <MainContent
@@ -28,7 +32,7 @@ export function UtilityPage({ children }: { children: ReactNode }) {
           style={{ fontFamily: T.font.serif }}
           aria-label={`${tUi("libraries")} Global homepage`}
         >
-          {tUi("libraries")} <i>Global</i>
+          {tUi("libraries")} <i>{tStatic("common.global")}</i>
         </UtilityLink>
         {children}
       </section>
@@ -46,12 +50,12 @@ export function UtilityPage({ children }: { children: ReactNode }) {
           href="/legal/terms"
           className="underline underline-offset-4"
         >
-          Terms
+          {tExisting("authInterface.terms")}
         </UtilityLink>
         <UtilityLink href="/knowledge" className="underline underline-offset-4">
           {tUi("help")}{" "}
         </UtilityLink>
-        <span>An independent, open-source project.</span>
+        <span>{tExisting("beta.independent")}</span>
       </footer>
     </MainContent>
   )
@@ -64,7 +68,7 @@ export function UtilityHeading({
   icon,
   tone = "info",
 }: {
-  title: string
+  title: ReactNode
   italic?: string
   description: ReactNode
   icon?: ReactNode

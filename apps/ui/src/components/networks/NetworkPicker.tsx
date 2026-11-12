@@ -1,5 +1,6 @@
 "use client"
 import { NETWORK_KIND_LABELS, type NetworkSummary } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useCallback } from "react"
 
 import { CatalogueSearch } from "@/components/ds/CatalogueSearch"
@@ -13,6 +14,10 @@ export function NetworkPicker({
   readonly onSelect: (network: NetworkSummary) => void
   readonly disabled?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const load = useCallback(
     async (query: string, page: number, signal: AbortSignal) => {
       const result = await networkRequest<NetworkList>(
@@ -32,8 +37,8 @@ export function NetworkPicker({
 
   return (
     <CatalogueSearch
-      label="Find your library service or network"
-      placeholder="Search by service or network name"
+      label={tExisting("staticUi.widget.find_your_library_service_or_network")}
+      placeholder={tStatic("network.search_by_service_or_network_name")}
       disabled={disabled}
       load={load}
       describe={(row: NetworkSummary) =>

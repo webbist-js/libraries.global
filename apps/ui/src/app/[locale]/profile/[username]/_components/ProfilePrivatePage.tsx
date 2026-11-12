@@ -1,6 +1,10 @@
+import { useTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 
 export function ProfilePrivatePage({ username }: { username: string }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div
       className="relative isolate flex min-h-screen w-full flex-col items-center justify-center"
@@ -24,7 +28,7 @@ export function ProfilePrivatePage({ username }: { username: string }) {
             marginBottom: "20px",
           }}
         >
-          Profile · Private
+          {tStatic("profileRoute.profile_private")}
         </p>
         <svg
           width="48"

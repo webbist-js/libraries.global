@@ -1,6 +1,7 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { AuthLeftPanel } from "../_components/AuthLeftPanel"
@@ -10,9 +11,7 @@ import { SignInForm } from "./_components/SignInForm"
 
 export const metadata = privateMetadata("Sign in")
 
-export default async function SignInPage({
-  params,
-}: PageProps<"/[locale]/auth/signin">) {
+async function SignInPage({ params }: PageProps<"/[locale]/auth/signin">) {
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
   const journal = await fetchJournalTeaser(locale)
@@ -27,3 +26,5 @@ export default async function SignInPage({
     </AuthShell>
   )
 }
+
+export default withMessages(SignInPage, "[locale]/auth/signin/page")

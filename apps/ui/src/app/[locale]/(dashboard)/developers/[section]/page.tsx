@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 
 import type { ApiSection } from "@/components/developers/ApiWorkspace"
 import { ApiWorkspacePage } from "@/components/developers/ApiWorkspacePage"
+import { withMessages } from "@/i18n/scoped-messages"
 
 const sections = new Set(["keys", "usage", "reference", "playground"])
 
@@ -24,7 +25,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function ApiSectionPage({
+async function ApiSectionPage({
   params,
 }: {
   readonly params: Promise<{ section: string }>
@@ -34,3 +35,8 @@ export default async function ApiSectionPage({
 
   return <ApiWorkspacePage section={section as ApiSection} />
 }
+
+export default withMessages(
+  ApiSectionPage,
+  "[locale]/(dashboard)/developers/[section]/page"
+)

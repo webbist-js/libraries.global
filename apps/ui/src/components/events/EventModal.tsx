@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
@@ -62,7 +61,9 @@ function formatDateTime(iso: string, allDay: boolean): string {
 }
 
 export function EventModal() {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { activeDocumentId, closeModal } = useEventModal()
   const [event, setEvent] = useState<ModalEvent | null>(null)
@@ -250,7 +251,7 @@ export function EventModal() {
                   textDecoration: "none",
                 }}
               >
-                Full details
+                {tStatic("frontendExtra.full_details")}
                 <Icon icon="mdi:arrow-right" className="size-4" />
               </a>
             </div>
@@ -264,7 +265,7 @@ export function EventModal() {
               fontStyle: "italic",
             }}
           >
-            Event not found.
+            {tStatic("frontendExtra.event_not_found")}
           </p>
         )}
       </div>

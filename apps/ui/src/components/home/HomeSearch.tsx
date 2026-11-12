@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { LibrarySearchBox } from "@/components/index-page/LibrarySearchBox"
@@ -11,15 +11,19 @@ import {
 import { T } from "@/lib/design-tokens"
 import { Link, useRouter } from "@/lib/navigation"
 
-/** Starting points that open the index already filtered. */
-const TRY_SEARCHES = [
-  { label: "Glasgow", href: "/libraries?q=Glasgow" },
-  { label: "Cardiff", href: "/libraries?q=Cardiff" },
-  { label: "National libraries", href: "/libraries?tg=national" },
-  { label: "Open now", href: "/libraries?open=1" },
-]
-
 export default function HomeSearch() {
+  const tStatic = useTranslations("staticUi")
+  const tUi = useTranslations("ui")
+  const trySearches = [
+    { label: "Glasgow", href: "/libraries?q=Glasgow" },
+    { label: "Cardiff", href: "/libraries?q=Cardiff" },
+    {
+      label: tStatic("home.nationalLibraries"),
+      href: "/libraries?tg=national",
+    },
+    { label: tUi("open_now"), href: "/libraries?open=1" },
+  ]
+
   const router = useRouter()
   const [locating, setLocating] = useState(false)
 
@@ -85,9 +89,9 @@ export default function HomeSearch() {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <span className="mr-0.5 text-base" style={{ color: T.ink.dim }}>
-          Try
+          {tStatic("home.try")}
         </span>
-        {TRY_SEARCHES.map(({ label, href }) => (
+        {trySearches.map(({ label, href }) => (
           <Link
             key={label}
             href={href}

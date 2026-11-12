@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -29,7 +28,9 @@ export function DataAccountSection({
 }: {
   sessionUser: BetterAuthUser
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [deactivateConfirm, setDeactivateConfirm] = useState(false)
   const [deactivating, setDeactivating] = useState(false)
@@ -46,15 +47,17 @@ export function DataAccountSection({
         body: JSON.stringify({ profileVisibility: "private" }),
       })
       if (!res.ok) {
-        toast.error("Failed to hide your profile — please try again")
+        toast.error(
+          tStatic("profileRoute.failed_to_hide_your_profile_please_try_again")
+        )
 
         return
       }
-      toast.success("Profile hidden — signing you out")
+      toast.success(tStatic("profileRoute.profile_hidden_signing_you_out"))
       await authClient.signOut()
       globalThis.location.href = "/"
     } catch {
-      toast.error("Failed to deactivate")
+      toast.error(tStatic("profileRoute.failed_to_deactivate"))
     } finally {
       setDeactivating(false)
     }
@@ -62,7 +65,7 @@ export function DataAccountSection({
 
   const handleDelete = async () => {
     if (deleteInput.trim().toLowerCase() !== sessionUser.email.toLowerCase()) {
-      toast.error("Email doesn't match — please try again")
+      toast.error(tStatic("profileRoute.email_doesn_t_match_please_try_again"))
 
       return
     }
@@ -75,13 +78,15 @@ export function DataAccountSection({
           reauthUrl?: string
         }
         if (redirectForReauthentication(json)) return
-        toast.error(json.error ?? "Failed to delete account")
+        toast.error(
+          json.error ?? tStatic("profileRoute.failed_to_delete_account")
+        )
 
         return
       }
       globalThis.location.href = "/?deleted=1"
     } catch {
-      toast.error("Failed to delete account")
+      toast.error(tStatic("profileRoute.failed_to_delete_account"))
       setDeleting(false)
     }
   }
@@ -93,7 +98,9 @@ export function DataAccountSection({
     <SectionCard
       id="data"
       title={tUi("your_data_account")}
-      lead="Download your account summary, request a complete personal-data copy, or delete your account."
+      lead={tStatic(
+        "profileRoute.download_your_account_summary_request_a_complete_personal_data_copy_or_delete_your_account"
+      )}
     >
       <div>
         {/* Download */}
@@ -103,12 +110,12 @@ export function DataAccountSection({
               className="m-0 text-base font-medium"
               style={{ color: T.ink.base }}
             >
-              Download your data
+              {tStatic("profileRoute.download_your_data")}
             </p>
             <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-              A JSON summary of your profile, preferences, account and API
-              Access consents. For a complete personal-data copy, contact
-              legal@libraries.global.
+              {tStatic(
+                "profileRoute.a_json_summary_of_your_profile_preferences_account_and_api_access_consents_for_a_complete_personal_d"
+              )}
             </p>
           </div>
           <a
@@ -116,7 +123,7 @@ export function DataAccountSection({
             download
             style={{ ...pillButton, textDecoration: "none" }}
           >
-            Request download
+            {tStatic("profileRoute.request_download")}
           </a>
         </div>
 
@@ -139,11 +146,12 @@ export function DataAccountSection({
                   className="m-0 text-base font-semibold"
                   style={{ color: T.accent.danger }}
                 >
-                  Hide profile and sign out
+                  {tStatic("profileRoute.hide_profile_and_sign_out")}
                 </p>
                 <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-                  Makes your profile private and signs you out. Change your
-                  email preferences above before signing out.
+                  {tStatic(
+                    "profileRoute.makes_your_profile_private_and_signs_you_out_change_your_email_preferences_above_before_signing_out"
+                  )}
                 </p>
               </div>
               <button
@@ -154,7 +162,7 @@ export function DataAccountSection({
                 }}
                 style={pillButton}
               >
-                Hide profile
+                {tStatic("profileRoute.hide_profile")}
               </button>
             </div>
             {deactivateConfirm ? (
@@ -163,9 +171,9 @@ export function DataAccountSection({
                   className="m-0 max-w-[52ch] text-sm leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
-                  Your profile will be set to private and you&rsquo;ll be signed
-                  out. Sign back in any time to update your visibility. Your
-                  email preferences stay as you set them.
+                  {tStatic(
+                    "profileRoute.your_profile_will_be_set_to_private_and_you_rsquo_ll_be_signed_out_sign_back_in_any_time_to_update_y"
+                  )}
                 </p>
                 <div className="flex shrink-0 gap-2.5">
                   <button
@@ -187,7 +195,9 @@ export function DataAccountSection({
                       opacity: deactivating ? 0.6 : 1,
                     }}
                   >
-                    {deactivating ? tUi("saving") : "Hide profile and sign out"}
+                    {deactivating
+                      ? tUi("saving")
+                      : tStatic("profileRoute.hide_profile_and_sign_out")}
                   </button>
                 </div>
               </div>
@@ -202,12 +212,12 @@ export function DataAccountSection({
                   className="m-0 text-base font-semibold"
                   style={{ color: T.accent.danger }}
                 >
-                  Delete account
+                  {tStatic("profileRoute.delete_account")}
                 </p>
                 <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-                  Permanently removes your account. Accepted contributions stay
-                  in the index, credited to &ldquo;a former contributor&rdquo;.
-                  This can&rsquo;t be undone.
+                  {tStatic(
+                    "profileRoute.permanently_removes_your_account_accepted_contributions_stay_in_the_index_credited_to_ldquo_a_former"
+                  )}
                 </p>
               </div>
               <button
@@ -224,7 +234,7 @@ export function DataAccountSection({
                   color: "#fff",
                 }}
               >
-                Delete account…
+                {tStatic("profileRoute.delete_account_prompt")}
               </button>
             </div>
             {deleteConfirm ? (
@@ -233,8 +243,9 @@ export function DataAccountSection({
                   className="m-0 text-sm leading-[1.5]"
                   style={{ color: T.ink.dim }}
                 >
-                  All personal data will be permanently removed. Type your email
-                  address to confirm:
+                  {tStatic(
+                    "profileRoute.all_personal_data_will_be_permanently_removed_type_your_email_address_to_confirm"
+                  )}
                 </p>
                 <div className="flex flex-wrap items-center gap-2.5">
                   <input

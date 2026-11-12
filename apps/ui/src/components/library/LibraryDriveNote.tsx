@@ -1,6 +1,6 @@
 "use client"
 
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { type ReactNode, useEffect, useState } from "react"
 
 import { FeaturedContribution } from "@/components/contribute/FeaturedContribution"
@@ -60,6 +60,10 @@ export function LibraryDriveNote({
   readonly fallback?: ReactNode
   readonly library: LibraryDriveRef
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const { data: session } = authClient.useSession()
   const signedIn = Boolean(session?.user)
@@ -115,7 +119,7 @@ export function LibraryDriveNote({
   const chip = focusChipOf(drive.focus)
   const verb =
     library.libraryType === "Mobile" && taskVerb(drive.focus) === "Add hours"
-      ? "Add stops and times"
+      ? tExisting("libraryPage.tasks.addStops")
       : taskVerb(drive.focus)
   const actionName = taskActionName(verb, "this library")
 
@@ -148,19 +152,25 @@ export function LibraryDriveNote({
           }
           alternatives={[
             {
-              title: "View the drive",
+              title: tStatic("library.view_the_drive"),
               href: driveHref(drive.slug),
-              description: "See the goal and accepted progress.",
+              description: tStatic(
+                "library.see_the_goal_and_accepted_progress"
+              ),
             },
             {
-              title: "Suggest a correction",
+              title: tExisting("ui.suggest_a_correction"),
               href: hubHref("correction", library),
-              description: "Send another changed detail with a source.",
+              description: tStatic(
+                "library.send_another_changed_detail_with_a_source"
+              ),
             },
             {
-              title: "Share a photo",
+              title: tExisting("libraryPage.tasks.photo"),
               href: hubHref("photo", library),
-              description: "Use your own or an openly licensed photo.",
+              description: tStatic(
+                "library.use_your_own_or_an_openly_licensed_photo"
+              ),
             },
           ]}
         />
@@ -178,7 +188,8 @@ export function LibraryDriveNote({
             >
               <DriveTitle title={drive.title} />
             </Link>{" "}
-            · {fmt(drive.done)} of {fmt(drive.total)} done
+            · {fmt(drive.done)} {tExisting("widgetPublic.of")}{" "}
+            {fmt(drive.total)} {tExisting("drivePage.done")}
           </p>
           <button
             type="button"

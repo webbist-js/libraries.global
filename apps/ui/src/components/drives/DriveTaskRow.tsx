@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -42,7 +41,9 @@ export function DriveTaskRow({
   readonly onSelect: (task: DriveTask) => void
   readonly icon?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const place =
@@ -127,7 +128,7 @@ export function DriveTaskRow({
               icon="mdi:account-clock-outline"
               width={15}
             />
-            <span id={statusId}>Someone’s on this</span>
+            <span id={statusId}>{tStatic("drive.someone_s_on_this")}</span>
           </span>
         ) : (
           <span

@@ -1,10 +1,12 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type {
   WidgetSelection,
   WidgetResolved,
   WidgetType,
 } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
@@ -45,19 +47,21 @@ function WidgetBuilderSelection({
   resolution,
   busy,
 }: BuilderProps & { readonly mobileView: string }) {
+  const tStatic = useTranslations("staticUi")
+
   const team = workspace.team
   const { draft, edit, phase, widget } = state
   const router = useRouter()
 
   return (
-    <StaffPanel title="Library selection" compact>
+    <StaffPanel title={tStatic("common.librarySelection")} compact>
       <p className="mt-2 text-sm text-(--t-ink-dim)">
         {selectionSummary(resolution.data, draft.type)}
       </p>
       <fieldset disabled={!team.active || busy} className="mt-4">
-        <WidgetField label="Use a selection">
+        <WidgetField label={tStatic("widget.use_a_selection")}>
           <SelectField
-            label="Use a selection"
+            label={tStatic("widget.use_a_selection")}
             value={draft.selectionId}
             onValueChange={(selectionId) => edit({ selectionId })}
             disabled={!team.active || busy}
@@ -107,7 +111,9 @@ function WidgetBuilderSelection({
         </div>
       ) : (
         <p className="text-xs text-(--t-ink-dim)">
-          This shared selection can also power your other widgets.
+          {tStatic(
+            "widget.this_shared_selection_can_also_power_your_other_widgets"
+          )}
         </p>
       )}
     </StaffPanel>
@@ -122,6 +128,10 @@ function WidgetBuilderPreview({
   siteUrl,
   mobileView,
 }: BuilderProps & { readonly mobileView: string }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const team = workspace.team
   const { draft } = state
   const [device, setDevice] = useState("desktop")
@@ -134,18 +144,18 @@ function WidgetBuilderPreview({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="hidden sm:block">
           <SegmentedControl
-            label="Preview width"
+            label={tStatic("widget.preview_width")}
             value={device}
             onChange={setDevice}
             options={[
               { value: "desktop", label: "Desktop" },
               { value: "tablet", label: "Tablet" },
-              { value: "phone", label: "Phone" },
+              { value: "phone", label: tExisting("ui.phone") },
             ]}
           />
         </div>
         <span className="text-sm font-semibold text-(--t-ink-dim) sm:hidden">
-          Preview
+          {tExisting("ui.preview")}
         </span>
         <Button variant="surface" size="pill" onClick={() => setRows(!rows)}>
           <Icon aria-hidden icon="mdi:table" width={17} />
@@ -154,7 +164,10 @@ function WidgetBuilderPreview({
       </div>
       <div className="flex items-center justify-between gap-3 px-1 text-xs text-(--t-ink-dim)">
         <span className="font-semibold tracking-wide uppercase">
-          <span className="hidden sm:inline">Interactive </span>draft preview
+          <span className="hidden sm:inline">
+            {tStatic("widget.interactive")}{" "}
+          </span>
+          {tStatic("widget.draft_preview")}
         </span>
         <span role="status" className="hidden sm:inline">
           {resolution.busy
@@ -178,7 +191,7 @@ function WidgetBuilderPreview({
           size="pill"
           onClick={() => resolution.retry()}
         >
-          Retry data
+          {tStatic("widget.retry_data")}
         </Button>
       ) : null}
       <div
@@ -225,6 +238,10 @@ function WidgetBuilderPreview({
 }
 
 export function WidgetBuilder(props: BuilderProps) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const { workspace, state, busy } = props
   const team = workspace.team
   const { draft, edit } = state
@@ -234,13 +251,13 @@ export function WidgetBuilder(props: BuilderProps) {
     <>
       <div className="sticky top-(--sticky-content-top) z-20 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-2 lg:hidden">
         <SegmentedControl
-          label="Builder view"
+          label={tStatic("widget.builder_view")}
           value={mobileView}
           onChange={setMobileView}
           layout="equal"
           options={[
             { value: "configure", label: "Configure" },
-            { value: "preview", label: "Preview" },
+            { value: "preview", label: tExisting("ui.preview") },
           ]}
         />
       </div>

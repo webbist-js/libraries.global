@@ -1,0 +1,240 @@
+{
+  "contactModal": {
+    "close": "Zavřít",
+    "choose": "Vyberte možnost",
+    "optional": "(nepovinné)",
+    "continue": "Pokračovat",
+    "back": "Zpět",
+    "done": "Hotovo",
+    "sending": "Odesílání…",
+    "invalid": "Zkontrolujte povinná pole. Zpráva musí mít alespoň 10 znaků.",
+    "error": "Zprávu se nepodařilo odeslat. Vaše odpovědi zůstaly zachované — zkuste to znovu.",
+    "rateLimited": "V poslední době jste odeslali několik zpráv. Zkuste to znovu za hodinu.",
+    "successTitle": "Děkujeme za zprávu.",
+    "received": "Vaše zpráva byla odeslána našemu týmu.",
+    "reference": "Číslo zprávy: {reference}",
+    "step": "Krok {current} ze 2",
+    "name": "Vaše jméno",
+    "email": "E-mailová adresa",
+    "steps": "Jak můžeme problém zopakovat?",
+    "stepsPlaceholder": "1. Otevřel(a) jsem…\n2. Vybral(a) jsem…\n3. Potom…",
+    "private": "Pouze pro náš tým",
+    "contextNote": "Ke zprávě připojíme údaje o stránce a zařízení, abychom lépe porozuměli vaší zkušenosti.",
+    "privacy": "Ochrana soukromí",
+    "feedback": {
+      "eyebrow": "Pomozte vylepšit betu",
+      "title": "Jak se vám dařilo?",
+      "description": "Pár krátkých otázek nám pomůže zjistit, co je užitečné a co můžeme zlepšit.",
+      "stepOne": "Vaše zkušenost",
+      "stepTwo": "Trochu podrobností",
+      "short": "Přibližně minuta",
+      "send": "Odeslat zpětnou vazbu",
+      "success": "Vaše zpětná vazba nám pomůže rozhodnout, co zlepšit jako další.",
+      "emailHint": "Pokud chcete odpověď, zanechte e-mail. Zpětnou vazbu můžete poslat i anonymně.",
+      "topic": "Co nám chcete sdělit?",
+      "topics": {
+        "problem": "Něco se nepovedlo",
+        "idea": "Mám nápad",
+        "experience": "Moje zkušenost",
+        "praise": "Něco se mi líbilo"
+      },
+      "task": "Co jste zde chtěli udělat?",
+      "tasks": {
+        "find_library": "Najít knihovnu",
+        "plan_visit": "Naplánovat návštěvu",
+        "contribute": "Přidat nebo opravit informace",
+        "manage_library": "Spravovat svou knihovnu",
+        "explore": "Prozkoumat web a dozvědět se více",
+        "other": "Něco jiného"
+      },
+      "outcome": "Podařilo se vám to?",
+      "outcomes": {
+        "yes": "Ano",
+        "partly": "Částečně",
+        "no": "Ne, narazil(a) jsem na problém",
+        "browsing": "Jen jsem procházel(a) web"
+      },
+      "ease": "Jak snadné to bylo?",
+      "easeScore": "{value} z 5",
+      "difficult": "Obtížné",
+      "easy": "Snadné",
+      "prompts": {
+        "problem": {
+          "label": "Co se stalo a co jste očekávali?",
+          "hint": "Napište, kde jste narazili na problém. Neuvádějte hesla ani soukromé údaje.",
+          "placeholder": "Chtěl(a) jsem… Očekával(a) jsem… Místo toho…"
+        },
+        "idea": {
+          "label": "Co by pro vás bylo užitečnější?",
+          "hint": "Co byste změnili nebo přidali a s čím by vám to pomohlo?",
+          "placeholder": "Pomohlo by mi, kdyby… protože…"
+        },
+        "experience": {
+          "label": "Co bylo snadné, matoucí nebo chybělo?",
+          "hint": "Zamyslete se nad hledáním informací, navigací nebo přispíváním. Konkrétní příklad pomůže.",
+          "placeholder": "Zaujalo mě hlavně…"
+        },
+        "praise": {
+          "label": "Co vám dobře fungovalo?",
+          "hint": "Co vám pomohlo a proč? Dobré věci chceme zachovat.",
+          "placeholder": "Užitečné pro mě bylo… protože…"
+        }
+      }
+    },
+    "atlas": {
+      "eyebrow": "Pomozte utvářet Atlas",
+      "title": "Jak se vám používal Atlas?",
+      "description": "Napište nám, které části jste použili, jak fungovaly a co byste chtěli vidět příště.",
+      "stepOne": "Používání Atlasu",
+      "stepTwo": "Vaše zkušenosti a nápady",
+      "short": "Přibližně dvě minuty",
+      "success": "Vaše zpětná vazba nám pomáhá vylepšovat Atlas a rozhodovat, co přidat jako další.",
+      "task": "Co jste chtěli v Atlasu udělat?",
+      "tasks": {
+        "find_library": "Najít knihovnu",
+        "plan_visit": "Naplánovat návštěvu",
+        "compare_areas": "Porovnat oblasti nebo pokrytí knihovnami",
+        "check_accessibility": "Zjistit bezbariérovou přístupnost",
+        "export_data": "Exportovat údaje o knihovnách",
+        "explore": "Prozkoumat mapu",
+        "other": "Něco jiného"
+      },
+      "features": {
+        "label": "Které části Atlasu jste použili?",
+        "hint": "Vyberte všechny odpovídající možnosti. Pokud žádná neodpovídá, vyberte Jiné.",
+        "required": "Vyberte alespoň jednu část Atlasu nebo možnost Jiné.",
+        "options": {
+          "search": "Vyhledávání",
+          "filters": "Filtry",
+          "map_layers": "Mapové vrstvy a legendy",
+          "library_details": "Podrobnosti o knihovně",
+          "list_view": "Zobrazení seznamu",
+          "area_comparison": "Porovnání oblastí",
+          "accessibility": "Informace o bezbariérovosti",
+          "exports": "Export dat",
+          "other": "Jiné"
+        }
+      },
+      "clarity": "Jak srozumitelné byly legendy mapy a výsledky?",
+      "clarityScore": "Srozumitelnost: {value} z 5",
+      "unclear": "Nesrozumitelné",
+      "clear": "Srozumitelné",
+      "wishlist": {
+        "label": "Co bych chtěl(a) vidět",
+        "hint": "Funkce, mapová vrstva nebo informace, která by vám pomohla. K čemu byste ji použili?",
+        "placeholder": "Chtěl(a) bych mít možnost… protože…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "Co se v Atlasu stalo a co jste očekávali?",
+          "hint": "Uveďte funkci nebo mapovou vrstvu a kde jste narazili na problém. Neuvádějte hesla ani soukromé údaje.",
+          "placeholder": "V Atlasu jsem chtěl(a)… Očekával(a) jsem… Místo toho…"
+        },
+        "idea": {
+          "label": "Co bych chtěl(a) vidět v Atlasu",
+          "hint": "Jakou funkci, mapovou vrstvu nebo informaci byste přidali či změnili a s čím by vám to pomohlo?",
+          "placeholder": "Chtěl(a) bych mít možnost… protože…"
+        },
+        "experience": {
+          "label": "Co bylo v Atlasu snadné, matoucí nebo chybělo?",
+          "hint": "Zamyslete se nad vyhledáváním, filtry, legendami mapy nebo podrobnostmi o knihovnách. Konkrétní příklad pomůže.",
+          "placeholder": "Při použití… jsem zjistil(a)…"
+        },
+        "praise": {
+          "label": "Co vám v Atlasu dobře fungovalo?",
+          "hint": "Která funkce vám pomohla a proč? Dobré věci chceme zachovat.",
+          "placeholder": "Užitečné pro mě bylo… protože…"
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Napište našemu týmu",
+      "title": "Jak vám můžeme pomoci?",
+      "description": "Vyberte, o čem nám chcete napsat, aby se zpráva dostala ke správnému člověku.",
+      "reason": "Čeho se zpráva týká?",
+      "send": "Odeslat zprávu",
+      "success": "Pokud bude potřeba odpověď, ozveme se na e-mailovou adresu, kterou jste uvedli.",
+      "emailHint": "Adresu použijeme pro odpověď na vaši zprávu. Nepřihlásíme vás k odběru e-mailů.",
+      "inlineDescription": "Nahlaste problém, položte otázku nebo navrhněte spolupráci. Několik podrobností nám pomůže nasměrovat vaši zprávu.",
+      "open": "Kontaktovat tým",
+      "types": {
+        "report_issue": "Nahlásit problém",
+        "general_inquiry": "Obecný dotaz",
+        "account_support": "Pomoc s účtem",
+        "membership_support": "Přístup k API a platby",
+        "library_correction": "Opravit údaje o knihovně",
+        "plans": "Tarify a přístup k API",
+        "partnership": "Partnerství nebo spolupráce",
+        "privacy": "Soukromí nebo žádost o údaje",
+        "sponsorship": "Sponzorství"
+      },
+      "prompts": {
+        "report_issue": {
+          "label": "Co se nepovedlo a co se mělo stát?",
+          "hint": "Popište problém a případnou chybovou zprávu. Neuvádějte hesla ani bezpečnostní kódy.",
+          "placeholder": "Chtěl(a) jsem… ale…"
+        },
+        "general_inquiry": {
+          "label": "Co byste chtěli vědět?",
+          "hint": "Trocha souvislostí nám pomůže dát vám užitečnou odpověď.",
+          "placeholder": "Píšu vám ohledně…"
+        },
+        "account_support": {
+          "label": "S čím potřebujete pomoci?",
+          "hint": "Popište problém s účtem. Nikdy nebudeme chtít vaše heslo ani přihlašovací kód.",
+          "placeholder": "Mám potíže s…"
+        },
+        "membership_support": {
+          "label": "S čím potřebujete pomoci?",
+          "hint": "Napište nám o svém předplatném přístupu k API, starším členství nebo potížích s platbami, přístupem či funkcemi. Neuvádějte údaje o kartě, hesla ani bezpečnostní kódy.",
+          "placeholder": "Potřebuji pomoci s…"
+        },
+        "library_correction": {
+          "label": "O kterou knihovnu jde a co je potřeba opravit?",
+          "hint": "Uveďte název knihovny nebo odkaz na stránku, správné informace a případně zdroj.",
+          "placeholder": "Informace o… by měly uvádět…"
+        },
+        "plans": {
+          "label": "Co byste chtěli probrat?",
+          "hint": "Napište o své knihovně či službě, co byste chtěli používat, nebo o dotazu na ověření.",
+          "placeholder": "Máme zájem o… pro…"
+        },
+        "partnership": {
+          "label": "Co máte na mysli?",
+          "hint": "Představte svou organizaci, nápad a způsob, jak bychom mohli spolupracovat.",
+          "placeholder": "Jsme… a rádi bychom…"
+        },
+        "privacy": {
+          "label": "Jaký je váš dotaz nebo žádost?",
+          "hint": "Popište žádost. Neposílejte zde doklady totožnosti ani citlivé osobní údaje.",
+          "placeholder": "Chtěl(a) bych se zeptat na…"
+        },
+        "sponsorship": {
+          "label": "Co byste chtěli sponzorovat?",
+          "hint": "Představte svou organizaci, program, který vás zajímá, a pokud je znáte, i rozpočet a časový rámec. Neuvádějte platební údaje.",
+          "placeholder": "Jsme… a rádi bychom podpořili…"
+        }
+      }
+    }
+  },
+  "contactForm": {
+    "name": "Jméno a Přijmení",
+    "namePlaceholder": "Jan Novák",
+    "email": "Email",
+    "emailPlaceholder": "jan.novak@gmail.com",
+    "message": "Zpráva",
+    "gdpr": "Odesláním souhlasíte se ",
+    "submit": "Odeslat",
+    "success": "Formulář byl úspěšně odeslán",
+    "error": "Při odesílání formuláře došlo k chybě, zkuste to prosím znovu",
+    "gdprLink": "Informace o zpracování osobních údajů"
+  },
+  "newsletterForm": {
+    "rateLimited": "Příliš mnoho přihlášení z tohoto místa. Zkuste to prosím později.",
+    "failed": "Přihlášení k odběru se nezdařilo. Zkuste to prosím znovu.",
+    "sent": "Děkujeme. Pokud je vyžadováno potvrzení, dokončete přihlášení k odběru podle e-mailu ve své schránce.",
+    "website": "Webové stránky",
+    "invalidEmail": "Zadejte platnou e-mailovou adresu.",
+    "accountEmail": "Pro odběr zpravodaje použijte e-mail svého účtu."
+  }
+}

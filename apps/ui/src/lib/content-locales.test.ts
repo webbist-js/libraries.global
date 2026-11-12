@@ -40,7 +40,7 @@ describe("fully supported content languages", () => {
       expect(
         JSON.parse(
           readFileSync(
-            new URL(`../../locales/${locale}.json`, import.meta.url),
+            new URL(`../../locales/${locale}/articles.json`, import.meta.url),
             "utf8"
           )
         )

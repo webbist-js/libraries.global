@@ -9,7 +9,7 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
@@ -52,7 +52,11 @@ export function ConnectFeedForm({
   readonly initialLibrary?: string
   readonly oauth: { eventbrite: boolean }
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const initialLibraryIsClaimed =
@@ -187,7 +191,7 @@ export function ConnectFeedForm({
         ) : (
           <div className="flex flex-col gap-1.5">
             <label htmlFor="connect-feed-library" style={fieldLabelStyle}>
-              Choose a library
+              {tExisting("atlasDrawers.chooseLibrary")}
             </label>
             <SelectField
               id="connect-feed-library"
@@ -215,10 +219,10 @@ export function ConnectFeedForm({
             color: T.ink.base,
           }}
         >
-          Platform
+          {tStatic("common.platform")}
         </h2>
         <fieldset className="m-0 border-0 p-0">
-          <legend className="sr-only">Platform</legend>
+          <legend className="sr-only">{tStatic("common.platform")}</legend>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {EVENT_PROVIDER_KEYS.map((key) => {
               const def = EVENT_PROVIDERS[key]
@@ -246,7 +250,7 @@ export function ConnectFeedForm({
               href={`/api/contribute/event-feeds/eventbrite/start?library=${encodeURIComponent(libraryDocumentId)}`}
               className={PRIMARY_PILL}
             >
-              Connect with Eventbrite
+              {tStatic("frontendExtra.connect_with_eventbrite")}
             </a>
             <button
               type="button"
@@ -254,7 +258,7 @@ export function ConnectFeedForm({
               style={{ color: T.accent.primary }}
               onClick={() => setManualToken(true)}
             >
-              Or paste a private token
+              {tStatic("frontendExtra.or_paste_a_private_token")}
             </button>
           </div>
         ) : null}
@@ -274,7 +278,7 @@ export function ConnectFeedForm({
               color: T.ink.base,
             }}
           >
-            Details
+            {tExisting("publishing.details")}
           </h2>
           <div ref={fieldsRef}>
             <FeedValuesFields
@@ -324,7 +328,7 @@ export function ConnectFeedForm({
                 className="text-sm"
                 style={{ color: T.ink.dim }}
               >
-                Test the connection first.
+                {tStatic("common.testConnectionFirst")}
               </span>
             ) : null}
           </div>
@@ -336,8 +340,9 @@ export function ConnectFeedForm({
               color: T.ink.dim,
             }}
           >
-            A moderator checks the connection before it syncs. They see whether
-            the test passed, never the details themselves.
+            {tStatic(
+              "frontendExtra.a_moderator_checks_the_connection_before_it_syncs_they_see_whether_the_test_passed_never_the_details"
+            )}
           </p>
         </section>
       ) : null}

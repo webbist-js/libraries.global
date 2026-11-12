@@ -1,5 +1,5 @@
 "use client"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import type { MobileStopHit, MobileVisitFilter } from "@/lib/mobile-stop-search"
@@ -22,7 +22,11 @@ export function AtlasMobileFilters({
   readonly onChange: (value: MobileVisitFilter) => void
   readonly total?: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -54,8 +58,8 @@ export function AtlasMobileFilters({
         value={value}
         onChange={onChange}
         options={[
-          { value: "any", label: "All" },
-          { value: "today", label: "Today" },
+          { value: "any", label: tStatic("common.all") },
+          { value: "today", label: tExisting("discussions.today") },
           { value: "week", label: tUi("this_week") },
           {
             value: "live",
@@ -66,7 +70,7 @@ export function AtlasMobileFilters({
                   className="size-2 shrink-0 rounded-full"
                   style={{ background: T.map.stopRing }}
                 />
-                Live
+                {tStatic("atlas.live")}
               </>
             ),
           },
@@ -92,7 +96,11 @@ export function AtlasMobileStops({
   readonly zoomIn: boolean
   readonly onPick: (stop: MobileStopHit) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -100,14 +108,14 @@ export function AtlasMobileStops({
       style={{ borderColor: T.border.line }}
       aria-label={tUi("mobile_stops_in_view")}
     >
-      <h3 className="type-h3">Stops in view · {total.toLocaleString()}</h3>
+      <h3 className="type-h3">{tCopy("stopsInView", { count: total })}</h3>
       {zoomIn || total > 200 ? (
         <p className="text-sm" style={{ color: T.ink.dim }}>
-          Zoom in to see the rest.
+          {tStatic("atlas.zoom_in_to_see_the_rest")}
         </p>
       ) : null}
       {!stops.length && !zoomIn ? (
-        <p>No mobile stops match this view.</p>
+        <p>{tStatic("atlas.no_mobile_stops_match_this_view")}</p>
       ) : (
         <ul className="m-0 list-none space-y-1 p-0">
           {stops.slice(0, 200).map((stop) => (

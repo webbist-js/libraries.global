@@ -1,9 +1,10 @@
 import { networkHref } from "@repo/shared-data"
 import { notFound, permanentRedirect } from "next/navigation"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { publicNetworkDetail } from "@/lib/networks/server"
 
-export default async function NetworkCountryAlias({
+async function NetworkCountryAlias({
   params,
 }: {
   readonly params: Promise<{
@@ -26,3 +27,8 @@ export default async function NetworkCountryAlias({
     `${locale === "en" ? "" : `/${locale}`}${networkHref(data.network.slug)}`
   )
 }
+
+export default withMessages(
+  NetworkCountryAlias,
+  "[locale]/(dashboard)/[continent]/[country]/library-services/[slug]/page"
+)

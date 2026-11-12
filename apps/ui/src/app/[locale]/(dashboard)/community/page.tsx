@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { TopThisMonthCard } from "@/components/community/TopThisMonthCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
 import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
 import { isFocusFilterKey } from "@/components/drives/focus-meta"
+import { withMessages } from "@/i18n/scoped-messages"
 import { hasCapability } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchDriveGaps } from "@/lib/community/drive-gaps-server"
@@ -50,14 +51,16 @@ export async function generateMetadata({
   })
 }
 
-export default async function CommunityPage({
+async function CommunityPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
   searchParams: Promise<{ focus?: string | string[] }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const [{ locale }, { focus: focusParam }] = await Promise.all([
     params,
@@ -101,8 +104,10 @@ export default async function CommunityPage({
       style={{ background: T.bg.void, color: T.ink.base }}
     >
       <CommunitySectionHeader
-        title="Our *community.*"
-        lead="Community drives to fill gaps in the index. Pick one, work through small tasks, and see the whole effort move forward."
+        title={tStatic("communityRoute.our_community")}
+        lead={tStatic(
+          "communityRoute.community_drives_to_fill_gaps_in_the_index_pick_one_work_through_small_tasks_and_see_the_whole_effor"
+        )}
         counts={{ noticeboard: open.length, suggestions: votableCount }}
       >
         <NoticeboardHeroActions
@@ -159,3 +164,8 @@ export default async function CommunityPage({
     </div>
   )
 }
+
+export default withMessages(
+  CommunityPage,
+  "[locale]/(dashboard)/community/page"
+)

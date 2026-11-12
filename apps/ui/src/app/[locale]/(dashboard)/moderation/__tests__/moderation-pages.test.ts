@@ -7,8 +7,7 @@ import { cleanup, render, screen } from "@/test/render"
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl")
-  const { default: messages } =
-    await import("../../../../../../locales/en.json")
+  const { default: messages } = await import("../../../../../../locales/en")
 
   return {
     getTranslations: async (namespace: "ui") =>

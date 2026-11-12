@@ -1,0 +1,489 @@
+{
+  "membershipContent": {
+    "standing": {
+      "public": "Nepřihlášen",
+      "explorer": "Průzkumník",
+      "contributor": "Přispěvatel",
+      "supporter": "Podporovatel"
+    },
+    "offers": {
+      "explorer": {
+        "name": "Průzkumník",
+        "who": "Kdokoli s bezplatným účtem.",
+        "price": "Zdarma",
+        "priceNote": "Registrace e-mailovou adresou. Bez platební karty a bez zkušební doby.",
+        "cta": {
+          "signUp": "Vytvořit bezplatný účet"
+        },
+        "items": {
+          "records": "Všechny záznamy knihoven, mapa a seznamy, s účtem i bez něj",
+          "contribute": "Navrhování oprav, fotografií a nových knihoven",
+          "follow": "Sledování knihoven, ukládání akcí a zapojení do diskusí",
+          "contextLayers": "Kontextové vrstvy Atlasu: deprivace a domácnosti bez auta v podporovaných oblastech Spojeného království",
+          "libraryAccess": "Dostupnost knihoven: srovnání na obyvatele pro státy a podporované místní oblasti",
+          "history": "Každá změna knihovny, pole po poli",
+          "savedViews": "Až {savedViews} uložených pohledů a {savedViews} uložených hledání",
+          "export": "Exporty z Atlasu až {exportRows} řádků, {exportsPerDay} denně",
+          "alerts": "Upozornění na uložená hledání",
+          "notes": "Soukromé poznámky ke kterékoli knihovně"
+        }
+      },
+      "contributor": {
+        "name": "Přispěvatel",
+        "who": "Kdokoli, komu byl přijat alespoň jeden příspěvek.",
+        "price": "Zdarma",
+        "priceNote": "Získáte jej prvním přijatým příspěvkem.",
+        "cta": {
+          "contribute": "Začít přispívat"
+        },
+        "items": {
+          "everythingExplorer": "Vše, co nabízí Průzkumník",
+          "reach": "{reachPerWeek} nové výpočty dosahu jedné knihovny každých 7 dní; otevření výsledku, který už máte, je zdarma",
+          "credit": "Uznání za každou přijatou změnu a historie vašich příspěvků",
+          "supporter": "Ocenění Podporovatel při {supporterAt} přijatých příspěvcích",
+          "noAuthority": "Ocenění nikdy nedává oprávnění k úpravám ani ověření zaměstnance. Body a odznaky se počítají zvlášť."
+        }
+      },
+      "staff": {
+        "name": "Ověřený personál",
+        "who": "Lidé, kteří pracují v knihovně nebo knihovní službě.",
+        "price": "Zdarma",
+        "priceNote": "Jakmile vaši roli ověříme u knihovny.",
+        "cta": {
+          "claim": "Převzít správu knihovny"
+        },
+        "items": {
+          "workspace": "Správa knihovny pro každou knihovnu, pro kterou jste ověřeni",
+          "editing": "Úprava záznamu knihovny, zveřejňování oznámení a odpovědi na návrhy změn",
+          "organisation": "Bezplatná organizace pro pozvání kolegů a uspořádání knihoven",
+          "widgets": "Vyhledávače knihoven, adresáře, grafy a statistiky k vložení na web",
+          "traffic": "Přehledy návštěvnosti stránek vaší knihovny",
+          "scope": "Oprávnění se vztahuje jen na knihovny, pro které jste ověřeni. Samotné členství v organizaci úpravy nikdy neumožňuje."
+        }
+      },
+      "api": {
+        "name": "Přístup k API",
+        "who": "Vývojáři, výzkumníci a organizace, které připojují vlastní nástroje.",
+        "price": "{apiPrice} měsíčně",
+        "priceNote": "Včetně daně. Stripe vám před platbou ukáže konečnou částku.",
+        "cta": {
+          "developers": "Přejít pro vývojáře"
+        },
+        "items": {
+          "allowance": "{apiRequests} požadavků, {apiMib} MiB dat v odpovědích a {apiCredits} analytických kreditů za každé zúčtovací období",
+          "keys": "Neomezený počet klíčů, přehled využití, referenční popis požadavků a testovací prostředí",
+          "overage": "Volitelné překročení s měsíčním limitem podle vaší volby ({capMin} až {capMax}). Je vypnuté, dokud jej nezapnete.",
+          "reach": "Organizátoři mají v Atlasu více výpočtů dosahu: {apiReachPerHour} nových výpočtů za hodinu a dosah služby až pro {apiReachLibraries} knihoven",
+          "noOrganisation": "Kupte pro sebe nebo pro organizaci.",
+          "noAuthority": "Klíč API identifikuje vaši aplikaci. Nikdy nedává oprávnění upravovat knihovny, ověření ani lepší pozici ve vyhledávání."
+        }
+      },
+      "sponsor": {
+        "name": "Sponzor",
+        "who": "Organizace, které chtějí financovat veřejnou službu.",
+        "price": "Po dohodě",
+        "priceNote": "Domluvíme s vámi, jakou práci financuje, na jak dlouho a jak vás budeme informovat.",
+        "cta": {
+          "contact": "Pojďme mluvit o sponzorství",
+          "sponsor": "O sponzorství"
+        },
+        "items": {
+          "programmes": "Financujte veřejný přístup, kvalitu dat, překlady, geografické pokrytí nebo otevřené nástroje",
+          "reporting": "Čtvrtletní přehledy činnosti a výroční zpráva o dopadu",
+          "acknowledgement": "Volitelné uvedení jména a loga na naší stránce sponzorů",
+          "independence": "Sponzoři nemají žádný vliv na záznamy, pořadí, ověřování ani redakční kontrolu. Sponzorství není charitativní dar."
+        }
+      }
+    },
+    "columns": {
+      "public": {
+        "name": "Bez účtu",
+        "price": "Zdarma"
+      },
+      "explorer": {
+        "name": "Průzkumník",
+        "price": "Zdarma"
+      },
+      "contributor": {
+        "name": "Přispěvatel",
+        "price": "Zdarma, získaný"
+      },
+      "staff": {
+        "name": "Ověřený personál",
+        "price": "Zdarma"
+      },
+      "api": {
+        "name": "Přístup k API",
+        "price": "{apiPrice}/měsíc"
+      }
+    },
+    "groups": {
+      "facts": "Údaje o knihovnách",
+      "account": "Zapojení",
+      "atlas": "Analýzy v Atlasu",
+      "watching": "Sledování a srovnávání knihoven",
+      "staff": "Pro zaměstnance knihoven",
+      "api": "Pro vývojáře"
+    },
+    "rows": {
+      "records": "Všechny záznamy knihoven s otevírací dobou a službami",
+      "map": "Vyhledávání, mapa a seznamy",
+      "reading": "Magazín, Znalosti, akce, nástěnka a veřejné diskuse",
+      "downloads": "Stažení záznamů knihoven",
+      "apiReference": "Dokumentace API a referenční popis požadavků",
+      "contribute": "Navrhování oprav, fotografií a nových knihoven",
+      "follow": "Sledování knihoven a ukládání akcí",
+      "discussions": "Zakládání diskusí, odpovědi a reakce",
+      "drives": "Zapojení do komunitních kampaní",
+      "savedViews": "Uložené pohledy a uložená hledání",
+      "atlas_contextLayers": "Kontextové vrstvy: deprivace a domácnosti bez auta (podporované oblasti Spojeného království)",
+      "atlas_analysis": "Dostupnost knihoven: srovnání na obyvatele",
+      "atlas_compare": "Srovnání dostupnosti knihoven mezi dvěma oblastmi",
+      "atlas_export": "Export výsledků Atlasu do CSV nebo GeoJSON",
+      "atlas_reach": "Dosah jedné knihovny podle doby cesty",
+      "atlas_serviceReach": "Dosah služby pro více knihoven",
+      "library_history": "Každá změna knihovny, pole po poli",
+      "library_watch": "Sledování změn a uzavření knihovny",
+      "index_alerts": "Upozornění na uložená hledání",
+      "index_compare": "Srovnání až šesti knihoven vedle sebe",
+      "library_notes": "Soukromé poznámky ke kterékoli knihovně",
+      "events_personalFeed": "Osobní kalendářový kanál",
+      "index_export": "Export výsledků hledání s uvedením zdrojů",
+      "data_benchmark": "Srovnání služby s podobnými službami",
+      "data_explorerExport": "Export odvozených ukazatelů",
+      "staffWorkspace": "Správa ověřených knihoven",
+      "staffEditing": "Úprava záznamů, oznámení a odpovědi na návrhy",
+      "staffOrganisation": "Bezplatná organizace s pozvánkami",
+      "staffWidgets": "Widgety k vložení na váš web",
+      "staffTraffic": "Přehledy návštěvnosti",
+      "api_key": "Klíče API a přehled využití",
+      "apiAllowance": "Zahrnutý limit API za zúčtovací období",
+      "apiOverage": "Volitelné překročení s nastaveným limitem",
+      "apiPlayground": "Požadavky v testovacím prostředí s vlastním klíčem"
+    },
+    "cells": {
+      "savedViews": "{savedViews}",
+      "exportRows": "{exportRows} řádků",
+      "reachWeek": "{reachPerWeek} týdně",
+      "reachHour": "{apiReachPerHour} za hodinu",
+      "serviceLibraries": "Až {apiReachLibraries}",
+      "apiAllowance": "{apiRequests} požadavků"
+    },
+    "copy": {
+      "lead": "Údaje o knihovnách jsou zdarma, stejně jako nástroje k jejich prozkoumání a vylepšování. Provoz služby financuje přístup k API a sponzorství.",
+      "metaDescription": "Průzkumník, Přispěvatel a Ověřený personál jsou zdarma. Přístup k API stojí {apiPrice} měsíčně. Organizace mohou veřejnou službu sponzorovat. Za peníze si důvěru nekoupíte.",
+      "promiseAds": "Nikdy žádné reklamy",
+      "promiseTrust": "Za peníze si důvěru nekoupíte",
+      "promiseData": "Otevřená data zůstanou otevřená",
+      "offersTitle": "Jak se zapojit",
+      "offersLead": "Většina Libraries Global je zdarma. Placené možnosti financují provoz; žádná z nich nemění, jak se záznamy kontrolují nebo řadí.",
+      "independence": "Placení za přístup k API ani sponzorství nikdy nemění vaši roli v komunitě, kontrolu vašich úprav ani pozici knihovny.",
+      "compare": "Porovnat vše vedle sebe",
+      "current": "Máte",
+      "includes": "Co je zahrnuto",
+      "signedIn": "Jste přihlášeni",
+      "openStaff": "Otevřít správu knihovny",
+      "manageApi": "Spravovat přístup k API",
+      "soon": "Již brzy",
+      "soonShort": "Brzy",
+      "included": "Zahrnuto",
+      "notIncluded": "Nezahrnuto",
+      "feature": "Funkce",
+      "compareTwo": "Porovnat dvě možnosti",
+      "comparisonCaption": "{group}: {first} a {second}",
+      "availableCount": "{count, number} dostupných nyní",
+      "roadmapCount": "{count, number} v plánu vývoje",
+      "questions": "Otázky",
+      "contactLead": "Něco jiného? Správci odpovídají do 5 pracovních dnů.",
+      "ask": "Položit otázku",
+      "supporterEyebrow": "Získané, nikdy koupené",
+      "supporterTitle": "Podporovatel: {supporterAt} přijatých příspěvků",
+      "supporterBody": "Podporovatel je ocenění pro ty, kterým bylo přijato {supporterAt} příspěvků. Přidává značku na profil a volitelné uvedení na stránce podporovatelů. Nepřidává žádné nástroje, limity ani oprávnění a nelze je koupit.",
+      "meetSupporters": "Poznejte podporovatele",
+      "freeGroupTitle": "Zdarma pro všechny",
+      "freeGroupLead": "Bez karty a bez zkušební doby. Nástroje přibývají s tím, jak se zapojujete.",
+      "paidGroupTitle": "Pro organizace",
+      "paidGroupLead": "Dva způsoby, jak službu financovat.",
+      "moreInComparison": "{count, plural, one {Další #} few {Další #} other {Dalších #}} ve srovnání"
+    },
+    "policies": {
+      "heading": "Podmínky a vrácení peněz",
+      "lead": "Přečtěte si je před nákupem přístupu k API. Každou stránku si můžete vytisknout nebo uložit.",
+      "languageNote": "Tyto podmínky jsou zatím k dispozici v angličtině.",
+      "terms": "Podmínky členství a API",
+      "termsBody": "Měsíční poplatek, zahrnuté limity, volitelné překročení, zúčtovací období a váš účet.",
+      "refunds": "Zrušení a vrácení peněz",
+      "refundsBody": "Zastavení obnovy, žádosti o vrácení peněz a vaše zákonná práva na odstoupení."
+    },
+    "faq": {
+      "0": {
+        "q": "Co je zdarma?",
+        "a": "Vše kromě přístupu k API. Bez účtu si můžete přečíst každý záznam knihovny a používat mapu. Bezplatný účet (Průzkumník) přidává kontextové vrstvy, srovnání, historii změn, uložené pohledy a exporty až {exportRows} řádků. Prvním přijatým příspěvkem se stanete Přispěvatelem s {reachPerWeek} výpočty dosahu týdně."
+      },
+      "1": {
+        "q": "Jak funguje Podporovatel?",
+        "a": "Každý přijatý podstatný příspěvek se počítá jednou: nové knihovny, opravy, fotografie, překlady, články a podobně. Denní série, bonusy a administrativní úpravy se nepočítají. Na profilu uvidíte svůj počet a postup k {supporterAt}. Podporovatel nepřidává nástroje ani oprávnění."
+      },
+      "2": {
+        "q": "Kolik stojí přístup k API?",
+        "a": "{apiPrice} měsíčně včetně daně za {apiRequests} požadavků, {apiMib} MiB dat v odpovědích a {apiCredits} analytických kreditů v každém zúčtovacím období. Překročení je vypnuté, dokud jej nezapnete; pak stojí {requestPrice} za každý další požadavek, {mibPrice} za každý další MiB a {creditPrice} za každý další analytický kredit, až do měsíčního limitu {capMin} až {capMax}."
+      },
+      "3": {
+        "q": "Potřebuji ke koupi přístupu k API organizaci?",
+        "a": "Ne. Pokud kupujete pro sebe, založíme bezplatnou organizaci, ve které jste jediným organizátorem, abyste mohli později přidat kolegy. Organizátoři spravují klíče a platby; členové vidí využití."
+      },
+      "4": {
+        "q": "Získám placením nebo sponzorstvím oprávnění k úpravám?",
+        "a": "Ne. Úprava záznamu knihovny vyžaduje ověřené oprávnění zaměstnance pro danou knihovnu, které ověřujeme přímo u ní. Přístup k API, sponzorství, ocenění ani členství v organizaci jej nikdy nedávají."
+      },
+      "5": {
+        "q": "Co sponzorství zahrnuje?",
+        "a": "Sponzorství financuje konkrétní program práce, například kvalitu dat nebo překlady, se čtvrtletními přehledy činnosti a výroční zprávou o dopadu. Částku domlouváme s každým sponzorem: napište na {contactEmail} nebo použijte kontaktní formulář. Nejde o charitativní dar a nezahrnuje přístup k API."
+      },
+      "6": {
+        "q": "Mohu přístup k API zrušit?",
+        "a": "Ano, kdykoli ve správě plateb na stránce pro vývojáře. Přístup trvá do konce zaplaceného období. Vaše zákonná práva najdete v zásadách zrušení a vrácení peněz."
+      }
+    },
+    "sheet": {
+      "title": "Údaje o knihovnách jsou zdarma.",
+      "titleEmphasis": "Vždy.",
+      "lead": "Adresy, otevírací doba, služby a všechny komunitní záznamy zůstávají otevřené všem. Přihlaste se pro nástroje Atlasu, přispějte jednou pro výpočty dosahu, nebo si kupte přístup k API pro více.",
+      "here": "Jste zde",
+      "signIn": "Přihlásit se",
+      "contribute": "Přispět",
+      "api": "O přístupu k API",
+      "reachTitle": "Přispějte jednou a odemkněte dva výpočty dosahu týdně.",
+      "reachBody": "Zákazníci API mají {apiReachPerHour} za hodinu a dosah služby.",
+      "allPlans": "Zobrazit všechny možnosti",
+      "openTitle": "Otevřený kód, otevřená data.",
+      "openBody": "Záznamy knihoven jsou otevřená data spravovaná komunitou a kód Atlasu je open source.",
+      "layers": {
+        "basics": "Vrstvy hustoty, pozdního otevření a uzavření",
+        "mobile": "Trasy a zastávky pojízdných knihoven",
+        "population": "Hustota obyvatel a podporované mřížky",
+        "access": "Vrstvy přístupnosti, akcí a úplnosti"
+      }
+    }
+  },
+  "membershipPage": {
+    "title": "Vaše postavení",
+    "hero": "Vaše *postavení*",
+    "lead": "Vaše příspěvky, přístup zaměstnance a účty API, každé zvlášť.",
+    "plansTitle": "Tarify a ceny",
+    "plansEyebrow": "Tarify a ceny",
+    "plansHero": "Zdarma pro všechny, *placený je jen přístup k API*",
+    "offersNav": "Jak se zapojit",
+    "comparePlans": "Porovnat tarify",
+    "questionsPoliciesNav": "Otázky a podmínky",
+    "membershipQuestions": "Máte otázky?",
+    "plansHelpLead": "Porovnejte, co je zahrnuto, přečtěte si odpovědi níže nebo nám napište.",
+    "askQuestion": "Položit otázku",
+    "settingsLead": "Vaše postavení, přístup zaměstnance a účty API najdete na svém profilu.",
+    "plansLink": "Tarify a ceny",
+    "yourStanding": "Vaše postavení",
+    "acceptedCount": "{count, plural, one {# přijatý příspěvek} few {# přijaté příspěvky} many {# přijatého příspěvku} other {# přijatých příspěvků}}",
+    "recentlyActive": "Nedávno aktivní",
+    "notRecentlyActive": "Bez nedávné aktivity",
+    "viewStanding": "Zobrazit postavení",
+    "standingTitle": "Vaše postavení",
+    "standingBody": {
+      "public": "Přihlaste se a uvidíte své postavení.",
+      "explorer": "Můžete používat všechny bezplatné nástroje. Prvním přijatým příspěvkem se stanete Přispěvatelem s {reachPerWeek} výpočty dosahu týdně.",
+      "contributor": "Můžete spustit {reachPerWeek} nové výpočty dosahu jedné knihovny každých 7 dní. Ocenění Podporovatel přichází při {supporterAt} přijatých příspěvcích.",
+      "supporter": "Děkujeme. Dosáhli jste {supporterAt} přijatých příspěvků. Podporovatel je pouze ocenění: vaše nástroje a limit dosahu jsou stejné jako u Přispěvatele."
+    },
+    "progressLabel": "Postup k ocenění Podporovatel",
+    "progressValue": "{count, number} z {total, number}",
+    "nextMilestone": {
+      "contributor": "{count, plural, one {Zbývá # přijatý příspěvek do Přispěvatele} few {Zbývají # přijaté příspěvky do Přispěvatele} many {Zbývá # přijatého příspěvku do Přispěvatele} other {Zbývá # přijatých příspěvků do Přispěvatele}}",
+      "supporter": "{count, plural, one {Zbývá # přijatý příspěvek do Podporovatele} few {Zbývají # přijaté příspěvky do Podporovatele} many {Zbývá # přijatého příspěvku do Podporovatele} other {Zbývá # přijatých příspěvků do Podporovatele}}"
+    },
+    "milestoneReached": "Dosáhli jste ocenění Podporovatel.",
+    "activityNote": "„Nedávno aktivní“ znamená, že vám byl v posledních {activityDays} dnech přijat příspěvek. Zobrazuje se zvlášť a vaše postavení nemění.",
+    "recognition": "Veřejné uznání",
+    "recognitionLead": "Vyberte, zda se chcete zobrazit na stránce podporovatelů a ukazovat značku Podporovatel na profilu. Každá volba se ukládá samostatně.",
+    "recognitionUnavailable": "Nastavení profilu se nepodařilo načíst. Obnovte stránku nebo otevřete nastavení účtu.",
+    "startContributing": "Začít přispívat",
+    "yourContributions": "Vaše příspěvky",
+    "standingIndependence": "Postavení se počítá z přijatých příspěvků, ne z bodů ani plateb. Nikdy nedává oprávnění k úpravám ani ověření zaměstnance.",
+    "staffTitle": "Přístup ověřeného personálu",
+    "approvedLibraries": "{count, plural, one {# knihovna} few {# knihovny} many {# knihovny} other {# knihoven}}",
+    "noStaffAccess": "Žádný",
+    "staffLead": "Tyto knihovny můžete upravovat a spravovat, protože jsme u každé z nich ověřili vaši roli.",
+    "claimExplanation": "Pokud pracujete v knihovně, převezměte její správu a aktualizujte záznam. Je to zdarma a moderátor nejprve ověří vaši roli.",
+    "staffRoles": {
+      "owner": "Vlastník",
+      "editor": "Editor"
+    },
+    "canGoLive": "Může vysílat živě",
+    "organisations": "Vaše organizace",
+    "organisationOrganiser": "Organizátor",
+    "organisationMember": "Člen",
+    "organisationNote": "Organizace jsou bezplatné pracovní prostory pro kolegy. Členství v nich nikdy neumožňuje upravovat knihovnu.",
+    "manageLibraries": "Spravovat knihovny",
+    "claimLibrary": "Převzít správu knihovny",
+    "openOrganisation": "Otevřít organizaci",
+    "apiTitle": "Účty API",
+    "organisationUnnamed": "Vaše organizace",
+    "apiLead": "Klíče, využití a platby těchto účtů spravujete na stránce pro vývojáře.",
+    "apiNone": "Nemáte účet API. Přístup k API stojí {apiPrice} měsíčně a koupíte jej na stránce pro vývojáře.",
+    "apiActive": "Aktivní",
+    "apiInactive": "Neaktivní",
+    "openDevelopers": "Přejít pro vývojáře",
+    "apiIndependence": "Přístup k API se účtuje zvlášť. Nikdy nedává oprávnění upravovat knihovny ani ověření zaměstnance.",
+    "helpAndAccess": "Nápověda a další možnosti",
+    "waysToTakePart": "Jak se zapojit",
+    "waysLead": "Průzkumník, Přispěvatel a Ověřený personál jsou zdarma. Placenými možnostmi jsou přístup k API a sponzorství.",
+    "sponsorLink": "Sponzorovat službu",
+    "termsAndHelp": "Podmínky a nápověda",
+    "terms": "Podmínky členství a API",
+    "cancellationAndRefunds": "Zrušení a vrácení peněz"
+  },
+  "membershipStaff": {
+    "eyebrow": "Pro zaměstnance knihoven",
+    "title": "Spravujte záznam své knihovny <em>zdarma.</em>",
+    "lead": "Ověření vám dává bezplatné nástroje pro vaši knihovnu. Přístup zaměstnance se nikdy neprodává a žádná platba jej nedává.",
+    "step0Title": "Přihlaste se ke své knihovně",
+    "step0Body": "Na stránce knihovny pomocí pracovního e-mailu.",
+    "step1Title": "Ověříme vaše oprávnění u knihovny",
+    "step1Body": "Obvykle do 5 pracovních dnů.",
+    "step2Title": "Zpřístupníme nástroje zaměstnanců",
+    "step2Body": "V pracovní sekci pouze pro danou knihovnu.",
+    "benefit0": "Přímo upravovat záznam knihovny",
+    "benefit1": "Zveřejňovat oznámení a uzavření",
+    "benefit2": "Prohlížet a vyřizovat navržené změny",
+    "benefit3": "Spravovat jízdní řád a sdílet živou polohu",
+    "benefit4": "Bezplatná organizace pro kolegy a widgety k vložení na web",
+    "openStaff": "Otevřít pracovní sekci",
+    "claim": "Přihlásit se ke knihovně",
+    "team": "Spravujete celou službu? Založte bezplatnou organizaci",
+    "eachLibrary": "Pro každou knihovnu, ke které máte schválený přístup.",
+    "endorsement": "Ověřený záznam spravuje zaměstnanec knihovny; neznamená to, že knihovna podporuje Libraries Global."
+  },
+  "membershipPreferences": {
+    "saved": "Nastavení poděkování uloženo",
+    "failed": "Nastavení se nepodařilo uložit. Zkuste to znovu.",
+    "listedCompact": "Zobrazit mě na této stránce",
+    "listed": "Zobrazit mě na stránce podporovatelů",
+    "listedDescription": "Vaše jméno a veřejná poloha. Kdykoli se můžete odhlásit.",
+    "settings": "Nastavení značky Supporter",
+    "badgeDescription": "Značka ukazuje jen získané ocenění. Nikdy neukazuje vaše role ani nic, za co platíte.",
+    "privateProfile": "Soukromé a omezené profily se nezobrazují. Zveřejněte profil v nastavení a pak zvolte, zda se chcete zobrazit."
+  },
+  "membershipCompare": {
+    "lead": "Každý sloupec je samostatný způsob zapojení, ne vyšší úroveň. Funkce označené „Brzy“ jsou zatím v plánu vývoje.",
+    "controls": "Ovládání porovnání",
+    "availability": "Dostupnost funkcí",
+    "allFeatures": "Všechny funkce",
+    "availableNow": "Dostupné nyní",
+    "expandAll": "Rozbalit všechny skupiny",
+    "collapseAll": "Sbalit všechny skupiny",
+    "showing": "Zobrazeno {count} z {total} funkcí",
+    "highlightHint": "Výběrem záhlaví sloupce jej zvýrazníte.",
+    "firstPlan": "První možnost",
+    "secondPlan": "Druhá možnost",
+    "roadmapLink": "V plánu vývoje"
+  },
+  "sponsorPage": {
+    "metaTitle": "Sponzorství",
+    "metaDescription": "Podpořte veřejný přístup, kvalitu dat, překlady, geografické pokrytí nebo otevřené nástroje Libraries Global: co sponzorství financuje, co sponzoři dostávají a naše pravidla nezávislosti. Každé sponzorství začíná rozhovorem.",
+    "title": "Sponzorství",
+    "eyebrow": "Sponzorství",
+    "heroTitle": "Financujte otevřený přehled *knihoven* světa",
+    "lead": "Libraries Global je nezávislý a otevřený rejstřík knihoven. Sponzorství platí konkrétní veřejnou práci na něm a o využití peněz podáváme zprávy. Vliv na záznamy si jím koupit nelze.",
+    "nav": {
+      "programmes": "Co sponzorství financuje",
+      "recognition": "Co sponzoři získají",
+      "independence": "Nezávislost",
+      "sponsors": "Současní sponzoři",
+      "enquire": "Napište nám"
+    },
+    "programmes": {
+      "title": "Co sponzorství financuje",
+      "lead": "Každé sponzorství podporuje jeden nebo více programů. Které to budou, se s vámi dohodneme ještě před podpisem.",
+      "items": {
+        "publicAccess": {
+          "title": "Veřejný přístup",
+          "body": "Aby rejstřík, mapa a stránky knihoven zůstaly pro všechny zdarma a bez reklam."
+        },
+        "dataQuality": {
+          "title": "Kvalita dat",
+          "body": "Ověřování, dohledávání zdrojů a opravy záznamů o knihovnách a kontrola příspěvků od komunity."
+        },
+        "translation": {
+          "title": "Překlady",
+          "body": "Překlad webu a jeho návodů, aby je mohlo více lidí používat ve vlastním jazyce."
+        },
+        "coverage": {
+          "title": "Geografické pokrytí",
+          "body": "Získávání a správa dat o knihovnách v zemích a regionech, které rejstřík zatím dobře nepokrývá."
+        },
+        "tooling": {
+          "title": "Otevřené nástroje",
+          "body": "Otevřený zdrojový kód, exporty otevřených dat a dokumentace, které může kdokoli znovu použít."
+        }
+      },
+      "reportingTitle": "Čtvrtletní a roční zprávy",
+      "reportingBody": "Každý sponzor dostává čtvrtletní zprávu o činnosti a roční zprávu o dopadu programů, které financuje."
+    },
+    "recognition": {
+      "title": "Co sponzoři získají",
+      "items": {
+        "acknowledgement": {
+          "title": "Uvedení názvu a loga",
+          "body": "Pokud souhlasíte, uvedeme na této stránce název a logo vaší organizace. Bez vašeho souhlasu nezveřejníme nic."
+        },
+        "entry": {
+          "title": "Věcný záznam o sponzorovi",
+          "body": "Krátký věcný popis práce, kterou vaše sponzorství financuje, přímo na této stránce."
+        },
+        "briefings": {
+          "title": "Průběžné informace",
+          "body": "Pravidelné informace o postupu programu vedle čtvrtletních a ročních zpráv."
+        }
+      }
+    },
+    "independence": {
+      "title": "Nezávislost",
+      "summary": "Sponzorstvím si vliv koupit nelze",
+      "items": {
+        "influence": "Sponzoři nemají žádný vliv na záznamy o knihovnách, řazení, výsledky vyhledávání, ověřování ani redakční kontrolu.",
+        "charity": "Sponzorství není charitativní dar a netvrdíme, že je daňově odpočitatelné.",
+        "api": "Sponzorství nezahrnuje kapacitu API. Přístup k API je samostatná nabídka za {price} měsíčně na <link>stránce pro vývojáře</link>."
+      }
+    },
+    "sponsors": {
+      "title": "Současní sponzoři",
+      "lead": "Organizace, které Libraries Global nyní sponzorují a souhlasily se zveřejněním.",
+      "empty": "Zatím zde nejsou uvedeni žádní sponzoři.",
+      "emptyDetail": "Sponzoři se zde objeví, jakmile souhlasí se zveřejněním.",
+      "unavailable": "Seznam sponzorů teď není k dispozici.",
+      "unavailableDetail": "Zkuste to prosím později.",
+      "tiers": {
+        "founding": "Zakládající sponzor",
+        "service": "Sponzor služeb",
+        "community": "Komunitní sponzor",
+        "custom": "Sponzor"
+      }
+    },
+    "enquire": {
+      "title": "Pojďme mluvit o sponzorství",
+      "body": "Každé sponzorství začíná rozhovorem: jakou práci chcete financovat, na jak dlouho a jak vás budeme informovat. Částku domluvíme společně.",
+      "action": "Pojďme mluvit o sponzorství",
+      "email": "Nebo nám napište na <link>{email}</link>.",
+      "terms": {
+        "contract": "Každé sponzorství má vlastní nabídku a samostatnou smlouvu.",
+        "invoice": "Sponzorství se obvykle fakturuje.",
+        "tax": "Daňové zacházení se potvrzuje v každé smlouvě zvlášť."
+      }
+    },
+    "sidebar": {
+      "title": "Dotazy ke sponzorství",
+      "body": "Pojďme probrat financování veřejného přístupu, kvality dat, překladů, pokrytí nebo otevřených nástrojů.",
+      "action": "Napište nám",
+      "api": "Přístup k API"
+    },
+    "heroHow": "Jak sponzorství funguje"
+  }
+}

@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { PromptDismissButton } from "@/components/ds/DismissiblePrompt"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -71,11 +72,16 @@ export function FinalCtaSection({
   /** Use the caller’s existing page container and spacing. */
   readonly contained?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!band.title) return null
 
   const size = SIZES[compact ? "compact" : "full"]
   const primary = signedIn
-    ? { label: "Start contributing", href: band.secondaryHref ?? "/contribute" }
+    ? {
+        label: tStatic("home.startContributing"),
+        href: band.secondaryHref ?? "/contribute",
+      }
     : band.primaryLabel && band.primaryHref
       ? { label: band.primaryLabel, href: band.primaryHref }
       : null

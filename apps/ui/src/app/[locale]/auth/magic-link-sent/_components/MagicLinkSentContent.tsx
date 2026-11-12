@@ -9,16 +9,15 @@ import {
   AuthSwitchPrompt,
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { usePendingEmail } from "@/app/[locale]/auth/_components/pending-email"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import {
-  linkLifetime,
   MAGIC_LINK_EMAIL_SUBJECT,
   MAGIC_LINK_TTL_SECONDS,
 } from "@/lib/auth-links"
-import { T } from "@/lib/design-tokens"
-
-const LIFETIME = linkLifetime(MAGIC_LINK_TTL_SECONDS)
 
 export function MagicLinkSentContent() {
+  const { heading, flowRich, tFlow, lifetime } = useAuthFlow()
+
   const email = usePendingEmail()
 
   return (
@@ -26,34 +25,25 @@ export function MagicLinkSentContent() {
       <AuthHeading
         layout="utility"
         icon="mdi:email-fast-outline"
-        title="Check your"
-        italic="inbox."
+        title={heading("inbox")}
         subtitle={
-          email ? (
-            <>
-              We sent a sign-in link to{" "}
-              <strong style={{ color: T.ink.base }}>{email}</strong>.
-            </>
-          ) : (
-            "We sent a sign-in link to your email address."
-          )
+          email ? flowRich("signinSent", email) : tFlow("signinSentUnknown")
         }
       />
 
       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
         <AuthInboxHint
           subject={MAGIC_LINK_EMAIL_SUBJECT}
-          detail={`The link works once, within ${LIFETIME}.`}
+          detail={tFlow("linkOnce", {
+            duration: lifetime(MAGIC_LINK_TTL_SECONDS),
+          })}
         />
-        <AuthNote>
-          You can close this tab: the link signs you in wherever you open it.
-          Nothing yet? Check your spam or promotions folder.
-        </AuthNote>
+        <AuthNote>{tFlow("closeTab")}</AuthNote>
       </div>
 
       <AuthSwitchPrompt
-        prompt={"Didn\u2019t get it?"}
-        linkLabel="Send another link"
+        prompt={tFlow("notReceived")}
+        linkLabel={tFlow("sendAnother")}
         href="/auth/signin"
       />
     </>

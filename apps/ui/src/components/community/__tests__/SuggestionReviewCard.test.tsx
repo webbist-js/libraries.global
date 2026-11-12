@@ -6,9 +6,8 @@ import { describe, expect, it } from "vitest"
 
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
 
+import messages from "../../../../locales/en"
 import { SuggestionReviewCard } from "../SuggestionReviewCard"
-
-import messages from "../../../../locales/en.json"
 
 Object.assign(globalThis, { React })
 describe("suggestion review progress hydration", () => {

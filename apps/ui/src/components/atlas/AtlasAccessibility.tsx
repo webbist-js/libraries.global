@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -64,7 +63,9 @@ export function AccessibilityControls({
   readonly scope: string
   readonly enabled?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <div className="mb-3 flex flex-col gap-2.5">
@@ -104,7 +105,9 @@ export function AccessibilityControls({
         enabled={enabled}
       />
       <p className="m-0 text-xs" style={{ color: T.ink.dim }}>
-        A gap in our records does not prove a feature is absent.
+        {tStatic(
+          "atlas.a_gap_in_our_records_does_not_prove_a_feature_is_absent"
+        )}
       </p>
     </div>
   )
@@ -120,7 +123,11 @@ export function AccessibilityCoverage({
   readonly scope: string
   readonly enabled?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -128,23 +135,29 @@ export function AccessibilityCoverage({
       className="flex flex-col gap-3"
     >
       <p className="m-0 text-xs font-semibold" style={{ color: T.ink.dim }}>
-        {scope} · current filters
+        {tCopy("currentFilters", { scope })}
       </p>
       {!enabled ? (
         <p className="m-0 text-sm">
-          Turn on the layer or choose a feature to see map coverage.
+          {tStatic(
+            "atlas.turn_on_the_layer_or_choose_a_feature_to_see_map_coverage"
+          )}
         </p>
       ) : coverage && coverage.total > 0 ? (
         <div role="status" className="flex flex-col gap-3">
           <p className="m-0 text-sm">
-            <strong
-              className="text-3xl font-semibold"
-              style={{ color: ACCESS_MATCH }}
-            >
-              {coverage.matches.toLocaleString()}
-            </strong>
-            <br />
-            of {coverage.total.toLocaleString()} records confirm the selection
+            {tCopy.rich("confirmedRecords", {
+              count: coverage.matches,
+              total: coverage.total,
+              strong: (chunks) => (
+                <strong
+                  className="text-3xl font-semibold"
+                  style={{ color: ACCESS_MATCH }}
+                >
+                  {chunks}
+                </strong>
+              ),
+            })}
           </p>
           <div
             aria-hidden="true"
@@ -163,7 +176,9 @@ export function AccessibilityCoverage({
           </div>
           <dl className="m-0 grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt style={{ color: T.ink.dim }}>Confirmed share</dt>
+              <dt style={{ color: T.ink.dim }}>
+                {tStatic("atlas.confirmed_share")}
+              </dt>
               <dd className="m-0 mt-1 text-xl font-semibold">
                 {((100 * coverage.matches) / coverage.total).toLocaleString(
                   undefined,
@@ -175,7 +190,7 @@ export function AccessibilityCoverage({
             <div>
               <dt className="flex items-center gap-2">
                 <AccessibilitySwatch confirmed={false} />
-                Unconfirmed
+                {tStatic("atlas.unconfirmed")}
               </dt>
               <dd className="m-0 mt-1 text-xl font-semibold">
                 {coverage.unconfirmed.toLocaleString()}
@@ -184,15 +199,14 @@ export function AccessibilityCoverage({
           </dl>
           {coverage.partial > 0 ? (
             <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-              {coverage.partial.toLocaleString()} unconfirmed records confirm
-              some selected features.
+              {tCopy("partialRecords", { count: coverage.partial })}
             </p>
           ) : null}
         </div>
       ) : coverage ? (
-        <p className="m-0 text-sm">No library records in this map area.</p>
+        <p className="m-0 text-sm">{tStatic("common.noMapLibraries")}</p>
       ) : (
-        <p className="m-0 text-sm">Loading library records…</p>
+        <p className="m-0 text-sm">{tStatic("common.loadingLibraries")}</p>
       )}
     </section>
   )
@@ -203,24 +217,26 @@ export function AccessibilityMapKey({
 }: {
   readonly view: AccessibilityView
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
       aria-label={tUi("accessibility_map_key")}
       className="flex flex-col gap-2 text-sm"
     >
-      <h3 className="type-h3 m-0">On the map</h3>
+      <h3 className="type-h3 m-0">{tStatic("atlas.on_the_map")}</h3>
       {view !== "gaps" ? (
         <span className="flex items-center gap-2">
           <AccessibilitySwatch confirmed />
-          Confirmed feature matches
+          {tStatic("atlas.confirmed_feature_matches")}
         </span>
       ) : null}
       {view !== "matches" ? (
         <span className="flex items-center gap-2">
           <AccessibilitySwatch confirmed={false} />
-          Unconfirmed records
+          {tStatic("atlas.unconfirmed_records")}
         </span>
       ) : null}
       <p className="m-0" style={{ color: T.ink.dim }}>

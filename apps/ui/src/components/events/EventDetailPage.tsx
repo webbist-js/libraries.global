@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
 import { Container } from "@/components/elementary/Container"
@@ -109,8 +109,10 @@ export function EventDetailPage({
   related,
   libraryName,
 }: EventDetailPageProps) {
-  const tUi = useUiTranslations("ui")
-  const tDiscovery = useUiTranslations("discovery")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
+  const tDiscovery = useTranslations("discovery")
 
   const { date, time } = formatDate(event.startTime)
   const endFormatted = event.endTime ? formatDate(event.endTime) : null
@@ -319,7 +321,7 @@ export function EventDetailPage({
                     color: T.ink.faint,
                   }}
                 >
-                  More at this library
+                  {tStatic("frontendExtra.more_at_this_library")}
                 </p>
                 <div className="flex flex-col gap-3">
                   {related.map((r) => (
@@ -337,7 +339,7 @@ export function EventDetailPage({
                     textDecoration: "none",
                   }}
                 >
-                  View all events
+                  {tStatic("frontendExtra.view_all_events")}
                   <Icon icon="mdi:arrow-right" className="size-3" />
                 </Link>
               </div>

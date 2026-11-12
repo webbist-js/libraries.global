@@ -1,12 +1,7 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { RenounceLibraryClaim } from "../RenounceLibraryClaim"
 

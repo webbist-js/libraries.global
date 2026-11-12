@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react"
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "next/navigation"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect } from "react"
 
 import { ContributionList } from "@/components/contributions/ContributionList"
@@ -193,7 +193,7 @@ function ViewLink({
   href: string
   kind: "library" | "article"
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <Link
@@ -230,8 +230,12 @@ function SkeletonList() {
  * drafts and the moderator's note on a decision.
  */
 export function SubmissionsShell({ username }: { username: string | null }) {
-  const tUi = useUiTranslations("ui")
-  const p = useUiTranslations("publishing")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const p = useTranslations("publishing")
   const query = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
@@ -325,7 +329,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
             className="inline-flex min-h-11 items-center gap-1 rounded-full px-4 text-sm font-semibold whitespace-nowrap text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
             style={{ background: T.action.primary }}
           >
-            Open Staff area
+            {tStatic("common.openStaffArea")}
             <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
           </Link>
         ),
@@ -345,11 +349,13 @@ export function SubmissionsShell({ username }: { username: string | null }) {
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <ContributeSectionHeader
         section={tUi("my_submissions")}
-        title="Your contributions, *in flight.*"
-        lead="Drafts, changes in review and decisions, with the moderator’s note where there is one."
+        title={tStatic("contributeRoute.your_contributions_in_flight")}
+        lead={tStatic(
+          "contributeRoute.drafts_changes_in_review_and_decisions_with_the_moderator_s_note_where_there_is_one"
+        )}
       >
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-          This list refreshes every minute.
+          {tStatic("contributeRoute.this_list_refreshes_every_minute")}
         </p>
       </ContributeSectionHeader>
 
@@ -399,17 +405,20 @@ export function SubmissionsShell({ username }: { username: string | null }) {
                   color: T.ink.base,
                 }}
               >
-                No submissions yet
+                {tStatic("contributeRoute.no_submissions_yet")}
               </h2>
               <p
                 className="mt-2 mb-3 text-base leading-[1.6]"
                 style={{ color: T.ink.dim }}
               >
-                Libraries you add, corrections and articles appear here as soon
-                as you start them.
+                {tStatic(
+                  "contributeRoute.libraries_you_add_corrections_and_articles_appear_here_as_soon_as_you_start_them"
+                )}
               </p>
               <Button asChild variant="primary" size="pill">
-                <Link href="/contribute">Start contributing</Link>
+                <Link href="/contribute">
+                  {tExisting("homepageContribute.start")}
+                </Link>
               </Button>
             </section>
           ) : (
@@ -462,7 +471,7 @@ export function SubmissionsShell({ username }: { username: string | null }) {
                         className="font-semibold underline underline-offset-[3px]"
                         style={{ color: T.accent.primary }}
                       >
-                        your profile
+                        {tStatic("contributeRoute.your_profile")}
                       </Link>
                       .
                     </p>

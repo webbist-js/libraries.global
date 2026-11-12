@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 
 import { ArticleContext } from "@/components/articles/ArticleContext"
 import { ArticleReaderActions } from "@/components/articles/ArticleReaderActions"
@@ -45,7 +45,7 @@ import { formatStrapiMediaUrl } from "@/lib/strapi-helpers"
 
 /** "Founder" pill beside the author's name (`lib/founder.ts`). */
 function FounderTag() {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -77,8 +77,10 @@ export function BlogArticlePage({
   readonly untranslatedLocale?: string | null
   readonly contentLocale?: string
 }) {
-  const tUi = useUiTranslations("ui")
-  const tArticle = useUiTranslations("editorial")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tArticle = useTranslations("editorial")
 
   if (!article) {
     return (
@@ -150,7 +152,7 @@ export function BlogArticlePage({
   return (
     <DashboardPage
       routeKey={`/journal/${article.section?.slug ?? "general"}/${article.slug}`}
-      title={article.title ?? "Journal"}
+      title={article.title ?? tExisting("ui.journal")}
       className="dashboard-editorial-page dashboard-journal-reader"
       navigationHeading={
         <RecordContextIdentity

@@ -9,7 +9,7 @@ import {
   type PublicLiveState,
 } from "@repo/shared-data"
 import type { GeoJSONSource, Map as MapLibreMap, Marker } from "maplibre-gl"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { coarseRing } from "@/components/atlas/mobile-map-data"
@@ -65,7 +65,9 @@ export function MobileRouteMap({
   /** Replaces the figure caption (the editor names the day itself). */
   readonly caption?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const element = useRef<HTMLDivElement>(null),
     mapRef = useRef<MapLibreMap | null>(null),
@@ -370,14 +372,16 @@ export function MobileRouteMap({
           ref={element}
           className={compact ? "h-72 w-full" : "h-96 w-full"}
           role="region"
-          aria-label="Mobile library route map. Stops are also listed in the timetable."
+          aria-label={tStatic(
+            "mobile.mobile_library_route_map_stops_are_also_listed_in_the_timetable"
+          )}
         />
         {!loaded && !unavailable ? (
           <p
             className="pointer-events-none absolute inset-0 m-0 flex items-center justify-center text-sm"
             style={{ background: T.bg.surface, color: T.ink.dim }}
           >
-            Loading map…
+            {tStatic("mobile.loading_map")}
           </p>
         ) : null}
       </div>
@@ -392,7 +396,7 @@ export function MobileRouteMap({
       <figcaption className="px-4 py-3 text-sm" style={{ color: T.ink.dim }}>
         {caption ??
           (now
-            ? `${route.date === date ? "Today’s route" : `Next service: ${weekdayCopy(route.date, date)}`} · ${route.route.length} ${route.route.length === 1 ? "stop" : "stops"}. Lines join the stops; they are not road directions.`
+            ? `${route.date === date ? tStatic("mobile.today_s_route") : `Next service: ${weekdayCopy(route.date, date)}`} · ${route.route.length} ${route.route.length === 1 ? "stop" : "stops"}. Lines join the stops; they are not road directions.`
             : "Route map. Current service dates appear when the page is ready.")}
       </figcaption>
     </figure>

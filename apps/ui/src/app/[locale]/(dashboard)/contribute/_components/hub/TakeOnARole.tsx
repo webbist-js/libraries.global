@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { cn } from "@/lib/styles"
@@ -18,36 +19,6 @@ type RoleCard = {
   icon: LucideIcon
   tint: string
 }
-
-const CARDS: RoleCard[] = [
-  {
-    id: "claim",
-    title: "Claim your library",
-    copy: "Work or volunteer at a library? Verify it, then look after its record and connect its events.",
-    cta: "Find your library",
-    href: "/contribute/claim",
-    icon: Landmark,
-    tint: "bg-(--t-palette-mint-bg) text-(--t-palette-mint-fg)",
-  },
-  {
-    id: "editor",
-    title: "Become an editor",
-    copy: "Publish approved Knowledge or Journal changes in the languages you choose.",
-    cta: "Apply to be an editor",
-    href: "/contribute/knowledge/apply",
-    icon: BookOpen,
-    tint: "bg-(--t-palette-violet-bg) text-(--t-palette-violet-fg)",
-  },
-  {
-    id: "moderator",
-    title: "Help moderate",
-    copy: "Review other people’s changes in a queue and language you choose, always with a reason.",
-    cta: "Apply to moderate",
-    href: "/contribute/knowledge/apply?role=moderator",
-    icon: ShieldCheck,
-    tint: "bg-(--t-palette-amber-bg) text-(--t-palette-amber-fg)",
-  },
-]
 
 export type RoleOpportunities = {
   readonly signedIn: boolean
@@ -63,6 +34,43 @@ export function TakeOnARole({
   isEditor,
   isModerator,
 }: RoleOpportunities) {
+  const tStatic = useTranslations("staticUi")
+  const CARDS: RoleCard[] = [
+    {
+      id: "claim",
+      title: tStatic("contributeRoute.claim_your_library"),
+      copy: tStatic(
+        "contributeModule.work_or_volunteer_at_a_library_verify_it_then_look_after_its_record_and_connect_its_events"
+      ),
+      cta: tStatic("contributeModule.find_your_library"),
+      href: "/contribute/claim",
+      icon: Landmark,
+      tint: "bg-(--t-palette-mint-bg) text-(--t-palette-mint-fg)",
+    },
+    {
+      id: "editor",
+      title: tStatic("contributeRoute.become_an_editor"),
+      copy: tStatic(
+        "contributeModule.publish_approved_knowledge_or_journal_changes_in_the_languages_you_choose"
+      ),
+      cta: tStatic("contributeModule.apply_to_be_an_editor"),
+      href: "/contribute/knowledge/apply",
+      icon: BookOpen,
+      tint: "bg-(--t-palette-violet-bg) text-(--t-palette-violet-fg)",
+    },
+    {
+      id: "moderator",
+      title: tStatic("contributeRoute.help_moderate"),
+      copy: tStatic(
+        "contributeModule.review_other_people_s_changes_in_a_queue_and_language_you_choose_always_with_a_reason"
+      ),
+      cta: tStatic("contributeModule.apply_to_moderate"),
+      href: "/contribute/knowledge/apply?role=moderator",
+      icon: ShieldCheck,
+      tint: "bg-(--t-palette-amber-bg) text-(--t-palette-amber-fg)",
+    },
+  ]
+
   const held: Record<RoleCard["id"], boolean> = {
     claim: hasClaim,
     editor: isEditor,
@@ -86,7 +94,7 @@ export function TakeOnARole({
         }
       >
         <h2 id="take-on-a-role" className="type-h2 m-0 text-(--t-ink-base)">
-          Take on a role
+          {tStatic("contributeRoute.take_on_a_role")}
         </h2>
         <p
           className={cn(
@@ -94,8 +102,9 @@ export function TakeOnARole({
             single ? "mt-2 max-w-[48ch]" : "mt-0 max-w-[74ch]"
           )}
         >
-          Accepted work and library verification open up more ways to help.
-          Roles are never bought or earned with points.
+          {tStatic(
+            "contributeRoute.accepted_work_and_library_verification_open_up_more_ways_to_help_roles_are_never_bought_or_earned_wi"
+          )}
         </p>
       </div>
       <ul

@@ -1,4 +1,5 @@
 import { ApiWorkspacePage } from "@/components/developers/ApiWorkspacePage"
+import { DASHBOARD_LAYOUT_STYLE } from "@/lib/dashboard-layout"
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 
 import { asyncStory } from "../../../.storybook/AsyncStory"
@@ -21,6 +22,13 @@ const meta = {
   component: ApiWorkspacePage,
   render: asyncStory(ApiWorkspacePage),
   args: { section: "overview" },
+  decorators: [
+    (Story) => (
+      <div style={DASHBOARD_LAYOUT_STYLE}>
+        <Story />
+      </div>
+    ),
+  ],
   parameters: {
     react: { rsc: true },
     fixtureSession: null,

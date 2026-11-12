@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useContext, useState } from "react"
 
@@ -36,7 +35,7 @@ function NearestAddress({
   readonly place: Place
   readonly onUse: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const { streetAddress, city } = place.address
   const where = [streetAddress, city].filter(Boolean).join(", ") || place.label
@@ -65,7 +64,7 @@ function NearestAddress({
 }
 
 function HierarchyNote() {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <p
@@ -85,7 +84,9 @@ function HierarchyNote() {
 }
 
 export function StepLocation({ f, set, setFormData, improving }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   // Translation mode: the coordinates are shared, and Photon answers in English.
   const translating = useIsShared("lat")
@@ -221,7 +222,9 @@ export function StepLocation({ f, set, setFormData, improving }: StepProps) {
           onChange={set}
           onPaste={pasteCoordinates}
           placeholder="51.5297"
-          hint="Paste “51.5297, -0.1271” from Google Maps into either box to fill both."
+          hint={tStatic(
+            "libraryEditor.paste_51_5297_0_1271_from_google_maps_into_either_box_to_fill_both"
+          )}
           errorText="Latitude is a number between -90 and 90."
         />
         <Field

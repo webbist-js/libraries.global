@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -22,6 +24,8 @@ function Row({
   readonly entry: LeaderboardEntry
   readonly you: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const tint = rankTint(entry.rank)
   const name = getDisplayName(entry)
   const place = entryPlace(entry)
@@ -67,7 +71,7 @@ function Row({
                 className="rounded-full px-[8px] py-[2px] text-xs font-bold text-white"
                 style={{ background: T.action.primary }}
               >
-                You
+                {tStatic("communityRoute.you")}
               </span>
             ) : null}
           </span>
@@ -85,7 +89,7 @@ function Row({
             color: T.ink.base,
           }}
         >
-          <span className="sr-only">Points: </span>
+          <span className="sr-only">{tStatic("communityRoute.points")} </span>
           {fmt(entry.periodPoints)}
         </span>
         <span
@@ -112,6 +116,10 @@ export function LeaderboardRows({
   /** The viewer's rank for this period, from their standing. */
   readonly youRank?: number | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (entries.length === 0) return null
 
   return (
@@ -129,8 +137,8 @@ export function LeaderboardRows({
         }}
       >
         <span>#</span>
-        <span>Contributor</span>
-        <span className="text-right">Points</span>
+        <span>{tExisting("editorial.contributor")}</span>
+        <span className="text-right">{tStatic("communityRoute.points_2")}</span>
       </div>
       <ol className="m-0 list-none p-0" start={entries[0]?.rank}>
         {entries.map((entry) => (

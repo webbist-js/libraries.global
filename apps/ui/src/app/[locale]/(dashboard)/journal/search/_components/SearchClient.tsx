@@ -65,6 +65,7 @@ const searchJournal = (query: string, locale: string) =>
   searchBlogArticles(query, 40, locale)
 
 function BlogSearchResults({ query }: { query: string }) {
+  const t = useUiTranslations("articleSearch")
   const locale = useLocale()
   const { results, loading, searched, active } = useArticleSearch({
     query,
@@ -83,7 +84,7 @@ function BlogSearchResults({ query }: { query: string }) {
             fontSize: "var(--type-body-small-size)",
           }}
         >
-          Searching…
+          {t("searching")}
         </p>
       ) : searched && results.length === 0 ? (
         <div
@@ -97,7 +98,7 @@ function BlogSearchResults({ query }: { query: string }) {
             fontSize: "var(--type-body-size)",
           }}
         >
-          No articles found for &ldquo;{query}&rdquo;.
+          {t("journal.empty", { query })}
         </div>
       ) : (
         <>
@@ -108,8 +109,7 @@ function BlogSearchResults({ query }: { query: string }) {
               marginBottom: "20px",
             }}
           >
-            {results.length} result{results.length !== 1 ? "s" : ""} for &ldquo;
-            {query}&rdquo;
+            {t("results", { count: results.length, query })}
           </p>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "12px" }}
@@ -126,6 +126,7 @@ function BlogSearchResults({ query }: { query: string }) {
 
 function SearchPageInner() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("articleSearch")
 
   const searchParams = useSearchParams()
   const query = searchParams.get("q") ?? ""
@@ -139,12 +140,12 @@ function SearchPageInner() {
           { label: tUi("search") },
         ]}
         compact
-        eyebrow="The Library Journal"
+        eyebrow={t("journal.eyebrow")}
         eyebrowIcon="mdi:notebook-outline"
         title={
           query
-            ? `Results for *“${query.replaceAll("*", "")}”*`
-            : "Search the *journal*"
+            ? t("title", { query: query.replaceAll("*", "") })
+            : t("journal.title")
         }
       >
         <form
@@ -167,7 +168,7 @@ function SearchPageInner() {
           <BlogSearchResults query={query} />
           {!query.trim() && (
             <p style={{ color: T.ink.dim, fontSize: "var(--type-body-size)" }}>
-              Enter a search term in the search bar above to find articles.
+              {t("journal.hint")}
             </p>
           )}
         </Container>

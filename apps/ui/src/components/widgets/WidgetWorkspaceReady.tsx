@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -15,30 +15,37 @@ export function WidgetWorkspaceReady({
   readonly returnTo?: string
   readonly children: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const { data, isPending, error } = useHydratedSession()
-  if (isPending) return <p role="status">Loading your workspace…</p>
+  if (isPending)
+    return <p role="status">{tStatic("widget.loading_your_workspace")}</p>
   if (error)
     return (
-      <div role="alert" className="space-y-3">
-        <p>Your session could not be checked. Reload to continue.</p>
+      <div role="alert" className="flex flex-col items-start gap-3">
+        <p className="m-0 leading-relaxed">
+          {tStatic(
+            "widget.we_couldn_t_check_your_sign_in_status_reload_the_workspace_to_try_again"
+          )}
+        </p>
         <Button
           variant="surface"
           size="pill"
           onClick={() => window.location.reload()}
         >
-          Reload workspace
+          {tStatic("widget.reload_workspace")}
         </Button>
       </div>
     )
   if (!data?.user)
     return (
       <p>
-        Your session has ended.{" "}
+        {tStatic("widget.sign_in_to_manage_your_widgets")}{" "}
         <Link
           href={`/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`}
-          className="underline"
+          className="font-semibold text-(--t-accent-primary) underline underline-offset-4"
         >
-          Sign in to continue
+          {tStatic("widget.sign_in_to_continue")}
         </Link>
         .
       </p>

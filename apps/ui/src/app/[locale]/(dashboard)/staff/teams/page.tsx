@@ -13,6 +13,7 @@ import { StaffLoadError } from "@/components/staff/StaffLoadError"
 import { TeamMembershipConflict } from "@/components/staff/TeamMembershipConflict"
 import { TeamNameContext } from "@/components/staff/TeamNameContext"
 import { TeamOrganiser } from "@/components/staff/TeamOrganiser"
+import { withMessages } from "@/i18n/scoped-messages"
 import { preferredTeams, sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import type { TeamDetail } from "@/lib/staff/types"
@@ -33,7 +34,7 @@ function teamLead(team: TeamDetail | null | undefined, organiser: boolean) {
  * read only. Membership never grants library editing; that comes only from
  * each person's verified staff claims. The account has one workspace.
  */
-export default async function TeamOrganiserPage({
+async function TeamOrganiserPage({
   params,
 }: {
   readonly params: Promise<{ locale: string }>
@@ -88,3 +89,8 @@ export default async function TeamOrganiserPage({
     </>
   )
 }
+
+export default withMessages(
+  TeamOrganiserPage,
+  "[locale]/(dashboard)/staff/teams/page"
+)

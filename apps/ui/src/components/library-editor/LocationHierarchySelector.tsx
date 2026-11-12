@@ -1,6 +1,5 @@
 "use client"
-
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -80,7 +79,11 @@ export function LocationHierarchySelector({
   f: FormData
   setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const locale = useLocale()
   const [revision, setRevision] = useState(0)
@@ -145,18 +148,19 @@ export function LocationHierarchySelector({
           lineHeight: 1.5,
         }}
       >
-        Link to the content hierarchy for atlas navigation and breadcrumbs.
-        Select continent first, then narrow down.
+        {tStatic(
+          "libraryEditor.link_to_the_content_hierarchy_for_atlas_navigation_and_breadcrumbs_select_continent_first_then_narro"
+        )}
       </p>
       {unavailable ? (
         <p role="alert" style={{ color: T.ink.dim }}>
-          Place choices are unavailable.{" "}
+          {tStatic("libraryEditor.place_choices_are_unavailable")}{" "}
           <button
             type="button"
             onClick={() => setRevision((value) => value + 1)}
             className="min-h-11 underline"
           >
-            Try again
+            {tExisting("ui.try_again")}
           </button>
         </p>
       ) : null}

@@ -3,16 +3,14 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import { T } from "@/lib/design-tokens"
 
 export const metadata: Metadata = {
   robots: "noindex, nofollow",
 }
 
-export default async function AuthLayout({
-  children,
-  params,
-}: LayoutProps<"/[locale]/auth">) {
+async function AuthLayout({ children, params }: LayoutProps<"/[locale]/auth">) {
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
@@ -25,3 +23,5 @@ export default async function AuthLayout({
     </MainContent>
   )
 }
+
+export default withMessages(AuthLayout, "[locale]/auth/layout")

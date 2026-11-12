@@ -4,26 +4,18 @@
 // and a white form card on the right with a top bar and a footnote strip.
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import LocaleSwitcher from "@/components/elementary/LocaleSwitcher"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
-const LEGAL_LINKS = [
-  { label: "Privacy", href: "/legal/privacy" },
-  { label: "Terms", href: "/legal/terms" },
-  { label: "Help", href: "/knowledge" },
-]
-
-const BACK_TO_ATLAS = { href: "/", label: "Back to the atlas" }
-
 export function AuthShell({
   locale,
   aside,
   footnote,
-  back = BACK_TO_ATLAS,
+  back: suppliedBack,
   children,
 }: {
   locale: Locale
@@ -34,7 +26,14 @@ export function AuthShell({
   back?: { href: string; label: string }
   children: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
+  const t = useTranslations("authInterface")
+  const back = suppliedBack ?? { href: "/", label: t("backToAtlas") }
+  const legalLinks = [
+    { label: t("privacy"), href: "/legal/privacy" },
+    { label: t("terms"), href: "/legal/terms" },
+    { label: t("help"), href: "/knowledge" },
+  ]
 
   return (
     <div
@@ -97,7 +96,7 @@ export function AuthShell({
             {footnote}
           </p>
           <nav aria-label={tUi("legal_and_help")} className="flex gap-5">
-            {LEGAL_LINKS.map((link) => (
+            {legalLinks.map((link) => (
               <GlobalLink
                 key={link.href}
                 href={link.href}

@@ -6,11 +6,10 @@ import { afterEach, expect, it, vi } from "vitest"
 
 import { DirectoryPagination } from "@/components/networks/DirectoryPagination"
 
+import en from "../../../../locales/en"
+import fr from "../../../../locales/fr"
 import { IndexPager } from "../IndexPager"
 import { PaginationControls } from "../PaginationControls"
-
-import en from "../../../../locales/en.json"
-import fr from "../../../../locales/fr.json"
 
 vi.mock("@/lib/navigation", () => ({
   Link: ({ children, ...props }: React.ComponentProps<"a">) => (

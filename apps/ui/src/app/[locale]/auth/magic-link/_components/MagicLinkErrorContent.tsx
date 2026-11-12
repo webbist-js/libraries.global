@@ -5,7 +5,7 @@
 // A sign-in link that failed lands here (its errorCallbackURL) with Better
 // Auth's code in `?error=`. A working link never does: it goes to post-signin.
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import * as z from "zod"
 
@@ -27,19 +27,19 @@ import {
   rememberPendingEmail,
   usePendingEmail,
 } from "@/app/[locale]/auth/_components/pending-email"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import { authClient } from "@/lib/auth-client"
-import { linkLifetime, MAGIC_LINK_TTL_SECONDS } from "@/lib/auth-links"
+import { MAGIC_LINK_TTL_SECONDS } from "@/lib/auth-links"
 import { magicLinkCallbacks } from "@/lib/auth-redirects"
-
-const LIFETIME = linkLifetime(MAGIC_LINK_TTL_SECONDS)
 
 const STATUS_ICONS = ["mdi:alert-circle-outline"] as const
 
-const EmailSchema = z
-  .string()
-  .trim()
-  .min(1, "Enter your email address")
-  .email("Enter a valid email address")
+const EmailSchema = (tStatic: ReturnType<typeof useTranslations<"staticUi">>) =>
+  z
+    .string()
+    .trim()
+    .min(1, tStatic("auth.enter_your_email_address"))
+    .email(tStatic("auth.enter_a_valid_email_address"))
 
 type Failure = "expired" | "used" | "no-account" | "failed"
 
@@ -58,40 +58,44 @@ function failureFor(code: string): Failure {
   }
 }
 
-const COPY: Record<
-  Failure,
-  { icon: string; title: string; italic: string; subtitle: string }
-> = {
-  expired: {
-    icon: "mdi:clock-alert-outline",
-    title: "That link has",
-    italic: "expired.",
-    subtitle: `Sign-in links work once, within ${LIFETIME}. Send yourself a new one and open it straight away.`,
-  },
-  used: {
-    icon: "mdi:link-variant-off",
-    title: "That link didn’t",
-    italic: "work.",
-    subtitle:
-      "It may have been used already: each sign-in link works once. Send yourself a new one.",
-  },
-  "no-account": {
-    icon: "mdi:account-question-outline",
-    title: "No account",
-    italic: "yet.",
-    subtitle:
-      "There’s no account for that email address. Creating one is free and takes a minute.",
-  },
-  failed: {
-    icon: "mdi:alert-circle-outline",
-    title: "We couldn’t",
-    italic: "sign you in.",
-    subtitle:
-      "Something went wrong on our side. Send yourself a new link, or sign in with your password.",
-  },
-}
-
 export function MagicLinkErrorContent({ error }: { error: string }) {
+  const { heading, tFlow, lifetime } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const COPY = {
+    expired: {
+      icon: "mdi:clock-alert-outline",
+      title: heading("expired"),
+      subtitle: tFlow("magicExpired", {
+        duration: lifetime(MAGIC_LINK_TTL_SECONDS),
+      }),
+    },
+    used: {
+      icon: "mdi:link-variant-off",
+      title: heading("invalid"),
+      subtitle: tStatic(
+        "auth.it_may_have_been_used_already_each_sign_in_link_works_once_send_yourself_a_new_one"
+      ),
+    },
+    "no-account": {
+      icon: "mdi:account-question-outline",
+      title: heading("noAccount"),
+      subtitle: tStatic(
+        "auth.there_s_no_account_for_that_email_address_creating_one_is_free_and_takes_a_minute"
+      ),
+    },
+    failed: {
+      icon: "mdi:alert-circle-outline",
+      title: heading("failed"),
+      subtitle: tStatic(
+        "auth.something_went_wrong_on_our_side_send_yourself_a_new_link_or_sign_in_with_your_password"
+      ),
+    },
+  }
+
   const failure = failureFor(error)
   const copy = COPY[failure]
 
@@ -102,18 +106,17 @@ export function MagicLinkErrorContent({ error }: { error: string }) {
         icon={copy.icon}
         iconTone="warn"
         title={copy.title}
-        italic={copy.italic}
         subtitle={copy.subtitle}
       />
 
       {failure === "no-account" ? (
         <>
           <AuthPrimaryLink href="/auth/register">
-            Create an account
+            {tExisting("auth.signIn.createAccount")}
           </AuthPrimaryLink>
           <AuthSwitchPrompt
-            prompt="Used a different address?"
-            linkLabel="Back to sign in"
+            prompt={tStatic("auth.used_a_different_address")}
+            linkLabel={tStatic("auth.back_to_sign_in")}
             href="/auth/signin"
           />
         </>
@@ -121,8 +124,8 @@ export function MagicLinkErrorContent({ error }: { error: string }) {
         <>
           <NewLinkForm />
           <AuthSwitchPrompt
-            prompt="Prefer your password?"
-            linkLabel="Sign in"
+            prompt={tStatic("auth.prefer_your_password")}
+            linkLabel={tExisting("ui.sign_in")}
             href="/auth/signin"
           />
         </>
@@ -132,7 +135,9 @@ export function MagicLinkErrorContent({ error }: { error: string }) {
 }
 
 function NewLinkForm() {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   usePreloadedIcons(STATUS_ICONS)
   const knownEmail = usePendingEmail()
@@ -145,7 +150,7 @@ function NewLinkForm() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const parsed = EmailSchema.safeParse(emailValue)
+    const parsed = EmailSchema(tStatic).safeParse(emailValue)
     if (!parsed.success) {
       setFieldError(parsed.error.issues[0]?.message)
 
@@ -166,8 +171,8 @@ function NewLinkForm() {
           tone: "error",
           text:
             authErrorParts(error).status === 429
-              ? "Too many attempts. Wait a minute, then try again."
-              : "We couldn’t send the link. Please try again.",
+              ? tStatic("auth.too_many_attempts_wait_a_minute_then_try_again")
+              : tStatic("auth.we_couldn_t_send_the_link_please_try_again"),
         })
 
         return
@@ -177,7 +182,7 @@ function NewLinkForm() {
     } catch {
       setStatus({
         tone: "error",
-        text: "We couldn’t send the link. Please try again.",
+        text: tStatic("auth.we_couldn_t_send_the_link_please_try_again"),
       })
     } finally {
       setPending(false)
@@ -210,7 +215,7 @@ function NewLinkForm() {
       </AuthField>
       <div>
         <AuthPrimaryButton disabled={pending}>
-          {pending ? tUi("sending") : "Email me a new link"}
+          {pending ? tUi("sending") : tStatic("auth.email_me_a_new_link")}
         </AuthPrimaryButton>
         <AuthStatusMessage status={status} />
       </div>

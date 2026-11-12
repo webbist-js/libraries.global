@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -36,7 +35,11 @@ export function LibraryPicker({
   readonly publishedCount?: number
   readonly suggestions?: readonly LibrarySuggestion[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const [query, setQuery] = useState("")
@@ -108,7 +111,7 @@ export function LibraryPicker({
             color: T.ink.base,
           }}
         >
-          Which library is this about?
+          {tStatic("contribute.which_library_is_this_about")}
         </h3>
         {publishedCount ? (
           <p className="mt-1 mb-0 text-base" style={{ color: T.ink.dim }}>
@@ -151,7 +154,7 @@ export function LibraryPicker({
             className="rounded-full border bg-(--t-bg-deep) px-3 py-1.5 text-sm font-semibold"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
-            Change
+            {tExisting("atlasNetwork.changeService")}
           </button>
         </div>
       ) : (
@@ -161,7 +164,7 @@ export function LibraryPicker({
             htmlFor={inputId}
             style={{ color: T.ink.base }}
           >
-            Library name or place
+            {tStatic("contribute.library_name_or_place")}
           </label>
           <div className="relative">
             <Icon
@@ -184,7 +187,7 @@ export function LibraryPicker({
               id={inputId}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="e.g. Epworth"
+              placeholder={tStatic("contribute.e_g_epworth")}
               role="combobox"
               style={{ color: T.ink.base }}
               type="text"
@@ -206,7 +209,7 @@ export function LibraryPicker({
                   className="px-3 py-2.5 text-sm"
                   style={{ color: T.ink.low }}
                 >
-                  Searching…
+                  {tExisting("siteSearch.loading")}
                 </li>
               ) : hits.length === 0 ? (
                 <li
@@ -218,7 +221,7 @@ export function LibraryPicker({
                     href="/contribute/index/new"
                     style={{ color: T.accent.primary }}
                   >
-                    add it as a new library
+                    {tStatic("contribute.add_it_as_a_new_library")}
                   </Link>
                   .
                 </li>
@@ -252,7 +255,7 @@ export function LibraryPicker({
             className="m-0 mb-3 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
-            Records with missing details
+            {tStatic("contribute.records_with_missing_details")}
           </p>
           <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 2xl:grid-cols-4">
             {suggestions.map((s) => (

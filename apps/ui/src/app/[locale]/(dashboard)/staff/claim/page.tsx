@@ -10,6 +10,7 @@ import {
   KNOWLEDGE_SLUGS,
 } from "@/components/staff/knowledge-links"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
@@ -21,7 +22,7 @@ import { privateMetadata } from "@/lib/seo/metadata"
 
 export const metadata = privateMetadata("Claim a library")
 
-export default async function StaffClaimPage({
+async function StaffClaimPage({
   searchParams,
 }: {
   readonly searchParams: Promise<ClaimParams>
@@ -68,3 +69,8 @@ export default async function StaffClaimPage({
     </>
   )
 }
+
+export default withMessages(
+  StaffClaimPage,
+  "[locale]/(dashboard)/staff/claim/page"
+)

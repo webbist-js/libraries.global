@@ -23,11 +23,10 @@ import { setFixtureLocale } from "./fixture-locale"
 import { respondToFixture, type FixtureResponses } from "./fixture-responses"
 import { FixtureSessionProvider, type FixtureSession } from "./FixtureSession"
 import { resetServerFixtures } from "./server-fixtures"
-
-import cs from "../../ui/locales/cs.json"
-import en from "../../ui/locales/en.json"
-import es from "../../ui/locales/es.json"
-import fr from "../../ui/locales/fr.json"
+import cs from "../../ui/locales/cs"
+import en from "../../ui/locales/en"
+import es from "../../ui/locales/es"
+import fr from "../../ui/locales/fr"
 
 disableCache("all")
 addCollection(icons)

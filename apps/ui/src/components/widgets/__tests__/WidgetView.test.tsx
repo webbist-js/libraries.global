@@ -66,6 +66,20 @@ const data = (type: PublicWidget["type"] = "finder"): PublicWidget => ({
 })
 
 describe("public widget states", () => {
+  it.each([
+    ["es", "Buscar por biblioteca o localidad"],
+    ["ja", "図書館名または街の名前で検索"],
+  ])(
+    "uses the configured %s language without a site provider",
+    (locale, placeholder) => {
+      const widget = data()
+      widget.config.locale = locale
+      render(<WidgetView data={widget} />)
+      expect(screen.getByPlaceholderText(placeholder)).toBeTruthy()
+      expect(screen.getByText("Alpha Library")).toBeTruthy()
+    }
+  )
+
   it("compares group counts on a shared scale and uses a count-only table", () => {
     const d = data("chart")
     d.spec.groups = [

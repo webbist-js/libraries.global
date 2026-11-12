@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { loadLibraryEditor } from "@/lib/library-editor-server"
@@ -12,7 +13,7 @@ import { ContributeSectionHeader } from "../../_components/ContributeSectionHead
 
 export const metadata = privateMetadata("Improve a library record")
 
-export default async function ImproveLibraryPage({
+async function ImproveLibraryPage({
   params,
   searchParams,
 }: {
@@ -23,6 +24,8 @@ export default async function ImproveLibraryPage({
     draft?: string
   }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const [{ slug }, query, session, t] = await Promise.all([
     params,
     searchParams,
@@ -54,9 +57,16 @@ export default async function ImproveLibraryPage({
         compact
         section={t("index_editor")}
         title={`${bootstrap.locale?.code !== bootstrap.locale?.defaultCode ? "Translate" : "Improve"} *${bootstrap.target!.name}.*`}
-        lead="Change only what you can source. An editor checks each change against your source before it goes live, credited to you."
+        lead={tStatic(
+          "contributeRoute.change_only_what_you_can_source_an_editor_checks_each_change_against_your_source_before_it_goes_live"
+        )}
       />
       <IndexRecordWizard mode="improve" {...bootstrap} />
     </div>
   )
 }
+
+export default withMessages(
+  ImproveLibraryPage,
+  "[locale]/(dashboard)/contribute/index/[slug]/page"
+)

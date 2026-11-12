@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { ContributionNextSteps } from "@/components/contribute/ContributionNextSteps"
@@ -29,9 +30,13 @@ export function FeaturedContribution({
   readonly steps?: readonly string[]
   readonly secondary?: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <section
-      aria-label="Help improve this record"
+      aria-label={tExisting("libraryPage.helpEyebrow")}
       className="featured-contribution grid gap-7 rounded-[28px] border p-6 sm:p-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,.95fr)] lg:gap-8"
       style={{ background: T.bg.deep, borderColor: T.border.line }}
     >
@@ -40,7 +45,7 @@ export function FeaturedContribution({
           className="m-0 text-sm font-semibold"
           style={{ color: T.accent.primary }}
         >
-          Where you could help
+          {tStatic("contribute.where_you_could_help")}
         </p>
         <h2
           className="type-h2 m-0 text-balance"
@@ -67,7 +72,9 @@ export function FeaturedContribution({
       >
         {next ? (
           <>
-            <h3 className="type-small-heading m-0">What happens next</h3>
+            <h3 className="type-small-heading m-0">
+              {tExisting("libraryClaim.next")}
+            </h3>
             <p
               className="mt-3 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}

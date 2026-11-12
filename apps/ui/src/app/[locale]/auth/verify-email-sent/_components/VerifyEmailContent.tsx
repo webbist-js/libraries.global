@@ -6,7 +6,7 @@
 // link offers an explicit resend rather than sending email automatically.
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type FormEvent, useEffect, useState } from "react"
 import * as z from "zod"
 
@@ -26,10 +26,10 @@ import {
   usePreloadedIcons,
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { usePendingEmail } from "@/app/[locale]/auth/_components/pending-email"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
 import {
-  linkLifetime,
   VERIFICATION_EMAIL_SUBJECT,
   VERIFICATION_LINK_TTL_SECONDS,
 } from "@/lib/auth-links"
@@ -44,88 +44,80 @@ import { T } from "@/lib/design-tokens"
 const RESEND_COOLDOWN = 30
 const RATE_LIMITED_COOLDOWN = 60
 
-const LIFETIME = linkLifetime(VERIFICATION_LINK_TTL_SECONDS)
-
 const STATUS_ICONS = [
   "mdi:check-circle-outline",
   "mdi:alert-circle-outline",
 ] as const
 
-const EmailSchema = z
-  .string()
-  .trim()
-  .min(1, "Enter your email address")
-  .email("Enter a valid email address")
-
-const HEADINGS: Record<
-  VerifyEmailState,
-  { icon: string; tone: "info" | "warn"; title: string; italic: string }
-> = {
-  sent: {
-    icon: "mdi:email-fast-outline",
-    tone: "info",
-    title: "Check your",
-    italic: "inbox.",
-  },
-  unverified: {
-    icon: "mdi:email-alert-outline",
-    tone: "info",
-    title: "Confirm your",
-    italic: "email first.",
-  },
-  expired: {
-    icon: "mdi:clock-alert-outline",
-    tone: "warn",
-    title: "That link has",
-    italic: "expired.",
-  },
-  invalid: {
-    icon: "mdi:link-variant-off",
-    tone: "warn",
-    title: "That link didn’t",
-    italic: "work.",
-  },
-}
-
-function subtitleFor(state: VerifyEmailState, email: string | null) {
-  const to = email ? (
-    <strong style={{ color: T.ink.base }}>{email}</strong>
-  ) : null
-
-  switch (state) {
-    case "sent":
-      return to ? (
-        <>
-          We sent a confirmation link to {to}. Open it to finish creating your
-          account.
-        </>
-      ) : (
-        "We sent a confirmation link to the address you signed up with. Open it to finish creating your account."
-      )
-    case "unverified":
-      return to ? (
-        <>
-          Confirm {to} before signing in. Use your original confirmation email,
-          or request a new link below.
-        </>
-      ) : (
-        "Confirm your email before signing in. Use your original confirmation email, or request a new link below."
-      )
-    case "expired":
-      return `Confirmation links work for ${LIFETIME}. Send yourself a new one and open it from your inbox.`
-    case "invalid":
-      return "It may have been copied only in part. If you’ve already confirmed your email, sign in. If not, send yourself a new link."
-  }
-}
+const EmailSchema = (tStatic: ReturnType<typeof useTranslations<"staticUi">>) =>
+  z
+    .string()
+    .trim()
+    .min(1, tStatic("auth.enter_your_email_address"))
+    .email(tStatic("auth.enter_a_valid_email_address"))
 
 export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
-  const tUi = useUiTranslations("ui")
+  const { heading, flowRich, tFlow, lifetime } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   usePreloadedIcons(STATUS_ICONS)
   const mounted = useMounted()
   const knownEmail = usePendingEmail()
   const emailWentOut = state === "sent"
-  const heading = HEADINGS[state]
+  const HEADINGS = {
+    sent: {
+      icon: "mdi:email-fast-outline",
+      tone: "info" as const,
+      title: heading("inbox"),
+    },
+    unverified: {
+      icon: "mdi:email-alert-outline",
+      tone: "info" as const,
+      title: heading("confirm"),
+    },
+    expired: {
+      icon: "mdi:clock-alert-outline",
+      tone: "warn" as const,
+      title: heading("expired"),
+    },
+    invalid: {
+      icon: "mdi:link-variant-off",
+      tone: "warn" as const,
+      title: heading("invalid"),
+    },
+  }
+
+  function subtitleFor(state: VerifyEmailState, email: string | null) {
+    switch (state) {
+      case "sent":
+        return email
+          ? flowRich("confirmationSent", email)
+          : tStatic(
+              "auth.we_sent_a_confirmation_link_to_the_address_you_signed_up_with_open_it_to_finish_creating_your_accoun"
+            )
+      case "unverified":
+        return email
+          ? flowRich("confirmBefore", email)
+          : tStatic(
+              "auth.confirm_your_email_before_signing_in_use_your_original_confirmation_email_or_request_a_new_link_belo"
+            )
+      case "expired":
+        return tFlow("confirmationExpired", {
+          duration: lifetime(VERIFICATION_LINK_TTL_SECONDS),
+        })
+      case "invalid":
+        return tStatic(
+          "auth.it_may_have_been_copied_only_in_part_if_you_ve_already_confirmed_your_email_sign_in_if_not_send_your"
+        )
+    }
+  }
+
+  const currentHeading = HEADINGS[state]
 
   // null until edited, so the field starts with the address from this tab.
   const [typedEmail, setTypedEmail] = useState<string | null>(null)
@@ -158,12 +150,12 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
         setCooldown(RATE_LIMITED_COOLDOWN)
         setStatus({
           tone: "error",
-          text: "Too many attempts. Wait a minute, then try again.",
+          text: tStatic("auth.too_many_attempts_wait_a_minute_then_try_again"),
         })
       } else if (error) {
         setStatus({
           tone: "error",
-          text: "We couldn’t send the email. Please try again.",
+          text: tStatic("auth.we_couldn_t_send_the_email_please_try_again"),
         })
       } else {
         setCooldown(RESEND_COOLDOWN)
@@ -172,22 +164,15 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
         setStatus({
           tone: "ok",
           text:
-            email === knownEmail ? (
-              <>
-                New link sent to <strong>{email}</strong>.
-              </>
-            ) : (
-              <>
-                If <strong>{email}</strong> has an account, a new link is on its
-                way.
-              </>
-            ),
+            email === knownEmail
+              ? flowRich("newLinkSent", email)
+              : flowRich("newLinkIfAccount", email),
         })
       }
     } catch {
       setStatus({
         tone: "error",
-        text: "We couldn’t send the email. Please try again.",
+        text: tStatic("auth.we_couldn_t_send_the_email_please_try_again"),
       })
     } finally {
       setPending(false)
@@ -201,7 +186,7 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
 
       return
     }
-    const parsed = EmailSchema.safeParse(emailValue)
+    const parsed = EmailSchema(tStatic).safeParse(emailValue)
     if (!parsed.success) {
       setFieldError(parsed.error.issues[0]?.message)
 
@@ -211,7 +196,9 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
     void send(parsed.data)
   }
 
-  let buttonLabel = emailWentOut ? "Resend the email" : "Send a new link"
+  let buttonLabel = emailWentOut
+    ? tStatic("auth.resend_the_email")
+    : tStatic("auth.send_a_new_link")
   if (pending) buttonLabel = "Sending…"
   else if (cooldown > 0) buttonLabel = `Resend in ${cooldown}s`
   const buttonDisabled = pending || cooldown > 0
@@ -220,10 +207,9 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
     <>
       <AuthHeading
         layout="utility"
-        icon={heading.icon}
-        iconTone={heading.tone}
-        title={heading.title}
-        italic={heading.italic}
+        icon={currentHeading.icon}
+        iconTone={currentHeading.tone}
+        title={currentHeading.title}
         subtitle={subtitleFor(state, knownEmail)}
       />
 
@@ -231,7 +217,9 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
         {emailWentOut && (
           <AuthInboxHint
             subject={VERIFICATION_EMAIL_SUBJECT}
-            detail={`The link works for ${LIFETIME}.`}
+            detail={tFlow("linkFor", {
+              duration: lifetime(VERIFICATION_LINK_TTL_SECONDS),
+            })}
           />
         )}
 
@@ -290,27 +278,30 @@ export function VerifyEmailContent({ state }: { state: VerifyEmailState }) {
 
         {emailWentOut && (
           <AuthNote>
-            Nothing yet? Check your spam or promotions folder. Emails can take a
-            few minutes to arrive.
+            {tStatic(
+              "auth.nothing_yet_check_your_spam_or_promotions_folder_emails_can_take_a_few_minutes_to_arrive"
+            )}
           </AuthNote>
         )}
       </div>
 
       {state === "sent" ? (
         <AuthSwitchPrompt
-          prompt="Wrong address?"
-          linkLabel="Start again"
+          prompt={tStatic("auth.wrong_address")}
+          linkLabel={tExisting("ui.start_again")}
           href="/auth/register"
         />
       ) : (
         <AuthSwitchPrompt
           prompt={
             state === "unverified"
-              ? "Used a different address?"
-              : "Already confirmed?"
+              ? tStatic("auth.used_a_different_address")
+              : tStatic("auth.already_confirmed")
           }
           linkLabel={
-            state === "unverified" ? "Back to sign in" : tUi("sign_in")
+            state === "unverified"
+              ? tStatic("auth.back_to_sign_in")
+              : tUi("sign_in")
           }
           href="/auth/signin"
         />

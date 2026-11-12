@@ -2,16 +2,14 @@ import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
-import {
-  getTranslations as getUiTranslations,
-  setRequestLocale,
-} from "next-intl/server"
+import { setRequestLocale, getTranslations } from "next-intl/server"
 
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
 import styles from "@/components/beta/beta.module.css"
 import { BetaFooter } from "@/components/beta/BetaFooter"
 import { BetaForms } from "@/components/beta/BetaForms"
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   BETA_COOKIE,
   betaConfigured,
@@ -27,17 +25,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function BetaPage({
+async function BetaPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: Locale }>
   searchParams: Promise<{ next?: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
-
   const { locale } = await params
   setRequestLocale(locale)
+  const tStatic = await getTranslations("staticUi")
+  const tUi = await getTranslations("ui")
   const prefix = locale === "en" ? "" : `/${locale}`
   const fallback = prefix || "/"
   const next = betaDestination((await searchParams).next, fallback)
@@ -46,7 +44,7 @@ export default async function BetaPage({
     (await hasBetaAccess((await cookies()).get(BETA_COOKIE)?.value))
   )
     redirect(next)
-  const t = await getUiTranslations("beta")
+  const t = await getTranslations("beta")
 
   return (
     <div className={styles.page}>
@@ -56,7 +54,7 @@ export default async function BetaPage({
           href={`${prefix}/beta`}
           aria-label="Libraries Global"
         >
-          {tUi("libraries")} <em>Global</em>
+          {tUi("libraries")} <em>{tStatic("common.global")}</em>
         </a>
         <div className="flex items-center gap-3">
           <span className={styles.badge}>{t("badge")}</span>
@@ -85,3 +83,5 @@ export default async function BetaPage({
     </div>
   )
 }
+
+export default withMessages(BetaPage, "[locale]/beta/page")

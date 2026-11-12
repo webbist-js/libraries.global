@@ -4,7 +4,7 @@
 // without values; a viewer with `library.history` gets page 1 again from
 // the history route, with previous → next, once their session has loaded.
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -258,7 +258,11 @@ export function LibraryChangeTimeline({
   /** Page 1, as the static page fetched it (without values). */
   readonly initial: LibraryHistoryPage
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { can, ready } = useEntitlements()
   const detailed = ready && can("library.history")
@@ -327,7 +331,7 @@ export function LibraryChangeTimeline({
   if (rows.length === 0 && !more)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No changes recorded yet.
+        {tStatic("library.no_changes_recorded_yet")}
       </p>
     )
 
@@ -362,12 +366,12 @@ export function LibraryChangeTimeline({
       ) : null}
 
       <p aria-live="polite" className="sr-only">
-        Showing {visible.length} of {entries}{" "}
+        Showing {visible.length} {tExisting("widgetPublic.of")} {entries}{" "}
         {entries === 1 ? "entry" : "entries"}.
       </p>
       {failed ? (
         <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
-          Older entries couldn’t be loaded. Try again.
+          {tStatic("library.older_entries_couldn_t_be_loaded_try_again")}
         </p>
       ) : null}
       {collapsed || more ? (

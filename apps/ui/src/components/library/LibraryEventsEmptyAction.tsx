@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -26,6 +26,10 @@ export function LibraryEventsEmptyAction({
   readonly librarySlug: string
   readonly libraryName: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const staff = useStaff()
   const { data: session, isPending } = authClient.useSession()
   const signedIn = !!session?.user
@@ -73,14 +77,15 @@ export function LibraryEventsEmptyAction({
         className={LINK}
         style={{ color: T.accent.primary }}
       >
-        Connect an event feed
+        {tExisting("libraryPage.connectEvents")}
       </GlobalLink>
     )
   if (claimed)
     return (
       <span className="block min-h-11 text-sm" style={{ color: T.ink.dim }}>
-        Your claim is with a moderator. Once it’s approved you can connect the
-        library’s events here.
+        {tStatic(
+          "library.your_claim_is_with_a_moderator_once_it_s_approved_you_can_connect_the_library_s_events_here"
+        )}
       </span>
     )
   const claimUrl = `/contribute/claim?librarySlug=${encodeURIComponent(librarySlug)}&libraryName=${encodeURIComponent(libraryName)}&libraryDocumentId=${encodeURIComponent(documentId)}`
@@ -95,7 +100,7 @@ export function LibraryEventsEmptyAction({
       className={LINK}
       style={{ color: T.accent.primary }}
     >
-      Work here? Claim this library to add events
+      {tStatic("library.work_here_claim_this_library_to_add_events")}
     </GlobalLink>
   )
 }

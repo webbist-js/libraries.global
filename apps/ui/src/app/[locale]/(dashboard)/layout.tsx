@@ -3,8 +3,9 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { DashboardShell } from "@/components/dashboard/DashboardShell"
+import { withMessages } from "@/i18n/scoped-messages"
 
-export default async function DashboardLayout({
+async function DashboardLayout({
   children,
   params,
 }: {
@@ -18,3 +19,5 @@ export default async function DashboardLayout({
 
   return <DashboardShell locale={locale as Locale}>{children}</DashboardShell>
 }
+
+export default withMessages(DashboardLayout, "[locale]/(dashboard)/layout")

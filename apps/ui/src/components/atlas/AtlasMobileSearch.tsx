@@ -1,5 +1,6 @@
 "use client"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -31,7 +32,9 @@ export function AtlasMobileSearch({
   readonly onStatus: (status: MobileSearchStatus) => void
   readonly libraryIds: Set<string>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const locale = useLocale()
   const term = query.trim()
@@ -78,13 +81,13 @@ export function AtlasMobileSearch({
   if (failed === term)
     return (
       <p role="status" className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        Mobile stop search is unavailable. Try again shortly.
+        {tStatic("atlas.mobile_stop_search_is_unavailable_try_again_shortly")}
       </p>
     )
   if (loaded?.query !== term)
     return (
       <p role="status" className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        Searching libraries and stops…
+        {tStatic("atlas.searching_libraries_and_stops")}
       </p>
     )
   const libraries = loaded.libraries.filter(
@@ -130,7 +133,7 @@ export function AtlasMobileSearch({
                   </span>
                   <span className="block text-sm" style={{ color: T.ink.dim }}>
                     {library.libraryType === "Mobile"
-                      ? "Mobile library"
+                      ? tStatic("common.mobileLibrary")
                       : tUi("library")}
                   </span>
                 </span>

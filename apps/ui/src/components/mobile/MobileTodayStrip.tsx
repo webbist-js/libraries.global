@@ -4,7 +4,7 @@ import {
   type MobileTimetable,
   type TimetableNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { StatusBadge } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -26,7 +26,9 @@ export function MobileTodayStrip({
   readonly timezone: string
   readonly status?: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const now = useMobileClock(),
     live = usePublicMobileLive(id, tt, notices, timezone, status)
@@ -36,7 +38,7 @@ export function MobileTodayStrip({
         className="rounded-[20px] border p-5"
         style={{ borderColor: T.edge.danger }}
       >
-        Service ended.
+        {tStatic("mobile.service_ended")}
       </p>
     )
   if (status === "temporarily_closed")
@@ -45,12 +47,18 @@ export function MobileTodayStrip({
         className="rounded-[20px] border p-5"
         style={{ borderColor: T.edge.warn }}
       >
-        Paused for now. The timetable below is shown as a record of the service.
+        {tStatic(
+          "mobile.paused_for_now_the_timetable_below_is_shown_as_a_record_of_the_service"
+        )}
       </p>
     )
   if (status === "planned")
     return (
-      <p>Service planned. Check the timetable for the recorded start dates.</p>
+      <p>
+        {tStatic(
+          "mobile.service_planned_check_the_timetable_for_the_recorded_start_dates"
+        )}
+      </p>
     )
   if (!now)
     return (
@@ -58,7 +66,7 @@ export function MobileTodayStrip({
         className="rounded-[20px] border p-5"
         style={{ borderColor: T.border.line }}
       >
-        Scheduled visits are shown below.
+        {tStatic("mobile.scheduled_visits_are_shown_below")}
       </p>
     )
   const state =

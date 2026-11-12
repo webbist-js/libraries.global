@@ -4,7 +4,7 @@ import {
   normalizeMobileTimetable,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
@@ -111,8 +111,12 @@ export function LibraryDetailPage({
   untranslatedLocale = null,
   translateLocales = [],
 }: LibraryDetailPageProps) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   if (library) library = { ...library, notices } as PopulatedLibraryData
   if (!library) {
@@ -122,7 +126,9 @@ export function LibraryDetailPage({
         style={{ background: T.bg.void, color: T.ink.base }}
       >
         <MainContent className="flex flex-1 items-center justify-center">
-          <p style={{ color: T.ink.dim }}>Library not found.</p>
+          <p style={{ color: T.ink.dim }}>
+            {tStatic("library.library_not_found")}
+          </p>
         </MainContent>
       </div>
     )
@@ -215,7 +221,11 @@ export function LibraryDetailPage({
   )
 
   const anchors = [
-    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+    {
+      href: "#overview",
+      label: tExisting("dashboard.overview"),
+      icon: LIB_ICONS.map,
+    },
     ...(!mobile && !digital
       ? [{ href: "#hours", label: tUi("opening_hours"), icon: LIB_ICONS.clock }]
       : []),
@@ -273,8 +283,10 @@ export function LibraryDetailPage({
         <DashboardPage
           mobileSections={anchors}
           routeKey={path}
-          title={library.name ?? "Library"}
-          eyebrow={libraryTypeName(library.libraryType) ?? "Library"}
+          title={library.name ?? tExisting("ui.library")}
+          eyebrow={
+            libraryTypeName(library.libraryType) ?? tExisting("ui.library")
+          }
           navigation={
             <>
               <LibraryAnchorNav items={anchors} sidebar />
@@ -304,8 +316,10 @@ export function LibraryDetailPage({
           }
           navigationHeading={
             <RecordContextIdentity
-              title={library.name ?? "Library"}
-              eyebrow={libraryTypeName(library.libraryType) ?? "Library"}
+              title={library.name ?? tExisting("ui.library")}
+              eyebrow={
+                libraryTypeName(library.libraryType) ?? tExisting("ui.library")
+              }
               parent={
                 parentCrumb?.href
                   ? { href: parentCrumb.href, label: parentCrumb.label }
@@ -387,7 +401,7 @@ export function LibraryDetailPage({
                     <StopsTimesSection
                       slug={library.slug ?? undefined}
                       id={library.documentId}
-                      name={library.name ?? "Mobile library"}
+                      name={library.name ?? tStatic("common.mobileLibrary")}
                       value={rec.mobileTimetable}
                       timezone={String(rec.timezone ?? "UTC")}
                       status={library.operationalStatus}
@@ -452,7 +466,7 @@ export function LibraryDetailPage({
                   {libraryTypeName(library.libraryType) === "Mobile" ? (
                     <LibrarySectionCard
                       id="area"
-                      title="Base and returns"
+                      title={tExisting("libraryPage.baseReturns")}
                       iconPath={LIB_ICONS.map}
                     >
                       <p>
@@ -461,7 +475,7 @@ export function LibraryDetailPage({
                           : "The service’s base and return arrangements are not recorded yet."}
                       </p>
                       <OpenCorrectionLink category="Stops & times">
-                        Suggest return arrangements
+                        {tStatic("library.suggest_return_arrangements")}
                       </OpenCorrectionLink>
                     </LibrarySectionCard>
                   ) : hasNearby ? (

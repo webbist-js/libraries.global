@@ -7,7 +7,7 @@ import {
   type AtlasLibraryAccessArea,
   type AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { accessValue } from "@/components/atlas/atlas-access-analysis"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -20,7 +20,13 @@ function AccessKey({
   readonly areas: readonly AtlasLibraryAccessArea[]
   readonly metric: AtlasAccessMetric
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const histogram = ATLAS_ACCESS_BINS.map(
     (bin, index) =>
@@ -81,28 +87,27 @@ function AccessKey({
                 "repeating-linear-gradient(135deg,#bdb7ed 0px,#bdb7ed 4px,#7d71bd 4px,#7d71bd 5px)",
             }}
           />
-          Few records yet
+          {tStatic("atlas.few_records_yet")}
         </span>
         <span className="flex items-center gap-2">
           <i
             className="h-4 w-5 rounded border border-dashed border-(--t-ink-low)"
             style={{ background: "var(--t-border-hi)" }}
           />
-          No data
+          {tExisting("tables.noData")}
         </span>
       </div>
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
-        Darker means more recorded libraries for each person.{" "}
-        {areas.length.toLocaleString()} areas,{" "}
-        {areas
-          .filter(
+        {tStatic("atlas.darker_means_more_recorded_libraries_for_each_person")}{" "}
+        {tCopy("areaCoverage", {
+          total: areas.length,
+          count: areas.filter(
             (area) =>
               area.status === "available" &&
               area.indexedCount > 0 &&
               area.indexedCount < 5
-          )
-          .length.toLocaleString()}{" "}
-        with few records.
+          ).length,
+        })}
       </p>
     </section>
   )
@@ -119,7 +124,13 @@ export function AreaDetails({
   readonly onFit: (id: string) => void
   readonly compact?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -141,44 +152,49 @@ export function AreaDetails({
         </p>
       </div>
       <dl className="m-0 grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 text-sm">
-        <dt>Libraries matching filters</dt>
+        <dt>{tStatic("atlas.libraries_matching_filters")}</dt>
         <dd className="m-0 font-semibold">
           {area.libraryCount.toLocaleString()}
         </dd>
-        <dt>Indexed before filters</dt>
+        <dt>{tStatic("atlas.indexed_before_filters")}</dt>
         <dd className="m-0 font-semibold">
           {area.indexedCount.toLocaleString()}
         </dd>
-        <dt>Residents · {area.populationYear}</dt>
+        <dt>{tCopy("residentsYear", { year: area.populationYear ?? "—" })}</dt>
         <dd className="m-0 font-semibold">
-          {area.population?.toLocaleString() ?? "Unavailable"}
+          {area.population?.toLocaleString() ??
+            tExisting("atlasDrawers.unavailable")}
         </dd>
       </dl>
       {area.status === "no_records" ? (
         <p className="m-0 text-sm">
-          No libraries are indexed here yet. This does not mean there are no
-          libraries.
+          {tStatic(
+            "atlas.no_libraries_are_indexed_here_yet_this_does_not_mean_there_are_no_libraries"
+          )}
         </p>
       ) : area.status === "missing_population" ? (
         <p className="m-0 text-sm">
-          A matching population estimate is unavailable.
+          {tStatic("atlas.a_matching_population_estimate_is_unavailable")}
         </p>
       ) : area.indexedCount < 5 ? (
         <p className="m-0 text-sm">
-          Fewer than five records are indexed here. The comparison may change
-          substantially as records are added.
+          {tStatic(
+            "atlas.fewer_than_five_records_are_indexed_here_the_comparison_may_change_substantially_as_records_are_adde"
+          )}
         </p>
       ) : null}
       {area.status === "available" && area.libraryCount === 0 ? (
         <p className="m-0 text-sm">
-          No indexed libraries match these filters. People per library has no
-          finite value.
+          {tStatic(
+            "atlas.no_indexed_libraries_match_these_filters_people_per_library_has_no_finite_value"
+          )}
         </p>
       ) : null}
       {area.smallPopulation ? (
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          Under 100,000 residents: a single library can change the rate
-          substantially.
+          {tStatic(
+            "atlas.under_100_000_residents_a_single_library_can_change_the_rate_substantially"
+          )}
         </p>
       ) : null}
       {!compact ? (
@@ -198,7 +214,7 @@ export function AreaDetails({
           onClick={() => onFit(area.id)}
           className="min-h-11 self-start text-sm font-semibold underline"
         >
-          Zoom to {area.name}
+          {tStatic("atlas.zoom_to")} {area.name}
         </button>
       ) : null}
     </section>
@@ -224,6 +240,10 @@ export function AccessOverview({
   readonly onSelect: (id: string) => void
   readonly onCompare: () => void
 }) {
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
   const fewRecords = analysisAreas.filter(
     (item) =>
       item.status === "available" &&
@@ -235,9 +255,9 @@ export function AccessOverview({
     <>
       <AccessKey areas={analysisAreas} metric={metric} />
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
-        This compares recorded libraries with the people living in each area. It
-        doesn’t show whether people can reach a library, and low figures can
-        mean missing records. Each rate covers its whole area.
+        {tStatic(
+          "atlas.this_compares_recorded_libraries_with_the_people_living_in_each_area_it_doesn_t_show_whether_people_"
+        )}
       </p>
       <AccessRanking {...{ ranked, metric, onSelect }} />
       <button
@@ -246,7 +266,7 @@ export function AccessOverview({
         className="min-h-11 self-start text-sm font-semibold underline"
         style={{ color: T.accent.primary }}
       >
-        Compare all {analysisAreas.length.toLocaleString()} areas
+        {tCopy("compareAll", { count: analysisAreas.length })}
       </button>
       {fewRecords > 0 ? (
         <section
@@ -254,18 +274,19 @@ export function AccessOverview({
           style={{ borderColor: T.border.hi, background: T.bg.surface }}
         >
           <h3 className="type-h3 m-0">
-            {fewRecords.toLocaleString()} areas have few records yet
+            {tCopy("fewAreas", { count: fewRecords })}
           </h3>
           <p className="m-0" style={{ color: T.ink.dim }}>
-            Missing libraries can make these figures look lower than actual
-            provision. Adding confirmed library records improves the comparison.
+            {tStatic(
+              "atlas.missing_libraries_can_make_these_figures_look_lower_than_actual_provision_adding_confirmed_library_r"
+            )}
           </p>
           <GlobalLink
             href="/community#drives"
             className="flex min-h-11 items-center self-start rounded-full border bg-(--t-bg-deep) px-4 font-semibold"
             style={{ borderColor: T.border.hi }}
           >
-            Join a drive
+            {tStatic("atlas.join_a_drive")}
           </GlobalLink>
         </section>
       ) : null}
@@ -291,12 +312,18 @@ export function AccessExplore({
   readonly onSelect: (id: string) => void
   readonly onFit: (id: string) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <>
       <label className="flex flex-col gap-2 text-sm font-semibold">
-        Find an area
+        {tExisting("atlasContext.findArea")}
         <input
           type="search"
           value={areaQuery}
@@ -327,13 +354,12 @@ export function AccessExplore({
           ))}
           {!exploreAreas.length ? (
             <p role="status" className="m-0 p-3 text-sm">
-              No areas match your search in this scope.
+              {tStatic("atlas.no_areas_match_your_search_in_this_scope")}
             </p>
           ) : null}
           {exploreAreas.length > 20 ? (
             <p className="m-0 p-3 text-xs" style={{ color: T.ink.dim }}>
-              Showing the first 20 of {exploreAreas.length.toLocaleString()}{" "}
-              matches. Refine your search to find an area.
+              {tCopy("firstMatches", { count: exploreAreas.length })}
             </p>
           ) : null}
         </section>
@@ -346,12 +372,16 @@ export function AccessExplore({
           <AreaDetails area={area} metric={metric} onFit={onFit} />
         ) : (
           <>
-            <h3 className="type-h3 m-0 mb-2">Pick an area</h3>
+            <h3 className="type-h3 m-0 mb-2">
+              {tStatic("atlas.pick_an_area")}
+            </h3>
             <p
               className="m-0 text-sm leading-relaxed"
               style={{ color: T.ink.dim }}
             >
-              Select one on the map, search above, or choose from Compare.
+              {tStatic(
+                "atlas.select_one_on_the_map_search_above_or_choose_from_compare"
+              )}
             </p>
           </>
         )}
@@ -371,8 +401,14 @@ function AccessRanking({
   readonly onSelect: (id: string) => void
   readonly scopeDescription?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
-    <section aria-label="Areas with the fewest recorded libraries per resident">
+    <section
+      aria-label={tStatic(
+        "atlas.areas_with_the_fewest_recorded_libraries_per_resident"
+      )}
+    >
       <h3 className="type-h3 m-0 mb-2">
         {metric === "per100k"
           ? "Fewest libraries per resident"
@@ -416,7 +452,9 @@ export function AccessData({
   readonly response: AtlasLibraryAccessResponse
   readonly area?: AtlasLibraryAccessArea
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -429,29 +467,26 @@ export function AccessData({
         style={{ borderColor: T.border.divider }}
       >
         <summary className="min-h-12 cursor-pointer list-none py-3 text-base font-bold">
-          How it’s calculated
+          {tStatic("atlas.how_it_s_calculated")}
         </summary>
         <div className="flex flex-col gap-4">
           <p className="m-0">
-            {response.coverage.note} The layer uses reporting-area boundaries,
-            generalised for display. Library counts and population denominators
-            cover each whole area, wherever you move or zoom the map.
+            {response.coverage.note}{" "}
+            {tStatic(
+              "atlas.the_layer_uses_reporting_area_boundaries_generalised_for_display_library_counts_and_population_denom"
+            )}
           </p>
           <p className="m-0">
-            Libraries per 100,000 residents = matching recorded libraries ÷
-            resident population × 100,000.
+            {tStatic(
+              "atlas.libraries_per_100_000_residents_matching_recorded_libraries_resident_population_100_000"
+            )}
           </p>
           <p className="m-0">
-            People per library = resident population ÷ matching recorded
-            libraries.
+            {tStatic(
+              "atlas.people_per_library_resident_population_matching_recorded_libraries"
+            )}
           </p>
-          <p className="m-0">
-            Counts follow your Filters, chosen library types and enabled
-            accessibility selection. Only published records with usable map
-            coordinates are counted. Planned libraries and permanent closures
-            are excluded. Each mapped mobile service counts once at its depot,
-            never once per stop.
-          </p>
+          <p className="m-0">{tStatic("atlas.method_41")}</p>
         </div>
       </details>
       <details
@@ -459,42 +494,21 @@ export function AccessData({
         style={{ borderColor: T.border.divider }}
       >
         <summary className="min-h-12 cursor-pointer list-none py-3 text-base font-bold">
-          What it doesn’t measure
+          {tStatic("atlas.what_it_doesn_t_measure")}
         </summary>
-        <p className="mt-0 mb-3">
-          The library index is incomplete. Low rates can mean missing records.
-          This does not measure travel time, opening capacity, eligibility or
-          quality. Academic and restricted libraries may serve a different
-          population. Five indexed records do not establish good or complete
-          record coverage.
-        </p>
+        <p className="mt-0 mb-3">{tStatic("atlas.method_43")}</p>
       </details>
       <details
         className="border-b py-2"
         style={{ borderColor: T.border.divider }}
       >
         <summary className="min-h-12 cursor-pointer list-none py-3 text-base font-bold">
-          Missing data and zeros
+          {tStatic("atlas.missing_data_and_zeros")}
         </summary>
         <div className="mb-3 flex flex-col gap-3">
-          <p className="m-0">
-            Hatching means one to four libraries are indexed before filtering.
-            Grey means missing population or no indexed baseline. Zero matching
-            libraries is a valid filtered count, not proof of no local
-            provision; people per library then has no finite value.
-          </p>
-          <p className="m-0">
-            Fixed colour bands stay comparable as you filter. People-per-library
-            band limits are rounded reciprocals of the per-100k scale. Histogram
-            bars count areas with a rate, including those with few indexed
-            records. Rankings include areas with at least five indexed records
-            and 20,000 residents.
-          </p>
-          <p className="m-0">
-            Scope changes which whole areas are included in the analysis and
-            CSV. In map view includes areas whose geographic bounds intersect
-            the view; it does not clip the population or library counts.
-          </p>
+          <p className="m-0">{tStatic("atlas.method_45")}</p>
+          <p className="m-0">{tStatic("atlas.method_46")}</p>
+          <p className="m-0">{tStatic("atlas.method_47")}</p>
         </div>
       </details>
       <details
@@ -502,11 +516,12 @@ export function AccessData({
         style={{ borderColor: T.border.divider }}
       >
         <summary className="min-h-12 cursor-pointer list-none py-3 text-base font-bold">
-          Sources and dates
+          {tStatic("atlas.sources_and_dates")}
         </summary>
         <div className="mb-3 flex flex-col gap-3">
           <p className="m-0">
-            Population: {response.baseline.year}. Library index evaluated{" "}
+            {tStatic("atlas.population")} {response.baseline.year}. Library
+            index evaluated{" "}
             {new Date(response.evaluatedAt).toLocaleDateString()}.
             {response.unmappedLibraries
               ? ` ${response.unmappedLibraries.toLocaleString()} matching records lack a reporting-area join and are excluded from rates.`
@@ -540,7 +555,7 @@ export function AccessData({
           </p>
           {area ? (
             <p className="m-0">
-              Selected area population:{" "}
+              {tStatic("atlas.selected_area_population")}{" "}
               <a
                 href={area.populationSourceUrl}
                 target="_blank"

@@ -1,13 +1,12 @@
 // apps/ui/src/components/index-page/FindStates.tsx
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
 
 export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -62,7 +61,9 @@ export function FindSkeletonGrid({ count = 6 }: { count?: number }) {
 }
 
 export function FindErrorState({ onRetry }: { onRetry: () => void }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -88,11 +89,12 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
           <path d="M12 9v4M12 17h.01" />
           <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
         </svg>
-        We couldn&rsquo;t load libraries just now.
+        {tStatic("profileIndex.we_couldn_rsquo_t_load_libraries_just_now")}
       </p>
       <p className="m-0 text-base" style={{ color: T.ink.base }}>
-        The search service may be starting up or unreachable. Your filters are
-        kept — try again in a moment.
+        {tStatic(
+          "profileIndex.the_search_service_may_be_starting_up_or_unreachable_your_filters_are_kept_try_again_in_a_moment"
+        )}
       </p>
       <button
         type="button"
@@ -107,7 +109,11 @@ export function FindErrorState({ onRetry }: { onRetry: () => void }) {
 }
 
 export function FindEmptyState({ onClear }: { onClear: () => void }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -136,10 +142,13 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
           <path d="m20 20-3.5-3.5M8 11h6" />
         </svg>
       </span>
-      <h3 className="type-h3 m-0">No libraries match these filters</h3>
+      <h3 className="type-h3 m-0">
+        {tStatic("profileIndex.no_libraries_match_these_filters")}
+      </h3>
       <p className="m-0 max-w-[46ch] text-base" style={{ color: T.ink.dim }}>
-        Try removing a filter or two — or help the index grow by adding a
-        library you know about.
+        {tStatic(
+          "profileIndex.try_removing_a_filter_or_two_or_help_the_index_grow_by_adding_a_library_you_know_about"
+        )}
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <button
@@ -159,7 +168,7 @@ export function FindEmptyState({ onClear }: { onClear: () => void }) {
             color: T.ink.base,
           }}
         >
-          Add a missing library
+          {tExisting("libraryPage.addLibrary")}
         </Link>
       </div>
     </div>

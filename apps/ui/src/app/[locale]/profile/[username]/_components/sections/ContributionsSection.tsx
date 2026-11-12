@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
@@ -73,7 +73,11 @@ export function ContributionsSection({
   username: string
   isOwner?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [submissions, setSubmissions] = useState<PublicSubmission[]>([])
   const [loading, setLoading] = useState(true)
@@ -152,16 +156,19 @@ export function ContributionsSection({
     return (
       <section aria-labelledby="ct-empty" style={{ ...CARD, padding: "24px" }}>
         <SectionTitle as="h2" id="ct-empty">
-          Contributions
+          {tExisting("dashboard.contributions")}
         </SectionTitle>
         <p className="m-0 mt-2 text-base" style={{ color: T.ink.dim }}>
-          No accepted contributions yet. Added libraries, edits and articles
-          appear here once a moderator accepts them.
+          {tStatic(
+            "profileRoute.no_accepted_contributions_yet_added_libraries_edits_and_articles_appear_here_once_a_moderator_accept"
+          )}
         </p>
         <div className="mt-3 flex flex-col gap-2">
           {ownerNote}
           <p className="m-0">
-            <TextLink href="/contribute">Start contributing</TextLink>
+            <TextLink href="/contribute">
+              {tExisting("homepageContribute.start")}
+            </TextLink>
           </p>
         </div>
       </section>
@@ -171,7 +178,9 @@ export function ContributionsSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="type-h2 sr-only">Contribution summary</h2>
+      <h2 className="type-h2 sr-only">
+        {tStatic("common.contributionSummary")}
+      </h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label={tUi("accepted")}

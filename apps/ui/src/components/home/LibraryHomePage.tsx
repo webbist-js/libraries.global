@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 import { Suspense, use } from "react"
 
 import { MainContent } from "@/components/ds/MainContent"
@@ -40,6 +40,7 @@ export function LibraryHomePage({ locale }: { readonly locale: Locale }) {
 }
 
 function HomepageContent({ locale }: { readonly locale: Locale }) {
+  const t = useTranslations("homepageFallback")
   const homepagePromise = fetchHomepage(locale)
   const pillarsPromise = fetchHomepagePillars(locale)
   const networksPromise = publicNetworkList(new URLSearchParams()).catch(
@@ -70,7 +71,7 @@ function HomepageContent({ locale }: { readonly locale: Locale }) {
   const stats = use(statsPromise)
   const tasks = pickTasks(use(incompletePromise), 3)
   const drives = use(drivesPromise)
-  const content = resolveHomepageContent(homepage)
+  const content = resolveHomepageContent(homepage, t)
   const globeMarkers = use(globeMarkersPromise)
   const pillars = use(pillarsPromise)
   const networks = use(networksPromise)?.networks ?? []

@@ -1,10 +1,11 @@
 import { permanentRedirect } from "next/navigation"
 import type { Locale } from "next-intl"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { getPathname } from "@/lib/navigation"
 
 /** Keep account bookmarks and billing returns after moving into Profile. */
-export default async function MembershipRedirect({
+async function MembershipRedirect({
   params,
   searchParams,
 }: {
@@ -16,3 +17,5 @@ export default async function MembershipRedirect({
     getPathname({ href: { pathname: "/profile/membership", query }, locale })
   )
 }
+
+export default withMessages(MembershipRedirect, "[locale]/membership/page")

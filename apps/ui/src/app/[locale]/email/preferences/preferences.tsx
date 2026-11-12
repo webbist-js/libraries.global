@@ -1,7 +1,6 @@
 "use client"
-
 import { Bell, Check, Clock, Mail, TriangleAlert } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -32,6 +31,8 @@ function isEmailAction(value: unknown): value is EmailAction {
 }
 
 export function EmailPreferences({ token }: { token: string }) {
+  const tExisting = useTranslations()
+
   const [state, setState] = useState<State>({ kind: "loading" })
   const [attempt, setAttempt] = useState(0)
   const [message, setMessage] = useState("")
@@ -82,7 +83,9 @@ export function EmailPreferences({ token }: { token: string }) {
       } else {
         setMessage(
           response.status === 429
-            ? "Too many attempts. Wait a minute, then try again."
+            ? tExisting(
+                "staticUi.auth.too_many_attempts_wait_a_minute_then_try_again"
+              )
             : "We couldn’t save this change. Please try again."
         )
       }
@@ -133,7 +136,7 @@ function EmailLinkProblem({
   kind: "invalid" | "unavailable"
   retry: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <>
@@ -306,7 +309,7 @@ function EmailActionButtons({
   busy: boolean
   submit: () => Promise<void>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div className="flex flex-wrap items-center gap-3">

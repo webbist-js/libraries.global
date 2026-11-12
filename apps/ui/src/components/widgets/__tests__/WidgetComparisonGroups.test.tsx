@@ -4,14 +4,13 @@ import {
   type WidgetLibrary,
   type WidgetSelectionSpec,
 } from "@repo/shared-data"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { useState } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { WidgetComparisonGroups } from "@/components/widgets/WidgetComparisonGroups"
+import { cleanup, fireEvent, render, screen } from "@/test/render"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-vi.mock("next-intl", () => ({ useTranslations: () => String }))
 afterEach(cleanup)
 const rows = [
   { documentId: "one", name: "Central Library", city: "City" },

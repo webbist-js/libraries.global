@@ -6,6 +6,7 @@ import { use } from "react"
 
 import ContinentDetailPage from "@/components/continent/ContinentDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { placeGapInsights } from "@/lib/place-insights-server"
@@ -73,7 +74,7 @@ export async function generateStaticParams({
   return results.data.map((c) => ({ continent: c.slug }))
 }
 
-export default function ContinentPage(props: {
+function ContinentPage(props: {
   params: Promise<{ locale: string; continent: string }>
 }) {
   const params = use(props.params)
@@ -124,3 +125,8 @@ export default function ContinentPage(props: {
     </>
   )
 }
+
+export default withMessages(
+  ContinentPage,
+  "[locale]/(dashboard)/[continent]/page"
+)

@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 
 import { SponsorPage } from "@/components/sponsor/SponsorPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { buildMetadata } from "@/lib/seo/metadata"
 import { fetchSponsorAcknowledgements } from "@/lib/sponsor/acknowledgements-server"
 
@@ -22,7 +23,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function SponsorRoute({
+async function SponsorRoute({
   params,
 }: {
   params: Promise<{ locale: Locale }>
@@ -33,3 +34,5 @@ export default async function SponsorRoute({
 
   return <SponsorPage acknowledgements={acknowledgements} />
 }
+
+export default withMessages(SponsorRoute, "[locale]/(dashboard)/sponsor/page")

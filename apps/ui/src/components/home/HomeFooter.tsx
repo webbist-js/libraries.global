@@ -33,6 +33,8 @@ export function HomeFooter({
   readonly footer: FooterData
   readonly legalDocuments: LegalDocumentNavItem[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("ui")
   const navigation = buildFooterNavigation(footer, legalDocuments, {
     legal: t("legal_policies"),
@@ -51,10 +53,9 @@ export function HomeFooter({
     <footer className="home-footer">
       <div className="home-frame">
         <p>
-          © {new Date().getFullYear()} Libraries Global · An independent,
-          open-source project
+          © {new Date().getFullYear()} {tStatic("home.footerProject")}
         </p>
-        <nav aria-label="Project and policies">
+        <nav aria-label={tStatic("home.footerPolicies")}>
           <GlobalLink href="/about">{t("about_the_project")}</GlobalLink>
           {unique.map((link) => (
             <GlobalLink key={link.href} href={link.href}>

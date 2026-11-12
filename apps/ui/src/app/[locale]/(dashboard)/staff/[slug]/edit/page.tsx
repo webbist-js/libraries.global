@@ -10,6 +10,7 @@ import {
 import { prefillLibrary } from "@/components/library-editor/wizard.prefill"
 import { wizardStepOf } from "@/components/library-editor/wizard.steps"
 import type { StaffNoticesData } from "@/components/staff/StaffNotices"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { languageName } from "@/lib/locale-fallback"
 import { routing } from "@/lib/navigation"
@@ -20,7 +21,7 @@ import { fetchLibraryForEditing } from "@/lib/strapi-api/content/server"
 
 export const metadata = privateMetadata("Edit your library")
 
-export default async function StaffEditPage({
+async function StaffEditPage({
   params,
   searchParams,
 }: {
@@ -101,3 +102,8 @@ export default async function StaffEditPage({
     />
   )
 }
+
+export default withMessages(
+  StaffEditPage,
+  "[locale]/(dashboard)/staff/[slug]/edit/page"
+)

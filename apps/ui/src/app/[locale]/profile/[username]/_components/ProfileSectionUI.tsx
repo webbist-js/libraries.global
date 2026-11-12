@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import {
   RARITY_COLOR,
@@ -87,6 +88,8 @@ export function BadgeTile({
   awardedLabel?: string | null
   showRarity?: boolean
 }) {
+  const tExisting = useTranslations()
+
   return (
     <li
       className="flex items-start gap-3 rounded-[16px] p-3.5"
@@ -136,8 +139,8 @@ export function BadgeTile({
             {earned
               ? awardedLabel
                 ? `Earned ${awardedLabel}`
-                : "Earned"
-              : "Locked"}
+                : tExisting("staticUi.profileRoute.earned")
+              : tExisting("discussions.lockedLabel")}
           </span>
           {showRarity ? (
             <span

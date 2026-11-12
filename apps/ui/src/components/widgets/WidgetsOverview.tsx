@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -16,11 +17,7 @@ import {
 import { WidgetThumbnail } from "@/components/widgets/WidgetThumbnail"
 import { Link } from "@/lib/navigation"
 import { cn } from "@/lib/styles"
-import {
-  widgetRequest,
-  widgetTypeLabels,
-  type WidgetWorkspace,
-} from "@/lib/widgets/client"
+import { widgetRequest, type WidgetWorkspace } from "@/lib/widgets/client"
 
 const WIDGET_STATUS_STYLE = {
   maxWidth: "100%",
@@ -31,14 +28,26 @@ const WIDGET_STATUS_STYLE = {
 /** The widget's main status chip: inactive Team, live version or draft. */
 function widgetStatus(
   w: WidgetWorkspace["widgets"][number],
-  teamActive: boolean
+  teamActive: boolean,
+  tSettings: ReturnType<typeof useTranslations<"widgetSettings">>
 ): { color: "warn" | "ok" | "dim"; label: string } {
-  if (!teamActive)
-    return { color: "warn", label: "Unavailable — workspace closed" }
+  if (!teamActive) return { color: "warn", label: tSettings("closed") }
   if (w.state === "live")
-    return { color: "ok", label: `Live v${w.publishedVersion}` }
+    return {
+      color: "ok",
+      label: tSettings("live", { version: w.publishedVersion ?? 0 }),
+    }
 
-  return { color: "dim", label: w.state === "draft" ? "Draft only" : w.state }
+  return {
+    color: "dim",
+    label: tSettings(
+      w.state === "draft"
+        ? "draft"
+        : w.state === "paused"
+          ? "paused"
+          : "archived"
+    ),
+  }
 }
 
 /** One widget's card in the overview grid. */
@@ -49,6 +58,11 @@ function WidgetCard({
   readonly w: WidgetWorkspace["widgets"][number]
   readonly teamActive: boolean
 }) {
+  const tSettings = useTranslations("widgetSettings")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const href = `/staff/teams/widgets/${w.documentId}`
   const updated = new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -62,11 +76,14 @@ function WidgetCard({
           <WidgetThumbnail type={w.type} />
         </div>
         <div className="absolute top-3 left-3 flex max-w-[calc(100%-1.5rem)] flex-wrap gap-1.5">
-          <Badge style={WIDGET_STATUS_STYLE} {...widgetStatus(w, teamActive)} />
+          <Badge
+            style={WIDGET_STATUS_STYLE}
+            {...widgetStatus(w, teamActive, tSettings)}
+          />
           {w.hasChanges && w.publishedVersion > 0 ? (
             <Badge
               color="warn"
-              label="Unpublished changes"
+              label={tStatic("widget.unpublished_changes")}
               style={WIDGET_STATUS_STYLE}
             />
           ) : null}
@@ -74,7 +91,7 @@ function WidgetCard({
             <Badge
               style={WIDGET_STATUS_STYLE}
               color="aurora"
-              label="Ready for organiser review"
+              label={tStatic("widget.ready_for_organiser_review")}
             />
           ) : null}
         </div>
@@ -82,7 +99,7 @@ function WidgetCard({
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-5 wrap-anywhere">
         <div className="min-w-0">
           <p className="type-label m-0 text-(--t-accent-primary)">
-            {widgetTypeLabels[w.type]}
+            {tSettings(w.type)}
           </p>
           <h3 className="m-0 mt-1 text-lg leading-snug font-semibold">
             <Link
@@ -105,7 +122,7 @@ function WidgetCard({
               className="mt-0.5 shrink-0"
             />
             <span>
-              <span className="sr-only">Selection: </span>
+              <span className="sr-only">{tStatic("widget.selection")} </span>
               {w.selection?.name ?? "Selection unavailable"}
             </span>
           </li>
@@ -129,19 +146,21 @@ function WidgetCard({
               width={16}
               className="mt-0.5 shrink-0"
             />
-            <span>Updated {updated}</span>
+            <span>
+              {tExisting("editorial.updated")} {updated}
+            </span>
           </li>
         </ul>
       </div>
       <div className="flex flex-wrap gap-2 border-t border-(--t-border-line) px-5 py-4">
         <Link className={cn(primaryCtaSm, "min-h-11 max-w-full")} href={href}>
-          Edit widget
+          {tStatic("widget.edit_widget")}
         </Link>
         <Link
           className={cn(secondaryCtaSm, "min-h-11 max-w-full")}
           href={`${href}/manage`}
         >
-          Publishing & websites
+          {tStatic("widget.publishing_websites")}
         </Link>
       </div>
     </li>
@@ -166,6 +185,10 @@ function DefaultSourceChange({
   readonly onPick: (network: PendingNetwork | null) => void
   readonly onConnect: (id: string | null) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div
       id="widget-default-source-change"
@@ -175,18 +198,22 @@ function DefaultSourceChange({
         <CataloguePicker
           teamId={teamId}
           kind="networks"
-          label="Find your library service or network"
+          label={tStatic("widget.find_your_library_service_or_network")}
           onPick={onPick}
         />
         <p className="m-0 mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
-          Uses public library data. Management access to a service is reviewed
-          separately.
+          {tStatic(
+            "widget.uses_public_library_data_management_access_to_a_service_is_reviewed_separately"
+          )}
         </p>
       </div>
       {pendingNetwork ? (
         <div className="flex max-w-xl flex-wrap items-center gap-3 rounded-xl bg-(--t-bg-surface) p-4">
           <p className="m-0 min-w-0 flex-1 text-base">
-            Use <strong>{pendingNetwork.name}</strong> as the default?
+            {tStatic.rich("widget.useDefault", {
+              name: pendingNetwork.name,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -194,7 +221,7 @@ function DefaultSourceChange({
               onClick={() => onPick(null)}
               className={cn(secondaryCtaSm, "min-h-11 cursor-pointer")}
             >
-              Cancel
+              {tExisting("ui.cancel")}
             </button>
             <button
               type="button"
@@ -205,21 +232,21 @@ function DefaultSourceChange({
                 "min-h-11 cursor-pointer disabled:opacity-50"
               )}
             >
-              Confirm
+              {tStatic("common.confirm")}
             </button>
           </div>
         </div>
       ) : null}
       {hasPrimaryNetwork ? (
         <p className="m-0 text-sm text-(--t-ink-dim)">
-          No single service fits?{" "}
+          {tStatic("widget.no_single_service_fits")}{" "}
           <button
             type="button"
             disabled={busy}
             onClick={() => onConnect(null)}
             className="cursor-pointer font-semibold text-(--t-accent-primary) underline underline-offset-4 disabled:opacity-50"
           >
-            Use manual setup instead
+            {tStatic("widget.use_manual_setup_instead")}
           </button>
         </p>
       ) : null}
@@ -232,6 +259,10 @@ export function WidgetsOverview({
 }: {
   readonly initial: WidgetWorkspace
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [data, setData] = useState(initial),
     [error, setError] = useState<string | null>(null),
     [pendingNetwork, setPendingNetwork] = useState<PendingNetwork | null>(null),
@@ -262,14 +293,15 @@ export function WidgetsOverview({
         <Notice
           icon="mdi:pause-circle-outline"
           tone="warn"
-          title="Your workspace is closed"
+          title={tStatic("widget.your_workspace_is_closed")}
         >
           <p>
-            Published widgets are unavailable. An organiser can still pause,
-            unpublish or archive retained work.
+            {tStatic(
+              "widget.published_widgets_are_unavailable_an_organiser_can_still_pause_unpublish_or_archive_retained_work"
+            )}
           </p>
           <Link href="/contact" className="font-semibold underline">
-            Contact the site team
+            {tStatic("common.contactSiteTeam")}
           </Link>
         </Notice>
       ) : null}
@@ -291,7 +323,7 @@ export function WidgetsOverview({
           </span>
           <div className="min-w-0 flex-1">
             <p className="type-label m-0 text-(--t-ink-dim)">
-              Default library source
+              {tStatic("widget.default_library_source")}
             </p>
             <h2
               id="widget-default-source"
@@ -300,8 +332,9 @@ export function WidgetsOverview({
               {team.primaryNetwork?.name ?? "Your Team libraries"}
             </h2>
             <p className="m-0 mt-0.5 text-sm text-(--t-ink-dim)">
-              New widgets start from this source. Each widget can use its own
-              selection.
+              {tStatic(
+                "widget.new_widgets_start_from_this_source_each_widget_can_use_its_own_selection"
+              )}
             </p>
           </div>
           {team.organiser && team.active ? (
@@ -315,7 +348,9 @@ export function WidgetsOverview({
               }}
               className={cn(secondaryCtaSm, "min-h-11 cursor-pointer")}
             >
-              {changingSource ? "Done" : "Change"}
+              {changingSource
+                ? tExisting("ui.done")
+                : tExisting("atlasNetwork.changeService")}
             </button>
           ) : null}
         </div>
@@ -330,11 +365,14 @@ export function WidgetsOverview({
           />
         ) : null}
       </section>
-      <StaffPanel title="Widgets" className="@container/widgets">
+      <StaffPanel
+        title={tExisting("staffWorkspace.widgets")}
+        className="@container/widgets"
+      >
         {!data.widgets.length ? (
           <EmptyState
             compact
-            lead="Put your library data to work"
+            lead={tStatic("widget.put_your_library_data_to_work")}
             detail="Create a finder, directory, chart or statistic card from the same library selection."
           />
         ) : (
@@ -346,22 +384,23 @@ export function WidgetsOverview({
         )}
       </StaffPanel>
       <StaffPanel
-        title="Library selections"
+        title={tStatic("widget.library_selections")}
         aside={
           team.active ? (
             <Link
               className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline"
               href="/staff/teams/widgets/selections/new"
             >
-              Create selection
+              {tStatic("widget.create_selection")}
             </Link>
           ) : undefined
         }
       >
         {!data.selections.length ? (
           <p className="m-0 max-w-prose text-sm leading-relaxed text-(--t-ink-dim)">
-            Selections are saved separately so a map, directory and chart can
-            use the same libraries.
+            {tStatic(
+              "widget.selections_are_saved_separately_so_a_map_directory_and_chart_can_use_the_same_libraries"
+            )}
           </p>
         ) : (
           <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
@@ -380,10 +419,10 @@ export function WidgetsOverview({
                   <p className="mt-1 text-sm text-(--t-ink-dim)">
                     {" "}
                     {s.spec.membership === "fixed"
-                      ? "Fixed library identities"
-                      : "Follows source membership"}{" "}
-                    · Used by {s.usedBy?.length ?? 0}{" "}
-                    {(s.usedBy?.length ?? 0) === 1 ? "widget" : "widgets"}
+                      ? tStatic("widget.fixedMembership")
+                      : tStatic("widget.followMembership")}{" "}
+                    ·{" "}
+                    {tStatic("widget.usedBy", { count: s.usedBy?.length ?? 0 })}
                   </p>
                 </div>
                 <Link
@@ -394,7 +433,7 @@ export function WidgetsOverview({
                   })}
                   href={`/staff/teams/widgets/selections/${s.documentId}`}
                 >
-                  Edit selection
+                  {tStatic("widget.edit_selection")}
                   <Icon aria-hidden icon="mdi:arrow-right" width={17} />
                 </Link>
               </li>

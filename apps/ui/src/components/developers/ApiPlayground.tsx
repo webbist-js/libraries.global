@@ -1,8 +1,14 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
+import {
+  ApiPlaygroundNavigationProvider,
+  useApiPlaygroundNavigation,
+} from "@/components/developers/ApiPlaygroundNavigation"
 import { ApiPlaygroundUsageDialog } from "@/components/developers/ApiPlaygroundUsageDialog"
+import { createPlaygroundOperations } from "@/components/developers/playground-operations"
 import { SelectField } from "@/components/ds/SelectField"
 import { Button } from "@/components/ui/button"
 import { LIVE_LOCALES } from "@/lib/live-locales"
@@ -22,102 +28,9 @@ import {
   type PlaygroundSummaryOperation,
 } from "@/lib/team-api/playground"
 
-const operations = [
-  {
-    id: "search",
-    label: "Search libraries",
-    method: "POST",
-    path: "/api/v1/search/libraries",
-  },
-  {
-    id: "list",
-    label: "List records",
-    method: "GET",
-    path: "/api/v1/libraries",
-  },
-  {
-    id: "read",
-    label: "Read one record",
-    method: "GET",
-    path: "/api/v1/libraries/{entityRef}",
-  },
-  {
-    id: "places",
-    label: "Browse places",
-    method: "GET",
-    path: "/api/v1/places/{country}/{region}",
-  },
-  {
-    id: "placeLibraries",
-    label: "Libraries in a place",
-    method: "GET",
-    path: "/api/v1/places/{country}/{region}/{area}/libraries",
-  },
-  {
-    id: "services",
-    label: "List services",
-    method: "GET",
-    path: "/api/v1/services",
-  },
-  {
-    id: "service",
-    label: "Read a service",
-    method: "GET",
-    path: "/api/v1/services/{ref}",
-  },
-  {
-    id: "serviceLibraries",
-    label: "Service members",
-    method: "GET",
-    path: "/api/v1/services/{ref}/libraries",
-  },
-  {
-    id: "summary",
-    label: "Summary analysis",
-    method: "POST",
-    path: "/api/v1/analysis/summary",
-  },
-  {
-    id: "reach",
-    label: "Reach analysis",
-    method: "POST",
-    path: "/api/v1/analysis/reach",
-  },
-  {
-    id: "job",
-    label: "Job status",
-    method: "GET",
-    path: "/api/v1/analysis/jobs/{id}",
-  },
-  {
-    id: "jobResult",
-    label: "Job result",
-    method: "GET",
-    path: "/api/v1/analysis/jobs/{id}/result",
-  },
-  {
-    id: "proposal",
-    label: "Proposal status",
-    method: "GET",
-    path: "/api/v1/submissions/{id}",
-  },
-] as const
 /** Most status checks one "Poll job" press makes (each is a metered request). */
 const POLL_LIMIT = 10
-const SUMMARY_OPERATIONS: {
-  value: PlaygroundSummaryOperation
-  label: string
-}[] = [
-  { value: "service.profile", label: "Service profile (1 credit)" },
-  { value: "service.coverage", label: "Service coverage (5 credits)" },
-  { value: "place.profile", label: "Place profile (1 credit)" },
-  { value: "place.coverage", label: "Place coverage (5 credits)" },
-]
-const REACH_MODES: { value: PlaygroundReachMode; label: string }[] = [
-  { value: "library", label: "One library (5 credits)" },
-  { value: "service", label: "Service reporting area (20 credits)" },
-  { value: "network", label: "Whole service (40 credits, when enabled)" },
-]
+
 const PLACE_OPERATIONS = new Set<PlaygroundOperation>([
   "places",
   "placeLibraries",
@@ -245,14 +158,45 @@ async function responseBody(response: Response): Promise<unknown> {
   }
 }
 
-export function ApiPlayground({
-  teamName,
-  showUsageWarning = true,
-}: {
+type ApiPlaygroundProps = {
   readonly teamName: string
   readonly showUsageWarning?: boolean
-}) {
-  const [operation, setOperation] = useState<PlaygroundOperation>("search")
+}
+
+export function ApiPlayground(props: ApiPlaygroundProps) {
+  const navigation = useApiPlaygroundNavigation()
+
+  return navigation ? (
+    <ApiPlaygroundBody {...props} />
+  ) : (
+    <ApiPlaygroundNavigationProvider>
+      <ApiPlaygroundBody {...props} />
+    </ApiPlaygroundNavigationProvider>
+  )
+}
+
+function ApiPlaygroundBody({
+  teamName,
+  showUsageWarning = true,
+}: ApiPlaygroundProps) {
+  const operations = createPlaygroundOperations(
+    useTranslations("playgroundOperations")
+  )
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const navigation = useApiPlaygroundNavigation()!
+  const {
+    operation,
+    setOperation,
+    pending,
+    setPending,
+    selectionVersion,
+    selectOperation,
+    sidebar,
+  } = navigation
+  const [previousSelection, setPreviousSelection] = useState(selectionVersion)
   const [query, setQuery] = useState("Central")
   const [entityRef, setEntityRef] = useState("")
   const [limit, setLimit] = useState(10)
@@ -271,9 +215,15 @@ export function ApiPlayground({
   const [proposalId, setProposalId] = useState("")
   const [polling, setPolling] = useState(false)
   const [token, setToken] = useState("")
-  const [pending, setPending] = useState(false)
   const [error, setError] = useState("")
   const [result, setResult] = useState<Result | null>(null)
+  // Sidebar changes clear the response, while preserving the key and parameters.
+  // Internal result navigation uses setOperation and retains its result list.
+  if (previousSelection !== selectionVersion) {
+    setPreviousSelection(selectionVersion)
+    setResult(null)
+    setError("")
+  }
   const controller = useRef<AbortController | null>(null)
   const keyInput = useRef<HTMLInputElement>(null)
   useEffect(() => () => controller.current?.abort(), [])
@@ -384,39 +334,38 @@ export function ApiPlayground({
         />
       ) : null}
       <p className="m-0 rounded-2xl border border-(--t-border-line) bg-(--t-accent-chip) px-5 py-4 text-sm text-(--t-ink-base)">
-        <strong>This playground uses your API account’s allowance.</strong>{" "}
+        <strong>
+          {tStatic(
+            "frontendExtra.this_playground_uses_your_api_account_s_allowance"
+          )}
+        </strong>{" "}
         Successful requests and response data count toward the shared monthly
         usage for {teamName}. This includes requests made with “Read this
         record”.
       </p>
-      <fieldset disabled={pending} className="m-0 min-w-0 border-0 p-0">
-        <legend className="sr-only">Request type</legend>
-        <div className="flex flex-wrap gap-2 border-b border-(--t-border-line) pb-4">
-          {operations.map((item) => (
-            <Button
-              key={item.id}
-              type="button"
-              variant={operation === item.id ? "primary" : "ghost"}
-              size="pill"
-              aria-pressed={operation === item.id}
-              onClick={() => {
-                setOperation(item.id)
-                clear()
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
-        </div>
-      </fieldset>
+      <div className={sidebar ? "lg:hidden" : undefined}>
+        <SelectField
+          label={tStatic("common.requestType")}
+          value={operation}
+          disabled={pending}
+          options={operations.map((item) => ({
+            value: item.id,
+            label: item.label,
+          }))}
+          onValueChange={(value) =>
+            selectOperation(value as PlaygroundOperation)
+          }
+        />
+      </div>
       <form
         onSubmit={(event) => {
           event.preventDefault()
           void run(input)
         }}
         className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-7"
-        aria-label="API request playground"
+        aria-label={tStatic("frontendExtra.api_request_playground")}
       >
+        <h2 className="type-h3 m-0 mb-4">{selected.label}</h2>
         <div className="flex min-w-0 items-center gap-4 border-b border-(--t-border-line) pb-5">
           <span className="shrink-0 rounded-lg bg-(--t-bg-surface) px-3 py-2 text-sm font-semibold text-(--t-accent-primary)">
             {selected.method}
@@ -435,9 +384,11 @@ export function ApiPlayground({
           disabled={pending}
           className="m-0 min-w-0 space-y-5 border-0 p-0 pt-5"
         >
-          <legend className="sr-only">Request parameters</legend>
+          <legend className="sr-only">
+            {tStatic("frontendExtra.request_parameters")}
+          </legend>
           <label className="block font-semibold">
-            API key
+            {tStatic("frontendExtra.api_key")}
             <input
               type="password"
               name="api-key"
@@ -524,9 +475,9 @@ export function ApiPlayground({
                 </label>
               ))}
               <p className="m-0 text-sm font-normal text-(--t-ink-dim) sm:col-span-3">
-                Use slugs from “Browse places”. A region needs its country and
-                an area needs its region. Leave them empty to start from every
-                country.
+                {tStatic(
+                  "frontendExtra.use_slugs_from_browse_places_a_region_needs_its_country_and_an_area_needs_its_region_leave_them_empt"
+                )}
               </p>
             </div>
           ) : null}
@@ -551,7 +502,7 @@ export function ApiPlayground({
               }}
             />
             <label className="font-semibold">
-              Locale
+              {tStatic("frontendExtra.locale")}
               <SelectField
                 name="locale"
                 className={field}
@@ -576,10 +527,12 @@ export function ApiPlayground({
         <PlaygroundResponse result={result} pending={pending} />
         {job?.state === "pending" ? (
           <section
-            aria-label="Pending job"
+            aria-label={tStatic("frontendExtra.pending_job")}
             className="min-w-0 rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5"
           >
-            <h2 className="type-small-heading m-0">Job {job.state}</h2>
+            <h2 className="type-small-heading m-0">
+              {tStatic("frontendExtra.job")} {job.state}
+            </h2>
             <p className="m-0 mt-2 font-mono text-xs break-all" translate="no">
               {job.id}
             </p>
@@ -603,11 +556,11 @@ export function ApiPlayground({
         ) : null}
         {services.length ? (
           <section
-            aria-label="Returned services"
+            aria-label={tStatic("common.returnedServices")}
             className="flex max-h-72 min-w-0 flex-col overflow-hidden rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) xl:max-h-[36rem]"
           >
             <h2 className="type-small-heading m-0 border-b border-(--t-border-line) p-5">
-              Returned services
+              {tStatic("common.returnedServices")}
             </h2>
             <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
               {services.map((service) => (
@@ -643,19 +596,22 @@ export function ApiPlayground({
         ) : null}
         {places.length && operation === "places" ? (
           <section
-            aria-label="Returned places"
+            aria-label={tStatic("common.returnedPlaces")}
             className="flex max-h-72 min-w-0 flex-col overflow-hidden rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) xl:max-h-[36rem]"
           >
             <div className="border-b border-(--t-border-line) p-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="type-small-heading m-0">Returned places</h2>
+                <h2 className="type-small-heading m-0">
+                  {tStatic("common.returnedPlaces")}
+                </h2>
                 <span className="rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-xs font-semibold tabular-nums">
                   {places.length}
                 </span>
               </div>
               <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-                Each request you make from here uses your API account’s
-                allowance.
+                {tStatic(
+                  "frontendExtra.each_request_you_make_from_here_uses_your_api_account_s_allowance"
+                )}
               </p>
             </div>
             <ul className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2">
@@ -700,7 +656,7 @@ export function ApiPlayground({
                           })
                         }}
                       >
-                        Browse
+                        {tExisting("dashboard.browse")}
                       </Button>
                     ) : null}
                     <Button
@@ -721,7 +677,7 @@ export function ApiPlayground({
                         })
                       }}
                     >
-                      Libraries
+                      {tExisting("ui.libraries")}
                     </Button>
                   </li>
                 )
@@ -731,22 +687,26 @@ export function ApiPlayground({
         ) : null}
         {records.length ? (
           <section
-            aria-label="Returned libraries"
+            aria-label={tStatic("common.returnedLibraries")}
             className="flex max-h-72 min-w-0 flex-col overflow-hidden rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) xl:max-h-[36rem]"
           >
             <div className="border-b border-(--t-border-line) p-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="type-small-heading m-0">Returned libraries</h2>
+                <h2 className="type-small-heading m-0">
+                  {tStatic("common.returnedLibraries")}
+                </h2>
                 <span className="rounded-full bg-(--t-accent-chip) px-2.5 py-1 text-xs font-semibold tabular-nums">
                   {records.length}
                 </span>
               </div>
               <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-                Each record you read uses your API account’s allowance.
+                {tStatic(
+                  "frontendExtra.each_record_you_read_uses_your_api_account_s_allowance"
+                )}
               </p>
             </div>
             <ul
-              aria-label="Choose a returned library"
+              aria-label={tStatic("frontendExtra.choose_a_returned_library")}
               tabIndex={0}
               className="m-0 min-h-0 list-none space-y-1 overflow-y-auto overscroll-contain p-2"
             >
@@ -780,7 +740,7 @@ export function ApiPlayground({
                         {record.name}
                       </span>
                       <span className="mt-1 block text-xs font-normal text-(--t-accent-primary)">
-                        Read record
+                        {tStatic("frontendExtra.read_record")}
                       </span>
                     </span>
                     <span
@@ -820,6 +780,8 @@ function OperationField({
   readonly onEntityRef: (value: string) => void
   readonly onLimit: (value: number) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (
     PLAYGROUND_RESOURCE_OPERATIONS.includes(operation) &&
     operation !== "services" &&
@@ -842,7 +804,7 @@ function OperationField({
   if (operation === "search")
     return (
       <label className="font-semibold">
-        Search query
+        {tStatic("frontendExtra.search_query")}
         <input
           name="query"
           autoComplete="off"
@@ -856,13 +818,15 @@ function OperationField({
   if (operation === "read")
     return (
       <label className="min-w-0 font-semibold">
-        Entity reference
+        {tStatic("frontendExtra.entity_reference")}
         <input
           id="playground-entity-ref"
           name="entityRef"
           autoComplete="off"
           spellCheck={false}
-          placeholder="Choose a Library from search or list results"
+          placeholder={tStatic(
+            "frontendExtra.choose_a_library_from_search_or_list_results"
+          )}
           className={field}
           value={entityRef}
           maxLength={1024}
@@ -870,15 +834,16 @@ function OperationField({
           onChange={(event) => onEntityRef(event.target.value)}
         />
         <span className="mt-2 block text-sm font-normal text-(--t-ink-dim)">
-          Run a search or list records, then choose “Read this record” below.
-          You can also paste a complete entityRef returned by the API.
+          {tStatic(
+            "frontendExtra.run_a_search_or_list_records_then_choose_read_this_record_below_you_can_also_paste_a_complete_entity"
+          )}
         </span>
       </label>
     )
 
   return (
     <label className="font-semibold">
-      Number of records
+      {tStatic("frontendExtra.number_of_records")}
       <input
         type="number"
         name="limit"
@@ -900,14 +865,16 @@ function PlaygroundResponse({
   readonly result: Result | null
   readonly pending: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section
       className="flex max-h-[36rem] min-w-0 flex-col overflow-hidden rounded-3xl bg-[#19182c] text-[#eeedf6]"
-      aria-label="API response"
+      aria-label={tStatic("frontendExtra.api_response")}
       aria-busy={pending}
     >
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/15 px-5 py-4 sm:px-7">
-        <h2 className="type-small-heading m-0">Response</h2>
+        <h2 className="type-small-heading m-0">{tStatic("common.response")}</h2>
         <p className="m-0 text-sm" role="status">
           {pending
             ? "Waiting for response…"
@@ -927,7 +894,7 @@ function PlaygroundResponse({
           <pre
             key={result.request}
             tabIndex={0}
-            aria-label="JSON response"
+            aria-label={tStatic("frontendExtra.json_response")}
             translate="no"
             className="m-0 min-h-0 overflow-auto p-5 font-mono text-sm leading-relaxed sm:p-7"
           >
@@ -936,9 +903,9 @@ function PlaygroundResponse({
         </>
       ) : (
         <p className="m-0 p-5 text-sm opacity-75 sm:p-7">
-          Run a request to retrieve real published Library data using your API
-          account’s allowance. Search or list records first to find a Library’s
-          complete entity reference.
+          {tStatic(
+            "frontendExtra.run_a_request_to_retrieve_real_published_library_data_using_your_api_account_s_allowance_search_or_l"
+          )}
         </p>
       )}
     </section>
@@ -952,12 +919,15 @@ function RequestSubmit({
   readonly pending: boolean
   readonly error: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <>
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
         <p className="m-0 max-w-[65ch] text-sm text-(--t-ink-dim)">
-          Successful requests consume your API account’s shared request and
-          response-data allowance. Errors do not consume monthly allowance.
+          {tStatic(
+            "frontendExtra.successful_requests_consume_your_api_account_s_shared_request_and_response_data_allowance_errors_do_"
+          )}
         </p>
         <Button
           type="submit"
@@ -1004,6 +974,42 @@ function ResourceFields({
   readonly values: ResourceValues
   readonly onChange: (key: keyof ResourceValues, value: string | number) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+  const SUMMARY_OPERATIONS: {
+    value: PlaygroundSummaryOperation
+    label: string
+  }[] = [
+    {
+      value: "service.profile",
+      label: tStatic("frontendExtra.service_profile_1_credit"),
+    },
+    {
+      value: "service.coverage",
+      label: tStatic("frontendExtra.service_coverage_5_credits"),
+    },
+    {
+      value: "place.profile",
+      label: tStatic("frontendExtra.place_profile_1_credit"),
+    },
+    {
+      value: "place.coverage",
+      label: tStatic("frontendExtra.place_coverage_5_credits"),
+    },
+  ]
+  const REACH_MODES: { value: PlaygroundReachMode; label: string }[] = [
+    { value: "library", label: tStatic("frontendExtra.one_library_5_credits") },
+    {
+      value: "service",
+      label: tStatic("frontendExtra.service_reporting_area_20_credits"),
+    },
+    {
+      value: "network",
+      label: tStatic("frontendExtra.whole_service_40_credits_when_enabled"),
+    },
+  ]
+
+  const tExisting = useTranslations()
+
   const text = (
     key: keyof ResourceValues,
     label: string,
@@ -1072,11 +1078,11 @@ function ResourceFields({
         <div className="grid gap-5 sm:grid-cols-3">
           {choose("reachMode", "Mode", REACH_MODES)}
           {choose("travelMode", "Travel", [
-            { value: "walking", label: "Walking" },
-            { value: "cycling", label: "Cycling" },
+            { value: "walking", label: tExisting("atlasDrawers.walking") },
+            { value: "cycling", label: tExisting("atlasDrawers.cycling") },
           ])}
           {choose("minutes", "Minutes", [
-            { value: "0", label: "All bands" },
+            { value: "0", label: tStatic("frontendExtra.all_bands") },
             ...[5, 10, 15, 30].map((m) => ({
               value: String(m),
               label: `${m} minutes`,

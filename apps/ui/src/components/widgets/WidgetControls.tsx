@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import {
   cloneElement,
   isValidElement,
@@ -19,14 +19,21 @@ import {
 } from "@/lib/widgets/client"
 
 export function WidgetError({ error }: { readonly error: string | null }) {
+  const tError = useTranslations("widgetErrors")
+  const tStatic = useTranslations("staticUi")
+
   return error ? (
     <div role="alert">
       <Notice
         icon="mdi:alert-circle-outline"
         tone="warn"
-        title="Couldn't complete that request"
+        title={tStatic("widget.couldn_t_complete_that_request")}
       >
-        <p className="m-0">{error}</p>
+        <p className="m-0">
+          {tError.has(error as Parameters<typeof tError>[0])
+            ? tError(error as Parameters<typeof tError>[0])
+            : error}
+        </p>
       </Notice>
     </div>
   ) : null
@@ -67,9 +74,7 @@ export function WidgetField({
         ? cloneElement(child, {
             id,
             disabled: child.props.disabled || !ready,
-            name:
-              child.props.name ??
-              label.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-"),
+            name: child.props.name ?? id,
             autoComplete: child.props.autoComplete ?? "off",
             "aria-describedby": hint
               ? `${id}-hint`
@@ -94,6 +99,13 @@ export function CataloguePicker({
   readonly country?: string
   readonly disabled?: boolean
 }) {
+  const tSettings = useTranslations("widgetSettings")
+  const searchLabels = {
+    networks: tSettings("searchNetworks"),
+    libraries: tSettings("searchLibraries"),
+    countries: tSettings("searchCountries"),
+    regions: tSettings("searchRegions"),
+  }
   const load = useCallback(
     async (query: string, page: number, signal: AbortSignal) => {
       const params = new URLSearchParams({
@@ -117,7 +129,7 @@ export function CataloguePicker({
   return (
     <CatalogueSearch
       label={label}
-      placeholder={`Search ${kind}`}
+      placeholder={searchLabels[kind]}
       disabled={disabled}
       load={load}
       describe={(row: CatalogueOption) =>
@@ -125,7 +137,7 @@ export function CataloguePicker({
           row.kind?.replaceAll("_", " "),
           row.city,
           row.libraryCount !== undefined
-            ? `${row.libraryCount} published ${row.libraryCount === 1 ? "library" : "libraries"}`
+            ? tSettings("publishedLibraries", { count: row.libraryCount })
             : null,
         ]
           .filter(Boolean)

@@ -1,5 +1,6 @@
 import { Clock, ImageOff } from "lucide-react"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -45,6 +46,10 @@ export function FeaturedLibraryCard({
     "href" | "children" | "className" | "style"
   >
 }) {
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
   const ground = CARD_TINTS[index % CARD_TINTS.length]!
   const typeTint = tintForLibraryType(libraryType)
   const imgUrl = formatStrapiMediaUrl(imageUrl)
@@ -71,7 +76,7 @@ export function FeaturedLibraryCard({
           style={{ color: ground.fg }}
         >
           <ImageOff aria-hidden="true" className="size-5" strokeWidth={1.6} />
-          No photo yet
+          {tStatic("common.noPhoto")}
         </span>
       )}
 
@@ -82,7 +87,7 @@ export function FeaturedLibraryCard({
               className="rounded-full px-2.5 py-0.5 text-sm font-semibold"
               style={{ background: typeTint.bg, color: typeTint.fg }}
             >
-              {libraryType} library
+              {libraryType} {tExisting("widgetPublic.library")}
             </span>
           ) : null}
           {location ? (

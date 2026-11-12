@@ -3,12 +3,13 @@ import {
   FEED_TEST_COPY,
   type FeedTestCode,
 } from "@repo/shared-data"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { Notice, type NoticeTone } from "@/components/ds"
 import { LibraryFeedsSection } from "@/components/event-feeds/LibraryFeedsSection"
 import type { LibraryFeeds } from "@/components/event-feeds/types"
+import { withMessages } from "@/i18n/scoped-messages"
 import { T } from "@/lib/design-tokens"
 import { fetchEventFeeds } from "@/lib/event-feed-proxy"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -47,14 +48,16 @@ const isFeedTestCode = (v: unknown): v is FeedTestCode =>
   typeof v === "string" && (FEED_TEST_CODES as readonly string[]).includes(v)
 
 /** This library's event feeds: the dashboard, in the staff shell. */
-export default async function StaffEventFeedsPage({
+async function StaffEventFeedsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ slug: string }>
   searchParams: Promise<{ oauth?: string; result?: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const [{ slug }, { oauth, result: testResult }] = await Promise.all([
     params,
@@ -69,7 +72,7 @@ export default async function StaffEventFeedsPage({
       ? {
           tone: "warn" as const,
           icon: "mdi:alert-circle-outline",
-          title: "Connection test failed",
+          title: tStatic("staffRoute.connection_test_failed"),
           message: isFeedTestCode(testResult)
             ? FEED_TEST_COPY[testResult]
             : FEED_TEST_COPY.auth_failed,
@@ -105,7 +108,9 @@ export default async function StaffEventFeedsPage({
         ) : null}
         {result.status !== 200 ? (
           <p role="alert" className="m-0" style={{ color: T.accent.danger }}>
-            We couldn&apos;t load your feeds. Try again in a minute.
+            {tStatic(
+              "staffRoute.we_couldn_apos_t_load_your_feeds_try_again_in_a_minute"
+            )}
           </p>
         ) : (
           <LibraryFeedsSection
@@ -119,3 +124,8 @@ export default async function StaffEventFeedsPage({
     </div>
   )
 }
+
+export default withMessages(
+  StaffEventFeedsPage,
+  "[locale]/(dashboard)/staff/[slug]/events/page"
+)

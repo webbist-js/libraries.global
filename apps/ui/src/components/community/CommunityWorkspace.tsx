@@ -49,6 +49,7 @@ export function CommunityWorkspace({
   readonly standing: ReactNode
   readonly counts: CommunityTabCounts
 }) {
+  const tTabs = useTranslations("communityTabs")
   const t = useTranslations("communityDashboard"),
     ui = useTranslations("ui")
   const path = usePathname(),
@@ -105,7 +106,7 @@ export function CommunityWorkspace({
     },
   }
   const cta = actions[active]!
-  const tabs = communityTabs(counts)
+  const tabs = communityTabs(tTabs, counts)
 
   return (
     <DashboardPage

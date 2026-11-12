@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -13,6 +13,8 @@ export function RenounceLibraryClaim({
   readonly libraryId: string
   readonly libraryName: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [confirm, setConfirm] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -38,8 +40,8 @@ export function RenounceLibraryClaim({
   return (
     <div className="min-w-0 text-sm">
       {confirm ? (
-        <div className="space-y-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-4">
-          <p className="m-0">
+        <div className="flex flex-col gap-3 rounded-xl border border-(--t-border-line) bg-(--t-bg-surface) p-4">
+          <p className="m-0 leading-relaxed">
             Renounce your claim to <strong>{libraryName}</strong>? Your staff
             access to this library will end. Your published contributions stay,
             and you can submit a new claim later.
@@ -51,7 +53,7 @@ export function RenounceLibraryClaim({
               disabled={busy}
               onClick={() => void leave()}
             >
-              {busy ? "Leaving…" : "Confirm renunciation"}
+              {busy ? "Leaving…" : "Remove my claim"}
             </Button>
             <Button
               variant="ghost"
@@ -59,7 +61,7 @@ export function RenounceLibraryClaim({
               disabled={busy}
               onClick={() => setConfirm(false)}
             >
-              Keep my claim
+              {tStatic("staff.keep_my_claim")}
             </Button>
           </div>
         </div>
@@ -69,7 +71,7 @@ export function RenounceLibraryClaim({
           className="min-h-11 px-0 text-sm"
           onClick={() => setConfirm(true)}
         >
-          Renounce library claim
+          {tStatic("staff.renounce_library_claim")}
         </Button>
       )}
       {error ? (

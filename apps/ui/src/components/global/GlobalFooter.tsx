@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -19,7 +19,9 @@ export function GlobalFooter({
   /** Published documents determine the direct links; the index lists them all. */
   readonly legalDocuments?: LegalDocumentNavItem[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { sections, links } = buildFooterNavigation(footer, legalDocuments, {
     legal: tUi("legal_policies"),
@@ -53,7 +55,7 @@ export function GlobalFooter({
                 <>
                   {brandTitle.slice(0, -7)}{" "}
                   <em className="font-normal text-(--t-accent-primary) italic">
-                    Global
+                    {tStatic("common.global")}
                   </em>
                 </>
               ) : (

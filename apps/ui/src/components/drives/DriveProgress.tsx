@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -29,6 +29,8 @@ function Sparkline({
   readonly unit: DriveUnit
   readonly color: string
 }) {
+  const tExisting = useTranslations()
+
   const first = log[0]!
   const last = log.at(-1)!
   const values = log.map((e) => e.done)
@@ -75,7 +77,8 @@ function Sparkline({
         />
       </svg>
       <span aria-hidden="true" className="text-sm" style={{ color: T.ink.dim }}>
-        Last {log.length} days: {fmt(first.done)} → {fmt(last.done)} done
+        Last {log.length} days: {fmt(first.done)} → {fmt(last.done)}{" "}
+        {tExisting("drivePage.done")}
       </span>
     </div>
   )
@@ -109,7 +112,11 @@ export function DriveProgress({
   /** The bar's colour: the Focus tint's ink. */
   readonly color?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const textId = useId()
   const { total, done, inReview } = progress
@@ -133,7 +140,8 @@ export function DriveProgress({
             {fmt(done)}
           </strong>{" "}
           <span>
-            of {fmt(total)} {noun} done
+            {tExisting("widgetPublic.of")} {fmt(total)} {noun}{" "}
+            {tExisting("drivePage.done")}
           </span>
         </p>
         {meta ? (
@@ -184,7 +192,7 @@ export function DriveProgress({
                   boxShadow: `inset 0 0 0 1px ${color}`,
                 }}
               />
-              {fmt(inReview)} in review
+              {fmt(inReview)} {tStatic("drive.in_review")}
             </li>
           ) : null}
           {showGoal ? (

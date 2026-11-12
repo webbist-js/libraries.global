@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { StandingCard } from "@/components/community/StandingCard"
 import { VoteOnAdditionsCard } from "@/components/community/VoteOnAdditionsCard"
@@ -9,6 +9,7 @@ import {
   KNOWLEDGE_SLUGS,
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities, staffLibrariesOf } from "@/lib/access-server"
 import { avatarSrc } from "@/lib/avatar"
 import { bridgeUserHeaders } from "@/lib/bridge-user-headers"
@@ -281,14 +282,16 @@ function contributionLead(staffCount: number) {
     : "Community maintained, every change reviewed."
 }
 
-export default async function ContributePage({
+async function ContributePage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const [tUi, t] = await Promise.all([
-    getUiTranslations("ui"),
-    getUiTranslations("workspaceDashboard"),
+    getTranslations("ui"),
+    getTranslations("workspaceDashboard"),
   ])
 
   const { locale } = await params
@@ -344,8 +347,10 @@ export default async function ContributePage({
     <div className="contribute-hub">
       {/* Hero band */}
       <ContributeSectionHeader
-        title="Help build the world’s *library index.*"
-        lead="Add a missing library, fix a detail you know is wrong, or share a photo you took. Accuracy matters more than volume. A single well-sourced correction helps more than ten guesses."
+        title={tStatic("contributeRoute.help_build_the_world_s_library_index")}
+        lead={tStatic(
+          "contributeRoute.add_a_missing_library_fix_a_detail_you_know_is_wrong_or_share_a_photo_you_took_accuracy_matters_more"
+        )}
       >
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
           {contributionLead(staffLibraries.length)} New here? Read{" "}
@@ -354,7 +359,7 @@ export default async function ContributePage({
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            How to Contribute
+            {tStatic("contributeRoute.how_to_contribute")}
           </GlobalLink>{" "}
           (5 min).
         </p>
@@ -404,11 +409,12 @@ export default async function ContributePage({
           <QuickFixes records={incompleteRecords} />
           <section>
             <h2 className="type-panel-title mb-2">
-              What would you like to do?
+              {tStatic("contributeRoute.what_would_you_like_to_do")}
             </h2>
             <p className="mt-0 mb-5 text-sm text-(--t-ink-dim)">
-              Choose one to start. Saved drafts are available from your account,
-              so you can come back later.
+              {tStatic(
+                "contributeRoute.choose_one_to_start_saved_drafts_are_available_from_your_account_so_you_can_come_back_later"
+              )}
             </p>
             <HubActionChooser
               publishedCount={libraryCount}
@@ -514,3 +520,8 @@ export default async function ContributePage({
     </div>
   )
 }
+
+export default withMessages(
+  ContributePage,
+  "[locale]/(dashboard)/contribute/page"
+)

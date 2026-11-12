@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
@@ -60,6 +61,10 @@ export function ContributionHeatmap({
   submissions: PublicSubmission[]
   now: number
 }) {
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
   const dateCountMap = useMemo(() => {
     const m = new Map<string, number>()
     for (const s of submissions) {
@@ -109,12 +114,12 @@ export function ContributionHeatmap({
             color: T.ink.base,
           }}
         >
-          Activity
+          {tStatic("common.activity")}
         </span>
         <span
           style={{ fontSize: "var(--type-body-small-size)", color: T.ink.dim }}
         >
-          Last 26 weeks
+          {tStatic("profileRoute.last_26_weeks")}
         </span>
       </div>
 
@@ -160,7 +165,7 @@ export function ContributionHeatmap({
             cursor: "pointer",
           }}
         >
-          Activity as text
+          {tStatic("profileRoute.activity_as_text")}
         </summary>
         <p
           style={{
@@ -188,7 +193,7 @@ export function ContributionHeatmap({
         <span
           style={{ fontSize: "var(--type-body-small-size)", color: T.ink.low }}
         >
-          Mon – Sun, last 182 days
+          {tStatic("profileRoute.mon_sun_last_182_days")}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
           <span
@@ -198,7 +203,7 @@ export function ContributionHeatmap({
               marginRight: "2px",
             }}
           >
-            Less
+            {tStatic("profileRoute.less")}
           </span>
           {[0, 2, 5, 10, 15].map((v) => (
             <div
@@ -218,7 +223,7 @@ export function ContributionHeatmap({
               marginLeft: "2px",
             }}
           >
-            More
+            {tExisting("dashboard.more")}
           </span>
         </div>
       </div>

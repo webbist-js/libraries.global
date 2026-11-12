@@ -1,12 +1,10 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import {
-  getLocale,
-  getTranslations as getUiTranslations,
-} from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { IndexRecordWizard } from "@/components/library-editor/IndexRecordWizard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
@@ -26,7 +24,7 @@ import { ContributeSectionHeader } from "../../_components/ContributeSectionHead
 
 export const metadata = privateMetadata("Add a library")
 
-export default async function AddLibraryPage({
+async function AddLibraryPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -39,7 +37,9 @@ export default async function AddLibraryPage({
     area?: string
   }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const params = await searchParams
   const locale = await getLocale()
@@ -90,8 +90,10 @@ export default async function AddLibraryPage({
       <ContributeSectionHeader
         compact
         section={tUi("index_editor")}
-        title="Add a library *to the index.*"
-        lead="Fill in what you know. Your draft saves as you go, and an editor reviews it before it goes live."
+        title={tStatic("contributeRoute.add_a_library_to_the_index")}
+        lead={tStatic(
+          "contributeRoute.fill_in_what_you_know_your_draft_saves_as_you_go_and_an_editor_reviews_it_before_it_goes_live"
+        )}
       />
       <IndexRecordWizard
         mode="new"
@@ -104,3 +106,8 @@ export default async function AddLibraryPage({
     </div>
   )
 }
+
+export default withMessages(
+  AddLibraryPage,
+  "[locale]/(dashboard)/contribute/index/new/page"
+)

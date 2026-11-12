@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { LIBRARY_NOTICE_LABELS, noticeEndDate } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, Sheet } from "@/components/ds"
@@ -22,7 +22,9 @@ export function TimetableServiceNotices({
 }: {
   readonly context: WizardTimetableContext
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { notices, today, staff } = context
   const [posting, setPosting] = useState(false)
@@ -39,14 +41,15 @@ export function TimetableServiceNotices({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 id="service-notices-heading" className="type-small-heading m-0">
-              Service notices
+              {tStatic("mobile.service_notices")}
             </h2>
             <p
               className="m-0 mt-0.5 text-xs leading-relaxed"
               style={{ color: T.ink.dim }}
             >
-              Notices publish separately from the timetable and cancel visits
-              while they apply.
+              {tStatic(
+                "mobile.notices_publish_separately_from_the_timetable_and_cancel_visits_while_they_apply"
+              )}
             </p>
           </div>
           {staff ? (
@@ -62,7 +65,7 @@ export function TimetableServiceNotices({
                 width={16}
                 style={{ color: T.accent.primary }}
               />
-              Add a notice
+              {tStatic("mobile.add_a_notice")}
             </button>
           ) : null}
         </div>
@@ -99,7 +102,9 @@ export function TimetableServiceNotices({
           </ul>
         ) : (
           <p className="m-0 mt-3 text-sm" style={{ color: T.ink.dim }}>
-            No notices showing. The timetable runs as published.
+            {tStatic(
+              "mobile.no_notices_showing_the_timetable_runs_as_published"
+            )}
           </p>
         )}
         {staff ? (
@@ -109,7 +114,7 @@ export function TimetableServiceNotices({
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Manage every notice
+              {tStatic("mobile.manage_every_notice")}
             </Link>
           </p>
         ) : null}

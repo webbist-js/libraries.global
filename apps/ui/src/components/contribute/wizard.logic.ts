@@ -1,3 +1,6 @@
+import type { useTranslations } from "next-intl"
+
+type WizardTranslate = ReturnType<typeof useTranslations<"wizardCopy">>
 import type { RecordChanges, RecordEdit } from "./correction.logic"
 
 /**
@@ -51,196 +54,70 @@ export const EMPTY_DRAFT: WizardDraft = {
 }
 
 /** What a correction is about: a card in the drawer, an option in the hub. */
-export const CATEGORY_OPTIONS = [
-  {
-    value: "Stops & times",
-    icon: "mdi:bus-clock",
-    placeholder: "e.g. The Tuesday stop now starts at 10:30",
-  },
-  {
-    value: "Opening hours",
-    icon: "mdi:clock-outline",
-    placeholder: "e.g. Open until 8pm on Thursdays since September",
-  },
-  {
-    value: "Address or location",
-    icon: "mdi:map-marker-outline",
-    placeholder: "e.g. The entrance moved to Church Street in 2025",
-  },
-  {
-    value: "Accessibility",
-    icon: "mdi:wheelchair-accessibility",
-    placeholder: "e.g. There’s now a lift to the first floor",
-  },
-  {
-    value: "Name",
-    icon: "mdi:format-letter-case",
-    placeholder: "e.g. It’s now called the Central Library",
-  },
-  {
-    value: "Website or catalogue",
-    icon: "mdi:web",
-    placeholder: "e.g. The catalogue moved to a new address",
-  },
-  {
-    value: "Open or closed",
-    icon: "mdi:door-open",
-    placeholder: "e.g. Closed for refurbishment until spring",
-  },
-  {
-    value: "Services and facilities",
-    icon: "mdi:star-four-points-outline",
-    placeholder: "e.g. Printing and scanning are now available",
-  },
-  {
-    value: "Collections",
-    icon: "mdi:bookshelf",
-    placeholder: "e.g. It holds the town’s local history archive",
-  },
-  {
-    value: "Something else",
-    icon: "mdi:dots-horizontal",
-    placeholder: "Tell us what’s wrong or missing",
-  },
-] as const
 
-export const CATEGORIES = CATEGORY_OPTIONS.map((c) => c.value)
-export const categoriesFor = (libraryType?: string | null) =>
-  CATEGORY_OPTIONS.filter((option) =>
-    libraryType === "Mobile"
-      ? option.value !== "Opening hours"
-      : option.value !== "Stops & times"
-  )
-
-export const categoryOption = (value: string) =>
-  CATEGORY_OPTIONS.find((c) => c.value === value)
-
+export const CATEGORIES = [
+  "Stops & times",
+  "Opening hours",
+  "Address or location",
+  "Accessibility",
+  "Name",
+  "Website or catalogue",
+  "Open or closed",
+  "Services and facilities",
+  "Collections",
+  "Something else",
+]
 export const PHOTO_LICENCE = "CC BY-SA 4.0"
 
-export const STEP_LABELS: Record<ActionId, [string, string, string]> = {
-  add: ["Start the record", "Details", "Sources & send"],
-  correction: ["Choose the library", "Details", "Source & send"],
-  photo: ["Choose the library", "Photo", "Licence & send"],
-  source: ["Choose the library", "Details", "Source & send"],
-  journal: ["Pitch or draft", "Write", "Send for review"],
-  knowledge: ["Pick a page", "Write", "Send for review"],
-}
-
 /** One line under each step in the wizard's rail. */
-export const STEP_HINTS: Record<ActionId, [string, string, string]> = {
-  add: [
-    "Name, type and place",
-    "Hours, access and collections",
-    "Evidence, then send",
-  ],
-  correction: [
-    "Search or pick a record below",
-    "Tell us what’s changed",
-    "Link a source, then send",
-  ],
-  photo: [
-    "Search or pick a record below",
-    "Upload the photo",
-    "Confirm the licence, then send",
-  ],
-  source: [
-    "Search or pick a record below",
-    "What the source confirms",
-    "Add the link, then send",
-  ],
-  journal: [
-    "A title and a short summary",
-    "The story, with sections and tags",
-    "An editor reviews it",
-  ],
-  knowledge: [
-    "Improve, write new or translate",
-    "Edit in the article editor",
-    "An editor reviews it",
-  ],
-}
 
 /** The visible question at the top of each step, in the hub's panel layout. */
-export const STEP_TITLES: Record<ActionId, [string, string, string]> = {
-  add: ["Start a new library record", "Details", "Sources & send"],
-  correction: [
-    "Which library is this about?",
-    "What’s changed?",
-    "How do you know?",
-  ],
-  photo: [
-    "Which library is this about?",
-    "Add your photo",
-    "Confirm the licence",
-  ],
-  source: [
-    "Which library is this about?",
-    "What does the source confirm?",
-    "Add the source",
-  ],
-  journal: ["Pitch or draft a story", "Write", "Send for review"],
-  knowledge: ["Pick a page to improve", "Write", "Send for review"],
-}
 
 /**
  * The library page's drawer: the library is already known, so step 1 picks
  * the part of the record instead.
  */
-export const DRAWER_STEPS = {
-  labels: ["What needs changing", "The correction", "Source & send"],
-  hints: [
-    "Pick a part of the record",
-    "What’s right now",
-    "Link a source, then send",
-  ],
-  titles: ["What needs changing?", "What’s right now?", "How do you know?"],
-  leads: [
-    "Pick the part of the record that’s wrong or missing.",
-    "Tell us what the record should say. Plain words are fine.",
-    "A link, or where you saw it, helps a reviewer accept it faster.",
-  ],
-} as const
 
 export type Step = 1 | 2 | 3
 
 const isUrl = (text: string) => /^https?:\/\/\S+$/i.test(text.trim())
 
 /** Why the user can't go on from this step yet, or null when they can. */
-export function blockerFor(
-  action: ActionId,
-  step: Step,
-  library: WizardLibrary | null,
-  draft: WizardDraft,
-  /** The drawer: the library is fixed and step 1 picks the category. */
-  locked = false,
-  /**
-   * Set when this category has a structured editor and the record loaded:
-   * the step needs a change to the record rather than a description.
-   */
-  structured?: { changed: boolean; invalid?: string | null }
-): string | null {
-  if (isHandoff(action)) return null
-  if (step === 1 && locked)
-    return draft.category ? null : "Pick what needs changing to continue."
-  if (step === 1) return library ? null : "Choose a library to continue."
-  if (action === "photo") {
-    if (!draft.photo) return "Upload a photo to continue."
-    if (step === 3 && !draft.licence)
-      return `Confirm you can share it under ${PHOTO_LICENCE}.`
+export function createBlockerFor(t: WizardTranslate) {
+  return function blockerFor(
+    action: ActionId,
+    step: Step,
+    library: WizardLibrary | null,
+    draft: WizardDraft,
+    /** The drawer: the library is fixed and step 1 picks the category. */
+    locked = false,
+    /**
+     * Set when this category has a structured editor and the record loaded:
+     * the step needs a change to the record rather than a description.
+     */
+    structured?: { changed: boolean; invalid?: string | null }
+  ): string | null {
+    if (isHandoff(action)) return null
+    if (step === 1 && locked) return draft.category ? null : t("pickCategory")
+    if (step === 1) return library ? null : t("chooseLibrary")
+    if (action === "photo") {
+      if (!draft.photo) return t("uploadPhoto")
+      if (step === 3 && !draft.licence)
+        return t("confirmLicence", { licence: PHOTO_LICENCE })
+
+      return null
+    }
+    if (action === "correction" && structured)
+      return (
+        structured.invalid ?? (structured.changed ? null : t("changeSomething"))
+      )
+    if (action === "correction" && !draft.text.trim())
+      return t("describeCorrect")
+    if (action === "source" && step === 3 && !isUrl(draft.source.trim()))
+      return t("publicLink")
 
     return null
   }
-  if (action === "correction" && structured)
-    return (
-      structured.invalid ??
-      (structured.changed ? null : "Change something to continue.")
-    )
-  if (action === "correction" && !draft.text.trim())
-    return "Describe what’s correct to continue."
-  if (action === "source" && step === 3 && !isUrl(draft.source.trim()))
-    return "Add a public http or https source link to send."
-
-  return null
 }
 
 type SubmissionBody = {
@@ -388,5 +265,164 @@ export function parseHubParams(params: URLSearchParams): {
     action: valid ? (action as ActionId) : null,
     library: valid && slug && name ? { slug, name } : null,
     category: valid ? params.get("category") : null,
+  }
+}
+
+export function createWizardCopy(t: WizardTranslate) {
+  const CATEGORY_OPTIONS = [
+    {
+      value: "Stops & times",
+      label: t("stops_times"),
+      icon: "mdi:bus-clock",
+      placeholder: t("e_g_the_tuesday_stop_now_starts_at_10_30"),
+    },
+    {
+      value: "Opening hours",
+      label: t("opening_hours"),
+      icon: "mdi:clock-outline",
+      placeholder: t("e_g_open_until_8pm_on_thursdays_since_september"),
+    },
+    {
+      value: "Address or location",
+      label: t("address_or_location"),
+      icon: "mdi:map-marker-outline",
+      placeholder: t("e_g_the_entrance_moved_to_church_street_in_2025"),
+    },
+    {
+      value: "Accessibility",
+      label: t("accessibility"),
+      icon: "mdi:wheelchair-accessibility",
+      placeholder: t("e_g_there_s_now_a_lift_to_the_first_floor"),
+    },
+    {
+      value: "Name",
+      label: t("name"),
+      icon: "mdi:format-letter-case",
+      placeholder: t("e_g_it_s_now_called_the_central_library"),
+    },
+    {
+      value: "Website or catalogue",
+      label: t("website_or_catalogue"),
+      icon: "mdi:web",
+      placeholder: t("e_g_the_catalogue_moved_to_a_new_address"),
+    },
+    {
+      value: "Open or closed",
+      label: t("open_or_closed"),
+      icon: "mdi:door-open",
+      placeholder: t("e_g_closed_for_refurbishment_until_spring"),
+    },
+    {
+      value: "Services and facilities",
+      label: t("services_and_facilities"),
+      icon: "mdi:star-four-points-outline",
+      placeholder: t("e_g_printing_and_scanning_are_now_available"),
+    },
+    {
+      value: "Collections",
+      label: t("collections"),
+      icon: "mdi:bookshelf",
+      placeholder: t("e_g_it_holds_the_town_s_local_history_archive"),
+    },
+    {
+      value: "Something else",
+      label: t("something_else"),
+      icon: "mdi:dots-horizontal",
+      placeholder: t("tell_us_what_s_wrong_or_missing"),
+    },
+  ] as const
+  const STEP_LABELS: Record<ActionId, [string, string, string]> = {
+    add: [t("start_the_record"), t("details"), t("sources_send")],
+    correction: [t("choose_the_library"), t("details"), t("source_send")],
+    photo: [t("choose_the_library"), t("photo"), t("licence_send")],
+    source: [t("choose_the_library"), t("details"), t("source_send")],
+    journal: [t("pitch_or_draft"), t("write"), t("send_for_review")],
+    knowledge: [t("pick_a_page"), t("write"), t("send_for_review")],
+  }
+  const STEP_HINTS: Record<ActionId, [string, string, string]> = {
+    add: [
+      t("name_type_and_place"),
+      t("hours_access_and_collections"),
+      t("evidence_then_send"),
+    ],
+    correction: [
+      t("search_or_pick_a_record_below"),
+      t("tell_us_what_s_changed"),
+      t("link_a_source_then_send"),
+    ],
+    photo: [
+      t("search_or_pick_a_record_below"),
+      t("upload_the_photo"),
+      t("confirm_the_licence_then_send"),
+    ],
+    source: [
+      t("search_or_pick_a_record_below"),
+      t("what_the_source_confirms"),
+      t("add_the_link_then_send"),
+    ],
+    journal: [
+      t("a_title_and_a_short_summary"),
+      t("the_story_with_sections_and_tags"),
+      t("an_editor_reviews_it"),
+    ],
+    knowledge: [
+      t("improve_write_new_or_translate"),
+      t("edit_in_the_article_editor"),
+      t("an_editor_reviews_it"),
+    ],
+  }
+  const STEP_TITLES: Record<ActionId, [string, string, string]> = {
+    add: [t("start_a_new_library_record"), t("details"), t("sources_send")],
+    correction: [
+      t("which_library_is_this_about"),
+      t("what_s_changed"),
+      t("how_do_you_know"),
+    ],
+    photo: [
+      t("which_library_is_this_about"),
+      t("add_your_photo"),
+      t("confirm_the_licence"),
+    ],
+    source: [
+      t("which_library_is_this_about"),
+      t("what_does_the_source_confirm"),
+      t("add_the_source"),
+    ],
+    journal: [t("pitch_or_draft_a_story"), t("write"), t("send_for_review")],
+    knowledge: [t("pick_a_page_to_improve"), t("write"), t("send_for_review")],
+  }
+  const DRAWER_STEPS = {
+    labels: [t("what_needs_changing"), t("the_correction"), t("source_send")],
+    hints: [
+      t("pick_a_part_of_the_record"),
+      t("what_s_right_now"),
+      t("link_a_source_then_send"),
+    ],
+    titles: [
+      t("what_needs_changing_question"),
+      t("what_s_right_now_question"),
+      t("how_do_you_know"),
+    ],
+    leads: [
+      t("pick_the_part_of_the_record_that_s_wrong_or_missing"),
+      t("tell_us_what_the_record_should_say_plain_words_are_fine"),
+      t("a_link_or_where_you_saw_it_helps_a_reviewer_accept_it_faster"),
+    ],
+  } as const
+
+  return {
+    CATEGORY_OPTIONS,
+    STEP_LABELS,
+    STEP_HINTS,
+    STEP_TITLES,
+    DRAWER_STEPS,
+    categoriesFor: (libraryType?: string | null) =>
+      CATEGORY_OPTIONS.filter((option) =>
+        libraryType === "Mobile"
+          ? option.value !== "Opening hours"
+          : option.value !== "Stops & times"
+      ),
+    categoryOption: (value: string) =>
+      CATEGORY_OPTIONS.find((c) => c.value === value),
   }
 }

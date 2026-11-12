@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 
 import { toDocsSections } from "@/components/docs/docs.config"
 import DocsPage from "@/components/docs/DocsPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { knowledgeBrowseParams } from "@/lib/article-filter-state"
 import { getPreferredContentLanguage } from "@/lib/content-language-server"
@@ -49,7 +50,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function DocsRoute(props: {
+async function DocsRoute(props: {
   params: Promise<{ locale: string }>
   searchParams: Promise<KnowledgeSearchParams>
 }) {
@@ -99,3 +100,5 @@ export default async function DocsRoute(props: {
     />
   )
 }
+
+export default withMessages(DocsRoute, "[locale]/(dashboard)/knowledge/page")

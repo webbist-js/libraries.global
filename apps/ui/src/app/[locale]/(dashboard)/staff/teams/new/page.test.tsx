@@ -70,3 +70,19 @@ it("sends an account that already has a Team to its workspace", async () => {
     NewTeamPage({ searchParams: Promise.resolve({}) })
   ).rejects.toThrow("/staff/teams")
 })
+
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const { default: messages } = await import("../../../../../../../locales/en")
+
+  return {
+    getTranslations: async (config?: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config?.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
+})

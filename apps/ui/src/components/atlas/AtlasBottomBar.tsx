@@ -1,12 +1,11 @@
 "use client"
-
 import {
   ATLAS_ACCESS_BINS,
   type AtlasAccessMetric,
   type AtlasLibraryDensity,
   type AtlasDensitySettings,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import {
@@ -59,8 +58,14 @@ export function AtlasLegends({
     state?: string
   }
 }) {
-  const tUi = useUiTranslations("ui")
-  const tContext = useUiTranslations("atlasContext")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tContext = useTranslations("atlasContext")
 
   const on = (id: LayerId) => layers.includes(id)
   const items: React.ReactNode[] = []
@@ -87,7 +92,7 @@ export function AtlasLegends({
     items.push(
       <KeyLegend
         key="reach"
-        title={`Reach · ${reach?.mode === "cycling" ? "Cycling" : "Walking"} · ${reach?.minutes ?? 15} min`}
+        title={`Reach · ${reach?.mode === "cycling" ? tExisting("atlasDrawers.cycling") : tExisting("atlasDrawers.walking")} · ${reach?.minutes ?? 15} min`}
         source={
           reach?.year
             ? `OSM routing · ${reach.year} population grid`
@@ -116,7 +121,7 @@ export function AtlasLegends({
             ? [
                 {
                   key: "beyond",
-                  label: `Beyond ${reach.minutes} minutes · reporting area`,
+                  label: tCopy("beyondMinutes", { count: reach.minutes }),
                   swatch: (
                     <i className="inline-block h-3.5 w-4 rounded bg-(--t-border-hi)" />
                   ),
@@ -199,7 +204,7 @@ export function AtlasLegends({
             ? [
                 {
                   key: "n",
-                  label: "Not confirmed",
+                  label: tStatic("atlas.not_confirmed"),
                   swatch: <AccessibilitySwatch confirmed={false} />,
                 },
               ]
@@ -208,7 +213,7 @@ export function AtlasLegends({
             ? [
                 {
                   key: "cluster",
-                  label: "Clusters: matches / records",
+                  label: tStatic("atlas.clusters_matches_records"),
                   swatch: null,
                 },
               ]
@@ -240,7 +245,7 @@ export function AtlasLegends({
           })),
           {
             key: "few",
-            label: "Few records",
+            label: tStatic("atlas.few_records"),
             swatch: (
               <i
                 aria-hidden="true"
@@ -254,7 +259,7 @@ export function AtlasLegends({
           },
           {
             key: "unknown",
-            label: "No data",
+            label: tExisting("tables.noData"),
             swatch: (
               <i
                 aria-hidden="true"
@@ -275,7 +280,7 @@ export function AtlasLegends({
         items={[
           {
             key: "late",
-            label: "After 19:00 or Sundays",
+            label: tStatic("atlas.after_19_00_or_sundays"),
             swatch: (
               <i
                 aria-hidden="true"
@@ -344,6 +349,8 @@ export function AtlasCount({
   readonly loading?: boolean
   readonly sub: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <p
       className="m-0 text-base whitespace-nowrap"
@@ -357,7 +364,9 @@ export function AtlasCount({
         {loading ? (
           <>
             <span aria-hidden="true">…</span>
-            <span className="sr-only">Loading result count</span>
+            <span className="sr-only">
+              {tStatic("atlas.loading_result_count")}
+            </span>
           </>
         ) : (
           count.toLocaleString()
@@ -375,7 +384,9 @@ export function ViewToggle({
   readonly list: boolean
   readonly onChange: (list: boolean) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <Segmented
@@ -383,8 +394,8 @@ export function ViewToggle({
       value={list ? "list" : "map"}
       onChange={(v) => onChange(v === "list")}
       options={[
-        { value: "map", label: "Map", icon: "map" },
-        { value: "list", label: "List", icon: "list" },
+        { value: "map", label: tStatic("atlas.map"), icon: "map" },
+        { value: "list", label: tStatic("atlas.list"), icon: "list" },
       ]}
     />
   )
@@ -406,7 +417,9 @@ export function AtlasMapLegend({
   readonly compact?: boolean
   readonly children: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const area = layers.includes("perCapita"),
     access = layers.includes("access")
@@ -422,7 +435,7 @@ export function AtlasMapLegend({
             className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-semibold"
           >
             <Icon name="layers" size={17} />
-            Map key
+            {tExisting("atlasContext.legend")}
             <Icon name="chevD" size={14} />
           </button>
         </PopoverTrigger>

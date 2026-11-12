@@ -10,6 +10,7 @@ import {
 } from "@/components/contribute/RoleApplicationForm"
 import { docsArticlePath } from "@/components/docs/docs.config"
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities } from "@/lib/access-server"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { getSessionSSR } from "@/lib/auth-server"
@@ -82,7 +83,7 @@ async function knowledgeHref(
   return docsArticlePath(article)
 }
 
-export default async function ApplyForRolePage({
+async function ApplyForRolePage({
   params,
   searchParams,
 }: {
@@ -211,3 +212,8 @@ export default async function ApplyForRolePage({
     </div>
   )
 }
+
+export default withMessages(
+  ApplyForRolePage,
+  "[locale]/(dashboard)/contribute/knowledge/apply/page"
+)

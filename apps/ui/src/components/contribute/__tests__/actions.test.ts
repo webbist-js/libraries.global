@@ -1,12 +1,21 @@
+import { createTranslator } from "next-intl"
 import { describe, expect, it } from "vitest"
 
-import { ACTION_GROUPS, ACTIONS } from "../actions"
-import {
-  isHandoff,
-  STEP_HINTS,
-  STEP_LABELS,
-  STEP_TITLES,
-} from "../wizard.logic"
+import messages from "../../../../locales/en"
+import { createActionGroups, createActions } from "../actions"
+import { createWizardCopy, isHandoff } from "../wizard.logic"
+
+const t = createTranslator({
+  locale: "en",
+  messages,
+  namespace: "contributeActions",
+})
+const ACTION_GROUPS = createActionGroups(t)
+const ACTIONS = createActions(t)
+
+const { STEP_HINTS, STEP_LABELS, STEP_TITLES } = createWizardCopy(
+  createTranslator({ locale: "en", messages, namespace: "wizardCopy" })
+)
 
 describe("hub actions", () => {
   it("puts every action in a known group, index edits first", () => {

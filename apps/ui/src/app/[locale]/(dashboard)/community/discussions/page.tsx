@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { DiscussionsBoard } from "@/components/discussions/DiscussionsBoard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -22,7 +23,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function DiscussionsPage({
+async function DiscussionsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -53,3 +54,8 @@ export default async function DiscussionsPage({
     <DiscussionsBoard languages={languages} initialSearch={initialSearch} />
   )
 }
+
+export default withMessages(
+  DiscussionsPage,
+  "[locale]/(dashboard)/community/discussions/page"
+)

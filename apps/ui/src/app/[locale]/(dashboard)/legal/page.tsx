@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
 import LegalIndexPage from "@/components/legal/LegalIndexPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { buildMetadata } from "@/lib/seo/metadata"
 import { fetchLegalDocuments } from "@/lib/strapi-api/content/server"
 
@@ -25,7 +26,7 @@ export async function generateMetadata({
 }
 
 /** One stable destination for all published policies, in the CMS's order. */
-export default async function LegalIndexRoute({
+async function LegalIndexRoute({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -35,3 +36,5 @@ export default async function LegalIndexRoute({
 
   return <LegalIndexPage locale={locale} documents={documents} />
 }
+
+export default withMessages(LegalIndexRoute, "[locale]/(dashboard)/legal/page")

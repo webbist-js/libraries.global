@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -47,6 +47,10 @@ export function PlaceContributionCard({
   readonly drive?: PlaceContributionDrive
   readonly task?: ContributionTask | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const id = useId()
   const { data: session } = authClient.useSession()
   const mounted = useMounted()
@@ -110,9 +114,9 @@ export function PlaceContributionCard({
   const requirement = contributionRequirement(ask.kind, primaryGap)
   const actionLabel =
     ask.kind === "gap"
-      ? "Find libraries"
+      ? tExisting("ui.find_libraries")
       : ask.kind === "add"
-        ? "Add a library"
+        ? tExisting("ui.add_a_library")
         : ask.kind === "drive"
           ? "Help with this drive"
           : ask.label
@@ -229,13 +233,15 @@ export function PlaceContributionCard({
               ]}
             />
             <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
-              Your invitation and its destination update before you start.
+              {tStatic(
+                "location.your_invitation_and_its_destination_update_before_you_start"
+              )}
             </p>
           </div>
         ) : null}
         {mounted && !signedIn ? (
           <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
-            A free account is needed to contribute.
+            {tStatic("location.a_free_account_is_needed_to_contribute")}
             {ask.kind === "add"
               ? " Sign in to open the form; your selected place is kept."
               : " You can choose a library first."}
@@ -246,14 +252,16 @@ export function PlaceContributionCard({
           style={{ borderColor: T.border.line }}
         >
           <p className="m-0 text-sm leading-[1.5]" style={{ color: T.ink.dim }}>
-            Add a source. Contributions are reviewed and credited to you.
+            {tStatic(
+              "location.add_a_source_contributions_are_reviewed_and_credited_to_you"
+            )}
           </p>
           <div className="mt-1 flex flex-wrap items-start gap-x-4">
             <details className="min-w-0">
               <summary
                 className={`${LINK} w-fit cursor-pointer text-(--t-accent-primary)`}
               >
-                What do I need?
+                {tStatic("location.what_do_i_need")}
               </summary>
               <p
                 className="mt-1 mb-3 max-w-[60ch] text-sm leading-[1.6]"
@@ -268,7 +276,7 @@ export function PlaceContributionCard({
                 className={LINK}
                 style={{ color: T.accent.primary }}
               >
-                Your submissions
+                {tExisting("ui.your_submissions")}
               </GlobalLink>
             ) : null}
           </div>
@@ -306,7 +314,7 @@ export function PlaceContributionCard({
                     >
                       {total
                         ? `${total.missing.toLocaleString("en-GB")} ${total.missing === 1 ? "library" : "libraries"}`
-                        : "Choose a library"}
+                        : tExisting("atlasDrawers.chooseLibrary")}
                     </span>
                     <span className="sr-only">
                       {total ? ` ${copy.need}` : ` in ${name} ${copy.need}`}
@@ -325,7 +333,7 @@ export function PlaceContributionCard({
               className={LINK}
               style={{ color: T.accent.primary }}
             >
-              What contributing unlocks
+              {tStatic("location.what_contributing_unlocks")}
             </GlobalLink>
           </p>
         </nav>
@@ -336,7 +344,7 @@ export function PlaceContributionCard({
             className={LINK}
             style={{ color: T.accent.primary }}
           >
-            What contributing unlocks
+            {tStatic("location.what_contributing_unlocks")}
           </GlobalLink>
         </p>
       )}

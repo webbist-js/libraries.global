@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { WorkspaceHero as PageHero } from "@/components/dashboard/WorkspaceHero"
@@ -19,7 +19,9 @@ export function ModerationHero({
   readonly leaf?: string
   readonly children?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <PageHero
@@ -27,10 +29,16 @@ export function ModerationHero({
       breadcrumb={[
         { label: tUi("home"), href: "/" },
         ...(leaf
-          ? [{ label: "Moderation", href: "/moderation" }, { label: leaf }]
-          : [{ label: "Moderation" }]),
+          ? [
+              {
+                label: tExisting("discussions.moderation"),
+                href: "/moderation",
+              },
+              { label: leaf },
+            ]
+          : [{ label: tExisting("discussions.moderation") }]),
       ]}
-      eyebrow="Moderation"
+      eyebrow={tExisting("discussions.moderation")}
       eyebrowIcon="mdi:shield-check-outline"
       title={title}
       plainTitle={plainTitle}

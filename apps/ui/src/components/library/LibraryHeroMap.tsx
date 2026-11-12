@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { Map as MapLibreMap } from "maplibre-gl"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { MapLoading } from "@/components/map/MapLoading"
@@ -48,7 +48,11 @@ export function LibraryHeroMap({
   readonly directionsUrl: string
   readonly atlasHref: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -174,8 +178,9 @@ export function LibraryHeroMap({
           className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-sm"
           style={{ color: T.ink.dim }}
         >
-          The map can&rsquo;t load in this browser. The address and nearby
-          libraries are listed below.
+          {tStatic(
+            "library.the_map_can_rsquo_t_load_in_this_browser_the_address_and_nearby_libraries_are_listed_below"
+          )}
         </p>
       ) : null}
 
@@ -260,7 +265,7 @@ export function LibraryHeroMap({
             icon="mdi:navigation-variant-outline"
             width={15}
           />
-          Get directions
+          {tExisting("libraryPage.directions")}
           <span className="sr-only"> {tUi("opens_in_a_new_tab")}</span>
         </a>
         <Link
@@ -268,7 +273,7 @@ export function LibraryHeroMap({
           href={atlasHref}
           style={{ borderColor: T.border.line, color: T.ink.base }}
         >
-          Open in the atlas
+          {tStatic("common.openAtlas")}
         </Link>
       </div>
     </figure>

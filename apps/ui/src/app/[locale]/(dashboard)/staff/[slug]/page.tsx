@@ -1,12 +1,13 @@
 import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { HealthList } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { staffHealthRows } from "@/components/staff/staff-health"
+import { withMessages } from "@/i18n/scoped-messages"
 import { canStaffTool } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
 import { mobileConsoleHref } from "@/lib/mobile-app"
@@ -21,12 +22,16 @@ import { QuickActions, type QuickAction } from "./_components/QuickActions"
 const LINK =
   "inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
 
-export default async function StaffOverviewPage({
+async function StaffOverviewPage({
   params,
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const { locale, slug } = await params
   const { overview, user, libraries, documentId } = await loadStaffPage(
@@ -42,14 +47,14 @@ export default async function StaffOverviewPage({
   const actions: QuickAction[] = [
     {
       icon: "mdi:bullhorn-outline",
-      label: "Post a closure or notice",
+      label: tStatic("staffRoute.post_a_closure_or_notice"),
       href: `${base}/notices#post-notice`,
     },
     ...(mobile
       ? [
           {
             icon: "mdi:calendar-clock",
-            label: "Edit the timetable",
+            label: tStatic("staffRoute.edit_the_timetable"),
             href: `${base}/edit?step=timetable`,
             tag: "Mobile",
           },
@@ -67,7 +72,7 @@ export default async function StaffOverviewPage({
             : []),
           {
             icon: "mdi:bus-side",
-            label: "Live sharing settings",
+            label: tStatic("common.liveSharingSettings"),
             href: `${base}/live`,
             tag: "Mobile",
           },
@@ -75,7 +80,7 @@ export default async function StaffOverviewPage({
       : [
           {
             icon: "mdi:clock-outline",
-            label: "Edit opening hours",
+            label: tStatic("staffRoute.edit_opening_hours"),
             href: `${base}/edit?step=hours`,
           },
         ]),
@@ -86,7 +91,7 @@ export default async function StaffOverviewPage({
     },
     {
       icon: "mdi:calendar-sync-outline",
-      label: "Connect an event feed",
+      label: tExisting("libraryPage.connectEvents"),
       href: `${base}/events/connect`,
     },
   ]
@@ -150,3 +155,8 @@ export default async function StaffOverviewPage({
     </div>
   )
 }
+
+export default withMessages(
+  StaffOverviewPage,
+  "[locale]/(dashboard)/staff/[slug]/page"
+)

@@ -2,6 +2,7 @@
 
 import { ArrowUpRight } from "lucide-react"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import {
@@ -20,6 +21,8 @@ export function AboutPhotoSequence({
 }: {
   readonly libraries: readonly AboutLibrary[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const sectionRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -154,13 +157,17 @@ export function AboutPhotoSequence({
       <div ref={stageRef} className="about-photo-stage">
         <div ref={contentRef} className="about-photo-content">
           <Container>
-            <p className="about-eyebrow">National libraries in the index</p>
+            <p className="about-eyebrow">
+              {tStatic("about.national_libraries_in_the_index")}
+            </p>
             <SectionHeader
               id="about-photos-title"
               textBeside
               intro={{
-                title: "A shared *purpose.*",
-                text: "National libraries preserve a country's published work and make it available for study. These are some of the institutions recorded in Libraries Global.",
+                title: tStatic("about.a_shared_purpose"),
+                text: tStatic(
+                  "about.national_libraries_preserve_a_country_s_published_work_and_make_it_available_for_study_these_are_som"
+                ),
               }}
             />
           </Container>
@@ -186,7 +193,7 @@ export function AboutPhotoSequence({
                         href={record.href}
                         className="about-text-link"
                       >
-                        Visit the record{" "}
+                        {tStatic("common.visitRecord")}{" "}
                         <ArrowUpRight className="size-4" aria-hidden="true" />
                       </GlobalLink>
                     ) : null}
@@ -203,13 +210,13 @@ export function AboutPhotoSequence({
               </div>
               {library.href ? (
                 <GlobalLink href={library.href} className="about-text-link">
-                  Visit the record{" "}
+                  {tStatic("common.visitRecord")}{" "}
                   <ArrowUpRight className="size-4" aria-hidden="true" />
                 </GlobalLink>
               ) : null}
             </div>
             <p className="about-photo-scroll-hint">
-              Scroll to see more national libraries{" "}
+              {tStatic("about.scroll_to_see_more_national_libraries")}{" "}
               <span aria-hidden="true">→</span>
             </p>
           </Container>

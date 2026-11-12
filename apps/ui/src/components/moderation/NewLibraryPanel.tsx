@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Badge, Notice } from "@/components/ds"
@@ -72,7 +71,9 @@ function RelationNames({ type, ids }: { type: string; ids: string[] }) {
 type Image = { url?: unknown; isHero?: unknown }
 
 function Photos({ images }: { images: Image[] }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const shown = images.flatMap((img, i) => {
     const raw = typeof img.url === "string" ? img.url.trim() : ""
@@ -85,7 +86,7 @@ function Photos({ images }: { images: Image[] }) {
 
   return (
     <div>
-      <GroupHeading>Photos</GroupHeading>
+      <GroupHeading>{tStatic("moderation.photos")}</GroupHeading>
       <ul className="m-0 flex list-none flex-wrap gap-3 p-0">
         {shown.map((p, i) => (
           <li key={p.key} className="flex flex-col gap-1">
@@ -112,11 +113,15 @@ function Photos({ images }: { images: Image[] }) {
  * fallback panel for types without one of their own.
  */
 export function FieldsList({ fields: raw }: { readonly fields: unknown }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const fields = asRecord(raw)
   if (Object.keys(fields).length === 0)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No details in this submission.
+        {tStatic("moderation.no_details_in_this_submission")}
       </p>
     )
   const present = (k: string) =>
@@ -151,7 +156,9 @@ export function FieldsList({ fields: raw }: { readonly fields: unknown }) {
       })}
       {other.length > 0 ? (
         <div>
-          <GroupHeading>Other</GroupHeading>
+          <GroupHeading>
+            {tExisting("contactModal.atlas.features.options.other")}
+          </GroupHeading>
           <KeyValueList
             rows={other.map((k) => ({ label: humanise(k), value: fields[k] }))}
           />
@@ -212,7 +219,9 @@ export function NewLibraryPanel({
   readonly fields: Record<string, unknown> | null
   readonly draftData: Record<string, unknown> | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const editable = status === "pending" || status === "needs_info"
@@ -250,13 +259,15 @@ export function NewLibraryPanel({
       }
       setMessage({
         ok: true,
-        text: "Location saved. It is used when you approve.",
+        text: tStatic("moderation.location_saved_it_is_used_when_you_approve"),
       })
       router.refresh()
     } catch {
       setMessage({
         ok: false,
-        text: "Something went wrong. Check your connection and try again.",
+        text: tStatic(
+          "moderation.something_went_wrong_check_your_connection_and_try_again"
+        ),
       })
     } finally {
       setBusy(false)
@@ -278,10 +289,14 @@ export function NewLibraryPanel({
           title={tUi("staff_ownership_requested")}
         >
           <p className="m-0">
-            Approval also grants the submitter owner access to this library.
+            {tStatic(
+              "moderation.approval_also_grants_the_submitter_owner_access_to_this_library"
+            )}
             {typeof creation.teamName === "string" &&
               ` It adds the library to ${creation.teamName}’s Team coverage.`}{" "}
-            Verify their staff relationship and service before approving.
+            {tStatic(
+              "moderation.verify_their_staff_relationship_and_service_before_approving"
+            )}
           </p>
         </Notice>
       )}
@@ -298,7 +313,7 @@ export function NewLibraryPanel({
           className="px-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          Where it goes in the atlas
+          {tStatic("moderation.where_it_goes_in_the_atlas")}
         </legend>
         <LocationHierarchySelector f={place} setFormData={setPlace} />
         {editable ? (
@@ -313,7 +328,9 @@ export function NewLibraryPanel({
             </button>
             {!complete ? (
               <span className="text-sm" style={{ color: T.ink.dim }}>
-                Approve and publish needs a continent, country and region.
+                {tStatic(
+                  "moderation.approve_and_publish_needs_a_continent_country_and_region"
+                )}
               </span>
             ) : null}
           </div>

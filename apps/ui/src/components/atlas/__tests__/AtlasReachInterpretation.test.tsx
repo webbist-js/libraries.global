@@ -4,9 +4,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, expect, it, vi } from "vitest"
 
+import messages from "../../../../locales/en"
 import { AtlasReachInterpretation } from "../AtlasReachInterpretation"
-
-import messages from "../../../../locales/en.json"
 
 afterEach(cleanup)
 const result = {

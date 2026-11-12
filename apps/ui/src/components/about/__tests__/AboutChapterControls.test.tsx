@@ -1,6 +1,5 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -18,6 +17,7 @@ import {
   createGlobeNarrative,
   type GlobeNarrativeController,
 } from "@/components/home/knowledge-globe-narrative"
+import { act, cleanup, fireEvent, render, screen } from "@/test/render"
 
 vi.mock("@/lib/navigation", () => ({
   Link: ({ children, ...props }: AnchorHTMLAttributes<HTMLAnchorElement>) => (
@@ -168,7 +168,7 @@ describe("About chapter controls", () => {
       <CoverageExplorer continents={continents} />
     )
     const asia = screen.getByRole("button", {
-      name: /Asia 1 published libraries/,
+      name: /Asia 1 published library/,
     })
     const africa = screen.getByRole("button", {
       name: /Africa 0 published libraries/,

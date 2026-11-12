@@ -1,7 +1,7 @@
-// apps/ui/src/app/[locale]/auth/_components/AuthLeftPanel.tsx
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
-import type { ReactNode } from "react"
+import { useTranslations } from "next-intl"
+
+// apps/ui/src/app/[locale]/auth/_components/AuthLeftPanel.tsx
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { SITE_NAME } from "@/lib/constants"
@@ -24,127 +24,45 @@ interface AuthLeftPanelProps {
   journal?: JournalTeaser | null
 }
 
-// Each tip describes a feature that exists today.
-const TIPS: readonly AuthTip[] = [
-  {
-    title: "Filter to what's open now",
-    body: "Find libraries can narrow any list to places open right now, checked against each library's own time zone.",
-  },
-  {
-    title: "Zoom in to split the clusters",
-    body: "Numbered circles on the map break apart into individual libraries as you zoom towards street level.",
-  },
-  {
-    title: "Spotted a mistake? Suggest a fix",
-    body: "Every library page has a correction link. Each change is reviewed before it goes live.",
-  },
-  {
-    title: "Find talks and reading groups",
-    body: "The events calendar gathers exhibitions, talks and reading groups from the libraries that publish them.",
-  },
-]
-
-// Each tip matches how sign-in and Settings work today.
-const ACCOUNT_TIPS: readonly AuthTip[] = [
-  {
-    title: "See where you're signed in",
-    body: "Settings lists every device signed in to your account. Sign out any you don't recognise.",
-  },
-  {
-    title: "Sign in without a password",
-    body: "On the sign-in page, choose “Email me a sign-in link” for a link that signs you in once.",
-  },
-  {
-    title: "Use a few unrelated words",
-    body: "A long passphrase is easier to remember than a short password full of symbols, and harder to guess.",
-  },
-]
-
-const TIPS_FOR: Partial<
-  Record<AuthLeftPanelProps["mode"], readonly AuthTip[]>
-> = {
-  signin: TIPS,
-  account: ACCOUNT_TIPS,
-}
-
-const STEPS = [
-  {
-    title: "Create your account",
-    body: "Email and password, Google or Discord.",
-  },
-  { title: "Confirm your email", body: "Open the link we send you." },
-  {
-    title: "Set up your profile",
-    body: "Choose a username and your interests.",
-  },
-]
-
-const italic = { fontStyle: "italic", fontWeight: 400 } as const
-
-const COPY: Record<
-  AuthLeftPanelProps["mode"],
-  { chipIcon: string; chip: string; heading: ReactNode; subtext: string }
-> = {
-  signin: {
-    chipIcon: "mdi:earth",
-    chip: "This week in the index",
-    heading: (
-      <>
-        Every library, <span style={italic}>on every continent.</span>
-      </>
-    ),
-    subtext:
-      "Browsing and every library record are free without an account. Sign in to contribute and follow libraries.",
-  },
-  register: {
-    chipIcon: "mdi:plus",
-    chip: "Join the index",
-    heading: (
-      <>
-        Help map <span style={italic}>the world&rsquo;s libraries.</span>
-      </>
-    ),
-    subtext:
-      "Three short steps, then you can start improving records. Every change is reviewed and credited to you.",
-  },
-  verify: {
-    chipIcon: "mdi:email-check-outline",
-    chip: "Almost there",
-    heading: (
-      <>
-        Help map <span style={italic}>the world&rsquo;s libraries.</span>
-      </>
-    ),
-    subtext:
-      "Your account is created. Confirm your email, choose a username, and you can start improving records.",
-  },
-  account: {
-    chipIcon: "mdi:shield-lock-outline",
-    chip: "Your account",
-    heading: (
-      <>
-        Keep your account <span style={italic}>yours.</span>
-      </>
-    ),
-    subtext:
-      "Change your password, or add one if you use a social sign-in. Library records stay free either way.",
-  },
-}
-
 const ACTIVE_STEP: Partial<Record<AuthLeftPanelProps["mode"], 1 | 2>> = {
   register: 1,
   verify: 2,
 }
 
 export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
 
-  const copy = COPY[mode]
+  const tUi = useTranslations("ui")
+
+  const tPanel = useTranslations("authPanel")
+  const tips: readonly AuthTip[] = (
+    mode === "account"
+      ? (["devices", "passwordless", "passphrase"] as const)
+      : (["open", "zoom", "fix", "events"] as const)
+  ).map((key) => ({ title: tPanel(`${key}Title`), body: tPanel(`${key}Body`) }))
+  const copy = {
+    chipIcon: {
+      signin: "mdi:earth",
+      register: "mdi:plus",
+      verify: "mdi:email-check-outline",
+      account: "mdi:shield-lock-outline",
+    }[mode],
+    chip: tPanel(`${mode}Chip`),
+    heading: tPanel.rich(
+      mode === "verify" ? "registerHeading" : `${mode}Heading`,
+      {
+        em: (chunks) => (
+          <span style={{ fontStyle: "italic", fontWeight: 400 }}>{chunks}</span>
+        ),
+      }
+    ),
+    subtext: tPanel(`${mode}Subtext`),
+  }
   const activeStep = ACTIVE_STEP[mode]
 
   return (
     <aside
-      aria-label={`About ${SITE_NAME}`}
+      aria-label={tPanel("about", { name: SITE_NAME })}
       className="hidden w-[52%] shrink-0 flex-col p-10 lg:flex xl:p-14"
       style={{
         background: T.bg.space,
@@ -163,7 +81,10 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
           color: T.ink.base,
         }}
       >
-        {tUi("libraries")} <em style={italic}>Global</em>
+        {tUi("libraries")}{" "}
+        <em style={{ fontStyle: "italic", fontWeight: 400 }}>
+          {tStatic("common.global")}
+        </em>
       </GlobalLink>
 
       <div className="my-auto flex flex-col pt-12">
@@ -219,7 +140,7 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
                 journal ? "grid grid-cols-2 gap-4" : "grid max-w-sm gap-4"
               }
             >
-              <AuthTipCarousel tips={TIPS_FOR[mode] ?? TIPS} />
+              <AuthTipCarousel tips={tips} />
               {journal && <JournalCard journal={journal} />}
             </div>
           )}
@@ -230,6 +151,9 @@ export function AuthLeftPanel({ mode, journal }: AuthLeftPanelProps) {
 }
 
 function JournalCard({ journal }: { journal: JournalTeaser }) {
+  const tPanel = useTranslations("authPanel")
+  const tExisting = useTranslations()
+
   return (
     <GlobalLink
       href={journal.href}
@@ -247,7 +171,7 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
           color: T.accent.primary,
         }}
       >
-        From the journal
+        {tExisting("homepageFallback.from_the_journal")}
       </span>
       <span
         style={{
@@ -269,7 +193,7 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
           color: T.accent.primary,
         }}
       >
-        Read the article
+        {tPanel("readArticle")}
         <Icon
           icon="mdi:arrow-right"
           width={16}
@@ -282,11 +206,16 @@ function JournalCard({ journal }: { journal: JournalTeaser }) {
 }
 
 function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
+  const tPanel = useTranslations("authPanel")
+  const steps = (["create", "confirm", "profile"] as const).map((key) => ({
+    title: tPanel(`${key}Title`),
+    body: tPanel(`${key}Body`),
+  }))
 
   return (
     <ol aria-label={tUi("getting_started")} className="grid grid-cols-3 gap-3">
-      {STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const number = i + 1
         const active = number === activeStep
         const done = number < activeStep
@@ -335,7 +264,7 @@ function StepCards({ activeStep }: { activeStep: 1 | 2 | 3 }) {
                 }}
               >
                 {step.title}
-                {done && <span className="sr-only"> (done)</span>}
+                {done && <span className="sr-only"> {tPanel("done")}</span>}
               </p>
               <p
                 style={{

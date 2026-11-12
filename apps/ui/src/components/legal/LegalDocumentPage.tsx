@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
@@ -44,7 +44,7 @@ function LegalTabs({
   readonly documents: LegalDocumentNavItem[]
   readonly activeSlug: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <SectionTabs
@@ -73,7 +73,7 @@ function LegalDocumentHero({
   untranslatedLocale: string | null
   meta: { label: string; value: string | null; mono?: boolean }[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -187,7 +187,11 @@ export function LegalDocumentPage({
   readonly locale: Locale
   readonly untranslatedLocale?: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const title = doc.title ?? "Legal"
   const membershipPolicy = isMembershipPolicy(doc.slug)
@@ -284,17 +288,15 @@ export function LegalDocumentPage({
                       id="legal-draft-notice"
                       style={{ color: T.ink.base }}
                     >
-                      Pre-launch draft
+                      {tStatic("frontendExtra.pre_launch_draft")}
                     </h2>
                     <p
                       className="mt-1 mb-0 text-base leading-[1.55]"
                       style={{ color: T.ink.base }}
                     >
-                      Libraries Global hasn’t launched yet. This is a working
-                      draft: it hasn’t been published as terms governing public
-                      use of the service, and nobody has been asked to accept
-                      it. The final text will be published as version 1.0, with
-                      its effective date, before the service opens.
+                      {tStatic(
+                        "frontendExtra.libraries_global_hasn_t_launched_yet_this_is_a_working_draft_it_hasn_t_been_published_as_terms_gover"
+                      )}
                     </p>
                   </div>
                 </aside>
@@ -309,7 +311,7 @@ export function LegalDocumentPage({
                     className="type-label m-0 text-(--t-accent-primary) uppercase"
                     id="legal-short-version"
                   >
-                    The short version
+                    {tStatic("frontendExtra.the_short_version")}
                   </h2>
                   <ul
                     className="mt-4 mb-0 grid list-none gap-3 p-0 text-base leading-relaxed"
@@ -329,15 +331,16 @@ export function LegalDocumentPage({
                     ))}
                   </ul>
                   <p className="mt-5 mb-0 border-t border-(--t-border-line) pt-4 text-base leading-relaxed text-(--t-ink-dim)">
-                    These summaries help you read the document but aren’t part
-                    of it. The full text below is what applies.
+                    {tStatic(
+                      "frontendExtra.these_summaries_help_you_read_the_document_but_aren_t_part_of_it_the_full_text_below_is_what_applies"
+                    )}
                   </p>
                 </aside>
               ) : null}
 
               {sections.length === 0 ? (
                 <p className="mt-8 text-base" style={{ color: T.ink.dim }}>
-                  This document has no content yet.
+                  {tStatic("frontendExtra.this_document_has_no_content_yet")}
                 </p>
               ) : null}
 
@@ -384,7 +387,7 @@ export function LegalDocumentPage({
                     id="legal-changes"
                     style={{ color: T.ink.base }}
                   >
-                    Changes to this document
+                    {tStatic("frontendExtra.changes_to_this_document")}
                   </h2>
                   <div
                     tabIndex={0}
@@ -400,10 +403,10 @@ export function LegalDocumentPage({
                       </caption>
                       <thead className="sr-only">
                         <tr>
-                          <th scope="col">Version</th>
-                          <th scope="col">Date</th>
+                          <th scope="col">{tStatic("common.version")}</th>
+                          <th scope="col">{tStatic("common.date")}</th>
                           <th scope="col">{tUi("what_changed")}</th>
-                          <th scope="col">Details</th>
+                          <th scope="col">{tExisting("publishing.details")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -443,7 +446,7 @@ export function LegalDocumentPage({
                                   className="font-semibold text-(--t-accent-primary) underline underline-offset-[3px] hover:text-(--t-accent-primary-hover)"
                                   href={revision.changesUrl}
                                 >
-                                  See changes
+                                  {tStatic("frontendExtra.see_changes")}
                                   <span className="sr-only">
                                     {" "}
                                     in {formatVersion(revision.version)}
@@ -460,8 +463,9 @@ export function LegalDocumentPage({
                     className="mt-3 mb-0 text-sm leading-relaxed"
                     style={{ color: T.ink.dim }}
                   >
-                    We announce material changes in the journal and by email to
-                    account holders at least 30 days before they apply.
+                    {tStatic(
+                      "frontendExtra.we_announce_material_changes_in_the_journal_and_by_email_to_account_holders_at_least_30_days_before_"
+                    )}
                   </p>
                 </section>
               ) : null}
@@ -477,14 +481,15 @@ export function LegalDocumentPage({
                   id="legal-questions"
                   style={{ color: T.ink.base }}
                 >
-                  Questions about this?
+                  {tStatic("frontendExtra.questions_about_this")}
                 </h2>
                 <p
                   className="mt-2 mb-0 text-base leading-relaxed"
                   style={{ color: T.ink.dim }}
                 >
-                  Ask in the community forum, or write to the maintainers. We
-                  reply within 5 working days.
+                  {tStatic(
+                    "frontendExtra.ask_in_the_community_forum_or_write_to_the_maintainers_we_reply_within_5_working_days"
+                  )}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Button asChild variant="primary" size="pill">
@@ -499,7 +504,7 @@ export function LegalDocumentPage({
                   </Button>
                   <Button asChild variant="surface" size="pill">
                     <GlobalLink href={LEGAL_FORUM_URL}>
-                      Community forum
+                      {tStatic("frontendExtra.community_forum")}
                     </GlobalLink>
                   </Button>
                 </div>

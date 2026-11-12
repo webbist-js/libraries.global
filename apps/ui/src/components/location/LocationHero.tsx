@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type React from "react"
 
 import { RecordMetrics } from "@/components/dashboard/RecordMetrics"
@@ -202,23 +203,27 @@ export function LocationSectionHeading({
 
 /** Honest empty state for locations with no records yet. */
 export function LocationEmptyState({ name }: { readonly name: string }) {
+  const tPlace = useTranslations("placeCopy")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div className="missing-content rounded-3xl px-8 py-12 text-center">
       <h3 className="type-h3 m-0" style={{ color: T.ink.base }}>
-        No records yet
+        {tStatic("location.no_records_yet")}
       </h3>
       <p
         className="mx-auto mt-2 mb-5 max-w-[46ch] text-base"
         style={{ color: T.ink.dim }}
       >
-        We haven&rsquo;t documented any libraries in {name} yet. Know one? Help
-        us put it on the map.
+        {tPlace("emptyLocation", { name })}
       </p>
       <GlobalLink
         href="/contribute"
         className="inline-flex items-center rounded-full bg-(--t-action-primary) px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover)"
       >
-        Add a missing library
+        {tExisting("libraryPage.addLibrary")}
       </GlobalLink>
     </div>
   )

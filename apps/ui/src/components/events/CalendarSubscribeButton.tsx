@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { analyticsAttributes } from "@/lib/analytics-events"
@@ -17,6 +17,8 @@ export function CalendarSubscribeButton({
   label = "Subscribe",
   eventDocumentId,
 }: CalendarSubscribeButtonProps) {
+  const tStatic = useTranslations("staticUi")
+
   const [open, setOpen] = useState(false)
 
   // webcal:// links trigger native calendar apps; https:// links for manual import
@@ -67,7 +69,7 @@ export function CalendarSubscribeButton({
                 letterSpacing: ".1em",
               }}
             >
-              Subscribe (calendar app)
+              {tStatic("frontendExtra.subscribe_calendar_app")}
             </span>
           </a>
           <a
@@ -93,7 +95,7 @@ export function CalendarSubscribeButton({
                 letterSpacing: ".1em",
               }}
             >
-              Download .ics file
+              {tStatic("frontendExtra.download_ics_file")}
             </span>
           </a>
         </div>

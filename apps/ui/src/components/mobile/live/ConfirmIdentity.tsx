@@ -1,5 +1,6 @@
 "use client"
-import { useTranslations as useUiTranslations } from "next-intl"
+
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Sheet } from "@/components/ds/Sheet"
@@ -38,7 +39,9 @@ export function ConfirmIdentity({
   readonly onClose: () => void
   readonly onConfirmed: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [password, setPassword] = useState(""),
     [code, setCode] = useState(""),
@@ -113,7 +116,7 @@ export function ConfirmIdentity({
             className="live-button live-primary rounded-full"
             disabled={busy || !password}
           >
-            Confirm
+            {tStatic("common.confirm")}
           </button>
         </form>
         <button
@@ -122,7 +125,7 @@ export function ConfirmIdentity({
           className="live-button rounded-full"
           onClick={() => confirm("passkey")}
         >
-          Use a passkey
+          {tStatic("mobile.use_a_passkey")}
         </button>
         <button
           type="button"
@@ -143,7 +146,7 @@ export function ConfirmIdentity({
             }
           }}
         >
-          Email me a code
+          {tStatic("mobile.email_me_a_code")}
         </button>
         {sent && (
           <form
@@ -153,7 +156,7 @@ export function ConfirmIdentity({
             }}
           >
             <label className="block text-base font-semibold">
-              Six-digit code
+              {tStatic("mobile.six_digit_code")}
               <input
                 ref={codeRef}
                 className="live-input mt-2 font-normal"
@@ -169,7 +172,7 @@ export function ConfirmIdentity({
               className="live-button rounded-full"
               disabled={busy || code.length !== 6}
             >
-              Confirm with code
+              {tStatic("mobile.confirm_with_code")}
             </button>
           </form>
         )}
@@ -182,8 +185,9 @@ export function ConfirmIdentity({
           {tUi("cancel")}{" "}
         </button>
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          Confirmation lasts 12 hours on this sign-in. After confirming, you can
-          add a passkey to this account.
+          {tStatic(
+            "mobile.confirmation_lasts_12_hours_on_this_sign_in_after_confirming_you_can_add_a_passkey_to_this_account"
+          )}
         </p>
       </ConfirmIdentityLook>
     </Sheet>
