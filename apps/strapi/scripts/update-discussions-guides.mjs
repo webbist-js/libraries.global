@@ -17,20 +17,29 @@ const stage = args.has("--stage") || resume
 const publish = args.has("--publish")
 if (stage && publish)
   throw new Error("Stage and publication are separate operations")
-const env = parseEnv(readFileSync(new URL("../.env", import.meta.url), "utf8"))
+const env = parseEnv(
+  readFileSync(
+    process.env.CMS_ENV_FILE || new URL("../.env", import.meta.url),
+    "utf8"
+  )
+)
 const origin =
   target === "local"
     ? "http://127.0.0.1:1337"
     : process.env.STRAPI_PRODUCTION_URL ||
       env.STRAPI_PRODUCTION_URL ||
       "http://127.0.0.1:18013"
+// Production never falls back to the local development token.
 const token =
   target === "local"
     ? env.STRAPI_MCP_TOKEN
-    : process.env.STRAPI_PRODUCTION_MCP_TOKEN ||
-      env.STRAPI_PRODUCTION_MCP_TOKEN ||
-      env.STRAPI_MCP_TOKEN
-if (!token) throw new Error("The selected CMS Admin Token is unavailable")
+    : process.env.STRAPI_PRODUCTION_MCP_TOKEN || env.STRAPI_PRODUCTION_MCP_TOKEN
+if (!token)
+  throw new Error(
+    target === "local"
+      ? "STRAPI_MCP_TOKEN is missing for the local CMS"
+      : "STRAPI_PRODUCTION_MCP_TOKEN is missing; production never uses the local STRAPI_MCP_TOKEN"
+  )
 if (target === "production" && new URL(origin).port === "1337")
   throw new Error("Production must not use the development CMS")
 const base = "collection-types/api::wiki-article.wiki-article"

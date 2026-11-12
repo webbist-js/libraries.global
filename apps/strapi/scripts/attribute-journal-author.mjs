@@ -41,10 +41,14 @@ if (
   )
 if (!local && cmsUrl.port === "1337")
   throw new Error("Production must not use the local CMS port")
-const token = local
-  ? env.STRAPI_MCP_TOKEN
-  : env.STRAPI_PRODUCTION_MCP_TOKEN || env.STRAPI_MCP_TOKEN
-if (!token) throw new Error("Missing scoped content token")
+// Production never falls back to the local development token.
+const token = local ? env.STRAPI_MCP_TOKEN : env.STRAPI_PRODUCTION_MCP_TOKEN
+if (!token)
+  throw new Error(
+    local
+      ? "STRAPI_MCP_TOKEN is missing for the local CMS"
+      : "STRAPI_PRODUCTION_MCP_TOKEN is missing; production never uses the local STRAPI_MCP_TOKEN"
+  )
 async function request(path, method = "GET", data, publicProfile = false) {
   const response = await fetch(new URL(path, origin), {
     method,
