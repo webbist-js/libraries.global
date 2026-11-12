@@ -11,7 +11,7 @@ Read [AGENTS.md](AGENTS.md) for repository commands and conventions, and [CONTEX
 - [API Access](apps/ui/TEAM-API.md)
 - [Local and production CMS content operations](apps/strapi/CONTENT-OPERATIONS.md)
 
-Detailed agent context is local under the gitignored `.claude/context/` directory.
+Maintainer workspaces may also have a private `.brain/` link holding operational skills (linked under `.claude/skills/`) and domain notes (`.brain/context/`). It is optional, machine-local and never committed.
 
 ## Rules to keep in view
 
@@ -28,7 +28,7 @@ Detailed agent context is local under the gitignored `.claude/context/` director
 
 ### Issue tracker
 
-Issues live as local markdown files under `.scratch/<feature>/`. See `docs/agents/issue-tracker.md`.
+Issues live as local markdown files under `.scratch/<feature>/` (gitignored; in maintainer workspaces a link into the private brain's local storage). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
