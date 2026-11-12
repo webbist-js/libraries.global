@@ -70,4 +70,4 @@ The complete snapshot has 978 records. Two home delivery services are skipped, l
 
 The completed local import has 331 sourced population estimates and no invalid Country/Region/Area links. A subsequent CMS preflight recognises all 976 Source Records and all 331 geographic documents, with nothing left to create. An interrupted request had committed before its response was lost; the resumed run adopted that Source Record without creating a duplicate.
 
-After publication and index reseeding, suitable contributor work is operational status verification, missing map pins, opening hours and mobile timetables. Split Drives by Region and name Kirjastot.fi's reusable directory in the evidence instructions.
+After publication and its search check, suitable contributor work is operational status verification, missing map pins, opening hours and mobile timetables. Split Drives by Region and name Kirjastot.fi's reusable directory in the evidence instructions.

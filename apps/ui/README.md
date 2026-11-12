@@ -44,7 +44,7 @@ Query caches include account identity and relevant permission scope. Never put p
 
 Use the warm-paper tokens in `src/lib/design-tokens.ts` and primitives in `src/components/ds`. Preserve keyboard focus, reduced motion, useful loading/error states and status conveyed through text as well as color.
 
-Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech, Spanish, French and Japanese). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` gives the server each locale's whole catalogue. UI translations and CMS content enablement are separate.
+Supported locales and the default come from `packages/shared-data/locales.ts` (English, Czech, French, Spanish and Japanese). `src/lib/navigation.ts` configures next-intl; `src/lib/i18n.ts` gives the server each locale's whole catalogue. UI translations and CMS content enablement are separate.
 
 Messages live in one JSON file per feature under `locales/<locale>/` (`common`, `atlas`, `staff`, …), listed in `locales/catalogue.ts`. Each file owns whole namespaces (for `staticUi`, whole sub-namespaces such as `staticUi.atlas`), and every locale has the same files holding the same keys. `pnpm --filter @repo/ui i18n:check` verifies parity, ICU arguments and file placement.
 

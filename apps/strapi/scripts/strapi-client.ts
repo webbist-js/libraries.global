@@ -146,6 +146,7 @@ export interface LibraryCreateData {
   slug?: string
   timezone?: string
   shortName?: string
+  alternateNames?: string[]
   summary?: string
   phone?: string
   email?: string

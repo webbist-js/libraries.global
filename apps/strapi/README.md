@@ -30,7 +30,7 @@ The generated declarations are shared through `@repo/strapi-types`. See [Schema 
 
 ## Plugins and authority
 
-The CMS includes local Access, Beta Invites, Content Moderation, Events, Library Staff, Mobile Libraries, Rewards and Topics plugins, plus the portable [Discussions plugin](../../packages/strapi-plugin-discussions/README.md). Read `config/plugins.ts` and each package's scripts for current registration/build behavior; package.json is the dependency/version reference.
+The CMS includes local Access, Beta Invites, Content Moderation, Events, Library Staff, Mobile Libraries and Rewards plugins, plus the portable [Discussions plugin](../../packages/strapi-plugin-discussions/README.md). Read `config/plugins.ts` and each package's scripts for current registration/build behavior; package.json is the dependency/version reference.
 
 The Strapi Better Auth plugin owns public accounts, sessions and profile provisioning. Server bridge endpoints verify trusted headers and current CMS authority. Strapi admin authentication and plugin RBAC are separate. Payment projections may grant tools, never community roles or staff authority. See [Authentication](../docs/docs/authentication.md).
 
