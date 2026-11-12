@@ -19,18 +19,14 @@ import { useGlobals } from "storybook/preview-api"
 import { themes } from "storybook/theming"
 
 import { resetAsyncStories } from "./AsyncStory"
-import { setFixtureLocale } from "./fixture-locale"
+import { isFixtureLocale, loadCatalogue, loadedCatalogue } from "./catalogues"
+import { setFixtureLocale, type FixtureLocale } from "./fixture-locale"
 import { respondToFixture, type FixtureResponses } from "./fixture-responses"
 import { FixtureSessionProvider, type FixtureSession } from "./FixtureSession"
 import { resetServerFixtures } from "./server-fixtures"
-import cs from "../../ui/locales/cs"
-import en from "../../ui/locales/en"
-import es from "../../ui/locales/es"
-import fr from "../../ui/locales/fr"
 
 disableCache("all")
 addCollection(icons)
-const messages = { en, cs, es, fr }
 function embeddedDocsRoot(): HTMLElement | null {
   // Only preset Doc-block iframes inherit their host's theme. Canvas keeps globals.
   if (!window.frameElement?.id.startsWith("iframe--")) return null
@@ -48,7 +44,7 @@ function Providers({
 }: {
   children: ReactNode
   session?: FixtureSession
-  locale: keyof typeof messages
+  locale: FixtureLocale
   appearance: AppearancePreference
   onAppearanceChange: (value: AppearancePreference) => void
 }) {
@@ -86,7 +82,7 @@ function Providers({
   return (
     <NextIntlClientProvider
       locale={locale}
-      messages={messages[locale]}
+      messages={loadedCatalogue(locale)}
       timeZone="Europe/London"
       now={new Date("2026-01-15T12:00:00Z")}
     >
@@ -128,8 +124,18 @@ function AppearanceDocs(props: DocsContainerProps) {
 
   return <DocsContainer {...props} theme={dark ? themes.dark : themes.light} />
 }
+const storyLocale = (selected: unknown): FixtureLocale =>
+  isFixtureLocale(selected) ? selected : "en"
+
 const preview: Preview = {
   tags: ["autodocs"],
+  loaders: [
+    async (context) => {
+      await loadCatalogue(storyLocale(context.globals.locale))
+
+      return {}
+    },
+  ],
   beforeEach: (context) => {
     resetAsyncStories()
     resetServerFixtures()
@@ -213,6 +219,7 @@ const preview: Preview = {
           { value: "cs", title: "Čeština" },
           { value: "es", title: "Español" },
           { value: "fr", title: "Français" },
+          { value: "ja", title: "日本語" },
         ],
       },
     },
@@ -223,8 +230,7 @@ const preview: Preview = {
       const appearance = isAppearancePreference(context.globals.appearance)
         ? context.globals.appearance
         : "light"
-      const selected = context.globals.locale as keyof typeof messages
-      const locale = selected in messages ? selected : "en"
+      const locale = storyLocale(context.globals.locale)
       setFixtureLocale(locale)
 
       return (
