@@ -19,9 +19,11 @@ export const SessionUnavailable: Story = {
     (Story) => (
       <FixtureSessionProvider
         error={{
+          name: "BetterFetchError",
           message: "Session unavailable",
           status: 503,
           statusText: "Service Unavailable",
+          error: null,
         }}
       >
         <Story />
