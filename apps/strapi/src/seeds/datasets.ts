@@ -40,6 +40,44 @@ export const DATASET_SEED: DatasetSeed[] = [
   openStreetMap as DatasetSeed,
   mexicoSic as DatasetSeed,
   canadaOdcaf as DatasetSeed,
+  // Licence, attribution and source fields match the Datasets registered by
+  // the first imports on 7 November 2026; the runner compares them before writes.
+  {
+    key: "ch-isil",
+    name: "Swiss ISIL Directory",
+    publisher: "Swiss National Library",
+    sourceUrl: "https://opendata.swiss/en/dataset/schweizer-isil-verzeichnis",
+    licence: "Open use — opendata.swiss",
+    licenceUrl: "https://opendata.swiss/terms-of-use#terms_open",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "Swiss National Library, Swiss ISIL Directory. https://opendata.swiss/en/dataset/schweizer-isil-verzeichnis. Open use; source ISIL identifiers retained.",
+    coverage:
+      "Active institutions in Switzerland explicitly classified as libraries. Excludes inactive, non-library and non-Swiss records. No coordinates supplied.",
+    importMechanism:
+      "pnpm ingest --dataset=ch-isil; CSV snapshot; stable ISIL identities; existing canton geography; resumable draft writes.",
+    notes:
+      "CSV resource metadata declares https://opendata.swiss/terms-of-use#terms_open. Institutional names, types, street addresses, places, postcodes and valid websites only. No free-text descriptions, contact people, hours or inferred coordinates.",
+  },
+  {
+    key: "jp-ndl-isil",
+    name: "Japan ISIL registry",
+    publisher: "National Diet Library",
+    sourceUrl: "https://www.ndl.go.jp/library/isil",
+    licence: "Public domain",
+    licenceUrl: "https://www.ndl.go.jp/library/isil",
+    licenceStatus: "stated_by_publisher",
+    redistribution: "permitted",
+    attribution:
+      "National Diet Library, ISIL registry, 2 November 2026. Public domain. Processed by Libraries Global; stable ISIL identifiers retained.",
+    coverage:
+      "Registered libraries and community reading rooms in Japan. Not a census; excludes deleted ISILs, museums, archives and unusable geography. Registration does not establish visitor access or current operation.",
+    importMechanism:
+      "pnpm ingest --dataset=jp-ndl-isil; frozen CSV snapshot; Japanese names; existing prefecture geography; resumable draft writes.",
+    notes:
+      "Library types are inferred conservatively from list membership and institution names; unmatched types are Other. Kana readings and readable English alternatives retained. Existing National Diet Library record preserved. Address and parcel points have separate provenance.",
+  },
   {
     key: "openstreetmap-routing",
     name: "OpenStreetMap walking and cycling network",
