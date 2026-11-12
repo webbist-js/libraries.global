@@ -67,4 +67,4 @@ Each country keeps request metadata, retrieval dates and SHA-256 checksums in `.
 
 Existing Swedish and Danish places are reused, including verified alternate spellings and municipality suffixes. Norway reuses current places where the parent agrees, adds missing current counties and municipalities, and reports eight obsolete county entries for review. The existing malformed county name `Ãstfold` is matched to code `31` through an explicit seed alias; its text remains an editorial correction. The adapter does not delete or reparent legacy documents.
 
-Review the drafts and uncertain types, publish approved records, then run the existing Meilisearch reseed. Country-only records, missing coordinates and Norway's sparse library coverage are useful contributor tasks.
+Review the drafts and uncertain types, publish approved records, then confirm they reached search without reseeding production (see [Search after publishing](../README.md#search-after-publishing)). Country-only records, missing coordinates and Norway's sparse library coverage are useful contributor tasks.
