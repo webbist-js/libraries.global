@@ -51,6 +51,11 @@ const binding = (country: string) => ({
 })
 type SourceRow = Record<string, unknown>
 
+const nlbName = (name: string) =>
+  nlbAttributes(
+    `<th>NAME</th><td>${name}</td><th>ADDRESSSTREETNAME</th><td>Main Street</td><th>ADDRESSPOSTALCODE</th><td>012345</td>`
+  ).NAME
+
 const fixtures: Record<string, unknown> = {
   "lv-kisc-libraries": [
     {
@@ -228,6 +233,11 @@ describe("separate expansion sources", () => {
     expect(() => nlbAttributes("<script>evil()</script>")).toThrow(
       "Missing source column"
     )
+    expect(nlbName("Tom &amp;quot;s &#38;amp; Co")).toBe("Tom &quot;s &amp; Co")
+    expect(nlbName("<scr<b>ipt>alert(1)</scr<b>ipt>")).toBe(
+      "scriptalert(1)/script"
+    )
+    expect(nlbName("&#60;img src=x&#62;")).toBe("img src=x")
   })
   it("keeps same-name branches at different addresses distinct; ignores transient Graz OIDs", () => {
     const raw = structuredClone(fixtures["at-graz-libraries"]) as {

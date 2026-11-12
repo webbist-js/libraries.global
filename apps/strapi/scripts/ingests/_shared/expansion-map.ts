@@ -122,23 +122,38 @@ export function geoFeatures(raw: unknown): GeoFeature[] {
   })
 }
 
+const NAMED_ENTITIES: Record<string, string> = {
+  amp: "&",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+}
+
+function decodeEntity(entity: string) {
+  if (!entity.startsWith("#"))
+    return NAMED_ENTITIES[entity.toLowerCase()] ?? `&${entity};`
+  const point =
+    entity[1].toLowerCase() === "x"
+      ? Number.parseInt(entity.slice(2), 16)
+      : Number(entity.slice(1))
+
+  return point > 0 && point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff)
+    ? String.fromCodePoint(point)
+    : ""
+}
+
+/**
+ * Plain text of an NLB table cell. Entities are decoded in one pass so a
+ * decoded `&` is never decoded again, and no angle bracket survives, so the
+ * result can never carry markup.
+ */
 const decodeNlbCell = (v: string) =>
   v
     .replaceAll(/<[^<>]*>/g, "")
-    .replaceAll(/&#(x[0-9a-f]+|\d+);/gi, (_, n) => {
-      const point =
-        n[0].toLowerCase() === "x" ? Number.parseInt(n.slice(1), 16) : Number(n)
-
-      return point > 0 &&
-        point <= 0x10ffff &&
-        !(point >= 0xd800 && point <= 0xdfff)
-        ? String.fromCodePoint(point)
-        : ""
-    })
-    .replaceAll("&amp;", "&")
-    .replaceAll("&quot;", '"')
-    .replaceAll(/&#39;|&apos;/g, "'")
-    .replaceAll("&nbsp;", " ")
+    .replaceAll(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|nbsp);/gi, (_, entity) =>
+      decodeEntity(entity)
+    )
+    .replaceAll(/[<>]/g, "")
     .trim()
 
 /** NLB embeds its attributes in an HTML table inside each GeoJSON feature. */
