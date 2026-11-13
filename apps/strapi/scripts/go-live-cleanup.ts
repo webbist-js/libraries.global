@@ -1,4 +1,8 @@
-/** Explicit one-off cleanup. Dry-run by default; never runs during Strapi bootstrap. */
+/**
+ * Explicit one-off cleanup. Dry-run by default; never runs during Strapi bootstrap.
+ * Only a loopback database is accepted by default. A non-local database also
+ * needs --production, an explicit confirmation of the production target.
+ */
 import { existsSync, readFileSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
@@ -39,6 +43,21 @@ const EMPTY_TABLES = [
   "verification",
   "strapi_sessions",
 ]
+
+const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]", "::1", "0.0.0.0"])
+
+/** Refuses a non-local database host unless --production confirms it. */
+export function assertCleanupTarget(
+  host: string | undefined,
+  production: boolean
+) {
+  // pg falls back to PGHOST, then localhost, when no host is configured.
+  const target = host || process.env.PGHOST || "localhost"
+  if (production || LOOPBACK.has(target)) return
+  throw new Error(
+    "Go-live cleanup refuses a non-local database; pass --production to confirm the production target"
+  )
+}
 
 function envFile() {
   return Object.fromEntries(
@@ -321,6 +340,10 @@ async function main() {
     )
   const env = { ...envFile(), ...process.env }
   const url = env.DATABASE_URL ? new URL(env.DATABASE_URL) : null
+  assertCleanupTarget(
+    url?.hostname ?? env.DATABASE_HOST,
+    args.includes("--production")
+  )
   const knex = createKnex({
     client: "pg",
     connection: {
