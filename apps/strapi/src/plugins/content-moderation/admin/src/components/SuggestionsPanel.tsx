@@ -24,6 +24,7 @@ import { EmptyDocuments } from "@strapi/icons/symbols"
 import { useFetchClient, useNotification } from "@strapi/strapi/admin"
 import { useCallback, useEffect, useState } from "react"
 
+import { ReviewResponsePicker } from "./ReviewResponsePicker"
 import { relativeTime } from "./submissionMeta"
 import { SuggestionRoundPanel } from "./SuggestionRoundPanel"
 import {
@@ -312,6 +313,15 @@ function DecisionModal({
                 </label>
               </>
             )}
+            <ReviewResponsePicker
+              context={{
+                submissionType: "option_suggestion",
+                itemName: suggestion.name,
+              }}
+              note={note}
+              onChange={setNote}
+              disabled={saving}
+            />
             <Field.Root
               name="note"
               required={!["publish", "review"].includes(decision)}
@@ -326,6 +336,7 @@ function DecisionModal({
               <Field.Label>Note</Field.Label>
               <Textarea
                 value={note}
+                maxLength={2000}
                 onChange={(e: any) => setNote(e.target.value)}
               />
               <Field.Hint />

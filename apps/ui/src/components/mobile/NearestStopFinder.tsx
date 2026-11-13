@@ -1,5 +1,6 @@
 "use client"
 import type { MobileStop } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
@@ -19,6 +20,10 @@ export function NearestStopFinder({
   readonly stops: MobileStop[]
   readonly onSelect: (id: string) => void
 }) {
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
       null
     ),
@@ -110,7 +115,7 @@ export function NearestStopFinder({
       aria-labelledby="nearest-stop-heading"
     >
       <h3 id="nearest-stop-heading" className="type-h3 mt-0 mb-3">
-        Find your nearest stop
+        {tStatic("mobile.find_your_nearest_stop")}
       </h3>
       <div className="flex flex-wrap items-end gap-3">
         <button
@@ -120,10 +125,12 @@ export function NearestStopFinder({
           className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-4 font-semibold hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50"
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          {busy ? "Finding your location…" : "Use my location"}
+          {busy
+            ? "Finding your location…"
+            : tExisting("widgetPublic.use_my_location")}
         </button>
         <label className="flex min-w-48 flex-1 flex-col gap-1 text-sm font-semibold">
-          Or search for a place
+          {tStatic("mobile.or_search_for_a_place")}
           <input
             value={query}
             maxLength={200}
@@ -137,7 +144,9 @@ export function NearestStopFinder({
         </label>
       </div>
       <p className="text-sm" style={{ color: T.ink.dim }}>
-        Your location stays in this browser. Distances are straight-line.
+        {tStatic(
+          "mobile.your_location_stays_in_this_browser_distances_are_straight_line"
+        )}
       </p>
       {error ? (
         <p role="alert" className="text-sm" style={{ color: T.accent.danger }}>
@@ -184,7 +193,9 @@ export function NearestStopFinder({
               </button>
             </li>
           ))}
-          {!nearest.length ? <li>Stops do not have map pins yet.</li> : null}
+          {!nearest.length ? (
+            <li>{tStatic("mobile.stops_do_not_have_map_pins_yet")}</li>
+          ) : null}
         </ul>
       ) : null}
     </section>

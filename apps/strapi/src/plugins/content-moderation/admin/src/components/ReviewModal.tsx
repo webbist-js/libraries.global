@@ -16,6 +16,7 @@ import { Check, Cross, Information } from "@strapi/icons"
 import { useState } from "react"
 
 import { RecordChangesPanel } from "./RecordChangesPanel"
+import { ReviewResponsePicker } from "./ReviewResponsePicker"
 import {
   detailOf,
   formatDateTime,
@@ -237,10 +238,17 @@ export function ReviewModal({
           )}
           {pending && (
             <Box paddingTop={4}>
+              <ReviewResponsePicker
+                context={{ submissionType: sub.submissionType }}
+                note={note}
+                onChange={setNote}
+                disabled={busy}
+              />
               <Field.Root name="reviewNote" hint={NOTE_COPY[pending].hint}>
                 <Field.Label>{NOTE_COPY[pending].label}</Field.Label>
                 <Textarea
                   value={note}
+                  maxLength={2000}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                     setNote(e.target.value)
                   }

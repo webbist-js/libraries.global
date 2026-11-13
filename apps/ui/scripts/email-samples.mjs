@@ -126,7 +126,7 @@ export function emailSamples() {
       "/profile",
       "View invitation"
     ),
-    ...["en", "cs", "es", "fr"].map((locale) => ({
+    ...["en", "cs", "es", "fr", "ja"].map((locale) => ({
       id: `beta-invitation-${locale}`,
       ...betaInvitationEmail({
         code: "EXAMPLE-CODE-FOR-PREVIEW-ONLY",

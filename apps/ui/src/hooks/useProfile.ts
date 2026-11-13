@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -7,6 +8,7 @@ import { authClient } from "@/lib/auth-client"
 import type { NotifPrefs, UserProfile } from "@/lib/types/profile"
 
 export function useProfile() {
+  const t = useTranslations("profileFeedback")
   const [saving, setSaving] = useState(false)
   const { refetch } = authClient.useSession()
 
@@ -18,13 +20,20 @@ export function useProfile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
-      const json = (await res.json()) as { error?: string }
       if (!res.ok) {
-        toast.error(json.error ?? "Failed to save profile")
+        toast.error(
+          t(
+            res.status === 401
+              ? "signIn"
+              : res.status === 400
+                ? "invalid"
+                : "failed"
+          )
+        )
 
         return false
       }
-      toast.success("Profile saved")
+      toast.success(t("saved"))
       // The profile route invalidates the bridge cache; update reactive form
       // defaults too. A failed refresh must not undo a successful profile save.
       try {
@@ -35,7 +44,7 @@ export function useProfile() {
 
       return true
     } catch {
-      toast.error("Failed to save profile")
+      toast.error(t("failed"))
 
       return false
     } finally {
@@ -53,16 +62,23 @@ export function useProfile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(prefs),
       })
-      const json = (await res.json()) as { error?: string }
       if (!res.ok) {
-        toast.error(json.error ?? "Failed to save notifications")
+        toast.error(
+          t(
+            res.status === 401
+              ? "signIn"
+              : res.status === 400
+                ? "invalid"
+                : "notificationsFailed"
+          )
+        )
 
         return false
       }
 
       return true
     } catch {
-      toast.error("Failed to save notifications")
+      toast.error(t("notificationsFailed"))
 
       return false
     } finally {

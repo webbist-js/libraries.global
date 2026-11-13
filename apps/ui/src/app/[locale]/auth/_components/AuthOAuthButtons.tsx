@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -16,6 +17,7 @@ interface AuthOAuthButtonsProps {
 }
 
 export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
+  const t = useTranslations("authInterface")
   const [loading, setLoading] = useState<"google" | "discord" | null>(null)
 
   const [providers, setProviders] = useState<string[]>([])
@@ -49,12 +51,12 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
         additionalData: { termsVersion: TERMS_VERSION },
       })
       if (result?.error) {
-        toast.error(result.error.message ?? `${provider} sign-in failed`)
+        toast.error(t("socialFailed", { provider }))
         setLoading(null)
       }
       // On success the redirect plugin navigates away — no need to clear loading
     } catch {
-      toast.error(`${provider} sign-in failed. Please try again.`)
+      toast.error(t("socialFailed", { provider }))
       setLoading(null)
     }
   }
@@ -78,10 +80,10 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
         >
           <Icon icon="mdi:discord" width={20} aria-hidden="true" />
           {loading === "discord"
-            ? "Redirecting…"
+            ? t("redirecting")
             : mode === "signin"
-              ? "Continue with Discord"
-              : "Sign up with Discord"}
+              ? t("socialContinue", { provider: "Discord" })
+              : t("socialRegister", { provider: "Discord" })}
         </AuthSecondaryButton>
       )}
       <p
@@ -92,24 +94,27 @@ export function AuthOAuthButtons({ mode }: AuthOAuthButtonsProps) {
           color: T.ink.dim,
         }}
       >
-        By continuing with Google or Discord, you confirm you&rsquo;re{" "}
-        {MINIMUM_ACCOUNT_AGE} or over and agree to our{" "}
-        <GlobalLink
-          href="/legal/terms"
-          style={{ color: T.accent.primary }}
-          className="underline underline-offset-[3px]"
-        >
-          terms of use
-        </GlobalLink>{" "}
-        and{" "}
-        <GlobalLink
-          href="/legal/privacy"
-          style={{ color: T.accent.primary }}
-          className="underline underline-offset-[3px]"
-        >
-          privacy notice
-        </GlobalLink>
-        .
+        {t.rich("socialConsent", {
+          age: MINIMUM_ACCOUNT_AGE,
+          terms: (chunks) => (
+            <GlobalLink
+              href="/legal/terms"
+              style={{ color: T.accent.primary }}
+              className="underline underline-offset-[3px]"
+            >
+              {chunks}
+            </GlobalLink>
+          ),
+          privacy: (chunks) => (
+            <GlobalLink
+              href="/legal/privacy"
+              style={{ color: T.accent.primary }}
+              className="underline underline-offset-[3px]"
+            >
+              {chunks}
+            </GlobalLink>
+          ),
+        })}
       </p>
     </div>
   )
@@ -124,6 +129,8 @@ function GoogleButton({
   loading: "google" | "discord" | null
   onClick: () => void
 }) {
+  const t = useTranslations("authInterface")
+
   return (
     <AuthSecondaryButton
       disabled={loading !== null}
@@ -149,9 +156,11 @@ function GoogleButton({
           fill="#EA4335"
         />
       </svg>
-      {loading === "google" && "Redirecting…"}
+      {loading === "google" && t("redirecting")}
       {loading !== "google" &&
-        (mode === "signin" ? "Continue with Google" : "Sign up with Google")}
+        (mode === "signin"
+          ? t("socialContinue", { provider: "Google" })
+          : t("socialRegister", { provider: "Google" }))}
     </AuthSecondaryButton>
   )
 }

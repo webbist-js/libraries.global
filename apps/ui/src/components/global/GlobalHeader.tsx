@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
-import { useTranslations as useUiTranslations, type Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { type Locale, useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
@@ -29,7 +29,9 @@ export async function GlobalHeader({
    */
   readonly variant?: "site" | "app" | "dashboard"
 }) {
-  const tUi = await getUiTranslations({ locale, namespace: "ui" })
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations({ locale, namespace: "ui" })
   const links = GLOBAL_NAVIGATION.map((link) => ({
     ...link,
     label: tUi(link.label),
@@ -90,7 +92,7 @@ export async function GlobalHeader({
             >
               {tUi("libraries")}{" "}
               <em className="font-normal text-(--t-accent-primary) italic">
-                Global
+                {tStatic("common.global")}
               </em>
             </span>
           </GlobalLink>
@@ -130,7 +132,9 @@ export async function GlobalHeader({
 }
 
 function PublicBetaHeader({ locale }: { locale: Locale }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <header
@@ -145,7 +149,7 @@ function PublicBetaHeader({ locale }: { locale: Locale }) {
         >
           {tUi("libraries")}{" "}
           <em className="font-normal text-(--t-accent-primary) italic">
-            Global
+            {tStatic("common.global")}
           </em>
         </GlobalLink>
         <div className="flex items-center gap-4">

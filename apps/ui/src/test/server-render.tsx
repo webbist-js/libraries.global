@@ -5,7 +5,7 @@ import {
   renderToString as renderString,
 } from "react-dom/server"
 
-import messages from "../../locales/en.json"
+import messages from "../../locales/en"
 
 const withMessages = (node: ReactNode) => (
   <NextIntlClientProvider

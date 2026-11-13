@@ -3,10 +3,11 @@ import { setRequestLocale } from "next-intl/server"
 
 import ComponentsList from "@/app/[locale]/dev/components-overview/components/ComponentsList"
 import Typography from "@/components/typography"
+import { withMessages } from "@/i18n/scoped-messages"
 
 export const dynamic = "force-dynamic"
 
-export default async function ComponentsOverviewPage({
+async function ComponentsOverviewPage({
   params,
 }: PageProps<"/[locale]/dev/components-overview">) {
   const { locale } = (await params) as { locale: Locale }
@@ -21,3 +22,8 @@ export default async function ComponentsOverviewPage({
     </>
   )
 }
+
+export default withMessages(
+  ComponentsOverviewPage,
+  "[locale]/dev/components-overview/page"
+)

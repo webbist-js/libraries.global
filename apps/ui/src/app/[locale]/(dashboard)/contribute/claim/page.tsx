@@ -8,6 +8,7 @@ import {
   knowledgeLink,
   KNOWLEDGE_SLUGS,
 } from "@/components/staff/knowledge-links"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
   claimSignInHref,
@@ -20,7 +21,7 @@ import { ContributeSectionHeader } from "../_components/ContributeSectionHeader"
 
 export const metadata = privateMetadata("Claim a library")
 
-export default async function ClaimLibraryPage({
+async function ClaimLibraryPage({
   searchParams,
 }: {
   searchParams: Promise<ClaimParams>
@@ -60,3 +61,8 @@ export default async function ClaimLibraryPage({
     </>
   )
 }
+
+export default withMessages(
+  ClaimLibraryPage,
+  "[locale]/(dashboard)/contribute/claim/page"
+)

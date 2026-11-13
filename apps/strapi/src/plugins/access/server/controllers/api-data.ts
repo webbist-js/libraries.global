@@ -75,7 +75,7 @@ export default ({ strapi }: { strapi: any }) => {
         throw new AccessError(404, "not_found")
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : "en"
-      if (!["en", "cs", "es", "fr"].includes(locale))
+      if (!["en", "cs", "es", "fr", "ja"].includes(locale))
         throw new AccessError(400, "invalid_locale")
       const limit = Number(ctx.query.limit ?? 50)
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100)
@@ -141,7 +141,7 @@ export default ({ strapi }: { strapi: any }) => {
     places: wrap(async (ctx) => {
       const locale =
         typeof ctx.query.locale === "string" ? ctx.query.locale : "en"
-      if (!["en", "cs", "es", "fr"].includes(locale))
+      if (!["en", "cs", "es", "fr", "ja"].includes(locale))
         throw new AccessError(400, "invalid_locale")
       const { country, region } = ctx.query as Record<string, unknown>
       for (const value of [country, region])

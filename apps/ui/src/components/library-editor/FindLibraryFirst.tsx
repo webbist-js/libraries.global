@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useRef, useState, type Ref } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -86,6 +85,8 @@ function RecordRow({
   onClaim?: () => void
   claimLabel?: string
 }) {
+  const tExisting = useTranslations()
+
   return (
     <li
       className="flex flex-col gap-4 sm:flex-row sm:items-center"
@@ -150,7 +151,7 @@ function RecordRow({
             width={16}
             aria-hidden="true"
           />
-          {pageHref ? claimLabel : "Improve this record"}
+          {pageHref ? claimLabel : tExisting("libraryPage.improve")}
           <span className="sr-only">: {name}</span>
         </Link>
       )}
@@ -188,7 +189,9 @@ function SearchResultsHeader({
   failed: boolean
   status: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -204,7 +207,7 @@ function SearchResultsHeader({
           {hasSearched
             ? tUi("results")
             : claiming
-              ? "Your library"
+              ? tExisting("workspaceDrawer.yourLibrary")
               : "Records that need help"}
         </h3>
       ) : null}
@@ -229,12 +232,20 @@ function FoundLibraryResults({
   claiming,
   onChooseLibrary,
 }: SearchResultProps) {
-  const tClaim = useUiTranslations("libraryClaim")
+  const tStatic = useTranslations("staticUi")
+
+  const tClaim = useTranslations("libraryClaim")
   if (!results.length)
     return (
-      <Notice icon="mdi:magnify" tone="info" title="No matching library found">
+      <Notice
+        icon="mdi:magnify"
+        tone="info"
+        title={tStatic("libraryEditor.no_matching_library_found")}
+      >
         <p className="m-0">
-          Try another name or spelling before adding a new record.
+          {tStatic(
+            "libraryEditor.try_another_name_or_spelling_before_adding_a_new_record"
+          )}
         </p>
       </Notice>
     )
@@ -283,7 +294,9 @@ function LibrarySearchResults({
   failed: boolean
   needsHelp: readonly RecordNeedingHelp[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   if (hasSearched)
     return (
       <FoundLibraryResults
@@ -296,8 +309,9 @@ function LibrarySearchResults({
   if (!needsHelp.length)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No suggested records are available right now. Search for a library to
-        improve.
+        {tStatic(
+          "libraryEditor.no_suggested_records_are_available_right_now_search_for_a_library_to_improve"
+        )}
       </p>
     )
 
@@ -348,8 +362,12 @@ export function FindLibraryFirst({
   readonly newLibraryHref?: string
   readonly headingRef?: Ref<HTMLHeadingElement>
 }) {
-  const tUi = useUiTranslations("ui")
-  const tClaim = useUiTranslations("libraryClaim")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tClaim = useTranslations("libraryClaim")
 
   const claiming = intent === "claim"
   const locale = useLocale()
@@ -423,7 +441,7 @@ export function FindLibraryFirst({
       <StepHeading
         titleRef={headingRef}
         compact={claiming}
-        eyebrow="Start here"
+        eyebrow={tExisting("ui.start_here")}
         title={claiming ? tClaim("find") : tUi("find_the_library_first")}
         lead={
           claiming
@@ -438,12 +456,12 @@ export function FindLibraryFirst({
           id="index-query-label"
           className="mb-2 block text-base font-semibold"
         >
-          Library name, town or city
+          {tStatic("libraryEditor.library_name_town_or_city")}
         </label>
         <SearchField
           id="index-query"
-          placeholder="e.g. Radlett, or Glasgow"
-          label="Library name, town or city"
+          placeholder={tStatic("libraryEditor.e_g_radlett_or_glasgow")}
+          label={tStatic("libraryEditor.library_name_town_or_city")}
           loading={loading}
           onClear={() => handleQuery("")}
           inputProps={{
@@ -468,13 +486,15 @@ export function FindLibraryFirst({
           <Notice
             icon="mdi:alert-circle-outline"
             tone="warn"
-            title="We couldn’t search the index"
+            title={tStatic("libraryEditor.we_couldn_t_search_the_index")}
           >
             <p className="m-0">
-              Your search is still here. Retry to check for an existing record.
+              {tStatic(
+                "libraryEditor.your_search_is_still_here_retry_to_check_for_an_existing_record"
+              )}
             </p>
             <Button variant="surface" size="pill" onClick={handleRetry}>
-              Try again
+              {tExisting("ui.try_again")}
             </Button>
           </Notice>
         </div>
@@ -514,7 +534,7 @@ export function FindLibraryFirst({
             className="m-0 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
-            Not listed?
+            {tStatic("libraryEditor.not_listed")}
           </p>
           <p className="m-0 mt-0.5 text-base" style={{ color: T.ink.dim }}>
             {canAdd
@@ -540,7 +560,7 @@ export function FindLibraryFirst({
           }}
         >
           <Icon icon="mdi:plus" width={18} aria-hidden="true" />
-          Add a new library
+          {tStatic("common.addNewLibrary")}
         </Link>
       </div>
     </div>

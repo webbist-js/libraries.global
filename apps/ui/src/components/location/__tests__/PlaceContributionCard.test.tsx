@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen } from "@/test/render"
 
 const session = vi.hoisted(() => ({
   data: null as null | { user: { id: string } },

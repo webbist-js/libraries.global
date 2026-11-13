@@ -2,7 +2,7 @@
 
 import { DRIVE_PROPOSAL_MIN_ACCEPTED } from "@repo/access"
 import { DRIVE_MAX_TASKS } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Badge, Notice } from "@/components/ds"
@@ -85,6 +85,8 @@ const COUNTS_PROMPT: Record<FocusKind, string> = {
  * from the form as it stands.
  */
 export function PreviewCard({ view }: { readonly view: DriveView }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section
       aria-labelledby="drive-preview-heading"
@@ -100,10 +102,10 @@ export function PreviewCard({ view }: { readonly view: DriveView }) {
           className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
-          On the noticeboard
+          {tStatic("drive.on_the_noticeboard")}
         </h2>
         <span className="text-sm" style={{ color: T.ink.dim }}>
-          Live preview
+          {tStatic("drive.live_preview")}
         </span>
       </div>
       <DriveCard view={view} preview />
@@ -157,7 +159,7 @@ function ScopeNotice({
   readonly todo: number
   readonly focusKind: FocusKind
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   if (total === 0) {
     return (
@@ -213,19 +215,25 @@ export function ScopeCard({
   readonly focusKind: FocusKind
   readonly locked: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   let body: ReactNode
   if (locked) {
     body = (
       <p className="m-0">
-        The scope is fixed once a drive opens, so it isn’t counted here.
+        {tStatic(
+          "drive.the_scope_is_fixed_once_a_drive_opens_so_it_isn_t_counted_here"
+        )}
       </p>
     )
   } else if (counts.status === "none") {
     body = <p className="m-0">{COUNTS_PROMPT[focusKind]}</p>
   } else if (counts.status === "error") {
-    body = <p className="m-0">Counts unavailable right now.</p>
+    body = (
+      <p className="m-0">{tStatic("drive.counts_unavailable_right_now")}</p>
+    )
   } else {
     const ready = counts.status === "ready" ? counts : null
     const total = ready?.total ?? null
@@ -239,7 +247,7 @@ export function ScopeCard({
           <BigNumber value={total} label="libraries in scope" />
           {ready && todo == null ? (
             <p className="m-0 self-end text-sm">
-              Choose a gap to see how many miss it.
+              {tStatic("drive.choose_a_gap_to_see_how_many_miss_it")}
             </p>
           ) : (
             <BigNumber value={todo} label={TODO_LABEL[focusKind]} accent />
@@ -298,7 +306,7 @@ export function ScopeCard({
         className={`type-h2 ${railTitleClass}`}
         style={{ color: T.ink.base }}
       >
-        Scope right now
+        {tStatic("drive.scope_right_now")}
       </h2>
       <div
         aria-live="polite"
@@ -322,7 +330,9 @@ export function StandingCard({
 }: {
   readonly standing: ProposalStanding
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { accepted, open } = standing
   const needed = DRIVE_PROPOSAL_MIN_ACCEPTED
@@ -341,10 +351,10 @@ export function StandingCard({
           className={`type-h2 ${railTitleClass}`}
           style={{ color: T.ink.base }}
         >
-          Who can propose
+          {tStatic("drive.who_can_propose")}
         </h2>
         {eligible ? (
-          <Badge label="You can" color="ok" icon="mdi:check" />
+          <Badge label={tStatic("drive.you_can")} color="ok" icon="mdi:check" />
         ) : (
           <Badge label={tUi("not_yet")} color="dim" icon="mdi:progress-clock" />
         )}
@@ -377,9 +387,9 @@ export function StandingCard({
             />
           </div>
           <p className="mt-4 mb-0 text-base" style={{ color: T.ink.dim }}>
-            Corrections, new libraries and photos all count.{" "}
+            {tStatic("drive.corrections_new_libraries_and_photos_all_count")}{" "}
             <Link href="/contribute" className={linkClass} style={linkStyle}>
-              Improve a record
+              {tStatic("common.improveRecord")}
             </Link>
           </p>
         </>
@@ -419,7 +429,9 @@ export function StandingCard({
 
 /** The board's card in place of "Who can propose": no review, and where it's run. */
 export function BoardCard({ editing }: { readonly editing: boolean }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -433,7 +445,7 @@ export function BoardCard({ editing }: { readonly editing: boolean }) {
           className={`type-h2 ${railTitleClass}`}
           style={{ color: T.ink.base }}
         >
-          Editorial board
+          {tExisting("authorBadges.editorial_board")}
         </h2>
         <Badge label={tUi("no_review_needed")} color="ok" icon="mdi:check" />
       </div>

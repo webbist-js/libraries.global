@@ -3,15 +3,14 @@ import { notFound } from "next/navigation"
 
 import DevNavbar from "@/app/[locale]/dev/components/DevNavbar"
 import { Container } from "@/components/elementary/Container"
+import { withMessages } from "@/i18n/scoped-messages"
 import { isProduction } from "@/lib/general-helpers"
 
 export const metadata: Metadata = {
   robots: "noindex, nofollow",
 }
 
-export default async function Layout({
-  children,
-}: LayoutProps<"/[locale]/dev">) {
+async function Layout({ children }: LayoutProps<"/[locale]/dev">) {
   if (isProduction()) {
     notFound()
   }
@@ -23,3 +22,5 @@ export default async function Layout({
     </>
   )
 }
+
+export default withMessages(Layout, "[locale]/dev/layout")

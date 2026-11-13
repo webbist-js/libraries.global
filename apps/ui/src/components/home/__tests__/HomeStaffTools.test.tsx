@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import type { AnchorHTMLAttributes } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { HOMEPAGE_DEFAULTS } from "@/components/home/homepage.content"
 import { LibraryStaffSection } from "@/components/home/sections/LibraryStaffSection"
 import { installAnalyticsClickTracking } from "@/lib/analytics-events"
+import { HOMEPAGE_DEFAULTS } from "@/test/homepage-defaults"
+import { render } from "@/test/render"
 
 const session = vi.hoisted(() => ({
   data: null as null | { user: { id: string } },

@@ -1,11 +1,10 @@
 "use client"
 
+import { useFormatter, useTranslations } from "next-intl"
 import { useId, useSyncExternalStore } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-
-import { formatCount } from "./location-page.helpers"
 
 export type LocationChildItem = {
   slug: string
@@ -40,8 +39,8 @@ export function LocationChildBrowser({
   addHref,
   countsAvailable = true,
   totalCount,
-  shareLabel = "Share of documented place-based libraries",
-  coverageLabel = "Sub-areas with records",
+  shareLabel,
+  coverageLabel,
 }: {
   readonly id: string
   readonly title: string
@@ -54,6 +53,12 @@ export function LocationChildBrowser({
   readonly shareLabel?: string
   readonly coverageLabel?: string
 }) {
+  const tPlace = useTranslations("placeCopy")
+  const formatCount = useFormatter().number
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const inputId = useId()
   const search = useSyncExternalStore(subscribe, snapshot, serverSnapshot)
   const params = new URLSearchParams(search)
@@ -113,17 +118,17 @@ export function LocationChildBrowser({
     ? "sm:grid-cols-[minmax(0,1.3fr)_minmax(0,1.2fr)_minmax(100px,.8fr)_minmax(0,1.6fr)]"
     : "sm:grid-cols-[minmax(0,1.3fr)_minmax(100px,.8fr)_minmax(0,1.6fr)]"
   const tabs = [
-    { value: "all", label: `All places · ${formatCount(items.length)}` },
+    { value: "all", label: tPlace("allPlaces", { count: items.length }) },
     ...(countsAvailable && populated
       ? [
           {
             value: "populated",
-            label: `With records · ${formatCount(populated)}`,
+            label: tPlace("withRecords", { count: populated }),
           },
         ]
       : []),
     ...(countsAvailable && empty
-      ? [{ value: "empty", label: `No records yet · ${formatCount(empty)}` }]
+      ? [{ value: "empty", label: tPlace("noRecords", { count: empty }) }]
       : []),
   ]
 
@@ -149,14 +154,14 @@ export function LocationChildBrowser({
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <label className="sr-only" htmlFor={inputId}>
-            Search {noun.plural}
+            {tExisting("ui.search")} {noun.plural}
           </label>
           <input
             id={inputId}
             type="search"
             value={query}
             onChange={(event) => set("q", event.target.value)}
-            placeholder={`Find a ${noun.singular.toLocaleLowerCase()}`}
+            placeholder={tPlace("find", { placeType: noun.singular })}
             className="min-h-11 w-full rounded-full border bg-(--t-bg-deep) px-4 text-sm sm:w-56"
             style={{ borderColor: T.border.hi }}
           />
@@ -166,7 +171,7 @@ export function LocationChildBrowser({
         <div
           className="inline-flex max-w-full flex-wrap gap-1 rounded-[24px] p-1 sm:rounded-full"
           role="group"
-          aria-label={`Filter ${noun.plural}`}
+          aria-label={tPlace("filter", { places: noun.plural })}
           style={{ background: T.bg.muted }}
         >
           {tabs.map((tab) => (
@@ -192,10 +197,10 @@ export function LocationChildBrowser({
         <div
           className="flex items-center gap-1 text-sm"
           role="group"
-          aria-label={`Sort ${noun.plural}`}
+          aria-label={tPlace("sort", { places: noun.plural })}
           style={{ color: T.ink.dim }}
         >
-          <span>Sort:</span>
+          <span>{tStatic("location.sort")}</span>
           <button
             type="button"
             aria-pressed={sort === "count"}
@@ -206,7 +211,7 @@ export function LocationChildBrowser({
               color: sort === "count" ? T.ink.base : T.ink.dim,
             }}
           >
-            Most records
+            {tStatic("location.most_records")}
           </button>
           <span aria-hidden="true">·</span>
           <button
@@ -225,8 +230,9 @@ export function LocationChildBrowser({
       </div>
       {!countsAvailable ? (
         <p role="status" className="text-sm" style={{ color: T.ink.dim }}>
-          Library counts are temporarily unavailable. You can still explore
-          these places.
+          {tStatic(
+            "location.library_counts_are_temporarily_unavailable_you_can_still_explore_these_places"
+          )}
         </p>
       ) : null}
       <p
@@ -234,10 +240,14 @@ export function LocationChildBrowser({
         className={preview && !q ? "sr-only" : "mt-4 mb-4 text-sm"}
         style={{ color: T.ink.dim }}
       >
-        {formatCount(matches.length)}{" "}
-        {matches.length === 1 ? noun.singular : noun.plural}
-        {q ? ` matching "${query.trim()}"` : ""}
-        {pages > 1 && !preview ? ` · Page ${current} of ${pages}` : ""}
+        {tPlace(q ? "matching" : "matches", {
+          count: matches.length,
+          places: matches.length === 1 ? noun.singular : noun.plural,
+          query: query.trim(),
+        })}
+        {pages > 1 && !preview
+          ? tPlace("page", { page: current, total: pages })
+          : ""}
       </p>
       <div
         className="overflow-hidden rounded-[22px] border bg-(--t-bg-deep)"
@@ -256,9 +266,17 @@ export function LocationChildBrowser({
             }}
           >
             <span className="capitalize">{noun.singular}</span>
-            {hasCoverage ? <span>{coverageLabel}</span> : null}
-            <span className="text-right">Documented libraries</span>
-            <span>{view === "empty" ? "Add a first record" : shareLabel}</span>
+            {hasCoverage ? (
+              <span>{coverageLabel ?? tPlace("coverageLabel")}</span>
+            ) : null}
+            <span className="text-right">
+              {tStatic("location.documented_libraries")}
+            </span>
+            <span>
+              {view === "empty"
+                ? tPlace("firstRecord")
+                : (shareLabel ?? tPlace("shareLabel"))}
+            </span>
           </div>
         ) : null}
         <ul className="m-0 list-none divide-y p-0">
@@ -291,7 +309,7 @@ export function LocationChildBrowser({
                 </div>
                 {hasCoverage ? (
                   <span className="text-sm" style={{ color: T.ink.dim }}>
-                    {item.coverage ?? "Unavailable"}
+                    {item.coverage ?? tExisting("atlasDrawers.unavailable")}
                   </span>
                 ) : null}
                 {countsAvailable ? (
@@ -332,18 +350,20 @@ export function LocationChildBrowser({
                             className="mt-1 block text-xs"
                             style={{ color: T.ink.dim }}
                           >
-                            Digital records have no geographic share
+                            {tStatic(
+                              "location.digital_records_have_no_geographic_share"
+                            )}
                           </span>
                         ) : null}
                       </div>
                     ) : (
                       <GlobalLink
                         href={item.addHref ?? addHref}
-                        aria-label={"Add the first library in " + item.name}
+                        aria-label={tPlace("addFirst", { place: item.name })}
                         className="inline-flex min-h-11 w-fit items-center justify-center rounded-full border px-3 text-sm font-semibold no-underline hover:bg-(--t-bg-surface)"
                         style={{ color: T.ink.base, borderColor: T.border.hi }}
                       >
-                        Add a library
+                        {tExisting("ui.add_a_library")}
                       </GlobalLink>
                     )}
                   </>
@@ -362,7 +382,9 @@ export function LocationChildBrowser({
                 .slice(5, 11)
                 .map((item) => item.name + " " + formatCount(item.count))
                 .join(" · ")}
-              {matches.length > 11 ? ` · ${matches.length - 11} more` : ""}
+              {matches.length > 11
+                ? tPlace("more", { count: matches.length - 11 })
+                : ""}
             </p>
             <button
               type="button"
@@ -370,7 +392,7 @@ export function LocationChildBrowser({
               style={{ color: T.accent.primary }}
               onClick={() => set("expanded", "1")}
             >
-              Show all {formatCount(matches.length)}
+              {tPlace("showAll", { count: matches.length })}
             </button>
           </div>
         ) : null}
@@ -380,8 +402,9 @@ export function LocationChildBrowser({
           className="mt-4 text-sm leading-relaxed"
           style={{ color: T.ink.dim }}
         >
-          Bars show how this index’s place-based records are spread across
-          places. They don’t measure how complete a place’s listing is.
+          {tStatic(
+            "location.bars_show_how_this_index_s_place_based_records_are_spread_across_places_they_don_t_measure_how_compl"
+          )}
         </p>
       ) : null}
       {countsAvailable && empty > 0 && view !== "empty" && !q ? (
@@ -392,16 +415,16 @@ export function LocationChildBrowser({
           <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
             <div className="flex-1">
               <h3 className="type-h3 m-0">
-                {formatCount(empty)} {empty === 1 ? noun.singular : noun.plural}{" "}
-                with no documented libraries yet
+                {tPlace("emptyPlaces", {
+                  count: empty,
+                  places: empty === 1 ? noun.singular : noun.plural,
+                })}
               </h3>
               <p
                 className="mt-1.5 mb-0 text-base leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
-                No one has added a library here yet — it doesn’t mean there are
-                none. Open a {noun.singular.toLocaleLowerCase()} to explore it,
-                or add the first library.
+                {tPlace("emptyExplain", { placeType: noun.singular })}
               </p>
             </div>
             <button
@@ -410,7 +433,7 @@ export function LocationChildBrowser({
               style={{ color: T.accent.primary }}
               onClick={() => set("view", "empty")}
             >
-              Show all {formatCount(empty)}
+              {tPlace("showAll", { count: empty })}
             </button>
           </div>
           <ul className="m-0 grid list-none gap-2 p-0 sm:grid-cols-2 lg:grid-cols-4">
@@ -432,11 +455,11 @@ export function LocationChildBrowser({
                   </GlobalLink>
                   <GlobalLink
                     href={item.addHref ?? addHref}
-                    aria-label={"Add the first library in " + item.name}
+                    aria-label={tPlace("addFirst", { place: item.name })}
                     className="inline-flex min-h-11 items-center justify-center rounded-full border px-3 text-sm font-semibold no-underline hover:bg-(--t-bg-surface)"
                     style={{ color: T.ink.base, borderColor: T.border.hi }}
                   >
-                    Add a library
+                    {tExisting("ui.add_a_library")}
                   </GlobalLink>
                 </li>
               ))}
@@ -445,7 +468,7 @@ export function LocationChildBrowser({
       ) : null}
       {!rows.length ? (
         <p className="py-4">
-          No {noun.plural} match this filter.{" "}
+          {tPlace("noMatches", { places: noun.plural })}{" "}
           <button
             type="button"
             className="min-h-11 underline"
@@ -454,19 +477,22 @@ export function LocationChildBrowser({
               set("view", "all")
             }}
           >
-            Clear filters
+            {tExisting("ui.clear_filters")}
           </button>
         </p>
       ) : null}
       {pages > 1 && !preview ? (
-        <nav aria-label={`${title} pages`} className="mt-4 flex gap-3">
+        <nav
+          aria-label={tPlace("pages", { title })}
+          className="mt-4 flex gap-3"
+        >
           <button
             type="button"
             disabled={current === 1}
             className="min-h-11 rounded-xl border px-4 disabled:opacity-40"
             onClick={() => set("page", String(current - 1))}
           >
-            Previous
+            {tExisting("ui.previous")}
           </button>
           <button
             type="button"
@@ -474,7 +500,7 @@ export function LocationChildBrowser({
             className="min-h-11 rounded-xl border px-4 disabled:opacity-40"
             onClick={() => set("page", String(current + 1))}
           >
-            Next
+            {tExisting("ui.next")}
           </button>
         </nav>
       ) : null}

@@ -1,7 +1,6 @@
+import { useTranslations } from "next-intl"
 // Changes per month as an inline SVG bar chart (no chart library). The
 // numbers are repeated in the aria-label and in a visually hidden table.
-
-import { useTranslations as useUiTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import type { LibraryHistoryStats } from "@/lib/strapi-api/content/server"
@@ -34,7 +33,9 @@ export function ChangeHistogram({
   readonly months: readonly Month[]
   readonly verificationEvents: readonly string[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const checked = new Set(verificationEvents)
   const max = Math.max(1, ...months.map((m) => m.batches))
@@ -95,7 +96,7 @@ export function ChangeHistogram({
               className="inline-block size-2 rounded-full"
               style={{ background: T.accent.ok }}
             />
-            Checked
+            {tStatic("library.checked")}
           </span>
         ) : null}
         <span data-axis>
@@ -104,14 +105,14 @@ export function ChangeHistogram({
       </figcaption>
 
       <table className="sr-only">
-        <caption>Changes per month</caption>
+        <caption>{tStatic("library.changes_per_month")}</caption>
         <thead>
           <tr>
-            <th scope="col">Month</th>
-            <th scope="col">Changes</th>
-            <th scope="col">Fields changed</th>
-            <th scope="col">Contributors</th>
-            <th scope="col">Checked that month</th>
+            <th scope="col">{tStatic("library.month")}</th>
+            <th scope="col">{tStatic("common.changes")}</th>
+            <th scope="col">{tStatic("library.fields_changed")}</th>
+            <th scope="col">{tStatic("library.contributors")}</th>
+            <th scope="col">{tStatic("library.checked_that_month")}</th>
           </tr>
         </thead>
         <tbody>

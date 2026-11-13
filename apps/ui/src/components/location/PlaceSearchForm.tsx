@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -15,6 +15,9 @@ export function PlaceSearchForm({
   readonly level: "continent" | "country" | "region"
   readonly slug: string
 }) {
+  const tPlace = useTranslations("placeCopy")
+  const tExisting = useTranslations()
+
   const router = useRouter()
   const id = useId()
 
@@ -31,7 +34,7 @@ export function PlaceSearchForm({
       }}
     >
       <label className="sr-only" htmlFor={id}>
-        Search libraries in {name}
+        {tPlace("searchIn", { name })}
       </label>
       <div
         className="flex min-h-12 min-w-40 flex-1 items-center gap-2 rounded-full border bg-(--t-bg-deep) px-4"
@@ -56,7 +59,7 @@ export function PlaceSearchForm({
         className="min-h-12 rounded-full px-5 text-sm font-semibold text-white"
         style={{ background: T.action.primary }}
       >
-        Search libraries
+        {tExisting("dashboard.searchLibraries")}
       </button>
     </form>
   )

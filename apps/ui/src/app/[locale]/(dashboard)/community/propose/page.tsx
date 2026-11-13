@@ -1,7 +1,7 @@
 import { DRIVE_PROPOSAL_MIN_ACCEPTED } from "@repo/access"
 import { headers } from "next/headers"
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
@@ -15,6 +15,7 @@ import {
 import { Notice } from "@/components/ds"
 import { MainContent } from "@/components/ds/MainContent"
 import GlobalLink from "@/components/global/GlobalLink"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
@@ -48,14 +49,18 @@ const MAIN = "mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8"
  * prefill (OD-8). Strapi's submission policy decides on send; the standing
  * read here only explains why sending is off, in the builder's side column.
  */
-export default async function ProposeDrivePage({
+async function ProposeDrivePage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
   searchParams: SearchParams
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const [{ locale }, sp] = await Promise.all([params, searchParams])
   const prefill = prefillFromParams(sp)
@@ -72,9 +77,11 @@ export default async function ProposeDrivePage({
   const header = (
     <WorkspacePageHeader
       density="task"
-      breadcrumb={[{ label: "Propose a drive" }]}
-      title="Propose a drive"
-      lead="A drive gets the community working on one job in one place for a few weeks. Pick the job and the place, and the live preview shows what helpers will see."
+      breadcrumb={[{ label: tExisting("dashboard.proposeDrive") }]}
+      title={tExisting("dashboard.proposeDrive")}
+      lead={tStatic(
+        "communityRoute.a_drive_gets_the_community_working_on_one_job_in_one_place_for_a_few_weeks_pick_the_job_and_the_plac"
+      )}
       actions={<DriveFlowPills steps={PROPOSE_FLOW} />}
     />
   )
@@ -149,3 +156,8 @@ export default async function ProposeDrivePage({
     </AccountGuard>
   )
 }
+
+export default withMessages(
+  ProposeDrivePage,
+  "[locale]/(dashboard)/community/propose/page"
+)

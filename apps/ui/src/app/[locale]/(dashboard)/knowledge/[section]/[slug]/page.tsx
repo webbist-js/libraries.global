@@ -13,6 +13,7 @@ import {
 } from "@/components/docs/docs.config"
 import DocsArticlePage from "@/components/docs/DocsArticlePage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   articleContentLanguage,
   contentLanguageSuffix,
@@ -100,7 +101,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function DocsArticleRoute({
+async function DocsArticleRoute({
   params,
   searchParams,
 }: {
@@ -182,3 +183,8 @@ export default async function DocsArticleRoute({
     </>
   )
 }
+
+export default withMessages(
+  DocsArticleRoute,
+  "[locale]/(dashboard)/knowledge/[section]/[slug]/page"
+)

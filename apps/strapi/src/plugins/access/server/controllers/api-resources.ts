@@ -36,7 +36,7 @@ import { AccessError, isDocumentId } from "../utils/admin"
  * is a bounded, keyset-paginated or counted query over published records.
  */
 
-const LOCALES = new Set(["en", "cs", "es", "fr"])
+const LOCALES = new Set(["en", "cs", "es", "fr", "ja"])
 const SERVICE_TYPES = new Set([
   "library_service",
   "university_system",

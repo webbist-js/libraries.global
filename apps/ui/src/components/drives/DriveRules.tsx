@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -46,7 +46,9 @@ export function DriveRules({
   readonly source: string | null
   readonly total?: number | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const where = drive.whereToLook
   const goal = drive.goalPercent ?? 100
@@ -68,7 +70,7 @@ export function DriveRules({
         className="type-h2 m-0 mb-1"
         style={{ color: T.ink.base }}
       >
-        Rules
+        {tStatic("drive.rules")}
       </h2>
       <dl className="m-0">
         <Rule label={tUi("focus")}>{focusSummary(drive.focus)}</Rule>
@@ -118,8 +120,9 @@ export function DriveRules({
         className="m-0 mt-1 rounded-[14px] p-3 text-xs leading-[1.5]"
         style={{ color: T.ink.dim, background: T.bg.void }}
       >
-        Every task is an ordinary suggestion, checked by a moderator before it
-        changes a record. Libraries added after the drive opened don’t count.
+        {tStatic(
+          "drive.every_task_is_an_ordinary_suggestion_checked_by_a_moderator_before_it_changes_a_record_libraries_add"
+        )}
       </p>
     </section>
   )

@@ -2,7 +2,7 @@
 "use client"
 
 import { noticeLocalDate } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { analyticsAttributes } from "@/lib/analytics-events"
@@ -137,7 +137,7 @@ export function LibraryResultCard({
   /** Optional contribution details within the standard tile. */
   children?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
   const status = hit.closed_dates?.includes(
@@ -242,7 +242,7 @@ export function LibraryResultRow({
   statusBadge?: ReactNode
   children?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const tint = TYPE_TINT[groupForLibraryType(hit.libraryType)]
   const status = hit.closed_dates?.includes(

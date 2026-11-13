@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
@@ -9,6 +10,7 @@ import { InformationNavigation } from "@/components/dashboard/InformationNavigat
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { PageHero } from "@/components/ds"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { avatarSrc } from "@/lib/avatar"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
@@ -20,18 +22,20 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function OnboardingPage({
+async function OnboardingPage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tExisting = await getTranslations()
+
   await params
   const sections = [
     { href: "#identity", label: "Name and identity" },
-    { href: "#affiliation", label: "Affiliation" },
+    { href: "#affiliation", label: tExisting("ui.affiliation") },
     { href: "#interests", label: "Interests and languages" },
-    { href: "#links", label: "Links" },
-    { href: "#visibility", label: "Profile visibility" },
+    { href: "#links", label: tExisting("staticUi.profileRoute.links") },
+    { href: "#visibility", label: tExisting("ui.profile_visibility") },
   ]
   const session = await getSessionSSR(await headers())
   if (!session?.user) redirect("/auth/signin?callbackUrl=/profile/onboarding")
@@ -43,16 +47,19 @@ export default async function OnboardingPage({
   return (
     <AccountGuard mode="identity" expectedScope={session.user.id}>
       <DashboardPage
-        title="Profile setup"
+        title={tExisting("ui.profile_setup")}
         className="dashboard-onboarding-page dashboard-record-page"
         navigationHeading={
           <RecordContextIdentity
-            title="Profile setup"
-            parent={{ href: "/", label: "Home" }}
+            title={tExisting("ui.profile_setup")}
+            parent={{ href: "/", label: tExisting("ui.home") }}
           />
         }
         navigation={
-          <InformationNavigation links={sections} label="Set up your profile" />
+          <InformationNavigation
+            links={sections}
+            label={tExisting("authPanel.profileTitle")}
+          />
         }
         navigationFooter={
           <DashboardSidebarCta
@@ -63,7 +70,10 @@ export default async function OnboardingPage({
         }
         toolbar={
           <RecordToolbar
-            items={[{ href: "/", label: "Home" }, { label: "Profile setup" }]}
+            items={[
+              { href: "/", label: tExisting("ui.home") },
+              { label: tExisting("ui.profile_setup") },
+            ]}
           />
         }
         mobileSections={sections}
@@ -72,7 +82,7 @@ export default async function OnboardingPage({
           <PageHero
             variant="card"
             compact
-            eyebrow="Profile setup"
+            eyebrow={tExisting("ui.profile_setup")}
             eyebrowIcon="mdi:account-circle-outline"
             title="One last thing — *introduce yourself.*"
             lead="Every contributor on the atlas has a public profile. It’s how readers, editors and reviewers know who’s behind a record. Only the Required sections are needed now; the rest can wait."
@@ -93,3 +103,8 @@ export default async function OnboardingPage({
     </AccountGuard>
   )
 }
+
+export default withMessages(
+  OnboardingPage,
+  "[locale]/(dashboard)/profile/onboarding/page"
+)

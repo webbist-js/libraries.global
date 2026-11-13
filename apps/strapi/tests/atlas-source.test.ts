@@ -218,36 +218,50 @@ describe("Atlas bounded source bridge", () => {
     expect(ctx.status).toBe(400)
     expect(ctx.body.code).toBe("ATLAS_SOURCE_WINDOW")
   })
-  it("resolves a published translated slug to one canonical source and keeps missing selections 404", async () => {
-    const library = {
-      findFirst: vi.fn(async () => ({ documentId: row.documentId })),
-      findMany: vi.fn(async () => [row]),
+  it.each([true, false])(
+    "returns translated content when available (%s), otherwise canonical content",
+    async (translated) => {
+      const library = {
+        findFirst: vi.fn(async () =>
+          translated ? { documentId: row.documentId } : null
+        ),
+        findMany: vi.fn(async () => [
+          {
+            ...row,
+            locale: translated ? "ja" : "en",
+            name: translated ? "図書館" : row.name,
+          },
+        ]),
+      }
+      const strapi = {
+        documents: (uid: string) =>
+          uid === "api::library.library"
+            ? library
+            : { findMany: vi.fn(async () => []) },
+      }
+      const controller = createController({ strapi }),
+        ctx = context()
+      ctx.query = { key: "library", locale: "ja" }
+      await controller.library(ctx)
+      expect(ctx.body.source.documentId).toBe(row.documentId)
+      expect(ctx.body.source.name).toBe(translated ? "図書館" : row.name)
+      expect(library.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ status: "published", locale: "ja" })
+      )
+      expect(library.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "published",
+          locale: translated ? "ja" : "en",
+          limit: 1,
+          filters: translated
+            ? { documentId: row.documentId }
+            : { $or: [{ documentId: "library" }, { slug: "library" }] },
+        })
+      )
+      library.findFirst.mockResolvedValueOnce(null as any)
+      library.findMany.mockResolvedValueOnce([])
+      await controller.library(ctx)
+      expect(ctx.status).toBe(404)
     }
-    const strapi = {
-      documents: (uid: string) =>
-        uid === "api::library.library"
-          ? library
-          : { findMany: vi.fn(async () => []) },
-    }
-    const controller = createController({ strapi }),
-      ctx = context()
-    ctx.query = { key: "knihovna", locale: "cs" }
-    await controller.library(ctx)
-    expect(ctx.body.source.documentId).toBe(row.documentId)
-    expect(library.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ status: "published", locale: "cs" })
-    )
-    expect(library.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "published",
-        locale: "en",
-        limit: 1,
-        filters: { documentId: row.documentId },
-      })
-    )
-    library.findFirst.mockResolvedValueOnce(null as any)
-    library.findMany.mockResolvedValueOnce([])
-    await controller.library(ctx)
-    expect(ctx.status).toBe(404)
-  })
+  )
 })

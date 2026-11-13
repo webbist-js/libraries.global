@@ -192,6 +192,8 @@ type NetworkReachProps = {
 }
 
 export function AtlasNetworkReach(props: NetworkReachProps) {
+  const tCopy = useTranslations("atlasCopy")
+
   const {
     selection,
     singleTime,
@@ -276,7 +278,7 @@ export function AtlasNetworkReach(props: NetworkReachProps) {
         onChange={(value) => onMinutes(Number(value))}
         options={[5, 10, 15, 30].map((value) => ({
           value: String(value),
-          label: `${value} min`,
+          label: tCopy("minutes", { count: value }),
         }))}
       />
       {singleTime && !calculationLimit ? (

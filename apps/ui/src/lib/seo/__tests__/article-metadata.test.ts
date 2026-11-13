@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl")
   const dictionaries = {
-    en: (await import("../../../../locales/en.json")).default,
-    cs: (await import("../../../../locales/cs.json")).default,
-    fr: (await import("../../../../locales/fr.json")).default,
+    en: (await import("../../../../locales/en")).default,
+    cs: (await import("../../../../locales/cs")).default,
+    fr: (await import("../../../../locales/fr")).default,
   }
 
   return {

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { DriveGap, DriveGapKey } from "@/lib/community/drive-gaps-server"
@@ -56,6 +57,8 @@ function gapAction(gap: DriveGap): {
  * the index has no gaps to show.
  */
 export function GapsWorthADrive({ gaps }: { readonly gaps: DriveGap[] }) {
+  const tStatic = useTranslations("staticUi")
+
   if (gaps.length === 0) return null
 
   return (
@@ -68,11 +71,12 @@ export function GapsWorthADrive({ gaps }: { readonly gaps: DriveGap[] }) {
             color: T.ink.base,
           }}
         >
-          Gaps worth a drive
+          {tStatic("communityRoute.gaps_worth_a_drive")}
         </h2>
         <p className="m-0 mt-1.5 text-base" style={{ color: T.ink.dim }}>
-          Found automatically in the index. Propose one and a Moderator will
-          review it.
+          {tStatic(
+            "communityRoute.found_automatically_in_the_index_propose_one_and_a_moderator_will_review_it"
+          )}
         </p>
       </div>
       <ul

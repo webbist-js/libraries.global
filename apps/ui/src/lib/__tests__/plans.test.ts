@@ -6,6 +6,10 @@ import {
 } from "@repo/access"
 import { describe, expect, it } from "vitest"
 
+import cs from "../../../locales/cs"
+import en from "../../../locales/en"
+import es from "../../../locales/es"
+import fr from "../../../locales/fr"
 import { MEMBERSHIP_FAQ_COUNT } from "../localized-plans"
 import {
   API_OFFER,
@@ -20,10 +24,6 @@ import {
   standingProgress,
 } from "../plans"
 
-import cs from "../../../locales/cs.json"
-import en from "../../../locales/en.json"
-import es from "../../../locales/es.json"
-import fr from "../../../locales/fr.json"
 import pricing from "../membership-pricing.json"
 
 const LOCALES = { en, fr, cs, es } as const

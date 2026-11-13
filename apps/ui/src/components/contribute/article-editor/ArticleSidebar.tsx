@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds/SearchField"
@@ -132,11 +131,11 @@ export function StatusCard({
   checks?: readonly { id: string; label: string; done: boolean }[]
   note?: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
-  const tLanguage = useUiTranslations("translation")
-  const p = useUiTranslations("publishing")
+  const tUi = useTranslations("ui")
+  const tLanguage = useTranslations("translation")
+  const p = useTranslations("publishing")
   const displayLocale = useLocale()
-  const w = useUiTranslations("writeWorkspace")
+  const w = useTranslations("writeWorkspace")
   const remaining = checks.filter((check) => !check.done).length
 
   let saveLabel = tUi("not_saved_yet")
@@ -330,8 +329,8 @@ export function SectionsCard({
   embedded?: boolean
   inherited?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const w = useUiTranslations("writeWorkspace")
+  const tUi = useTranslations("ui")
+  const w = useTranslations("writeWorkspace")
   const [loadResult, setLoadResult] = useState<{
     key: string
     state: "ready" | "error"
@@ -511,10 +510,10 @@ export function TagsCard({
   disabled?: boolean
   inherited?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const tEditor = useUiTranslations("articleEditor")
-  const tRelations = useUiTranslations("articleRelations")
-  const w = useUiTranslations("writeWorkspace")
+  const tUi = useTranslations("ui")
+  const tEditor = useTranslations("articleEditor")
+  const tRelations = useTranslations("articleRelations")
+  const w = useTranslations("writeWorkspace")
 
   const locale = useLocale()
   const [query, setQuery] = useState("")
@@ -755,7 +754,7 @@ function ArticlePlacePicker({
   locale: string
   onAdd: (tag: ArticleTag) => void
 }) {
-  const tRelations = useUiTranslations("articleRelations")
+  const tRelations = useTranslations("articleRelations")
   const [selected, setSelected] = useState<
     Partial<Record<PlaceKind, PlaceChoice>>
   >({})
@@ -891,13 +890,13 @@ export function ArticleEventsCard({
   onChange: (mentions: ArticleEventMention[]) => void
   disabled?: boolean
 }) {
-  const tRelations = useUiTranslations("articleRelations")
+  const tRelations = useTranslations("articleRelations")
   const [title, setTitle] = useState("")
   const [url, setUrl] = useState("")
   const [date, setDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [zone, setZone] = useState("UTC")
-  const p = useUiTranslations("publishing")
+  const p = useTranslations("publishing")
   const [libraryId, setLibraryId] = useState("")
   const [error, setError] = useState("")
   const add = () => {
@@ -1083,10 +1082,10 @@ export function LanguageCard({
   disabled?: boolean
   inline?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const tLanguage = useUiTranslations("translation")
+  const tUi = useTranslations("ui")
+  const tLanguage = useTranslations("translation")
   const displayLocale = useLocale()
-  const w = useUiTranslations("writeWorkspace")
+  const w = useTranslations("writeWorkspace")
 
   if (locales.length < 2) return null
   const translating = locale !== sourceLocale
@@ -1152,7 +1151,7 @@ export function EditSummaryCard({
   disabled?: boolean
   embedded?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -1203,7 +1202,7 @@ export function HowEditingWorks({
 }: {
   publishesDirectly: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <section

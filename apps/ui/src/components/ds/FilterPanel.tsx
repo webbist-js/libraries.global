@@ -7,8 +7,7 @@
 // preview with "Show all"), a sticky desktop sidebar that can be hidden, and
 // a left slide-in drawer + toggle button for mobile.
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import {
   Children,
   createContext,
@@ -57,7 +56,7 @@ export function FilterPanelHeader({
   /** From useFilterSidebar: adds the desktop Hide control. */
   readonly sidebar?: FilterSidebarState
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const inDrawer = useContext(FilterDrawerContext)
 
@@ -166,6 +165,8 @@ export function FilterGroup({
   readonly activeCount?: number
   readonly spacing?: "default" | "comfortable"
 }) {
+  const tExisting = useTranslations()
+
   const options = Children.toArray(children)
   const activeFlags = options.map(isActiveOption)
   const active = activeCount ?? activeFlags.filter(Boolean).length
@@ -225,7 +226,9 @@ export function FilterGroup({
             className="mt-1 cursor-pointer rounded-full border-0 bg-transparent p-0 text-sm font-semibold underline"
             style={{ color: T.accent.primary, textUnderlineOffset: 3 }}
           >
-            {showAll ? "Show fewer" : `Show all ${options.length}`}
+            {showAll
+              ? tExisting("optionSuggestions.showFewer")
+              : `Show all ${options.length}`}
           </button>
         ) : null}
         {helper ? <FilterHelper>{helper}</FilterHelper> : null}
@@ -332,7 +335,7 @@ export function FilterShowButton({
   readonly sidebar: FilterSidebarState
   readonly activeCount?: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   if (!sidebar.collapsed) return null
 
@@ -474,7 +477,7 @@ export function FilterSidebar({
   readonly children: ReactNode
   readonly sticky?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -512,7 +515,7 @@ export function FilterDrawer({
   readonly showLabel?: string
   readonly edgeAligned?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const titleId = useId()
   useEffect(() => {

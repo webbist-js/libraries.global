@@ -5,6 +5,7 @@ import type {
 } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
@@ -164,6 +165,10 @@ export async function WidgetsStaffPage({
   readonly mode?: Mode
   readonly id?: string
 }) {
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
   const session = await getSessionSSR(await headers())
   if (!session?.user && mode === "overview")
     return <FeatureAccessLanding feature="widgets" />
@@ -185,7 +190,7 @@ export async function WidgetsStaffPage({
         title={page.title}
         context={team.name}
         breadcrumb={[
-          { label: "Staff area", href: "/staff" },
+          { label: tExisting("ui.staff_area"), href: "/staff" },
           { label: team.name, href: "/staff/teams" },
           ...widgetBreadcrumb(mode, page.title),
         ]}
@@ -197,7 +202,7 @@ export async function WidgetsStaffPage({
               href="/staff/teams/widgets/new"
               className={buttonVariants({ variant: "primary", size: "pill" })}
             >
-              Create widget
+              {tStatic("widget.create_widget")}
             </Link>
           ) : undefined
         }

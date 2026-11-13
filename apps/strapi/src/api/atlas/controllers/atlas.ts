@@ -291,7 +291,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
         ? { documentId: translated.documentId }
         : { $or: [{ documentId: key }, { slug: key }] },
       1,
-      canonical
+      translated ? ((locale as string | undefined) ?? canonical) : canonical
     )
     if (!rows.length) {
       ctx.status = 404

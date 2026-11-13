@@ -10,6 +10,7 @@ import {
 } from "@/components/library/library-page.helpers"
 import LibraryDetailPage from "@/components/library/LibraryDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { fetchPublicLibraryNotices } from "@/lib/library-notices"
@@ -131,7 +132,7 @@ export async function generateMetadata({
   })
 }
 
-export default function LibraryRoutePage(props: {
+function LibraryRoutePage(props: {
   params: Promise<{
     locale: string
     continent: string
@@ -275,3 +276,8 @@ export default function LibraryRoutePage(props: {
     </>
   )
 }
+
+export default withMessages(
+  LibraryRoutePage,
+  "[locale]/(dashboard)/[continent]/[country]/[region]/[library]/page"
+)

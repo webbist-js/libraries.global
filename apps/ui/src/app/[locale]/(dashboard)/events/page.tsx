@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
 import { EventsPageClient } from "@/components/events/EventsPageClient"
+import { withMessages } from "@/i18n/scoped-messages"
 import { buildMetadata } from "@/lib/seo/metadata"
 
 export const dynamic = "force-dynamic"
@@ -23,6 +24,8 @@ export async function generateMetadata({
   })
 }
 
-export default function EventsPage() {
+function EventsPage() {
   return <EventsPageClient />
 }
+
+export default withMessages(EventsPage, "[locale]/(dashboard)/events/page")

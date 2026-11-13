@@ -9,7 +9,7 @@ import {
   toMinutes,
   type PublicLiveState,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { StatusBadge } from "@/components/ds"
@@ -39,18 +39,18 @@ import {
 } from "./LiveConsoleScreens"
 
 const SCREENS = [
-  { key: "entry", label: "Entry" },
-  { key: "confirm", label: "Confirm it’s you" },
-  { key: "before", label: "Before you start" },
-  { key: "live", label: "Live" },
-  { key: "finished", label: "Finished" },
+  { key: "entry", label: "mobile.entry" },
+  { key: "confirm", label: "mobile.confirm_it_s_you" },
+  { key: "before", label: "mobile.before_you_start" },
+  { key: "live", label: "mobile.live" },
+  { key: "finished", label: "mobile.finished" },
 ] as const
 const SIMULATIONS = [
-  { key: "locked", label: "Screen locked" },
-  { key: "location", label: "Location denied" },
-  { key: "far", label: "Far from route" },
-  { key: "offline", label: "Offline" },
-  { key: "expired", label: "Sign-in expired" },
+  { key: "locked", label: "mobile.screen_locked" },
+  { key: "location", label: "mobile.location_denied" },
+  { key: "far", label: "mobile.far_from_route" },
+  { key: "offline", label: "mobile.offline" },
+  { key: "expired", label: "mobile.sign_in_expired" },
 ] as const
 type Screen = (typeof SCREENS)[number]["key"]
 type Simulation = (typeof SIMULATIONS)[number]["key"] | null
@@ -78,7 +78,11 @@ export function ConsolePreview({
   readonly publicPath: string
   readonly firstName: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const staffHref = useStaffLibraryHref(initial.library.id)
   const [screen, setScreen] = useState<Screen>("live")
@@ -112,7 +116,7 @@ export function ConsolePreview({
   const local = now ? localDateTime(now, initial.library.timezone) : null
   const route = consolePreviewRoute(initial.route, tt, local?.date)
   const stopName = (stopId: string) =>
-    tt?.stops.find((s) => s.id === stopId)?.name ?? "Stop"
+    tt?.stops.find((s) => s.id === stopId)?.name ?? tStatic("mobile.stop")
   // The fake session: first stop done, second "here now", the rest to come.
   const hereAt = Math.min(position, Math.max(0, route.length - 1))
   const stops: ScreenStop[] = route.map((v, i) => ({
@@ -158,12 +162,12 @@ export function ConsolePreview({
     )
   const previewHere = current
     ? {
-        label: "Here now",
+        label: tStatic("mobile.here_now"),
         sentence: `At ${current.name} until ${current.depart}.`,
       }
     : null
   const routeDate = route[0]?.date
-  const routeLabel = `${routeDate ? weekdayName(routeDate) : "Today"}${tt && routeDate && tt.cycle.weeks > 1 ? `, Week ${cycleWeekOf(tt, routeDate)}` : ""} · ${route.length} ${route.length === 1 ? "stop" : "stops"}`
+  const routeLabel = `${routeDate ? weekdayName(routeDate) : tExisting("discussions.today")}${tt && routeDate && tt.cycle.weeks > 1 ? `, Week ${cycleWeekOf(tt, routeDate)}` : ""} · ${route.length} ${route.length === 1 ? "stop" : "stops"}`
   const routeTimes = route.length
     ? `${route[0]!.arrive}–${route.at(-1)!.depart}`
     : "No stops today"
@@ -172,13 +176,15 @@ export function ConsolePreview({
       ? {
           tone: "warn" as const,
           icon: "mdi:cloud-off-outline",
-          text: "Offline. 2 check-ins are saved on this phone.",
+          text: tStatic("mobile.offline_2_check_ins_are_saved_on_this_phone"),
         }
       : simulate === "locked"
         ? {
             tone: "warn" as const,
             icon: "mdi:lock-outline",
-            text: "Screen locked. Reopen the console to check in.",
+            text: tStatic(
+              "mobile.screen_locked_reopen_the_console_to_check_in"
+            ),
           }
         : {
             tone: "ok" as const,
@@ -214,7 +220,7 @@ export function ConsolePreview({
             width={20}
             style={{ color: T.accent.primary }}
           />
-          Preview the console
+          {tStatic("mobile.preview_the_console")}
         </span>
         <Icon
           aria-hidden="true"
@@ -261,7 +267,7 @@ export function ConsolePreview({
             {screen === "entry" || screen === "confirm" ? (
               <div className="relative">
                 <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                  Staff area · Your libraries
+                  {tStatic("mobile.staff_area_your_libraries")}
                 </p>
                 <p
                   className="my-2 text-[28px]"
@@ -291,8 +297,9 @@ export function ConsolePreview({
                   }
                 />
                 <p className="mt-3 text-sm" style={{ color: T.ink.dim }}>
-                  Also on the library page, in the “You run this mobile library”
-                  card.
+                  {tStatic(
+                    "mobile.also_on_the_library_page_in_the_you_run_this_mobile_library_card"
+                  )}
                 </p>
               </div>
             ) : screen === "before" ? (
@@ -383,7 +390,7 @@ export function ConsolePreview({
                       className="live-button mt-4 rounded-full"
                       onClick={() => setAction("end")}
                     >
-                      End route
+                      {tStatic("mobile.end_route")}
                     </button>
                   </>
                 ) : null}
@@ -433,7 +440,9 @@ export function ConsolePreview({
                           : "End route?"}
                     </p>
                     <p className="text-base" style={{ color: T.ink.dim }}>
-                      This only changes the preview. No public update is sent.
+                      {tStatic(
+                        "mobile.this_only_changes_the_preview_no_public_update_is_sent"
+                      )}
                     </p>
                     <button
                       type="button"
@@ -470,7 +479,7 @@ export function ConsolePreview({
                         className="font-normal"
                         style={{ color: T.ink.dim }}
                       >
-                        (preview)
+                        {tStatic("mobile.preview")}
                       </span>
                       <input
                         className="live-input mt-2 font-normal"
@@ -486,14 +495,14 @@ export function ConsolePreview({
                       className="live-button live-primary rounded-full"
                       onClick={() => setScreen("before")}
                     >
-                      Confirm
+                      {tStatic("common.confirm")}
                     </button>
                     <button
                       type="button"
                       className="live-button rounded-full"
                       onClick={() => setScreen("before")}
                     >
-                      Use a passkey
+                      {tStatic("mobile.use_a_passkey")}
                     </button>
                     <button
                       type="button"
@@ -516,10 +525,11 @@ export function ConsolePreview({
             className="rounded-[24px] border p-5 sm:p-6"
             style={{ borderColor: T.border.line }}
           >
-            <h3 className="type-h3 m-0">Try the console</h3>
+            <h3 className="type-h3 m-0">{tStatic("mobile.try_the_console")}</h3>
             <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
-              Interactive preview. Nothing here starts a live session or changes
-              the public page.
+              {tStatic(
+                "mobile.interactive_preview_nothing_here_starts_a_live_session_or_changes_the_public_page"
+              )}
             </p>
             <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
               {routeDate
@@ -559,7 +569,7 @@ export function ConsolePreview({
                       setSimulate(null)
                     }}
                   >
-                    {s.label}
+                    {tStatic(s.label)}
                   </button>
                 )
               })}
@@ -598,7 +608,7 @@ export function ConsolePreview({
                       setScreen("live")
                     }}
                   >
-                    {s.label}
+                    {tStatic(s.label)}
                   </button>
                 )
               })}
@@ -610,10 +620,12 @@ export function ConsolePreview({
             aria-live="polite"
           >
             <p className="m-0 text-sm font-semibold">
-              What the public sees right now
+              {tStatic("mobile.what_the_public_sees_right_now")}
             </p>
             <p className="mt-1 mb-0 text-sm" style={{ color: T.ink.dim }}>
-              The actual public page. Trying the preview doesn’t change this.
+              {tStatic(
+                "mobile.the_actual_public_page_trying_the_preview_doesn_t_change_this"
+              )}
             </p>
             {publicNow ? (
               <>
@@ -645,7 +657,7 @@ export function ConsolePreview({
               className="text-sm font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Open the public library page
+              {tStatic("mobile.open_the_public_library_page")}
             </Link>
           </section>
           <p
@@ -656,10 +668,9 @@ export function ConsolePreview({
               background: T.bg.surface,
             }}
           >
-            Built for a parked vehicle and cold hands: one primary button at a
-            time, targets of 56 px or more, and the stop name in large type.
-            Reopen the console to tap at each stop. Sharing position needs the
-            page open with the screen on.
+            {tStatic(
+              "mobile.built_for_a_parked_vehicle_and_cold_hands_one_primary_button_at_a_time_targets_of_56_px_or_more_and_"
+            )}
           </p>
         </div>
       </div>

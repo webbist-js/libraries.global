@@ -59,6 +59,8 @@ export default function AtlasGlobePreview({
   readonly markers: readonly LibraryMarker[]
   readonly href: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("ui")
   const containerRef = useRef<HTMLElement>(null)
   const [hasEntered, setHasEntered] = useState(false)
@@ -111,15 +113,13 @@ export default function AtlasGlobePreview({
           </GlobalLink>
         </div>
         <p className="pointer-events-none absolute inset-x-5 bottom-5 m-0 text-center text-xs text-[#C9C7D8]">
-          Drag to rotate · Arrow keys when focused
+          {tStatic("home.globeDrag")}
         </p>
       </div>
       <figcaption className="border-t border-[#4A4866] px-6 py-6 sm:px-8 sm:py-7">
-        <h3 className="type-h3 m-0 text-white">How the globe lights up</h3>
+        <h3 className="type-h3 m-0 text-white">{tStatic("home.globeHelp")}</h3>
         <p className="mt-3 mb-0 text-base leading-[1.65] text-[#C9C7D8]">
-          Warm lights show where published library records are located. Brighter
-          hubs mark featured principal libraries. Arcs join these hubs to nearby
-          featured libraries, illustrating a shared world of knowledge.
+          {tStatic("home.globeDescription")}
         </p>
         <ul className="m-0 mt-4 flex list-none flex-wrap gap-x-5 gap-y-2 p-0 text-xs text-[#C9C7D8]">
           <li className="inline-flex items-center gap-2">
@@ -127,21 +127,21 @@ export default function AtlasGlobePreview({
               aria-hidden="true"
               className="size-1.5 rounded-full bg-[#F2C879]"
             />
-            Published locations
+            {tStatic("home.publishedLocations")}
           </li>
           <li className="inline-flex items-center gap-2">
             <span
               aria-hidden="true"
               className="size-2.5 rounded-full bg-[#FFE2A8] shadow-[0_0_8px_#F2C879]"
             />
-            Principal libraries
+            {tStatic("home.principalLibraries")}
           </li>
           <li className="inline-flex items-center gap-2">
             <span
               aria-hidden="true"
               className="h-2 w-4 rounded-t-full border-t border-[#F2C879]"
             />
-            Illustrative links
+            {tStatic("home.illustrativeLinks")}
           </li>
         </ul>
       </figcaption>

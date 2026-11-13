@@ -1,12 +1,7 @@
 // @vitest-environment happy-dom
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
+
+import { cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 import { RenounceLibraryClaim } from "../RenounceLibraryClaim"
 
@@ -37,7 +32,7 @@ it("requires confirmation and sends only the selected library to the owned leave
   fireEvent.click(
     screen.getByRole("button", { name: "Renounce library claim" })
   )
-  fireEvent.click(screen.getByRole("button", { name: "Confirm renunciation" }))
+  fireEvent.click(screen.getByRole("button", { name: "Remove my claim" }))
   await waitFor(() => expect(reload).toHaveBeenCalledOnce())
   expect(request).toHaveBeenCalledExactlyOnceWith(
     "/api/staff/library000000000000000001/leave",
@@ -55,7 +50,7 @@ it("keeps the confirmation available and reports a failed departure", async () =
   fireEvent.click(
     screen.getByRole("button", { name: "Renounce library claim" })
   )
-  fireEvent.click(screen.getByRole("button", { name: "Confirm renunciation" }))
+  fireEvent.click(screen.getByRole("button", { name: "Remove my claim" }))
   await waitFor(() =>
     expect(screen.getByRole("alert").textContent).toContain(
       "Your staff access has changed."

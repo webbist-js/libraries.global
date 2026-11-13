@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { reviewCategoriesInScope, type Capability } from "@repo/access"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Drawer } from "@/components/ds/Drawer"
 import {
@@ -61,9 +61,11 @@ export function EditorialDrawer({
   readonly open?: boolean
   readonly onAfterClose?: () => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("workspaceDrawer")
-  const review = useUiTranslations("moderationWorkspace")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const t = useTranslations("workspaceDrawer")
+  const review = useTranslations("moderationWorkspace")
 
   const { data } = useHydratedSession()
   const c = sessionCapabilities(data?.user)
@@ -95,9 +97,9 @@ export function EditorialDrawer({
   const roles = board
     ? ["Editorial board"]
     : [
-        docs ? "Knowledge editor" : null,
+        docs ? tExisting("ui.knowledge_editor") : null,
         journal ? "Journal editor" : null,
-        moderates ? "Moderator" : null,
+        moderates ? tExisting("authorBadges.moderator") : null,
       ].filter((r): r is string => r !== null)
   const scopeLocales = Object.fromEntries(
     c.moderation.flatMap((s) =>

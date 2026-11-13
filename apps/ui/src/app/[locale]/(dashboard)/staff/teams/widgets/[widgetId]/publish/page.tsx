@@ -1,6 +1,7 @@
 import { WidgetsStaffPage } from "@/components/widgets/WidgetsStaffPage"
+import { withMessages } from "@/i18n/scoped-messages"
 
-export default async function Page({
+async function Page({
   params,
 }: {
   readonly params: Promise<{ widgetId: string }>
@@ -9,3 +10,8 @@ export default async function Page({
 
   return <WidgetsStaffPage mode="publish" id={widgetId} />
 }
+
+export default withMessages(
+  Page,
+  "[locale]/(dashboard)/staff/teams/widgets/[widgetId]/publish/page"
+)

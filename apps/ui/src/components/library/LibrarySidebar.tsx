@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { libraryTypeName } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { SidebarLinks } from "@/components/ds/SidebarLinks"
 import { facilityRows } from "@/components/library/facility-rows"
@@ -51,7 +51,11 @@ export function LibraryRecordPanel({
   /** People following the library; null leaves the count out. */
   readonly followers?: number | null
 }) {
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tPage = useTranslations("libraryPage")
 
   const rec = asRecord(library)
   const { done, total, items } = libraryChecklist(library)
@@ -99,10 +103,10 @@ export function LibraryRecordPanel({
 
       <div className="mt-4 flex items-baseline justify-between">
         <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
-          Core details recorded
+          {tStatic("library.core_details_recorded")}
         </h3>
         <span className="text-sm font-semibold" style={{ color: T.ink.base }}>
-          {done} of {total}
+          {done} {tExisting("widgetPublic.of")} {total}
         </span>
       </div>
       <div aria-hidden="true" className="mt-2 flex gap-1">
@@ -166,10 +170,10 @@ export function LibraryRecordPanel({
       <dl className="mt-4 grid gap-2 text-xs" style={{ color: T.ink.dim }}>
         {access.length ? (
           <div className="flex justify-between gap-3">
-            <dt>Access and facilities</dt>
+            <dt>{tStatic("library.access_and_facilities")}</dt>
             <dd className="m-0">
-              {access.filter((row) => row.state !== "unknown").length} of{" "}
-              {access.length} answered
+              {access.filter((row) => row.state !== "unknown").length}{" "}
+              {tExisting("widgetPublic.of")} {access.length} answered
             </dd>
           </div>
         ) : null}
@@ -186,13 +190,13 @@ export function LibraryRecordPanel({
                 ? new Date(
                     sectionCheckedAt(library, section)!
                   ).toLocaleDateString("en-GB")
-                : "Not yet checked"}
+                : tExisting("ui.history_not_checked")}
             </dd>
           </div>
         ))}
         {typeof rec.contentUpdatedAt === "string" ? (
           <div className="flex justify-between gap-3">
-            <dt>Content updated</dt>
+            <dt>{tStatic("library.content_updated")}</dt>
             <dd className="m-0">
               {new Date(rec.contentUpdatedAt).toLocaleDateString("en-GB")}
             </dd>
@@ -249,7 +253,11 @@ const hostname = (url: string) => {
 }
 
 export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const rec = asRecord(library)
   const website = (rec.website as string | null) ?? null
@@ -265,19 +273,19 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
   }[] = [
     {
       href: (rec.membershipUrl as string | null) ?? null,
-      label: "Join the library",
+      label: tStatic("library.join_the_library"),
       action: "join",
       icon: LIB_ICONS.people,
     },
     {
       href: (rec.bookingUrl as string | null) ?? null,
-      label: "Book a visit",
+      label: tExisting("libraryPage.booking"),
       action: "booking",
       icon: LIB_ICONS.calendar,
     },
     {
       href: (rec.planVisitUrl as string | null) ?? null,
-      label: "Plan your visit",
+      label: tExisting("libraryPage.planVisit"),
       action: "plan_visit",
       icon: LIB_ICONS.pin,
     },
@@ -285,7 +293,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
       href: (rec.wikidataId as string | null)
         ? `https://www.wikidata.org/wiki/${rec.wikidataId as string}`
         : null,
-      label: "Wikidata",
+      label: tExisting("libraryPage.wikidata"),
       icon: LIB_ICONS.db,
     },
   ]
@@ -342,7 +350,7 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
         className="type-panel-title m-0 mb-2.5"
         style={{ color: T.ink.base }}
       >
-        Official links
+        {tStatic("library.official_links")}
       </h2>
       <SidebarLinks>
         {website
@@ -369,8 +377,11 @@ export function LibraryLinksPanel({ library }: { readonly library: Lib }) {
             className="font-semibold underline underline-offset-2"
             sections={["contact"]}
           >
-            Still right?
-            <span className="sr-only"> Confirm the contact details</span>
+            {tStatic("common.stillRight")}
+            <span className="sr-only">
+              {" "}
+              {tStatic("library.confirm_the_contact_details")}
+            </span>
           </OpenVerifyLink>
         </p>
       ) : null}

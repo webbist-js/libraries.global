@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -104,6 +105,8 @@ export function NearbyRegions({
   readonly regions: RegionSibling[]
   readonly basePath: string
 }) {
+  const tExisting = useTranslations()
+
   if (regions.length === 0) return null
 
   return (
@@ -142,7 +145,7 @@ export function NearbyRegions({
                 <span className="block text-xs" style={{ color: T.ink.dim }}>
                   {region.libraryCount > 0
                     ? `${formatCount(region.libraryCount)} ${countNoun(region.libraryCount, "library", "libraries")}`
-                    : "No records yet"}
+                    : tExisting("staticUi.location.no_records_yet")}
                 </span>
               </span>
               <Icon

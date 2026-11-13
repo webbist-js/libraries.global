@@ -1,5 +1,7 @@
 "use client"
+
 import type { NetworkSummary } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useTransition } from "react"
 
 import { NetworkPicker } from "@/components/networks/NetworkPicker"
@@ -10,6 +12,10 @@ import { networkRequest } from "@/lib/networks/client"
 import type { NetworkWorkspace } from "@/lib/networks/types"
 
 export function NetworkAffiliationEditor() {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [role, setRole] = useState(""),
     [department, setDepartment] = useState(""),
     [publicDisplay, setPublicDisplay] = useState(false)
@@ -50,7 +56,9 @@ export function NetworkAffiliationEditor() {
         refresh()
       } catch (failure) {
         setError(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
@@ -70,10 +78,11 @@ export function NetworkAffiliationEditor() {
 
   return (
     <div className="mt-6 space-y-4 border-t border-(--t-border-line) pt-6">
-      <h3 className="type-h3">Your service or network</h3>
+      <h3 className="type-h3">{tStatic("network.your_service_or_network")}</h3>
       <p className="text-sm">
-        Add your institutional affiliation. A declared affiliation is separate
-        from verified employment or authority to manage library records.
+        {tStatic(
+          "network.add_your_institutional_affiliation_a_declared_affiliation_is_separate_from_verified_employment_or_au"
+        )}
       </p>
       {data?.affiliations.map((row) => (
         <div
@@ -91,7 +100,7 @@ export function NetworkAffiliationEditor() {
             className={STAFF_LINK}
             href={`/staff/networks?network=${row.network.documentId}`}
           >
-            Request verification or management
+            {tStatic("network.request_verification_or_management")}
           </Link>
           {row.status !== "revoked" ? (
             <Button
@@ -100,7 +109,9 @@ export function NetworkAffiliationEditor() {
               disabled={pending}
               onClick={() => withdraw(row.documentId)}
             >
-              End this affiliation and its service authority
+              {tStatic(
+                "network.end_this_affiliation_and_its_service_authority"
+              )}
             </Button>
           ) : null}
         </div>
@@ -121,7 +132,7 @@ export function NetworkAffiliationEditor() {
         <div className="space-y-4">
           <p className="font-semibold">{selected.name}</p>
           <label className="grid gap-2">
-            Role
+            {tStatic("common.role")}
             <input
               value={role}
               onChange={(event) => setRole(event.target.value)}
@@ -131,7 +142,7 @@ export function NetworkAffiliationEditor() {
             />
           </label>
           <label className="grid gap-2">
-            Department (optional)
+            {tExisting("libraryClaim.department")}
             <input
               value={department}
               onChange={(event) => setDepartment(event.target.value)}
@@ -145,7 +156,7 @@ export function NetworkAffiliationEditor() {
               checked={publicDisplay}
               onChange={(event) => setPublicDisplay(event.target.checked)}
             />
-            Show this affiliation on my public profile
+            {tStatic("network.show_this_affiliation_on_my_public_profile")}
           </label>
           <Button
             type="button"
@@ -153,7 +164,7 @@ export function NetworkAffiliationEditor() {
             disabled={pending || !role.trim()}
             onClick={save}
           >
-            Save affiliation
+            {tStatic("network.save_affiliation")}
           </Button>
         </div>
       ) : null}

@@ -35,6 +35,14 @@ const COPY: Record<
     footer:
       "Recibe este correo porque solicitó acceso a la beta. No le suscribe a ningún boletín. Para obtener ayuda o retirar su solicitud, responda a este correo.",
   },
+  ja: {
+    title: "Libraries Global ベータ版へのご招待",
+    body: "クローズドベータ版をご利用いただけます。招待を開いて「ベータ版に入る」を押すか、下記の招待コードをベータ版の入口に貼り付けてください。\n\n招待は1回限り有効で、有効期限は7日間です。招待を承諾すると、このブラウザーから30日間アクセスできます。招待は他の方と共有しないでください。\n\n現在開発中のサービスです。機能が動作しない場合や、テストデータがリセットされる場合があります。アカウントの作成は任意で、ベータ版へのアクセスとは別です。",
+    action: "ベータ版に入る",
+    codeLabel: "招待コード",
+    footer:
+      "このメールは、ベータ版へのアクセスをお申し込みいただいた方にお送りしています。ニュースレターへの登録は行われません。ご不明な点がある場合やお申し込みを取り消す場合は、このメールにご返信ください。",
+  },
   fr: {
     title: "Votre invitation à la bêta de Libraries Global",
     body: "Une place vous attend dans la bêta fermée. Ouvrez votre invitation et appuyez sur Entrer dans la bêta, ou collez le code ci-dessous sur la page d'entrée.\n\nL'invitation est utilisable une seule fois et expire dans sept jours. Après acceptation, ce navigateur aura accès pendant 30 jours. Gardez votre invitation privée.\n\nLe service est en développement : des fonctions peuvent tomber en panne et les données de test peuvent être réinitialisées. La création d'un compte est facultative et distincte de l'accès à la bêta.",

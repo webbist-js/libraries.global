@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { isModeratedLibraryChange } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 
@@ -26,7 +26,7 @@ import type { FormData } from "./wizard.types"
 // ── ChangedTag — improve mode marks fields that differ from the record ───────
 
 export function ChangedTag() {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -87,7 +87,7 @@ export function useIsShared(key?: keyof FormData): boolean {
 }
 
 export function SharedTag({ id }: { id?: string }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -119,7 +119,7 @@ export function useIsModerated(key?: keyof FormData, value?: unknown): boolean {
 
 /** "Reviewed by a moderator": the per-field note in the staff editor. */
 export function ModeratedTag({ id }: { id?: string }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -150,7 +150,7 @@ export function SharedBlock({
   fields: readonly (keyof FormData)[]
   children: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const editable = useContext(EditableFieldsContext)
   const shared = !!editable && fields.every((f) => !editable.has(f))
@@ -182,7 +182,7 @@ export function SharedBlock({
 // ── RequiredTag — subtle rust "required" marker next to a label ──────────────
 
 export function RequiredTag() {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -332,7 +332,7 @@ export function WizardSelect({
   options: { value: string; label: string }[]
   required?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const changed = useIsChanged(id)
   const shared = useIsShared(id)
@@ -429,7 +429,7 @@ export function TextareaField({
   hint?: string
   required?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const hintId = hint ? `${id}-hint` : undefined
   const changed = useIsChanged(id)
@@ -498,7 +498,7 @@ export function TagSelector({
   /** The form field this selects, for improve-mode change marking. */
   fieldKey?: keyof FormData
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const changed = useIsChanged(fieldKey ?? "services") && !!fieldKey
   const shared = useIsShared(fieldKey)

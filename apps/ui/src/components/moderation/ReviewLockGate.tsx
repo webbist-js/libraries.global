@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 
 import { primaryCtaSm, secondaryCtaSm } from "@/components/ui/action-styles"
@@ -23,6 +23,10 @@ export function ReviewLockGate({
   readonly active: boolean
   readonly children: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const { view, takeOver } = useReviewLock(documentId, active)
   const [confirming, setConfirming] = useState(false)
   const [taking, setTaking] = useState(false)
@@ -38,7 +42,9 @@ export function ReviewLockGate({
           className="m-0 flex items-center gap-2 text-sm text-(--t-ink-dim)"
         >
           <Icon aria-hidden icon="mdi:lock-outline" width={16} />
-          You’re reviewing this. Other moderators see it as in review.
+          {tStatic(
+            "moderation.you_re_reviewing_this_other_moderators_see_it_as_in_review"
+          )}
         </p>
       ) : null}
       {view.state === "held" ? (
@@ -58,8 +64,9 @@ export function ReviewLockGate({
               : `${who} is reviewing this submission.`}
           </p>
           <p className="m-0 text-sm">
-            You can read everything, but decisions are paused until they finish
-            or their lock lapses after two minutes away.
+            {tStatic(
+              "moderation.you_can_read_everything_but_decisions_are_paused_until_they_finish_or_their_lock_lapses_after_two_mi"
+            )}
           </p>
           {confirming ? (
             <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +78,7 @@ export function ReviewLockGate({
                 onClick={() => setConfirming(false)}
                 className={cn(secondaryCtaSm, "min-h-11 cursor-pointer")}
               >
-                Cancel
+                {tExisting("ui.cancel")}
               </button>
               <button
                 type="button"
@@ -87,7 +94,7 @@ export function ReviewLockGate({
                   "min-h-11 cursor-pointer disabled:opacity-50"
                 )}
               >
-                Take over review
+                {tStatic("moderation.take_over_review")}
               </button>
             </div>
           ) : (
@@ -96,7 +103,7 @@ export function ReviewLockGate({
               onClick={() => setConfirming(true)}
               className={cn(secondaryCtaSm, "min-h-11 w-fit cursor-pointer")}
             >
-              Take over
+              {tStatic("moderation.take_over")}
             </button>
           )}
         </div>

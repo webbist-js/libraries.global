@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -79,7 +79,11 @@ const pillButton = {
 }
 
 export function SignInSecuritySection() {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [sessions, setSessions] = useState<SessionEntry[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -113,9 +117,9 @@ export function SignInSecuritySection() {
     })
     if (res.ok) {
       setSessions((s) => s.filter((x) => x.id !== id))
-      toast.success("Session signed out")
+      toast.success(tStatic("profileRoute.session_signed_out"))
     } else {
-      toast.error("Failed to sign out session")
+      toast.error(tStatic("profileRoute.failed_to_sign_out_session"))
     }
     setRevoking(null)
   }
@@ -128,9 +132,9 @@ export function SignInSecuritySection() {
     })
     if (res.ok) {
       setSessions((s) => s.filter((x) => x.current))
-      toast.success("Signed out everywhere else")
+      toast.success(tStatic("profileRoute.signed_out_everywhere_else"))
     } else {
-      toast.error("Failed to sign out sessions")
+      toast.error(tStatic("profileRoute.failed_to_sign_out_sessions"))
     }
   }
 
@@ -157,7 +161,9 @@ export function SignInSecuritySection() {
     <SectionCard
       id="security"
       title={tUi("signin_security")}
-      lead="How you sign in, and where you’re signed in right now."
+      lead={tStatic(
+        "profileRoute.how_you_sign_in_and_where_you_re_signed_in_right_now"
+      )}
     >
       <div>
         {/* Two-step verification */}
@@ -170,10 +176,12 @@ export function SignInSecuritySection() {
               className="m-0 text-base font-medium"
               style={{ color: T.ink.base }}
             >
-              Two-step verification
+              {tStatic("profileRoute.two_step_verification")}
             </p>
             <p className="m-0 mt-0.5 text-sm" style={{ color: T.ink.dim }}>
-              Ask for a code from an authenticator app when you sign in.
+              {tStatic(
+                "profileRoute.ask_for_a_code_from_an_authenticator_app_when_you_sign_in"
+              )}
             </p>
           </div>
           <span
@@ -190,7 +198,7 @@ export function SignInSecuritySection() {
         {/* Connected sign-in methods */}
         {loading ? (
           <p className="py-3.5 text-sm" style={{ color: T.ink.low }}>
-            Loading sign-in methods…
+            {tStatic("profileRoute.loading_sign_in_methods")}
           </p>
         ) : (
           accounts.map((acct) => {
@@ -243,7 +251,9 @@ export function SignInSecuritySection() {
                       href="/auth/change-password"
                       style={{ ...pillButton, textDecoration: "none" }}
                     >
-                      {isPassword ? "Change password" : "Add a password"}
+                      {isPassword
+                        ? tExisting("navbar.actions.changePassword")
+                        : "Add a password"}
                     </GlobalLink>
                   )}
                   {!isOnly && (
@@ -252,7 +262,7 @@ export function SignInSecuritySection() {
                       onClick={() => void disconnect(acct.providerId)}
                       style={pillButton}
                     >
-                      Disconnect
+                      {tStatic("common.disconnect")}
                     </button>
                   )}
                 </div>
@@ -266,15 +276,15 @@ export function SignInSecuritySection() {
           className="m-0 mt-6 mb-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          Where you&rsquo;re signed in
+          {tStatic("profileRoute.where_you_rsquo_re_signed_in")}
         </p>
         {loading ? (
           <p className="py-3 text-sm" style={{ color: T.ink.low }}>
-            Loading sessions…
+            {tStatic("profileRoute.loading_sessions")}
           </p>
         ) : sessions.length === 0 ? (
           <p className="py-3 text-sm" style={{ color: T.ink.dim }}>
-            No active sessions found.
+            {tStatic("profileRoute.no_active_sessions_found")}
           </p>
         ) : (
           sessions.map((s) => (
@@ -314,7 +324,7 @@ export function SignInSecuritySection() {
                     className="m-0 mt-0.5 truncate text-sm"
                     style={{ color: T.ink.dim }}
                   >
-                    Signed in{" "}
+                    {tStatic("profileRoute.signed_in")}{" "}
                     {new Date(s.createdAt).toLocaleDateString("en-GB")}
                     {s.ipAddress ? ` · ${s.ipAddress}` : ""}
                   </p>
@@ -325,7 +335,7 @@ export function SignInSecuritySection() {
                   className="shrink-0 rounded-full px-3 py-1 text-sm font-semibold text-white"
                   style={{ background: T.bg.inverse }}
                 >
-                  This device
+                  {tStatic("profileRoute.this_device")}
                 </span>
               ) : (
                 <button
@@ -351,7 +361,7 @@ export function SignInSecuritySection() {
               onClick={() => void revokeAll()}
               style={pillButton}
             >
-              Sign out everywhere else
+              {tStatic("profileRoute.sign_out_everywhere_else")}
             </button>
           </div>
         ) : null}

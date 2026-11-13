@@ -3,6 +3,7 @@ import {
   networkHref,
   type NetworkKind,
 } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import { Link } from "@/lib/navigation"
 
@@ -21,6 +22,8 @@ export function LibraryNetworks({
   readonly libraryId: string
   readonly networks?: readonly LibraryNetworkMembership[] | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const visible = (networks ?? []).filter(
     (
       row
@@ -40,7 +43,7 @@ export function LibraryNetworks({
   return (
     <section
       className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-6"
-      aria-label="Services and networks"
+      aria-label={tStatic("common.servicesNetworks")}
     >
       <h2 className="type-h2">Part of</h2>
       <ul className="m-0 list-none space-y-3 p-0">
@@ -62,7 +65,9 @@ export function LibraryNetworks({
         <Link
           href={`/staff/networks?network=${visible[0]!.documentId}&libraryId=${libraryId}`}
         >
-          Work for the wider service? Request a grouped review.
+          {tStatic(
+            "library.work_for_the_wider_service_request_a_grouped_review"
+          )}
         </Link>
       </p>
     </section>

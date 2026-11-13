@@ -30,6 +30,10 @@ export function LibraryHeroMedia({
   readonly map: ReactNode
   readonly mapLabel?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("libraryPage")
   const photos = [
     ...(photo ? [{ url: photo, alt: name, caption }] : []),
@@ -47,7 +51,7 @@ export function LibraryHeroMedia({
         <div
           className="library-media-switch flex flex-wrap gap-1"
           role="group"
-          aria-label="Library media"
+          aria-label={tStatic("library.library_media")}
         >
           {photos.length ? (
             <button
@@ -60,7 +64,9 @@ export function LibraryHeroMedia({
                 borderColor: T.border.line,
               }}
             >
-              {photos.length > 1 ? `Photos (${photos.length})` : "Photo"}
+              {photos.length > 1
+                ? `Photos (${photos.length})`
+                : tExisting("ui.photo")}
             </button>
           ) : null}
           {map ? (
@@ -85,7 +91,7 @@ export function LibraryHeroMedia({
               className="inline-flex min-h-11 items-center rounded-full border px-4 text-sm"
               style={{ borderColor: T.border.line }}
             >
-              Virtual tour ↗
+              {tStatic("library.virtual_tour")}
             </a>
           ) : null}
         </div>
@@ -120,7 +126,7 @@ export function LibraryHeroMedia({
             <div className="mt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                aria-label="Previous photo"
+                aria-label={tStatic("library.previous_photo")}
                 onClick={() =>
                   setSelected(
                     (index) => (index + photos.length - 1) % photos.length
@@ -131,11 +137,12 @@ export function LibraryHeroMedia({
                 ←
               </button>
               <span className="text-sm" aria-live="polite">
-                Photo {selected + 1} of {photos.length}
+                {tExisting("ui.photo")} {selected + 1}{" "}
+                {tExisting("widgetPublic.of")} {photos.length}
               </span>
               <button
                 type="button"
-                aria-label="Next photo"
+                aria-label={tStatic("library.next_photo")}
                 onClick={() =>
                   setSelected((index) => (index + 1) % photos.length)
                 }

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -33,7 +33,9 @@ export function HealthList({
   readonly score?: { done: number; total: number }
   readonly renderAction?: (row: HealthRow) => ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -59,7 +61,7 @@ export function HealthList({
             >
               {score.done}
             </span>{" "}
-            of {score.total}
+            {tExisting("widgetPublic.of")} {score.total}
           </p>
         ) : null}
       </div>
@@ -79,7 +81,7 @@ export function HealthList({
                   background: ok ? TONES.ok.bg : TONES.warn.bg,
                   color: ok ? TONES.ok.fg : TONES.warn.fg,
                 }}
-                title={ok ? tUi("done") : "To do"}
+                title={ok ? tUi("done") : tExisting("drivePage.todo")}
               >
                 <Icon
                   aria-hidden="true"
@@ -87,7 +89,9 @@ export function HealthList({
                   width={18}
                   height={18}
                 />
-                <span className="sr-only">{ok ? tUi("done") : "To do"}</span>
+                <span className="sr-only">
+                  {ok ? tUi("done") : tExisting("drivePage.todo")}
+                </span>
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span

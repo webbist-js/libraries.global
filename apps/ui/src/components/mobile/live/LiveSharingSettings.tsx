@@ -1,6 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge, ChoiceCard, Sheet, Switch } from "@/components/ds"
@@ -37,7 +37,11 @@ export function LiveSharingSettings({
   readonly members: StaffTeam
   readonly onNote: (note: { tone: "ok" | "danger"; text: string }) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const id = initial.library.id,
@@ -57,13 +61,18 @@ export function LiveSharingSettings({
         "PUT"
       )
       setSettings(r.settings)
-      onNote({ tone: "ok", text: "Live sharing settings saved." })
+      onNote({
+        tone: "ok",
+        text: tStatic("mobile.live_sharing_settings_saved"),
+      })
       setPrivacy(false)
       setAccepted(false)
     } catch {
       onNote({
         tone: "danger",
-        text: "The settings could not be saved. Check your access and try again.",
+        text: tStatic(
+          "mobile.the_settings_could_not_be_saved_check_your_access_and_try_again"
+        ),
       })
     } finally {
       setBusy(false)
@@ -76,7 +85,9 @@ export function LiveSharingSettings({
       <section className={card} style={cardStyle}>
         <Switch
           label={`Allow live updates for ${name}`}
-          description="When off, the library page always shows the timetable."
+          description={tStatic(
+            "mobile.when_off_the_library_page_always_shows_the_timetable"
+          )}
           checked={settings.enabled}
           disabled={locked}
           onChange={(value) => {
@@ -86,7 +97,7 @@ export function LiveSharingSettings({
         />
         {!owner && (
           <p className="m-0 mt-2 text-sm" style={{ color: T.ink.dim }}>
-            Only owners can change live sharing settings.
+            {tStatic("mobile.only_owners_can_change_live_sharing_settings")}
           </p>
         )}
       </section>
@@ -101,12 +112,12 @@ export function LiveSharingSettings({
           className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
-          Who can go live
+          {tStatic("mobile.who_can_go_live")}
         </h3>
         {team ? (
           <>
             <p className="my-2 text-sm" style={{ color: T.ink.dim }}>
-              Owners choose who can go live, person by person.{" "}
+              {tStatic("mobile.owners_choose_who_can_go_live_person_by_person")}{" "}
               <Badge
                 label={tUi("team")}
                 color="aurora"
@@ -126,8 +137,8 @@ export function LiveSharingSettings({
                       description={
                         member.staffRole
                           ? member.staffRole === "owner"
-                            ? "Owner"
-                            : "Editor"
+                            ? tExisting("teamInvitation.owner")
+                            : tExisting("authorBadges.editor")
                           : undefined
                       }
                       checked={member.canGoLive !== false}
@@ -153,7 +164,9 @@ export function LiveSharingSettings({
                         } catch {
                           onNote({
                             tone: "danger",
-                            text: "This permission could not be changed.",
+                            text: tStatic(
+                              "mobile.this_permission_could_not_be_changed"
+                            ),
                           })
                         } finally {
                           setBusy(false)
@@ -165,15 +178,16 @@ export function LiveSharingSettings({
               </ul>
             ) : (
               <p className="m-0 text-sm">
-                Ask an owner to change who can go live.
+                {tStatic("mobile.ask_an_owner_to_change_who_can_go_live")}
               </p>
             )}
           </>
         ) : (
           <>
             <p className="my-2 text-sm" style={{ color: T.ink.dim }}>
-              Every verified staff member for this library can go live.
-              Restrictions already set stay in force.
+              {tStatic(
+                "mobile.every_verified_staff_member_for_this_library_can_go_live_restrictions_already_set_stay_in_force"
+              )}
             </p>
             <p
               className="m-0 mt-3 flex items-start gap-2 rounded-[14px] px-4 py-3 text-sm"
@@ -186,14 +200,15 @@ export function LiveSharingSettings({
                 className="mt-0.5 shrink-0"
               />
               <span>
-                In a free team workspace, owners choose who can go live, person
-                by person.{" "}
+                {tStatic(
+                  "mobile.in_a_free_team_workspace_owners_choose_who_can_go_live_person_by_person"
+                )}{" "}
                 <Link
                   href={staffHref("/team")}
                   className="font-semibold underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
-                  See the Team tab
+                  {tStatic("mobile.see_the_team_tab")}
                 </Link>
               </span>
             </p>
@@ -207,10 +222,12 @@ export function LiveSharingSettings({
           className="type-small-heading m-0"
           style={{ color: T.ink.base }}
         >
-          What the public sees
+          {tStatic("mobile.what_the_public_sees")}
         </h3>
         <fieldset className="m-0 mt-4 border-0 p-0" disabled={locked}>
-          <legend className="sr-only">Position precision</legend>
+          <legend className="sr-only">
+            {tStatic("mobile.position_precision")}
+          </legend>
           <div className="grid gap-3 sm:grid-cols-2">
             <ChoiceCard
               name="precision"
@@ -221,10 +238,13 @@ export function LiveSharingSettings({
               tint={{ bg: T.accent.chip, fg: T.accent.primary }}
               title={
                 <span className="flex flex-wrap items-center gap-2">
-                  Stops only <Badge label={tUi("default")} color="dim" />
+                  {tStatic("mobile.stops_only")}{" "}
+                  <Badge label={tUi("default")} color="dim" />
                 </span>
               }
-              hint="The public sees which stop the vehicle is at, and “On the road” between stops."
+              hint={tStatic(
+                "mobile.the_public_sees_which_stop_the_vehicle_is_at_and_on_the_road_between_stops"
+              )}
             />
             <ChoiceCard
               name="precision"
@@ -234,12 +254,14 @@ export function LiveSharingSettings({
               icon="mdi:crosshairs-gps"
               tint={{ bg: T.accent.chip, fg: T.accent.primary }}
               title={tUi("approximate_position_between_stops")}
-              hint="Shown as a circle about 250 m wide, a minute behind. Only when a crew member shares position."
+              hint={tStatic(
+                "mobile.shown_as_a_circle_about_250_m_wide_a_minute_behind_only_when_a_crew_member_shares_position"
+              )}
             />
           </div>
         </fieldset>
         <label className="mt-5 flex flex-wrap items-center gap-3 text-base">
-          Stop sharing automatically
+          {tStatic("mobile.stop_sharing_automatically")}
           <SelectField
             label={tUi("minutes_after_the_last_stop")}
             className="min-h-11 rounded-[14px] border px-3"
@@ -265,9 +287,9 @@ export function LiveSharingSettings({
         title={tUi("allow_live_updates")}
       >
         <p>
-          Staff can share check-ins from the vehicle. Approximate position, when
-          enabled, is shown only between stops, rounded to about 250 m and a
-          minute behind. Positions are removed when the route ends.
+          {tStatic(
+            "mobile.staff_can_share_check_ins_from_the_vehicle_approximate_position_when_enabled_is_shown_only_between_s"
+          )}
         </p>
         <label className="my-5 flex min-h-11 items-start gap-3">
           <input
@@ -276,8 +298,9 @@ export function LiveSharingSettings({
             checked={accepted}
             onChange={(e) => setAccepted(e.target.checked)}
           />
-          I confirm the service allows its staff to share the vehicle’s
-          position.
+          {tStatic(
+            "mobile.i_confirm_the_service_allows_its_staff_to_share_the_vehicle_s_position"
+          )}
         </label>
         <button
           type="button"

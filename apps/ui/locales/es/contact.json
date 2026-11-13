@@ -1,0 +1,240 @@
+{
+  "contactModal": {
+    "close": "Cerrar",
+    "choose": "Elija una opción",
+    "optional": "(opcional)",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "done": "Hecho",
+    "sending": "Enviando…",
+    "invalid": "Compruebe los campos obligatorios. Su mensaje debe tener al menos 10 caracteres.",
+    "error": "No pudimos enviar su mensaje. Sus respuestas siguen aquí; inténtelo de nuevo.",
+    "rateLimited": "Ha enviado varios mensajes recientemente. Inténtelo de nuevo dentro de una hora.",
+    "successTitle": "Gracias por ponerse en contacto.",
+    "received": "Su mensaje se ha enviado a nuestro equipo.",
+    "reference": "Referencia: {reference}",
+    "step": "Paso {current} de 2",
+    "name": "Su nombre",
+    "email": "Dirección de correo electrónico",
+    "steps": "¿Cómo podemos reproducirlo?",
+    "stepsPlaceholder": "1. Abrí…\n2. Seleccioné…\n3. Luego…",
+    "private": "Solo se comparte con nuestro equipo",
+    "contextNote": "Se incluyen datos de la página y del dispositivo para ayudarnos a entender su experiencia.",
+    "privacy": "Privacidad",
+    "feedback": {
+      "eyebrow": "Ayude a dar forma a la beta",
+      "title": "¿Cómo le fue?",
+      "description": "Un par de preguntas rápidas nos ayudan a entender qué resulta útil y dónde podemos mejorar.",
+      "stepOne": "Su experiencia",
+      "stepTwo": "Algo más de detalle",
+      "short": "Alrededor de un minuto",
+      "send": "Enviar comentarios",
+      "success": "Sus comentarios nos ayudan a decidir qué mejorar a continuación.",
+      "emailHint": "Deje un correo electrónico si desea que le respondamos. Los comentarios anónimos son bienvenidos.",
+      "topic": "¿Qué le gustaría compartir?",
+      "topics": {
+        "problem": "Algo ha fallado",
+        "idea": "Tengo una idea",
+        "experience": "Mi experiencia",
+        "praise": "Algo que me gustó"
+      },
+      "task": "¿Qué venía a hacer?",
+      "tasks": {
+        "find_library": "Encontrar una biblioteca",
+        "plan_visit": "Planificar una visita",
+        "contribute": "Añadir o corregir información",
+        "manage_library": "Gestionar mi biblioteca",
+        "explore": "Explorar y aprender",
+        "other": "Otra cosa"
+      },
+      "outcome": "¿Logró hacerlo?",
+      "outcomes": {
+        "yes": "Sí, lo logré",
+        "partly": "En parte",
+        "no": "No, me quedé atascado",
+        "browsing": "Solo estaba explorando"
+      },
+      "ease": "¿Qué tan fácil fue?",
+      "easeScore": "{value} de 5",
+      "difficult": "Difícil",
+      "easy": "Fácil",
+      "prompts": {
+        "problem": {
+          "label": "¿Qué ocurrió y qué esperaba?",
+          "hint": "Cuéntenos dónde se quedó atascado. No incluya contraseñas ni información privada.",
+          "placeholder": "Estaba intentando… Esperaba… En cambio…"
+        },
+        "idea": {
+          "label": "¿Qué le resultaría más útil?",
+          "hint": "¿Qué cambiaría o añadiría y para qué le serviría?",
+          "placeholder": "Me ayudaría que… porque…"
+        },
+        "experience": {
+          "label": "¿Qué le pareció fácil, confuso o qué echó en falta?",
+          "hint": "Piense en buscar información, navegar o contribuir. Un ejemplo concreto ayuda.",
+          "placeholder": "Lo que más me llamó la atención fue…"
+        },
+        "praise": {
+          "label": "¿Qué le funcionó bien?",
+          "hint": "¿Qué le ayudó y por qué? Queremos conservar lo que funciona.",
+          "placeholder": "Me resultó útil… porque…"
+        }
+      }
+    },
+    "atlas": {
+      "eyebrow": "Ayude a dar forma a Atlas",
+      "title": "¿Qué le pareció Atlas?",
+      "description": "Cuéntenos qué partes usó, cómo funcionaron y qué le gustaría ver a continuación.",
+      "stepOne": "Uso de Atlas",
+      "stepTwo": "Sus comentarios e ideas",
+      "short": "Alrededor de dos minutos",
+      "success": "Sus comentarios nos ayudan a hacer Atlas más útil y a decidir qué crear a continuación.",
+      "task": "¿Para qué estaba usando Atlas?",
+      "tasks": {
+        "find_library": "Encontrar una biblioteca",
+        "plan_visit": "Planificar una visita",
+        "compare_areas": "Comparar áreas o la cobertura de bibliotecas",
+        "check_accessibility": "Comprobar la accesibilidad",
+        "export_data": "Exportar datos de bibliotecas",
+        "explore": "Explorar el mapa",
+        "other": "Otra cosa"
+      },
+      "features": {
+        "label": "¿Qué partes de Atlas usó?",
+        "hint": "Seleccione todas las que correspondan. Elija Otra si ninguna encaja.",
+        "required": "Elija al menos una parte de Atlas, o Otra.",
+        "options": {
+          "search": "Búsqueda",
+          "filters": "Filtros",
+          "map_layers": "Capas y leyendas del mapa",
+          "library_details": "Detalles de las bibliotecas",
+          "list_view": "Vista de lista",
+          "area_comparison": "Comparación de áreas",
+          "accessibility": "Información de accesibilidad",
+          "exports": "Exportación de datos",
+          "other": "Otra"
+        }
+      },
+      "clarity": "¿Qué tan claras fueron las leyendas del mapa y los resultados?",
+      "clarityScore": "Claridad: {value} de 5",
+      "unclear": "Poco claros",
+      "clear": "Claros",
+      "wishlist": {
+        "label": "Lo que me gustaría ver",
+        "hint": "Una función, capa del mapa o dato que le ayudaría. ¿Para qué lo usaría?",
+        "placeholder": "Me gustaría poder… porque…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "¿Qué ocurrió en Atlas y qué esperaba?",
+          "hint": "Mencione la función o capa del mapa y dónde se quedó atascado. No incluya contraseñas ni información privada.",
+          "placeholder": "En Atlas, estaba intentando… Esperaba… En cambio…"
+        },
+        "idea": {
+          "label": "Lo que me gustaría ver en Atlas",
+          "hint": "¿Qué función, capa del mapa o dato añadiría o cambiaría y para qué le serviría?",
+          "placeholder": "Me gustaría poder… porque…"
+        },
+        "experience": {
+          "label": "¿Qué le pareció fácil, confuso o qué echó en falta en Atlas?",
+          "hint": "Piense en la búsqueda, los filtros, las leyendas del mapa o los detalles de las bibliotecas. Un ejemplo concreto ayuda.",
+          "placeholder": "Cuando usé… encontré…"
+        },
+        "praise": {
+          "label": "¿Qué le funcionó bien en Atlas?",
+          "hint": "¿Qué función le ayudó y por qué? Queremos conservar lo que funciona.",
+          "placeholder": "Me resultó útil… porque…"
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Hable con el equipo",
+      "title": "¿Cómo podemos ayudarle?",
+      "description": "Elija el motivo de su consulta para que su mensaje llegue a la persona adecuada.",
+      "reason": "¿Sobre qué trata su mensaje?",
+      "send": "Enviar mensaje",
+      "success": "Responderemos a la dirección de correo electrónico que nos ha facilitado cuando sea necesaria una respuesta.",
+      "emailHint": "Usaremos esta dirección para responder a su mensaje. No le suscribe a ningún correo.",
+      "inlineDescription": "Informe de un problema, haga una pregunta o hable de colaborar. Unos pocos detalles nos ayudan a dirigirle a la persona adecuada.",
+      "open": "Contactar con el equipo",
+      "types": {
+        "report_issue": "Informar de un problema",
+        "general_inquiry": "Consulta general",
+        "account_support": "Ayuda con la cuenta",
+        "membership_support": "Acceso a la API y facturación",
+        "library_correction": "Corregir información de una biblioteca",
+        "plans": "Planes y acceso a la API",
+        "partnership": "Alianza o colaboración",
+        "privacy": "Privacidad o solicitud sobre datos",
+        "sponsorship": "Patrocinio"
+      },
+      "prompts": {
+        "report_issue": {
+          "label": "¿Qué salió mal y qué debería haber ocurrido?",
+          "hint": "Describa el problema y cualquier error que viera. No incluya contraseñas ni códigos de seguridad.",
+          "placeholder": "Estaba intentando… pero…"
+        },
+        "general_inquiry": {
+          "label": "¿Qué le gustaría saber?",
+          "hint": "Un poco de contexto nos ayuda a darle una respuesta útil.",
+          "placeholder": "Me pongo en contacto por…"
+        },
+        "account_support": {
+          "label": "¿Con qué necesita ayuda?",
+          "hint": "Describa el problema con la cuenta. Nunca le pediremos su contraseña ni su código de inicio de sesión.",
+          "placeholder": "Tengo problemas con…"
+        },
+        "membership_support": {
+          "label": "¿Con qué necesita ayuda?",
+          "hint": "Cuéntenos sobre su suscripción de acceso a la API, una membresía anterior o cualquier problema con la facturación, el acceso o las funciones. No incluya datos de tarjeta, contraseñas ni códigos de seguridad.",
+          "placeholder": "Necesito ayuda con…"
+        },
+        "library_correction": {
+          "label": "¿Qué biblioteca y qué hay que corregir?",
+          "hint": "Incluya el nombre de la biblioteca o el enlace a su página, la información correcta y una fuente si la tiene.",
+          "placeholder": "La información de… debería decir…"
+        },
+        "plans": {
+          "label": "¿De qué le gustaría hablar?",
+          "hint": "Cuéntenos sobre su biblioteca o servicio, lo que quiere usar o su consulta sobre la verificación.",
+          "placeholder": "Nos interesa… para…"
+        },
+        "partnership": {
+          "label": "¿Qué tiene en mente?",
+          "hint": "Cuéntenos sobre su organización, su idea y cómo podríamos trabajar juntos.",
+          "placeholder": "Somos… y nos gustaría…"
+        },
+        "privacy": {
+          "label": "¿Cuál es su pregunta o solicitud?",
+          "hint": "Describa su solicitud. No envíe aquí documentos de identidad ni información personal sensible.",
+          "placeholder": "Me gustaría preguntar sobre…"
+        },
+        "sponsorship": {
+          "label": "¿Qué le gustaría patrocinar?",
+          "hint": "Háblenos de su organización, del programa que le interesa y, si los conoce, de su presupuesto y sus plazos. No incluya datos de pago.",
+          "placeholder": "Somos… y nos gustaría apoyar…"
+        }
+      }
+    }
+  },
+  "contactForm": {
+    "name": "Nombre y apellidos",
+    "namePlaceholder": "Juan Pérez",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "juan.perez@gmail.com",
+    "message": "Mensaje",
+    "gdpr": "Acepto el tratamiento de mis datos personales",
+    "submit": "Enviar",
+    "success": "El formulario se ha enviado correctamente.",
+    "error": "No se ha podido enviar el formulario. Inténtelo de nuevo más tarde.",
+    "gdprLink": "Más información sobre el tratamiento de datos personales"
+  },
+  "newsletterForm": {
+    "rateLimited": "Se han realizado demasiadas suscripciones desde aquí. Inténtalo de nuevo más tarde.",
+    "failed": "No se pudo completar la suscripción. Inténtalo de nuevo.",
+    "sent": "Gracias. Si se necesita confirmación, revisa tu correo para completar la suscripción.",
+    "website": "Sitio web",
+    "invalidEmail": "Introduce una dirección de correo válida.",
+    "accountEmail": "Usa el correo de tu cuenta para suscribirte al boletín."
+  }
+}

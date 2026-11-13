@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { FeatureAccessLanding } from "@/components/auth/FeatureAccessLanding"
 import { MainContent } from "@/components/ds/MainContent"
@@ -8,6 +8,7 @@ import { StepsCard } from "@/components/ds/StepsCard"
 import { Container } from "@/components/elementary/Container"
 import { WIZARD_CARD } from "@/components/library-editor/wizard.constants"
 import { Button } from "@/components/ui/button"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -37,13 +38,17 @@ const NEXT_STEPS = [
   },
 ]
 
-export default async function IndexEditorPage({
+async function IndexEditorPage({
   searchParams,
 }: {
   searchParams: Promise<{ intent?: string | string[] }>
 }) {
-  const tUi = await getUiTranslations("ui")
-  const tClaim = await getUiTranslations("libraryClaim")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
+  const tClaim = await getTranslations("libraryClaim")
 
   const [{ intent }, session] = await Promise.all([
     searchParams,
@@ -70,8 +75,10 @@ export default async function IndexEditorPage({
     <div style={{ color: T.ink.base }}>
       <ContributeSectionHeader
         section={tUi("index_editor")}
-        title="Add or improve *a library.*"
-        lead="Search the index first. Improve the record if it’s there, or add it if it isn’t. An editor reviews every change before it goes live."
+        title={tStatic("contributeRoute.add_or_improve_a_library")}
+        lead={tStatic(
+          "contributeRoute.search_the_index_first_improve_the_record_if_it_s_there_or_add_it_if_it_isn_t_an_editor_reviews_ever"
+        )}
       />
       <Container className="py-8 lg:py-10">
         <MainContent className="grid min-w-0 gap-6">
@@ -94,7 +101,7 @@ export default async function IndexEditorPage({
               </Button>
             </section>
             <StepsCard
-              title="What happens next"
+              title={tExisting("libraryClaim.next")}
               steps={NEXT_STEPS.map((step) => ({
                 id: step.title,
                 content: (
@@ -111,3 +118,8 @@ export default async function IndexEditorPage({
     </div>
   )
 }
+
+export default withMessages(
+  IndexEditorPage,
+  "[locale]/(dashboard)/contribute/index/page"
+)

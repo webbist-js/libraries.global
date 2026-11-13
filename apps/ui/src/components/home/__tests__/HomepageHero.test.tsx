@@ -2,8 +2,8 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { HOMEPAGE_DEFAULTS } from "@/components/home/homepage.content"
 import HomepageHero from "@/components/home/HomepageHero"
+import { HOMEPAGE_DEFAULTS } from "@/test/homepage-defaults"
 
 const canvas = vi.hoisted(() => vi.fn())
 vi.mock("@/components/home/KnowledgeGlobeCanvas", () => ({

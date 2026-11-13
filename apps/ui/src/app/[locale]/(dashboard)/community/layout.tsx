@@ -3,6 +3,7 @@ import type { ReactNode } from "react"
 
 import { CommunityWorkspace } from "@/components/community/CommunityWorkspace"
 import { StandingCard } from "@/components/community/StandingCard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { avatarSrc } from "@/lib/avatar"
 import { fetchStanding } from "@/lib/community/leaderboard-server"
@@ -13,7 +14,7 @@ import { fetchOwnProfile } from "@/lib/own-profile-server"
 import { getInitials } from "@/lib/types/leaderboard"
 
 /** One persistent section navigation; the existing routes retain their own data/actions. */
-export default async function CommunityLayout({
+async function CommunityLayout({
   children,
   params,
 }: {
@@ -56,3 +57,8 @@ export default async function CommunityLayout({
     </CommunityWorkspace>
   )
 }
+
+export default withMessages(
+  CommunityLayout,
+  "[locale]/(dashboard)/community/layout"
+)

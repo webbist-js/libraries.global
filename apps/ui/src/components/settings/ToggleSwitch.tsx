@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -15,6 +16,8 @@ export function ToggleSwitch({
   label: string
   disabled?: boolean
 }) {
+  const tExisting = useTranslations()
+
   return (
     <span className="inline-flex shrink-0 items-center gap-2.5">
       <span
@@ -22,7 +25,9 @@ export function ToggleSwitch({
         className="text-sm font-semibold"
         style={{ color: value ? T.ink.dim : T.ink.faint }}
       >
-        {value ? "On" : "Off"}
+        {value
+          ? tExisting("widgetSettings.on")
+          : tExisting("discussions.feedOff")}
       </span>
       <button
         type="button"

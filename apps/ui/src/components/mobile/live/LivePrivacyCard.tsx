@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -23,7 +23,9 @@ export function LivePrivacyCard({
 }: {
   readonly libraryDocumentId: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   const headingId = useId()
 
   const staffHref = useStaffLibraryHref(libraryDocumentId)
@@ -61,8 +63,9 @@ export function LivePrivacyCard({
         className="mt-4 mb-0 rounded-[14px] px-4 py-3 text-sm"
         style={{ background: T.bg.surface, color: T.ink.dim }}
       >
-        Your library should cover live tracking in its own staff data-protection
-        checks.
+        {tStatic(
+          "mobile.your_library_should_cover_live_tracking_in_its_own_staff_data_protection_checks"
+        )}
       </p>
       <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
         <Link
@@ -70,14 +73,14 @@ export function LivePrivacyCard({
           style={{ color: T.accent.primary }}
           href="/privacy"
         >
-          Read the privacy notice
+          {tStatic("mobile.read_the_privacy_notice")}
         </Link>
         <Link
           className="font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
           href={staffHref("/team")}
         >
-          Report a problem
+          {tStatic("common.reportProblem")}
         </Link>
       </div>
     </section>

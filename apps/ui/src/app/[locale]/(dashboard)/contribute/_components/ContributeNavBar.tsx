@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { useOptionalDashboardOverlay } from "@/components/dashboard/DashboardOverlayContext"
 import { type SectionTab, SectionTabs } from "@/components/ds"
@@ -12,31 +12,26 @@ export const NAV_ITEMS = [
   {
     id: "hub",
     href: "/contribute",
-    label: "Hub",
     icon: "mdi:view-dashboard-outline",
   },
   {
     id: "index",
     href: "/contribute/index",
-    label: "Index editor",
     icon: "mdi:map-marker-outline",
   },
   {
     id: "knowledge",
     href: "/contribute/knowledge",
-    label: "Knowledge editor",
     icon: "mdi:book-open-page-variant-outline",
   },
   {
     id: "submissions",
     href: "/contribute/submissions",
-    label: "My submissions",
     icon: "mdi:inbox-outline",
   },
   {
     id: "membership",
     href: "/contribute/membership",
-    label: "Membership",
     icon: "mdi:hand-heart-outline",
   },
 ] as const
@@ -64,8 +59,8 @@ export function activeContributeTab(pathname: string): TabId | null {
 
 /** The Contribute section's tabs, on the bottom edge of its hero band. */
 export function ContributeNavBar() {
-  const tUi = useUiTranslations("ui")
-  const tNav = useUiTranslations("contributeNav")
+  const tUi = useTranslations("ui")
+  const tNav = useTranslations("contributeNav")
 
   const pathname = usePathname()
   const { has, ready } = useCapabilities()

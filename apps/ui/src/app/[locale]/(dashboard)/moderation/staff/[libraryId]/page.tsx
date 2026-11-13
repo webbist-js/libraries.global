@@ -1,8 +1,10 @@
 import { Icon } from "@iconify/react"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { Notice } from "@/components/ds"
 import { StaffAccessList, type StaffAccessRow } from "@/components/moderation"
+import { withMessages } from "@/i18n/scoped-messages"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
 import { fetchModeration } from "@/lib/moderation-proxy"
@@ -80,11 +82,13 @@ function staffAccessError(status: number) {
  * report email. Removal uses the same route as the claim panel; Strapi
  * re-checks the scope on every request.
  */
-export default async function StaffAccessPage({
+async function StaffAccessPage({
   params,
 }: {
   readonly params: Promise<{ libraryId: string }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const { libraryId } = await params
   if (!isDocumentIdParam(libraryId)) notFound()
   const { user, scopes, accessUnknown } = await requireModerator(
@@ -93,7 +97,7 @@ export default async function StaffAccessPage({
   if (accessUnknown)
     return (
       <ModerationAccessUnavailable
-        title="Staff *access*"
+        title={tStatic("networkModeration.staff_access")}
         leaf="Staff access"
         path={`/moderation/staff/${libraryId}`}
       />
@@ -114,7 +118,9 @@ export default async function StaffAccessPage({
         title={`Staff access · *${name}*`}
         plainTitle={false}
         leaf="Staff access"
-        lead="Who can publish to this record, how they got access and since when. Remove anyone whose access shouldn’t stand; they’re emailed and the change is audited."
+        lead={tStatic(
+          "networkModeration.who_can_publish_to_this_record_how_they_got_access_and_since_when_remove_anyone_whose_access_sh"
+        )}
       >
         {place?.href ? (
           <p className="m-0 text-base">
@@ -123,7 +129,7 @@ export default async function StaffAccessPage({
               className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              View the public page
+              {tStatic("networkModeration.view_the_public_page")}
               <Icon
                 aria-hidden="true"
                 icon="mdi:arrow-top-right"
@@ -152,3 +158,8 @@ export default async function StaffAccessPage({
     </>
   )
 }
+
+export default withMessages(
+  StaffAccessPage,
+  "[locale]/(dashboard)/moderation/staff/[libraryId]/page"
+)

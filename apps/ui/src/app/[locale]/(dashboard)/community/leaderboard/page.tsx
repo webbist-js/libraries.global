@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { PointsTableCard } from "@/components/community/PointsTableCard"
 import { StandingCard } from "@/components/community/StandingCard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { avatarSrc } from "@/lib/avatar"
 import {
@@ -57,14 +58,16 @@ function viewerInitials(
   })
 }
 
-export default async function LeaderboardPage({
+async function LeaderboardPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
   searchParams: Promise<{ period?: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const [{ locale }, { period: periodParam }] = await Promise.all([
     params,
@@ -99,8 +102,10 @@ export default async function LeaderboardPage({
     >
       <CommunitySectionHeader
         section={tUi("leaderboard")}
-        title="The community, *in numbers.*"
-        lead="The people keeping the atlas accurate and growing. Points are earned only for approved contributions."
+        title={tStatic("communityRoute.the_community_in_numbers")}
+        lead={tStatic(
+          "communityRoute.the_people_keeping_the_atlas_accurate_and_growing_points_are_earned_only_for_approved_contributions"
+        )}
         counts={{ noticeboard: openDrives, suggestions: votableCount }}
       />
 
@@ -125,7 +130,7 @@ export default async function LeaderboardPage({
                 color: T.ink.base,
               }}
             >
-              Top contributors
+              {tStatic("communityRoute.top_contributors")}
             </h2>
             <LeaderboardPeriodNav period={period} />
           </div>
@@ -145,8 +150,9 @@ export default async function LeaderboardPage({
             className="m-0 text-sm leading-normal"
             style={{ marginTop: -12, color: T.ink.dim }}
           >
-            Points only come from approved changes. Acceptance rate is shown so
-            careful work counts as much as volume.
+            {tStatic(
+              "communityRoute.points_only_come_from_approved_changes_acceptance_rate_is_shown_so_careful_work_counts_as_much_as_vo"
+            )}
           </p>
         </section>
 
@@ -169,3 +175,8 @@ export default async function LeaderboardPage({
     </div>
   )
 }
+
+export default withMessages(
+  LeaderboardPage,
+  "[locale]/(dashboard)/community/leaderboard/page"
+)

@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { StaffRole } from "@repo/access"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, SegmentedControl, Sheet } from "@/components/ds"
@@ -69,12 +69,16 @@ function MemberLibraryAccess({
   readonly role: StaffRole
   readonly status: string
 }) {
+  const tExisting = useTranslations()
+
   return (
     <li className="flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
       <div className="min-w-0 flex-1 basis-48">
         <strong className="block text-sm wrap-anywhere">{name}</strong>
         <span className="text-sm text-(--t-ink-dim)">
-          {role === "owner" ? "Owner" : "Editor"}
+          {role === "owner"
+            ? tExisting("teamInvitation.owner")
+            : tExisting("authorBadges.editor")}
         </span>
       </div>
       <LibraryAccessBadge status={status} />
@@ -92,7 +96,11 @@ function MemberLibraryAccess({
  * organisers) get the same view read only.
  */
 export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const locale = useLocale()
@@ -116,7 +124,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
   const base = `/api/staff/team/${team.documentId}`
   const staffOf = new Set(mine.map((l) => l.id))
   const libraryName = (id: string) =>
-    team.libraries.find((l) => l.documentId === id)?.name ?? "Library"
+    team.libraries.find((l) => l.documentId === id)?.name ??
+    tExisting("ui.library")
   // Free workspaces never lapse for payment; only a closed row reads as inactive.
   const active = team.status !== "lapsed"
 
@@ -190,8 +199,9 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           title={tUi("invite_created_but_email_isnt_configured")}
         >
           <span style={{ color: T.ink.base }}>
-            The invite shows below. Nobody was emailed: the site team needs to
-            configure email before invites can be sent.
+            {tStatic(
+              "staff.the_invite_shows_below_nobody_was_emailed_the_site_team_needs_to_configure_email_before_invites_can_"
+            )}
           </span>
         </Notice>
       ) : null}
@@ -210,11 +220,11 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           tone="warn"
           title={tUi("this_team_isnt_active")}
         >
-          The site team has closed this workspace, so invitations and shared
-          tools are paused. Each person’s own library staff access is not
-          affected.{" "}
+          {tStatic(
+            "staff.the_site_team_has_closed_this_workspace_so_invitations_and_shared_tools_are_paused_each_person_s_own"
+          )}{" "}
           <a href={SITE_TEAM_HREF} className={CONTACT_LINK}>
-            Contact the site team
+            {tStatic("common.contactSiteTeam")}
           </a>
         </Notice>
       ) : null}
@@ -233,7 +243,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
               href={`/staff/networks?network=${scope.networkId}`}
               className={CONTACT_LINK}
             >
-              Open service management
+              {tStatic("staff.open_service_management")}
             </a>
           </p>
         </Notice>
@@ -242,12 +252,13 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         <Notice
           tone="warn"
           icon="mdi:clock-outline"
-          title="Some library assignments need review"
+          title={tStatic("staff.some_library_assignments_need_review")}
         >
-          Assignments need moderator review unless they are covered by an
-          approved service delegation.{" "}
+          {tStatic(
+            "staff.assignments_need_moderator_review_unless_they_are_covered_by_an_approved_service_delegation"
+          )}{" "}
           <a href={SITE_TEAM_HREF} className={CONTACT_LINK}>
-            Contact the site team
+            {tStatic("common.contactSiteTeam")}
           </a>
         </Notice>
       ) : null}
@@ -256,7 +267,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         <div className="min-w-0 space-y-6">
           <Card
             id="team-members"
-            title="Members"
+            title={tStatic("staff.members")}
             aside={
               <div className="flex flex-wrap items-center gap-4">
                 <span className="text-sm text-(--t-ink-dim)">
@@ -265,7 +276,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 </span>
                 {organiser ? (
                   <Link href="#team-invite" className={CONTACT_LINK}>
-                    Invite a colleague
+                    {tExisting("ui.invite_a_colleague")}
                   </Link>
                 ) : null}
               </div>
@@ -300,7 +311,10 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                           >
                             {member.name ?? member.email ?? member.emailMasked}
                             {member.isYou ? (
-                              <span style={{ color: T.ink.dim }}> (you)</span>
+                              <span style={{ color: T.ink.dim }}>
+                                {" "}
+                                {tStatic("common.youSuffix")}
+                              </span>
                             ) : null}
                           </p>
                           <p
@@ -322,7 +336,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         <Badge
                           label={
                             member.status === "active"
-                              ? "Active"
+                              ? tExisting("membershipPage.apiActive")
                               : tUi("invited")
                           }
                           color={member.status === "active" ? "ok" : "warn"}
@@ -353,8 +367,14 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                                 })
                               }
                               options={[
-                                { value: "member", label: "Member" },
-                                { value: "organiser", label: "Organiser" },
+                                {
+                                  value: "member",
+                                  label: tExisting("teamInvitation.member"),
+                                },
+                                {
+                                  value: "organiser",
+                                  label: tExisting("teamInvitation.organiser"),
+                                },
                               ]}
                             />
                           </div>
@@ -362,8 +382,8 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                           <Badge
                             label={
                               member.teamRole === "organiser"
-                                ? "Organiser"
-                                : "Member"
+                                ? tExisting("teamInvitation.organiser")
+                                : tExisting("teamInvitation.member")
                             }
                             color="dim"
                           />
@@ -383,7 +403,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                                 )
                               }
                             >
-                              Resend
+                              {tStatic("staff.resend")}
                             </Button>
                             <Button
                               type="button"
@@ -400,7 +420,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                                 })
                               }
                             >
-                              Revoke
+                              {tStatic("common.revoke")}
                             </Button>
                           </>
                         ) : null}
@@ -464,7 +484,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                       ) : null}
                       {current.length === 0 && member.pending.length === 0 ? (
                         <span className="text-sm" style={{ color: T.ink.dim }}>
-                          No libraries yet
+                          {tStatic("staff.no_libraries_yet")}
                         </span>
                       ) : null}
                       {organiser && team.libraries.length > 0 ? (
@@ -508,10 +528,13 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
 
           <Card
             id="team-libraries"
-            title="Libraries covered"
+            title={tStatic("staff.libraries_covered")}
             footer={
               organiser && team.libraries.length > 0 ? (
-                <TeamConfiguration team={team} label="Manage libraries" />
+                <TeamConfiguration
+                  team={team}
+                  label={tStatic("staff.manage_libraries")}
+                />
               ) : undefined
             }
             aside={
@@ -521,8 +544,9 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             }
           >
             <p className="mt-0 text-sm leading-relaxed text-(--t-ink-dim)">
-              The libraries this workspace looks after. Each person’s library
-              staff access is assigned and checked separately.
+              {tStatic(
+                "staff.the_libraries_this_workspace_looks_after_each_person_s_library_staff_access_is_assigned_and_checked_"
+              )}
             </p>
             {team.libraries.length ? (
               <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
@@ -549,7 +573,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         style={{ background: tint.bg, color: tint.fg }}
                       >
                         {lib.libraryType === "Mobile"
-                          ? "Mobile library"
+                          ? tStatic("common.mobileLibrary")
                           : `${lib.libraryType} library`}
                       </span>
                       <strong className="text-base font-semibold">
@@ -561,13 +585,13 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                           className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-[3px]"
                           style={{ color: T.accent.primary }}
                         >
-                          Open Staff area
+                          {tStatic("common.openStaffArea")}
                         </Link>
                       ) : pending ? (
                         <LibraryAccessBadge status={pending.status} />
                       ) : (
                         <span className="text-sm" style={{ color: T.ink.dim }}>
-                          You’re not assigned here
+                          {tStatic("staff.you_re_not_assigned_here")}
                         </span>
                       )}
                     </li>
@@ -581,14 +605,17 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 </span>
                 <p className="m-0 min-w-0 flex-1 basis-48 text-base leading-relaxed text-(--t-ink-dim)">
                   <strong className="text-(--t-ink-base)">
-                    No libraries yet.
+                    {tStatic("staff.no_libraries_yetsentence")}
                   </strong>{" "}
                   {organiser
                     ? "Choose the libraries your workspace covers, then assign members. Staff authority is checked separately."
                     : "Your organiser can add libraries and assign your access."}
                 </p>
                 {organiser ? (
-                  <TeamConfiguration team={team} label="Add libraries" />
+                  <TeamConfiguration
+                    team={team}
+                    label={tStatic("staff.add_libraries")}
+                  />
                 ) : null}
               </div>
             )}
@@ -597,7 +624,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         <aside className="min-w-0 space-y-6">
           <Card
             compact
-            title="Team details"
+            title={tExisting("staffWorkspace.teamDetails")}
             footer={organiser ? <TeamConfiguration team={team} /> : undefined}
             aside={
               <TeamStatusBadges
@@ -612,7 +639,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                   className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
-                  Members
+                  {tStatic("staff.members")}
                 </dt>
                 <dd className="m-0 text-base tabular-nums">
                   {team.members.filter((m) => m.status === "active").length}{" "}
@@ -626,7 +653,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                   className="text-sm font-semibold"
                   style={{ color: T.ink.dim }}
                 >
-                  Organisers
+                  {tStatic("staff.organisers")}
                 </dt>
                 <dd className="m-0 text-base">
                   {team.organiserNames.join(", ") || "None yet"}
@@ -635,16 +662,17 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             </dl>
           </Card>
 
-          <Card compact title="API access">
+          <Card compact title={tExisting("staffWorkspace.apiAccess")}>
             <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
-              API access is bought separately on the Developers page. It never
-              grants library editing.
+              {tStatic(
+                "staff.api_access_is_bought_separately_on_the_developers_page_it_never_grants_library_editing"
+              )}
             </p>
             <Link
               href="/developers"
               className={`${CONTACT_LINK} mt-2 text-(--t-accent-primary)`}
             >
-              Open Developers
+              {tExisting("featureAccess.openDevelopers")}
               <Icon aria-hidden="true" icon="mdi:arrow-right" width={16} />
             </Link>
           </Card>
@@ -658,7 +686,9 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
             >
               {!active ? (
                 <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                  Invitations are paused while this workspace is closed.
+                  {tStatic(
+                    "staff.invitations_are_paused_while_this_workspace_is_closed"
+                  )}
                 </p>
               ) : (
                 <form
@@ -709,9 +739,9 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                     />
                   </label>
                   <div className="flex flex-col gap-2 text-sm font-semibold">
-                    <span>Team role</span>
+                    <span>{tStatic("staff.team_role")}</span>
                     <SelectField
-                      label="Team role"
+                      label={tStatic("staff.team_role")}
                       value={inviteRole}
                       disabled={busy}
                       onValueChange={(value) =>
@@ -720,23 +750,28 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         )
                       }
                       options={[
-                        { value: "member", label: "Member" },
+                        {
+                          value: "member",
+                          label: tExisting("teamInvitation.member"),
+                        },
                         {
                           value: "organiser",
-                          label: "Organiser (can manage this team)",
+                          label: tStatic(
+                            "staff.organiser_can_manage_this_team"
+                          ),
                         },
                       ]}
                     />
                   </div>
                   <div className="flex flex-col gap-2 text-sm font-semibold">
-                    <span>Give access to (optional)</span>
+                    <span>{tStatic("staff.give_access_to_optional")}</span>
                     <SelectField
-                      label="Give access to (optional)"
+                      label={tStatic("staff.give_access_to_optional")}
                       value={inviteLibrary}
                       disabled={busy}
                       onValueChange={setInviteLibrary}
                       options={[
-                        { value: NONE, label: "No library yet" },
+                        { value: NONE, label: tStatic("staff.no_library_yet") },
                         ...team.libraries.map((library) => ({
                           value: library.documentId,
                           label: library.name,
@@ -746,7 +781,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                   </div>
                   {inviteLibrary !== NONE ? (
                     <div className="flex flex-col gap-2 text-sm font-semibold">
-                      Level
+                      {tStatic("common.level")}
                       <SegmentedControl
                         label={tUi("level_at_the_library")}
                         options={LEVELS}
@@ -768,14 +803,15 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                         width={16}
                         height={16}
                       />
-                      Send invite
+                      {tStatic("common.sendInvite")}
                     </Button>
                     <p
                       className="mt-3 mb-0 text-base"
                       style={{ color: T.ink.dim }}
                     >
-                      They sign in with that email and accept the link within 14
-                      days. Library editing still needs verified access.
+                      {tStatic(
+                        "staff.they_sign_in_with_that_email_and_accept_the_link_within_14_days_library_editing_still_needs_verified"
+                      )}
                     </p>
                   </div>
                 </form>
@@ -881,7 +917,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
           </ul>
         ) : (
           <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-            No libraries yet.
+            {tStatic("staff.no_libraries_yetsentence")}
           </p>
         )}
         {canAddToDraft ? (
@@ -897,7 +933,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 style={{ borderColor: T.border.hi }}
                 onValueChange={(selectedValue) => setAddLibrary(selectedValue)}
                 options={[
-                  { value: "", label: "Choose a library…" },
+                  { value: "", label: tStatic("staff.choose_a_library") },
                   ...draftFree.map((l) => ({
                     value: String(l.documentId),
                     label: String(l.name),
@@ -945,7 +981,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
         open={confirm !== null}
         onClose={() => setConfirm(null)}
         side="bottom"
-        title={confirm?.title ?? "Confirm"}
+        title={confirm?.title ?? tStatic("common.confirm")}
       >
         <p className="m-0 mb-5" style={{ color: T.ink.dim }}>
           {confirm?.body}
@@ -964,7 +1000,7 @@ export function TeamOrganiser({ team }: { readonly team: TeamDetail }) {
                 void request(confirm.path, confirm.method, confirm.payload)
             }}
           >
-            {confirm?.danger ? "Yes, go ahead" : "Confirm"}
+            {confirm?.danger ? "Yes, go ahead" : tStatic("common.confirm")}
           </Button>
           <Button
             type="button"

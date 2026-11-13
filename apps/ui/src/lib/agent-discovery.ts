@@ -40,7 +40,7 @@ const PLATFORM_LINKS = `## Explore the platform
 
 - [Journal](https://libraries.global/journal): Editorial features and community stories about libraries.
 - [Terms](https://libraries.global/legal/terms): Platform terms of use.
-- [Membership terms](https://libraries.global/legal/membership): Membership and API purchase terms.
+- [API purchase terms](https://libraries.global/legal/membership): Terms for paid API access.
 `
 
 export function renderLlmsTxt(

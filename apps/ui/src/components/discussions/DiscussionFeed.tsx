@@ -1,5 +1,4 @@
 "use client"
-
 import { ArrowRight, Plus, Shield } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"

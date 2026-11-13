@@ -5,6 +5,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { editingLocaleFrom } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   fetchArticleLocales,
   loadArticleForEditor,
@@ -30,7 +31,7 @@ export async function generateMetadata({
   return privateMetadata(`Edit Journal article: ${slug}`)
 }
 
-export default async function EditJournalArticlePage({
+async function EditJournalArticlePage({
   params,
   searchParams,
 }: {
@@ -107,3 +108,8 @@ export default async function EditJournalArticlePage({
     </div>
   )
 }
+
+export default withMessages(
+  EditJournalArticlePage,
+  "[locale]/(dashboard)/contribute/knowledge/journal/[slug]/page"
+)

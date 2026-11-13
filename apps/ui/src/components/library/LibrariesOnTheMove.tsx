@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { normalizeMobileTimetable, summarizeTimetable } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import { Card } from "@/components/ds"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -20,13 +21,18 @@ export function LibrariesOnTheMove({
 }: {
   libraries: readonly BasedMobile[]
 }) {
+  const tExtra = useTranslations("libraryExtra")
+  const tStatic = useTranslations("staticUi")
+
   if (!libraries.length) return null
 
   return (
     <section>
-      <h2 className="type-h2">Based here</h2>
+      <h2 className="type-h2">{tStatic("library.based_here")}</h2>
       <p style={{ color: T.ink.dim }}>
-        Mobile libraries that start their routes from this library.
+        {tStatic(
+          "library.mobile_libraries_that_start_their_routes_from_this_library"
+        )}
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         {libraries.map((library) => {
@@ -53,7 +59,7 @@ export function LibrariesOnTheMove({
                 }}
               >
                 <Icon aria-hidden="true" icon="mdi:bus-side" width={14} />
-                Mobile library
+                {tStatic("common.mobileLibrary")}
               </span>
               <h3 className="type-h3 mt-3 mb-1">
                 <Link
@@ -65,15 +71,17 @@ export function LibrariesOnTheMove({
                 </Link>
               </h3>
               <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                {summary.stopCount} {summary.stopCount === 1 ? "stop" : "stops"}{" "}
-                · {summary.cycleWeeks}-week cycle
+                {tExtra("mobileSummary", {
+                  count: summary.stopCount,
+                  weeks: summary.cycleWeeks,
+                })}
               </p>
               <Link
                 href={`${path}#stops`}
                 className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
-                Stops and times
+                {tStatic("common.stopsTimes")}
               </Link>
             </Card>
           )

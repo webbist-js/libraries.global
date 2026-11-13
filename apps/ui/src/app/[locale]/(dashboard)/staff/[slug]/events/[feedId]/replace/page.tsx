@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { ReplaceFeedForm } from "@/components/event-feeds/ReplaceFeedForm"
 import type { LibraryFeeds } from "@/components/event-feeds/types"
 import { StaffBackLink } from "@/components/staff/StaffBackLink"
+import { withMessages } from "@/i18n/scoped-messages"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
 import { fetchEventFeeds } from "@/lib/event-feed-proxy"
@@ -15,12 +16,14 @@ import { loadStaffPage } from "@/lib/staff/server"
 export const metadata = privateMetadata("Replace feed details")
 
 /** Replace an active or paused feed's details; the feed must be this library's. */
-export default async function ReplaceEventFeedPage({
+async function ReplaceEventFeedPage({
   params,
 }: {
   params: Promise<{ slug: string; feedId: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const { slug, feedId } = await params
   if (!isDocumentIdParam(feedId)) notFound()
@@ -54,7 +57,7 @@ export default async function ReplaceEventFeedPage({
           color: T.ink.base,
         }}
       >
-        Replace this feed’s details
+        {tStatic("staffRoute.replace_this_feed_s_details")}
       </h2>
       <ReplaceFeedForm
         feed={feed}
@@ -65,3 +68,8 @@ export default async function ReplaceEventFeedPage({
     </div>
   )
 }
+
+export default withMessages(
+  ReplaceEventFeedPage,
+  "[locale]/(dashboard)/staff/[slug]/events/[feedId]/replace/page"
+)

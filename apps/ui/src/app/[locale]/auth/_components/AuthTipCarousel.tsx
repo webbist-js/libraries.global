@@ -1,9 +1,7 @@
 "use client"
 
-// apps/ui/src/app/[locale]/auth/_components/AuthTipCarousel.tsx
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -17,7 +15,9 @@ const navButtonClassName =
   "flex size-11 cursor-pointer items-center justify-center transition-colors hover:bg-(--t-bg-surface)"
 
 export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [index, setIndex] = useState(0)
   const step = (delta: number) =>
@@ -25,7 +25,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
 
   return (
     <section
-      aria-roledescription="carousel"
+      aria-roledescription={tExisting("carousel.role")}
       aria-label={tUi("tips")}
       className="flex flex-col p-6"
       style={{
@@ -51,7 +51,7 @@ export function AuthTipCarousel({ tips }: { tips: readonly AuthTip[] }) {
         <span
           style={{ fontSize: "var(--type-body-small-size)", color: T.ink.dim }}
         >
-          {index + 1} of {tips.length}
+          {index + 1} {tExisting("widgetPublic.of")} {tips.length}
         </span>
       </div>
 

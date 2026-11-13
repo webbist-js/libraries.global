@@ -56,7 +56,7 @@ export default ({ strapi }: { strapi: any }) => {
       if (
         typeof q !== "string" ||
         q.length > 100 ||
-        !["", "en", "cs", "es", "fr"].includes(locale) ||
+        !["", "en", "cs", "es", "fr", "ja"].includes(locale) ||
         (status !== "" && !STATUSES.has(status)) ||
         typeof page !== "string" ||
         !/^\d{1,5}$/.test(page)
@@ -74,7 +74,7 @@ export default ({ strapi }: { strapi: any }) => {
     }),
     preview: protectedAction(async (ctx) => {
       const locale = ctx.query.locale ?? "en"
-      if (!["en", "cs", "es", "fr"].includes(locale))
+      if (!["en", "cs", "es", "fr", "ja"].includes(locale))
         throw new InviteError(400, "Invalid language.")
       ctx.body = betaInvitationEmail({
         locale,

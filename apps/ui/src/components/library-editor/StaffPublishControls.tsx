@@ -6,7 +6,7 @@ import {
   timetableHash,
   normalizeMobileTimetable,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Sheet, PublishBar } from "@/components/ds"
@@ -64,7 +64,9 @@ export function StaffPublishControls({
   onStale?: (fresh: Partial<FormData>) => void
   publicPath?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
@@ -225,10 +227,10 @@ export function StaffPublishControls({
             disabled={busy || savingDraft}
           >
             {savingDraft
-              ? "Saving draft…"
+              ? tExisting("draftSave.saving")
               : busy
-                ? "Publishing…"
-                : "Publish changes"}
+                ? tExisting("sharedControls.publish.busy")
+                : tExisting("sharedControls.publish.action")}
           </button>
         }
       >

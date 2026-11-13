@@ -4,27 +4,23 @@ import type {
   WidgetWorkspace,
 } from "@repo/shared-data"
 
-const messages: Record<string, string> = {
-  version_conflict:
-    "Another editor changed this draft. Load their version or apply your changes on top.",
-  team_inactive:
-    "Your Team is inactive. An organiser can still pause, unpublish or archive widgets.",
-  organiser_required: "Only a Team organiser can do this.",
-  selection_too_large:
-    "This selection exceeds the 2,000-library engineering limit. Narrow the source or filters.",
-  workspace_limit:
-    "This workspace has reached its engineering storage limit. Contact Libraries Global.",
-  source_licence_unavailable:
-    "Source redistribution permissions need review before this widget can be published.",
-  branding_required:
-    "Hiding the publisher credit requires the Widget branding add-on.",
-  website_required: "Add at least one allowed website.",
-  empty_selection: "Select at least one published library.",
-  no_mapped_libraries:
-    "No selected libraries have coordinates. Use a list or add mapped libraries.",
-  network_unavailable: "That network is unavailable. Choose another source.",
-  not_found: "This record is unavailable or you no longer have access.",
-}
+const knownErrors = new Set([
+  "version_conflict",
+  "team_inactive",
+  "organiser_required",
+  "selection_too_large",
+  "workspace_limit",
+  "source_licence_unavailable",
+  "branding_required",
+  "website_required",
+  "empty_selection",
+  "no_mapped_libraries",
+  "network_unavailable",
+  "not_found",
+  "unavailable",
+  "selection_unavailable",
+  "no_assignments",
+])
 
 export class WidgetRequestError extends Error {
   constructor(
@@ -32,11 +28,7 @@ export class WidgetRequestError extends Error {
     public readonly status: number,
     message?: string
   ) {
-    super(
-      message ??
-        messages[code] ??
-        "The widget service could not complete this request. Please retry."
-    )
+    super(knownErrors.has(code) ? code : (message ?? "unavailable"))
   }
 }
 export async function widgetRequest<T>(
@@ -103,11 +95,5 @@ export type CataloguePage = {
   rows: CatalogueOption[]
   more: boolean
   page: number
-}
-export const widgetTypeLabels = {
-  finder: "Library finder",
-  directory: "Directory",
-  chart: "Comparison chart",
-  stat: "Statistic card",
 }
 export type { WidgetWorkspace }

@@ -14,7 +14,7 @@ import {
   MailWarning,
   UserRound,
 } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import {
   type ButtonHTMLAttributes,
   type CSSProperties,
@@ -98,8 +98,8 @@ export function AuthHeading({
   iconTone = "info",
   layout = "form",
 }: {
-  title: string
-  italic: string
+  title: ReactNode
+  italic?: string
   subtitle: ReactNode
   /** Iconify id for a status page's icon above the title. */
   icon?: string
@@ -146,8 +146,13 @@ export function AuthHeading({
           margin: 0,
         }}
       >
-        {title}{" "}
-        <em style={{ fontStyle: "italic", fontWeight: 400 }}>{italic}</em>
+        {title}
+        {italic ? (
+          <>
+            {" "}
+            <em style={{ fontStyle: "italic", fontWeight: 400 }}>{italic}</em>
+          </>
+        ) : null}
       </h1>
       <p
         style={{
@@ -240,7 +245,7 @@ export function PasswordInput({
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   ref?: Ref<HTMLInputElement>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const [visible, setVisible] = useState(false)
 
@@ -493,6 +498,7 @@ export function PasswordStrengthMeter({
   id: string
   password: string
 }) {
+  const t = useTranslations("authInterface")
   const { score, label } = passwordStrength(password, PASSWORD_MIN_LENGTH)
 
   return (
@@ -521,15 +527,18 @@ export function PasswordStrengthMeter({
           color: T.ink.dim,
         }}
       >
-        <strong style={{ fontWeight: 600, color: T.ink.base }}>{label}.</strong>{" "}
-        At least {PASSWORD_MIN_LENGTH} characters. A few unrelated words works
-        well.
+        <strong style={{ fontWeight: 600, color: T.ink.base }}>
+          {t(`strength.${label}`)}.
+        </strong>{" "}
+        {t("passwordHint", { count: PASSWORD_MIN_LENGTH })}
       </p>
     </div>
   )
 }
 
 export function AuthDivider() {
+  const t = useTranslations("authInterface")
+
   return (
     <div
       style={{
@@ -543,7 +552,9 @@ export function AuthDivider() {
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
       />
-      <span style={{ fontSize: authBodyFontSize, color: T.ink.dim }}>or</span>
+      <span style={{ fontSize: authBodyFontSize, color: T.ink.dim }}>
+        {t("or")}
+      </span>
       <span
         aria-hidden="true"
         style={{ flex: 1, height: "1px", background: T.border.line }}
@@ -593,6 +604,8 @@ export function AuthInboxHint({
   subject: string
   detail: string
 }) {
+  const t = useTranslations("authInterface")
+
   return (
     <div>
       <p
@@ -603,7 +616,7 @@ export function AuthInboxHint({
           color: T.ink.base,
         }}
       >
-        Look for this email
+        {t("lookForEmail")}
       </p>
       <div
         className="flex items-center gap-4 px-4 py-4"
@@ -631,7 +644,7 @@ export function AuthInboxHint({
               color: T.ink.dim,
             }}
           >
-            From {SITE_NAME}
+            {t("from", { name: SITE_NAME })}
           </p>
           <p
             style={{
@@ -657,7 +670,7 @@ export function AuthInboxHint({
   )
 }
 
-/** Small indigo link, e.g. "Forgot password?" on a label row. */
+/** Small indigo link, e.g. tStatic("auth.forgot_password") on a label row. */
 export function AuthInlineLink({
   href,
   children,

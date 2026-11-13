@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -25,7 +25,9 @@ export function TopThisMonthCard({
 }: {
   readonly entries: readonly LeaderboardEntry[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -71,7 +73,9 @@ export function TopThisMonthCard({
                   className="box-border size-8 shrink-0 rounded-full"
                   style={{ border: `2px dashed ${T.border.hi}` }}
                 />
-                <span className="flex-1 text-base">Open spot</span>
+                <span className="flex-1 text-base">
+                  {tStatic("common.openSpot")}
+                </span>
               </li>
             )
           }

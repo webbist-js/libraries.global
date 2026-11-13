@@ -153,8 +153,7 @@ describe("staff creation page", () => {
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl")
-  const messages = (await import("../../../../../../../locales/en.json"))
-    .default
+  const messages = (await import("../../../../../../../locales/en")).default
 
   return {
     getLocale: async () => "en",
@@ -162,7 +161,7 @@ vi.mock("next-intl/server", async () => {
       createTranslator({
         locale: "en",
         messages,
-        namespace: (typeof config === "string" ? config : config.namespace) as
+        namespace: (typeof config === "string" ? config : config?.namespace) as
           | keyof typeof messages
           | undefined,
       }),

@@ -2,13 +2,14 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { UtilityPage } from "@/components/utility/UtilityPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ResetPasswordForm } from "./_components/ResetPasswordForm"
 
 export const metadata = privateMetadata("Reset password")
 
-export default async function ResetPasswordPage({
+async function ResetPasswordPage({
   params,
   searchParams,
 }: PageProps<"/[locale]/auth/reset-password">) {
@@ -24,3 +25,8 @@ export default async function ResetPasswordPage({
     </UtilityPage>
   )
 }
+
+export default withMessages(
+  ResetPasswordPage,
+  "[locale]/auth/reset-password/page"
+)

@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -14,7 +13,7 @@ export function AtlasLoading({
   readonly listReady: boolean
   readonly onOpenList: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div
@@ -65,6 +64,10 @@ export function AtlasNoMatch({
   readonly onApply: (s: LoosenSuggestion) => void
   readonly onClear: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div
       className="w-[min(440px,calc(100vw-32px))] rounded-[22px] border bg-(--t-bg-deep) p-[22px]"
@@ -72,7 +75,7 @@ export function AtlasNoMatch({
       role="status"
     >
       <h2 className="type-h2 m-0">
-        No libraries match{" "}
+        {tStatic("atlas.no_libraries_match")}{" "}
         {filterCount === 1 ? "this filter" : `all ${filterCount} filters`}
       </h2>
       <p
@@ -105,7 +108,7 @@ export function AtlasNoMatch({
         className="mt-3 text-sm font-semibold underline underline-offset-[3px]"
         style={{ color: "var(--t-accent-primary-hover)" }}
       >
-        Clear all filters
+        {tExisting("publishing.clearFilters")}
       </button>
     </div>
   )
@@ -165,7 +168,7 @@ export function AtlasToast({
   readonly onDismiss: () => void
   readonly action?: { label: string; onClick: () => void }
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <div

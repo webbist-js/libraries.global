@@ -1,5 +1,5 @@
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
@@ -73,8 +73,10 @@ export async function ContinentDetailPage({
   readonly gapRows?: readonly PlaceGapInsight[] | null
   readonly drives?: readonly { view: DriveView; here: number }[] | null
 }) {
-  const tUi = await getUiTranslations("ui")
-  const d = await getUiTranslations("dashboard")
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
+  const d = await getTranslations("dashboard")
 
   if (!continent) {
     return (
@@ -155,9 +157,17 @@ export async function ContinentDetailPage({
   )
 
   const sectionItems = [
-    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+    {
+      href: "#overview",
+      label: tExisting("dashboard.overview"),
+      icon: LIB_ICONS.map,
+    },
 
-    { href: "#countries", label: "Countries", icon: LIB_ICONS.list },
+    {
+      href: "#countries",
+      label: tExisting("ui.countries"),
+      icon: LIB_ICONS.list,
+    },
     {
       href: "#drives-here",
       label: d("getInvolved"),
@@ -173,7 +183,7 @@ export async function ContinentDetailPage({
       navigationHeading={
         <RecordContextIdentity
           title={name}
-          eyebrow="Continent"
+          eyebrow={tExisting("ui.continent")}
           parent={{ href: "/map", label: tUi("atlas") }}
         >
           <p className="record-context-summary">
@@ -198,7 +208,7 @@ export async function ContinentDetailPage({
           proposeHref={proposeHref({ places: { continent: [slug] } })}
         />
       }
-      eyebrow="Continent"
+      eyebrow={tExisting("ui.continent")}
       className="dashboard-place-record"
       toolbar={<RecordToolbar labels={{ [slug]: name }} />}
       overview={
@@ -244,7 +254,7 @@ export async function ContinentDetailPage({
             {
               value: countsAvailable
                 ? formatCount(libraryCount)
-                : "Unavailable",
+                : tExisting("atlasDrawers.unavailable"),
               label: `${countNoun(libraryCount, tUi("library"), tUi("libraries"))} documented`,
               note: "Each library counted once",
             },

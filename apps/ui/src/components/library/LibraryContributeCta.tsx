@@ -1,4 +1,7 @@
 "use client"
+
+import { useTranslations } from "next-intl"
+
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
 import { useCorrectionDrawer } from "@/components/library/LibraryCorrection"
 import { useMounted } from "@/hooks/useMounted"
@@ -14,6 +17,8 @@ export function LibraryContributeCta({
   readonly documentId: string
   readonly slug: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const { data: session, isPending } = useHydratedSession()
   const mounted = useMounted()
   const { open } = useCorrectionDrawer()
@@ -27,7 +32,7 @@ export function LibraryContributeCta({
         className="inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold"
         href={staffLibraryHref(slug, "/edit")}
       >
-        Manage record
+        {tStatic("common.manageRecord")}
       </a>
     ) : (
       <button
@@ -35,7 +40,7 @@ export function LibraryContributeCta({
         className="min-h-11 rounded-full border px-4 text-sm font-semibold"
         onClick={() => open()}
       >
-        Improve this library
+        {tStatic("library.improve_this_library")}
       </button>
     )
 
@@ -45,8 +50,14 @@ export function LibraryContributeCta({
       body="Improve its published details. Your contribution is credited after review."
       action={
         staff
-          ? { label: "Manage record", href: staffLibraryHref(slug, "/edit") }
-          : { label: "Improve this library", onClick: () => open() }
+          ? {
+              label: tStatic("common.manageRecord"),
+              href: staffLibraryHref(slug, "/edit"),
+            }
+          : {
+              label: tStatic("library.improve_this_library"),
+              onClick: () => open(),
+            }
       }
     />
   )

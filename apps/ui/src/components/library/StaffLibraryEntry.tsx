@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useId } from "react"
 
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
@@ -39,8 +39,12 @@ export function StaffLibraryEntry(props: {
   /** Whether the library has an active event feed (the record's flag). */
   readonly hasActiveFeed?: boolean | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const headingId = useId()
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
   const locale = useLocale()
 
   const staff = useStaff()
@@ -102,10 +106,11 @@ export function StaffLibraryEntry(props: {
           width={15}
           height={15}
         />
-        Library staff
+        {tExisting("staffOnboarding.eyebrow")}
       </p>
       <h2 id={headingId} className="type-panel-title m-0 mt-2">
-        You run this {mobile ? "mobile library" : "library"}
+        {tStatic("library.you_run_this")}{" "}
+        {mobile ? "mobile library" : tExisting("widgetPublic.library")}
       </h2>
       <p
         className="my-2 text-base leading-normal"
@@ -126,7 +131,7 @@ export function StaffLibraryEntry(props: {
             width={15}
             height={15}
           />
-          Live updates are off for you: ask an owner.
+          {tStatic("library.live_updates_are_off_for_you_ask_an_owner")}
         </p>
       ) : null}
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3">
@@ -165,7 +170,7 @@ export function StaffLibraryEntry(props: {
               icon="mdi:calendar-sync-outline"
               width={16}
             />
-            Connect an event feed
+            {tExisting("libraryPage.connectEvents")}
           </Link>
         )}
       </div>
@@ -181,7 +186,11 @@ function StaffEntryCard({
   libraryDocumentId,
   hasActiveFeed,
 }: Parameters<typeof CompactStaffTools>[0]) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <DashboardSidebarCta
@@ -199,7 +208,7 @@ function StaffEntryCard({
     >
       {mobile && !canGoLive ? (
         <p className="text-xs text-(--t-ink-dim)">
-          Live updates are off for you: ask an owner.
+          {tStatic("library.live_updates_are_off_for_you_ask_an_owner")}
         </p>
       ) : null}
       {!hasActiveFeed ? (
@@ -207,7 +216,7 @@ function StaffEntryCard({
           className="dashboard-sidebar-cta-secondary"
           href={`${base}/events/connect`}
         >
-          Connect an event feed
+          {tExisting("libraryPage.connectEvents")}
         </Link>
       ) : null}
     </DashboardSidebarCta>
@@ -229,8 +238,8 @@ function CompactStaffTools({
   libraryDocumentId: string
   hasActiveFeed?: boolean | null
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   return (
     <div

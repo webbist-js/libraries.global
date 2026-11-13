@@ -30,6 +30,8 @@ describe("fully supported content languages", () => {
       "fr",
     ])
     expect(supportedContentLanguage("FR_ca")).toBe("fr")
+    expect(supportedContentLanguage("ja-JP")).toBe("ja")
+    expect(supportedContentLanguage("jp")).toBeNull()
     expect(supportedContentLanguage("de-AT")).toBeNull()
   })
   it.each(SUPPORTED_LOCALES)(
@@ -38,7 +40,7 @@ describe("fully supported content languages", () => {
       expect(
         JSON.parse(
           readFileSync(
-            new URL(`../../locales/${locale}.json`, import.meta.url),
+            new URL(`../../locales/${locale}/articles.json`, import.meta.url),
             "utf8"
           )
         )

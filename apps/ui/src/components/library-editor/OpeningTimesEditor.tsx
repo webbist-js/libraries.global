@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useMemo } from "react"
 
@@ -146,7 +145,7 @@ function DayToggle({
   open: boolean
   onChange: (open: boolean) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <button
@@ -213,7 +212,7 @@ function CopyDaySelect({
   sourceDay: OpeningTimesDayKey
   onCopy: (targets: OpeningTimesDayKey[]) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const otherDays = DAY_ORDER.filter((d) => d !== sourceDay)
   const weekdays: OpeningTimesDayKey[] = [
@@ -298,7 +297,9 @@ function TimeframeRow({
   onRemove: () => void
   onDetailsChange: (frame: OpeningTimeframe) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const invalidRange = hasInvalidRange(timeframe)
   const hasError = isOverlapping || invalidRange
@@ -373,7 +374,7 @@ function TimeframeRow({
               : "This slot overlaps with another"
           }
         >
-          {invalidRange ? "End ≤ start" : "Overlaps"}
+          {invalidRange ? "End ≤ start" : tExisting("staticUi.mobile.overlaps")}
         </span>
       )}
 
@@ -431,7 +432,7 @@ export function OpeningTimesEditor({
   value,
   onChange,
 }: OpeningTimesEditorProps) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const overlapMap = useMemo(() => {
     const map: Record<string, Set<number>> = {}

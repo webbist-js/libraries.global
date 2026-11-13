@@ -4,7 +4,7 @@ import type {
   AtlasCountsResponse,
   AtlasNetworkSelection,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useMemo, useState } from "react"
 
 import { FilterGroup } from "@/components/ds/FilterPanel"
@@ -111,9 +111,13 @@ export function AtlasFiltersTab({
   readonly onFacilitySearch?: (query: string) => void
   readonly onMoreFacilities?: () => void
 }) {
-  const t = useUiTranslations("atlasFilters")
-  const tUi = useUiTranslations("ui")
-  const tNetwork = useUiTranslations("atlasNetwork")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const t = useTranslations("atlasFilters")
+  const tUi = useTranslations("ui")
+  const tNetwork = useTranslations("atlasNetwork")
 
   const featureSearchId = useId()
   const [featureQuery, setFeatureQuery] = useState("")
@@ -238,11 +242,11 @@ export function AtlasFiltersTab({
           }
         >
           <SelectField
-            label="Country"
+            label={tExisting("ui.country")}
             value={filters.country?.slug ?? ""}
             onValueChange={(slug) => onCountry(slug || null)}
             options={[
-              { value: "", label: "Every country" },
+              { value: "", label: tStatic("atlas.every_country") },
               ...countries
                 .filter(
                   (country) =>
@@ -257,11 +261,11 @@ export function AtlasFiltersTab({
           />
           {filters.country && onRegion && regions.length ? (
             <SelectField
-              label="Region"
+              label={tExisting("discovery.regions")}
               value={filters.region?.slug ?? ""}
               onValueChange={(slug) => onRegion(slug || null)}
               options={[
-                { value: "", label: "Every region" },
+                { value: "", label: tStatic("atlas.every_region") },
                 ...regions.map((region) => ({
                   value: region.slug,
                   label: `${region.name} · ${region.libraryCount.toLocaleString("en-GB")}`,
@@ -271,11 +275,11 @@ export function AtlasFiltersTab({
           ) : null}
           {filters.region && onArea && areas.length ? (
             <SelectField
-              label="Area"
+              label={tStatic("common.area")}
               value={filters.area?.slug ?? ""}
               onValueChange={(slug) => onArea(slug || null)}
               options={[
-                { value: "", label: "Every area" },
+                { value: "", label: tStatic("atlas.every_area") },
                 ...areas.map((area) => ({
                   value: area.slug,
                   label: `${area.name} · ${area.libraryCount.toLocaleString("en-GB")}`,
@@ -323,7 +327,8 @@ export function AtlasFiltersTab({
               >
                 {g.label}
                 <span className="sr-only">
-                  , {typeCounts.get(g.key)} libraries
+                  , {typeCounts.get(g.key)}{" "}
+                  {tExisting("widgetPublic.libraries_lower")}
                 </span>
               </Chip>
             )
@@ -373,9 +378,9 @@ export function AtlasFiltersTab({
               className="flex flex-1 flex-col gap-1 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Day
+              {tStatic("common.day")}
               <SelectField
-                label="Day"
+                label={tStatic("common.day")}
                 value={String(filters.atDay)}
                 onValueChange={(value) => set({ atDay: Number(value) })}
                 options={DAYS.map((day, index) => ({
@@ -388,7 +393,7 @@ export function AtlasFiltersTab({
               className="flex w-32 flex-col gap-1 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Time
+              {tStatic("common.time")}
               <input
                 type="time"
                 step={900}
@@ -463,7 +468,7 @@ export function AtlasFiltersTab({
             style={{ color: "var(--t-accent-primary-hover)" }}
           >
             {allFacilities
-              ? "Show fewer"
+              ? tExisting("optionSuggestions.showFewer")
               : `Show ${facilities.length - FACILITIES_SHOWN} more`}
           </button>
         ) : null}
@@ -475,7 +480,7 @@ export function AtlasFiltersTab({
             onClick={onMoreFacilities}
             className="text-sm underline"
           >
-            Next features
+            {tStatic("atlas.next_features")}
           </button>
         ) : null}
       </Group>
@@ -552,7 +557,8 @@ export function AtlasFiltersTab({
                 >
                   {g.label}
                   <span className="sr-only">
-                    , {operatorCounts.get(g.key)} libraries
+                    , {operatorCounts.get(g.key)}{" "}
+                    {tExisting("widgetPublic.libraries_lower")}
                   </span>
                 </Chip>
               ))}
@@ -587,11 +593,12 @@ export function AtlasFiltersTab({
               style={{ color: T.ink.dim }}
             >
               <span>{years[0]}</span>
-              <span>Today</span>
+              <span>{tExisting("discussions.today")}</span>
             </div>
             <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-              Only libraries with a recorded founding year are shown when this
-              is set.
+              {tStatic(
+                "atlas.only_libraries_with_a_recorded_founding_year_are_shown_when_this_is_set"
+              )}
             </p>
           </Group>
         ) : null}
@@ -648,7 +655,7 @@ export function AtlasFiltersTab({
               className="min-h-9 self-start font-semibold underline"
               style={{ color: T.accent.primary }}
             >
-              Show mobile stops on the map
+              {tStatic("atlas.show_mobile_stops_on_the_map")}
             </button>
           ) : null}
         </Group>

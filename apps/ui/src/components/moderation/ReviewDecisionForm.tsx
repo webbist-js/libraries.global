@@ -1,5 +1,4 @@
 "use client"
-
 import {
   AlertCircle,
   MessageSquareText,
@@ -7,10 +6,11 @@ import {
   ShieldX,
   Upload,
 } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { reviewHref } from "@/components/moderation/queue-navigation"
+import { ReviewResponsePicker } from "@/components/moderation/ReviewResponsePicker"
 import { T } from "@/lib/design-tokens"
 import { redirectForReauthentication } from "@/lib/fresh-auth"
 import { Link, useRouter } from "@/lib/navigation"
@@ -71,7 +71,11 @@ export function ReviewDecisionForm({
   readonly driveDocumentId?: string | null
   readonly returnTo?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const noteId = useId()
@@ -243,16 +247,23 @@ export function ReviewDecisionForm({
           className="text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          Note to the contributor
+          {tStatic("moderation.note_to_the_contributor")}
         </label>
         <p
           id={hintId}
           className="m-0 text-sm leading-normal"
           style={{ color: T.ink.dim }}
         >
-          Required for Needs changes and Reject. Say what was wrong and what
-          would be accepted.
+          {tStatic(
+            "moderation.required_for_needs_changes_and_reject_say_what_was_wrong_and_what_would_be_accepted"
+          )}
         </p>
+        <ReviewResponsePicker
+          context={{ submissionType }}
+          note={note}
+          onChange={setNote}
+          disabled={disabled}
+        />
         <textarea
           id={noteId}
           aria-describedby={hintId}
@@ -305,8 +316,9 @@ export function ReviewDecisionForm({
             className="m-0 text-sm leading-[1.55]"
             style={{ color: T.ink.base }}
           >
-            Approving and publishing puts this live: readers see it straight
-            away. Check it reads well before you confirm.
+            {tStatic(
+              "moderation.approving_and_publishing_puts_this_live_readers_see_it_straight_away_check_it_reads_well_before_you_"
+            )}
           </p>
           <div className="flex flex-wrap gap-2">
             <button
@@ -315,7 +327,9 @@ export function ReviewDecisionForm({
               disabled={disabled}
               onClick={() => void decide("approved", true)}
             >
-              {busy === "publish" ? "Publishing…" : "Confirm and publish"}
+              {busy === "publish"
+                ? tExisting("sharedControls.publish.busy")
+                : "Confirm and publish"}
             </button>
             <button
               type="button"
@@ -353,7 +367,7 @@ export function ReviewDecisionForm({
             }}
           >
             <Upload size={18} aria-hidden />
-            Approve and publish
+            {tStatic("moderation.approve_and_publish")}
           </button>
         ) : null}
         <button
@@ -364,7 +378,9 @@ export function ReviewDecisionForm({
           onClick={() => void decide("needs_info")}
         >
           <MessageSquareText size={18} aria-hidden />
-          {busy === "needs_info" ? tUi("sending") : "Needs changes"}
+          {busy === "needs_info"
+            ? tUi("sending")
+            : tExisting("optionSuggestions.changesRequested")}
         </button>
         <button
           type="button"
@@ -374,7 +390,7 @@ export function ReviewDecisionForm({
           onClick={() => void decide("rejected")}
         >
           <ShieldX size={18} aria-hidden />
-          {busy === "rejected" ? "Rejecting…" : "Reject"}
+          {busy === "rejected" ? "Rejecting…" : tExisting("discussions.reject")}
         </button>
       </div>
     </form>
@@ -388,6 +404,8 @@ function NextInDriveStatus({
   readonly show: boolean
   readonly next: NextInDrive
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!show) return null
 
   return (
@@ -400,7 +418,7 @@ function NextInDriveStatus({
           className="font-semibold underline-offset-2 hover:underline"
           style={{ color: T.accent.primary }}
         >
-          Next in this drive →
+          {tStatic("moderation.next_in_this_drive")}
         </Link>
       ) : (
         "Checking the drive…"

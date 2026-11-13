@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -17,6 +18,8 @@ export function QuickActions({
 }: {
   readonly actions: readonly QuickAction[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section
       className="rounded-[28px] border p-5 sm:p-6"
@@ -28,7 +31,7 @@ export function QuickActions({
         className="type-panel-title m-0"
         style={{ color: T.ink.base }}
       >
-        Quick actions
+        {tStatic("staffRoute.quick_actions")}
       </h2>
       <ul className="m-0 mt-3 flex list-none flex-col gap-2 p-0">
         {actions.map((action) => (

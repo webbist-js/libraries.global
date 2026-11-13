@@ -170,7 +170,9 @@ export default function WidgetMap({
   return (
     <div
       className="relative isolate min-h-[360px] overflow-hidden rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface)"
-      aria-label="Library map. Use the list for all records, including libraries without coordinates."
+      aria-label={t(
+        "Library map. Use the list for all records, including libraries without coordinates."
+      )}
     >
       {/* MapLibre's unlayered .maplibregl-map position rule overrides Tailwind
           utilities. Keep the canvas positioned explicitly inside its fixed frame. */}
@@ -265,8 +267,9 @@ export default function WidgetMap({
         </Button>
       ) : null}
       <span className="sr-only">
-        Scroll zoom requires a modifier key. Use two fingers to move the map on
-        a phone.
+        {t(
+          "Scroll zoom requires a modifier key. Use two fingers to move the map on a phone."
+        )}
       </span>
     </div>
   )

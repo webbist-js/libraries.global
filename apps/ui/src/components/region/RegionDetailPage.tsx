@@ -2,7 +2,7 @@ import { Icon } from "@iconify/react"
 import { libraryTypeName, type GapKey, PANEL_GAPS } from "@repo/shared-data"
 import { cookies } from "next/headers"
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
@@ -125,8 +125,10 @@ export async function RegionDetailPage({
   gapRows?: readonly PlaceGapInsight[] | null
   drives?: readonly { view: DriveView; here: number }[] | null
 }) {
-  const tUi = await getUiTranslations("ui")
-  const d = await getUiTranslations("dashboard")
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
+  const d = await getTranslations("dashboard")
 
   const name = region.name ?? ""
   const place = { continent: continentSlug, country: countrySlug, region: slug }
@@ -192,7 +194,9 @@ export async function RegionDetailPage({
 
   const stats: LocationHeroStat[] = [
     {
-      value: countsAvailable ? formatCount(libraryCount) : "Unavailable",
+      value: countsAvailable
+        ? formatCount(libraryCount)
+        : tExisting("atlasDrawers.unavailable"),
       label: `${countNoun(libraryCount, "Library", "Libraries")} documented`,
     },
   ]
@@ -313,9 +317,17 @@ export async function RegionDetailPage({
   )
 
   const sectionItems = [
-    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+    {
+      href: "#overview",
+      label: tExisting("dashboard.overview"),
+      icon: LIB_ICONS.map,
+    },
 
-    { href: "#libraries", label: "Libraries", icon: LIB_ICONS.list },
+    {
+      href: "#libraries",
+      label: tExisting("ui.libraries"),
+      icon: LIB_ICONS.list,
+    },
     { href: "#areas", label: areaLabels.plural, icon: LIB_ICONS.pin },
     {
       href: "#drives-here",
@@ -366,7 +378,7 @@ export async function RegionDetailPage({
           proposeHref={proposeHref({ places: { region: [slug] } })}
         />
       }
-      eyebrow="Region"
+      eyebrow={tExisting("discovery.regions")}
       className="dashboard-place-record"
       toolbar={
         <RecordToolbar
@@ -531,8 +543,9 @@ export async function RegionDetailPage({
                       className="mt-5 inline-flex min-h-11 items-center font-semibold underline underline-offset-3"
                       style={{ color: T.accent.primary }}
                     >
-                      See all {formatCount(nationalSelection?.total ?? 0)}{" "}
-                      national libraries in {name}
+                      {tExisting("contributionDrawer.seeAll")}{" "}
+                      {formatCount(nationalSelection?.total ?? 0)} national
+                      libraries in {name}
                     </GlobalLink>
                   ) : null}
                 </section>

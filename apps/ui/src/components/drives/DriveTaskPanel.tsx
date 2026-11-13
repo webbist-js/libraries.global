@@ -7,7 +7,7 @@ import {
   gapDefinition,
   type VerifySection,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type ReactNode, type Ref, useEffect, useId, useState } from "react"
 
 import {
@@ -25,7 +25,7 @@ import {
   SECONDARY,
 } from "@/components/contribute/wizard-ui"
 import {
-  blockerFor,
+  createBlockerFor,
   EMPTY_DRAFT,
   PHOTO_LICENCE,
   type WizardDraft,
@@ -176,26 +176,29 @@ type VerifyState = {
  * source for hours, addresses and contact details), the photo and its
  * licence, then the content-safety check over what the reader wrote.
  */
-function panelBlocker({
-  mode,
-  loaded,
-  changes,
-  evidence,
-  categories,
-  verify,
-  photo,
-  name,
-}: {
-  mode: PanelMode | null
-  loaded: Loaded
-  changes: RecordChanges | null
-  evidence: string
-  /** The whole-record checklist's open categories. */
-  categories: readonly string[]
-  verify: VerifyState
-  photo: PhotoState
-  name: string
-}): string | null {
+function panelBlocker(
+  {
+    mode,
+    loaded,
+    changes,
+    evidence,
+    categories,
+    verify,
+    photo,
+    name,
+  }: {
+    mode: PanelMode | null
+    loaded: Loaded
+    changes: RecordChanges | null
+    evidence: string
+    /** The whole-record checklist's open categories. */
+    categories: readonly string[]
+    verify: VerifyState
+    photo: PhotoState
+    name: string
+  },
+  blockerFor: ReturnType<typeof createBlockerFor>
+): string | null {
   if (mode === "verify") {
     if (!loaded) return "Loading the record…"
     if (!loaded.record) return NO_RECORD
@@ -254,7 +257,7 @@ function PanelHeader({
   readonly heldUntil?: string | null
   readonly nameRef?: Ref<HTMLHeadingElement>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const place = taskPlace(task)
   const held = heldUntilLabel(heldUntil)
@@ -306,19 +309,21 @@ function PanelHeader({
 
 /** "Sign in to help", back to the drive's page. */
 function SignInToHelp({ drivePath }: { readonly drivePath: string }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div
       className="flex flex-col items-start gap-3 rounded-[16px] p-5"
       style={{ background: T.accent.chip }}
     >
       <p className={DIM} style={{ color: T.ink.base }}>
-        Every change goes to a reviewer before it’s published.
+        {tStatic("drive.every_change_goes_to_a_reviewer_before_it_s_published")}
       </p>
       <Link
         className={`${PRIMARY} h-11 bg-(--t-action-primary) px-5 text-base text-white no-underline hover:bg-(--t-action-primary-hover)`}
         href={`/auth/signin?callbackUrl=${encodeURIComponent(drivePath)}`}
       >
-        Sign in to help
+        {tStatic("drive.sign_in_to_help")}
       </Link>
     </div>
   )
@@ -336,10 +341,12 @@ function GapSwitcher({
   readonly gap: PanelGap | null
   readonly onPick: (gap: PanelGap) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
       <legend className="mb-2 p-0 text-base font-semibold">
-        What are you adding?
+        {tStatic("drive.what_are_you_adding")}
       </legend>
       {gaps.map((g) => {
         const on = g === gap
@@ -386,7 +393,9 @@ function PhotoFields({
   readonly value: PhotoState
   readonly onChange: (next: Partial<PhotoState>) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <div className="flex flex-col gap-5">
@@ -396,13 +405,13 @@ function PhotoFields({
       />
       <div>
         <Label htmlFor={`${id}-caption`} hint={tUi("optional_59be71")}>
-          What does it show?
+          {tStatic("common.photoDescription")}
         </Label>
         <input
           className={FIELD}
           id={`${id}-caption`}
           onChange={(e) => onChange({ caption: e.target.value })}
-          placeholder="e.g. The main entrance from the high street"
+          placeholder={tStatic("common.photoDescriptionExample")}
           style={{ color: T.ink.base }}
           value={value.caption}
         />
@@ -410,9 +419,9 @@ function PhotoFields({
       <div>
         <Label
           htmlFor={`${id}-credit`}
-          hint="Optional, as you’d like to be credited"
+          hint={tStatic("common.photoCreditOptional")}
         >
-          Photo credit
+          {tStatic("common.photoCredit")}
         </Label>
         <input
           className={FIELD}
@@ -452,12 +461,15 @@ function DriveRefusal({
   readonly sending: boolean
   readonly onResend: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div role="alert">
       <Notice icon="mdi:alert-circle-outline" tone="warn" title={message}>
         <p className="m-0" style={{ color: T.ink.base }}>
-          You can still send it for review on its own. It just won’t count
-          toward this drive.
+          {tStatic(
+            "drive.you_can_still_send_it_for_review_on_its_own_it_just_won_t_count_toward_this_drive"
+          )}
         </p>
         <button
           type="button"
@@ -466,7 +478,7 @@ function DriveRefusal({
           onClick={onResend}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Send without the drive
+          {tStatic("common.sendWithoutDrive")}
         </button>
       </Notice>
     </div>
@@ -494,7 +506,11 @@ function LacksAction({
   readonly onToggle: () => void
   readonly onPhoto: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const style = { borderColor: T.border.hi, color: T.ink.base }
 
@@ -533,8 +549,11 @@ function LacksAction({
           icon="mdi:camera-outline"
           width={16}
         />
-        Share a photo
-        <span className="sr-only"> of {task.name}</span>
+        {tExisting("libraryPage.tasks.photo")}
+        <span className="sr-only">
+          {" "}
+          {tExisting("widgetPublic.of")} {task.name}
+        </span>
       </button>
     )
 
@@ -544,7 +563,7 @@ function LacksAction({
       href={`/contribute/index/${task.slug}`}
       style={style}
     >
-      Add in the Index editor
+      {tStatic("drive.add_in_the_index_editor")}
       <span className="sr-only">
         : {label.toLowerCase()} for {task.name}
       </span>
@@ -575,10 +594,12 @@ function RecordChecklist({
   readonly onPhoto: () => void
   readonly editor: (category: string) => ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="flex flex-col gap-3">
       <h4 className="type-h4 m-0" style={{ color: T.ink.base }}>
-        What this record lacks
+        {tStatic("drive.what_this_record_lacks")}
       </h4>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {gaps.map((gap) => {
@@ -632,6 +653,8 @@ function QuotaFull({
   readonly id: string
   readonly reason: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="flex flex-col gap-2">
       <p
@@ -646,7 +669,7 @@ function QuotaFull({
         href="/contribute/submissions"
         style={{ color: T.accent.primary }}
       >
-        See my submissions
+        {tStatic("common.mySubmissions")}
       </Link>
     </div>
   )
@@ -689,7 +712,13 @@ export function DriveTaskPanel({
   /** The library's name: where focus goes when a new library opens. */
   readonly nameRef?: Ref<HTMLHeadingElement>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tWizard = useTranslations("wizardCopy")
+  const blockerFor = createBlockerFor(tWizard)
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const gaps = panelGapsOf(drive.focus)
@@ -748,16 +777,19 @@ export function DriveTaskPanel({
     inPerson,
   }
   const full = quotaReason(quota)
-  const blocker = panelBlocker({
-    mode,
-    loaded,
-    changes,
-    evidence,
-    categories: openCategories,
-    verify,
-    photo,
-    name: task.name,
-  })
+  const blocker = panelBlocker(
+    {
+      mode,
+      loaded,
+      changes,
+      evidence,
+      categories: openCategories,
+      verify,
+      photo,
+      name: task.name,
+    },
+    blockerFor
+  )
   const showBlocker = tried && blocker !== null
   const evidenceInvalid =
     showBlocker &&
@@ -888,7 +920,7 @@ export function DriveTaskPanel({
   if (needsRecord && !loaded)
     editor = (
       <p className={DIM} role="status" style={{ color: T.ink.dim }}>
-        Loading the record…
+        {tStatic("common.loadingRecord")}
       </p>
     )
   else if (needsRecord && !record)
@@ -901,15 +933,16 @@ export function DriveTaskPanel({
     editor = (
       <div className="flex flex-col gap-6">
         <p className={DIM} style={{ color: T.ink.dim }}>
-          Set what’s true now. Change the status if it has closed, the address
-          if it has moved, or both.
+          {tStatic(
+            "drive.set_what_s_true_now_change_the_status_if_it_has_closed_the_address_if_it_has_moved_or_both"
+          )}
         </p>
         <div className="flex flex-col gap-3">
-          <h4 className="type-h4 m-0">Is it still open?</h4>
+          <h4 className="type-h4 m-0">{tStatic("drive.is_it_still_open")}</h4>
           {editorFor(MODE_CATEGORIES.closed[0]!)}
         </div>
         <div className="flex flex-col gap-3">
-          <h4 className="type-h4 m-0">Where is it now?</h4>
+          <h4 className="type-h4 m-0">{tStatic("drive.where_is_it_now")}</h4>
           {editorFor(MODE_CATEGORIES.closed[1]!)}
         </div>
       </div>
@@ -929,8 +962,9 @@ export function DriveTaskPanel({
     editor = (
       <div className="flex flex-col gap-6">
         <p className={DIM} style={{ color: T.ink.dim }}>
-          Confirm what you’ve checked. A Moderator reviews it, then it shows as
-          checked today.
+          {tExisting(
+            "staticUi.library.confirm_what_you_ve_checked_a_moderator_reviews_it_then_it_shows_as_checked_today"
+          )}
         </p>
         <VerifyFields
           available={verifyAvailable}
@@ -955,7 +989,7 @@ export function DriveTaskPanel({
             editorFor(category)
           ) : (
             <p className={DIM} style={{ color: T.ink.dim }}>
-              {loaded ? NO_RECORD : "Loading the record…"}
+              {loaded ? NO_RECORD : tStatic("common.loadingRecord")}
             </p>
           )
         }
@@ -983,7 +1017,7 @@ export function DriveTaskPanel({
               icon="mdi:arrow-left"
               width={16}
             />
-            Back to the checklist
+            {tStatic("drive.back_to_the_checklist")}
           </button>
         ) : null}
         <PhotoFields
@@ -997,7 +1031,9 @@ export function DriveTaskPanel({
     editor = (
       <div className="flex flex-col gap-3">
         <p className={DIM} style={{ color: T.ink.dim }}>
-          Tap Yes or No for what you can confirm, then send your answers.
+          {tStatic(
+            "drive.tap_yes_or_no_for_what_you_can_confirm_then_send_your_answers"
+          )}
         </p>
         <LibraryFacilityAnswers
           driveDocumentId={drive.documentId}
@@ -1013,13 +1049,13 @@ export function DriveTaskPanel({
   else
     editor = (
       <p className={DIM} style={{ color: T.ink.dim }}>
-        This drive’s tasks are done in the Index editor.{" "}
+        {tStatic("drive.this_drive_s_tasks_are_done_in_the_index_editor")}{" "}
         <Link
           className="font-semibold underline underline-offset-[3px]"
           href={`/contribute/index/${task.slug}`}
           style={{ color: T.accent.primary }}
         >
-          Improve this record
+          {tExisting("libraryPage.improve")}
         </Link>
       </p>
     )
@@ -1063,7 +1099,7 @@ export function DriveTaskPanel({
       {showEvidence ? (
         <div>
           <Label htmlFor={`${id}-evidence`} hint={evidenceHint}>
-            Where did you find this?
+            {tStatic("drive.where_did_you_find_this")}
           </Label>
           <input
             aria-describedby={evidenceInvalid ? blockerId : undefined}
@@ -1074,7 +1110,9 @@ export function DriveTaskPanel({
             inputMode="url"
             onChange={(e) => setEvidence(e.target.value)}
             placeholder={
-              evidenceNeeded ? "https://" : "A link, or where you saw it"
+              evidenceNeeded
+                ? "https://"
+                : tExisting("staticUi.contribute.a_link_or_where_you_saw_it")
             }
             style={{ color: T.ink.base }}
             type={evidenceNeeded ? "url" : "text"}
@@ -1140,7 +1178,7 @@ export function DriveTaskPanel({
           onClick={() => onSkip(task)}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Skip
+          {tExisting("workspaceDashboard.skip")}
         </button>
         <button
           type="button"

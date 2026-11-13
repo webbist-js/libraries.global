@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server"
 import { EmptyState } from "@/components/ds"
 import { Container } from "@/components/elementary/Container"
 import { RoadmapView } from "@/components/roadmap/RoadmapView"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchRoadmap } from "@/lib/roadmap-server"
 import { buildMetadata } from "@/lib/seo/metadata"
 
@@ -29,7 +30,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function RoadmapPage({
+async function RoadmapPage({
   params,
 }: {
   params: Promise<{ locale: Locale }>
@@ -62,3 +63,8 @@ export default async function RoadmapPage({
     </>
   )
 }
+
+export default withMessages(
+  RoadmapPage,
+  "[locale]/(dashboard)/community/roadmap/page"
+)

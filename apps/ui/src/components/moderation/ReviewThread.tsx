@@ -1,4 +1,5 @@
 import { Check, Clock3, MessageCircle, X } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -35,10 +36,12 @@ function verb(e: ReviewEvent): string {
  * "An admin"; Strapi never sends their ids.
  */
 export function ReviewThread({ events }: { readonly events: ReviewEvent[] }) {
+  const tStatic = useTranslations("staticUi")
+
   if (events.length === 0)
     return (
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        No decisions yet.
+        {tStatic("moderation.no_decisions_yet")}
       </p>
     )
 

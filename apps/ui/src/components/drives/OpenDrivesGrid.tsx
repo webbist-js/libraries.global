@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -42,7 +42,9 @@ export function OpenDrivesGrid({
   readonly followed: string[] | null
   readonly now?: Date
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [followOn, setFollowOn] = useState(false)
   const [near, setNear] = useState(false)
@@ -136,7 +138,7 @@ export function OpenDrivesGrid({
             }
             width={17}
           />
-          Near me
+          {tStatic("common.nearMe")}
         </button>
         {followed !== null ? (
           <button
@@ -152,7 +154,7 @@ export function OpenDrivesGrid({
               icon="mdi:map-marker-star-outline"
               width={17}
             />
-            Places I follow
+            {tStatic("drive.places_i_follow")}
           </button>
         ) : null}
       </div>
@@ -178,13 +180,13 @@ export function OpenDrivesGrid({
 
       {followOn && sorted.length === 0 ? (
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-          None of the open drives cover places you follow.{" "}
+          {tStatic("drive.none_of_the_open_drives_cover_places_you_follow")}{" "}
           <GlobalLink
             href="/libraries"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Follow libraries
+            {tStatic("common.followLibraries")}
           </GlobalLink>
         </p>
       ) : (

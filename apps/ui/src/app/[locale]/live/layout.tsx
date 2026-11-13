@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 
 import { MainContent } from "@/components/ds/MainContent"
 import { LiveInstall } from "@/components/mobile/live/LiveInstall"
+import { withMessages } from "@/i18n/scoped-messages"
 import { T } from "@/lib/design-tokens"
 import { mobileAppConfig, mobilePath } from "@/lib/mobile-app"
 
@@ -29,7 +30,7 @@ export async function generateMetadata({
     },
   }
 }
-export default async function LiveLayout({
+async function LiveLayout({
   children,
   params,
 }: {
@@ -49,3 +50,5 @@ export default async function LiveLayout({
     </MainContent>
   )
 }
+
+export default withMessages(LiveLayout, "[locale]/live/layout")

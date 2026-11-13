@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -25,7 +25,9 @@ export function ModerationAccessUnavailable({
   /** The page's path, without a locale: where "Try again" goes. */
   readonly path: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <>
@@ -37,8 +39,9 @@ export function ModerationAccessUnavailable({
           title={tUi("couldnt_check_your_access")}
         >
           <p className="m-0" style={{ color: T.ink.base }}>
-            Your roles didn’t load in time, so this page can’t tell whether you
-            may review here. Nothing was lost. Try again.
+            {tStatic(
+              "networkModeration.your_roles_didn_t_load_in_time_so_this_page_can_t_tell_whether_you_may_review_here_nothing_was_"
+            )}
           </p>
           <form action={path} method="get" className="m-0 mt-2">
             <button

@@ -10,7 +10,7 @@ import {
   WEEKDAYS,
   type PublicLiveState,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useContext } from "react"
 
 import { StatusBadge } from "@/components/ds/StatusBadge"
@@ -37,7 +37,11 @@ export function AtlasStopPanel({
   readonly now: Date
   readonly onClose: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const inInspect = useContext(AtlasAnalysisPanelContext)
 
   const [loaded, setLibrary] = useState<PublicMobileTimetable | null>(null)
@@ -113,7 +117,7 @@ export function AtlasStopPanel({
                 }}
               >
                 <Icon aria-hidden="true" icon="mdi:bus-side" width={16} />
-                Mobile library stop
+                {tStatic("atlas.mobile_library_stop")}
               </span>
             </div>
             <button
@@ -145,7 +149,7 @@ export function AtlasStopPanel({
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Served by {stop.library_name}
+            {tStatic("atlas.served_by")} {stop.library_name}
           </GlobalLink>
         ) : (
           `Served by ${stop.library_name}`
@@ -153,10 +157,12 @@ export function AtlasStopPanel({
       </p>
       {error ? (
         <p role="status">
-          The timetable could not be loaded. Open the library page to try again.
+          {tStatic(
+            "atlas.the_timetable_could_not_be_loaded_open_the_library_page_to_try_again"
+          )}
         </p>
       ) : !library ? (
-        <p role="status">Loading timetable…</p>
+        <p role="status">{tStatic("atlas.loading_timetable")}</p>
       ) : tt ? (
         <>
           {copy ? (
@@ -179,14 +185,14 @@ export function AtlasStopPanel({
               <p className="m-0 text-base font-bold">{copy.sentence}</p>
               {updated ? (
                 <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                  Updated {updated} by the crew
+                  {tExisting("editorial.updated")} {updated} by the crew
                 </p>
               ) : null}
             </div>
           ) : null}
           <section aria-labelledby="atlas-stop-visits">
             <h3 id="atlas-stop-visits" className="type-h3 m-0 mb-2">
-              Visits to this stop
+              {tStatic("common.visitsStop")}
             </h3>
             {visits.length ? (
               <table className="w-full table-fixed border-collapse text-left">
@@ -199,13 +205,13 @@ export function AtlasStopPanel({
                     style={{ borderColor: T.border.line }}
                   >
                     <th scope="col" className="pr-2 pb-2 font-bold">
-                      Day
+                      {tStatic("common.day")}
                     </th>
                     <th scope="col" className="pr-2 pb-2 font-bold">
-                      Time
+                      {tStatic("common.time")}
                     </th>
                     <th scope="col" className="pb-2 font-bold">
-                      How often
+                      {tStatic("atlas.how_often")}
                     </th>
                   </tr>
                 </thead>
@@ -236,13 +242,13 @@ export function AtlasStopPanel({
               </table>
             ) : (
               <p className="m-0" style={{ color: T.ink.dim }}>
-                No visits scheduled for this stop.
+                {tStatic("atlas.no_visits_scheduled_for_this_stop")}
               </p>
             )}
           </section>
           <section aria-labelledby="atlas-stop-next">
             <h3 id="atlas-stop-next" className="type-h3 m-0 mb-1">
-              Next visits
+              {tStatic("common.nextVisits")}
             </h3>
             {next.length ? (
               <ul className="m-0 list-none p-0">
@@ -278,7 +284,9 @@ export function AtlasStopPanel({
                         ) : sameTime ? (
                           <>
                             <span>{date}</span>
-                            <span style={{ color: T.ink.dim }}>Same time</span>
+                            <span style={{ color: T.ink.dim }}>
+                              {tStatic("atlas.same_time")}
+                            </span>
                           </>
                         ) : (
                           <span>
@@ -291,7 +299,8 @@ export function AtlasStopPanel({
                           className="m-0 mt-1 text-sm"
                           style={{ color: T.accent.danger }}
                         >
-                          Not stopping{reason ? ` · ${reason}` : ""}
+                          {tStatic("common.notStopping")}
+                          {reason ? ` · ${reason}` : ""}
                         </p>
                       ) : null}
                     </li>
@@ -300,7 +309,7 @@ export function AtlasStopPanel({
               </ul>
             ) : (
               <p className="m-0" style={{ color: T.ink.dim }}>
-                No visits scheduled in the next six months.
+                {tStatic("atlas.no_visits_scheduled_in_the_next_six_months")}
               </p>
             )}
           </section>
@@ -316,7 +325,7 @@ export function AtlasStopPanel({
                 content_id: stop.id,
               })}
             >
-              View timetable
+              {tStatic("atlas.view_timetable")}
             </button>
             {directions ? (
               <a
@@ -331,7 +340,7 @@ export function AtlasStopPanel({
                 className="inline-flex min-h-11 items-center justify-center rounded-full border px-5 text-base font-semibold hover:bg-(--t-bg-surface)"
                 style={{ borderColor: T.border.hi, color: T.ink.base }}
               >
-                Directions
+                {tStatic("atlas.directions")}
               </a>
             ) : null}
           </div>
@@ -347,9 +356,13 @@ export function AtlasStopPanel({
         </>
       ) : (
         <div>
-          <p className="m-0 font-semibold">No timetable added yet</p>
+          <p className="m-0 font-semibold">
+            {tStatic("atlas.no_timetable_added_yet")}
+          </p>
           <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
-            Stops and times appear here once the library adds them.
+            {tStatic(
+              "atlas.stops_and_times_appear_here_once_the_library_adds_them"
+            )}
           </p>
           {stop.library_path ? (
             <GlobalLink
@@ -363,7 +376,7 @@ export function AtlasStopPanel({
               className="mt-3 inline-flex min-h-11 items-center font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              See the library’s Stops section
+              {tStatic("atlas.see_the_library_s_stops_section")}
             </GlobalLink>
           ) : null}
         </div>

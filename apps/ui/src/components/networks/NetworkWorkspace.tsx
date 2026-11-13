@@ -1,6 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { NetworkClaimSnapshot } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useRef, useCallback } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -41,6 +43,10 @@ export function NetworkWorkspace({
   readonly initialNetwork?: string
   readonly teamId?: string | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [workspace, setWorkspace] = useState<Workspace | null>(null),
     [detail, setDetail] = useState<NetworkDetail | null>(null),
     [ids, setIds] = useState<string[]>([]),
@@ -143,7 +149,7 @@ export function NetworkWorkspace({
       <div className="space-y-6">
         {!workspace && !error ? (
           <p role="status" className="text-(--t-ink-dim)">
-            Loading your service access…
+            {tStatic("network.loading_your_service_access")}
           </p>
         ) : null}
         {workspace?.mandates.map((mandate) => (
@@ -161,7 +167,10 @@ export function NetworkWorkspace({
           />
         ))}
         {workspace?.requests.length ? (
-          <StaffPanel title="Service access requests" compact>
+          <StaffPanel
+            title={tStatic("network.service_access_requests")}
+            compact
+          >
             {workspace?.requests.map((row) => (
               <div
                 key={row.documentId}
@@ -170,10 +179,10 @@ export function NetworkWorkspace({
                 <h3 className="type-h3">{row.fields.networkName}</h3>
                 <p>
                   {row.fields.intent === "employment"
-                    ? "Affiliation"
+                    ? tExisting("ui.affiliation")
                     : "Management access"}{" "}
                   · {reviewStatus(row.status)} · {row.fields.libraryIds.length}{" "}
-                  libraries
+                  {tExisting("widgetPublic.libraries_lower")}
                 </p>
                 {row.reviewNote ? <p>{row.reviewNote}</p> : null}
                 {row.status === "needs_info" ? (
@@ -189,7 +198,7 @@ export function NetworkWorkspace({
                       )
                     }}
                   >
-                    Update and resubmit this request
+                    {tStatic("network.update_and_resubmit_this_request")}
                   </button>
                 ) : null}
               </div>
@@ -197,7 +206,7 @@ export function NetworkWorkspace({
             <SidebarLinks flushEnd>
               <li>
                 <Link className={STAFF_LINK} href="/contribute/submissions">
-                  Your submissions
+                  {tExisting("ui.your_submissions")}
                 </Link>
               </li>
             </SidebarLinks>
@@ -210,15 +219,15 @@ export function NetworkWorkspace({
               workspace.mandates.length ||
               workspace.requests.length)
               ? "Find another service or network"
-              : "Find your service or network"
+              : tExisting("staticUi.libraryEditor.find_your_service_or_network")
           }
           compact
         >
           <div className="grid gap-5">
             <p className="m-0 max-w-[66ch] text-sm leading-relaxed text-(--t-ink-dim)">
-              Connect your work with a library service or network. Choose an
-              institution to verify your affiliation or request management
-              access.
+              {tStatic(
+                "network.connect_your_work_with_a_library_service_or_network_choose_an_institution_to_verify_your_affiliation"
+              )}
             </p>
             <NetworkPicker
               onSelect={(row) => {
@@ -230,7 +239,7 @@ export function NetworkWorkspace({
         {error ? (
           <div role="alert">
             <Notice
-              title="Service unavailable"
+              title={tStatic("network.service_unavailable")}
               tone="warn"
               icon="mdi:alert-circle-outline"
             >
@@ -243,7 +252,7 @@ export function NetworkWorkspace({
             role="status"
             className="rounded-2xl bg-(--t-bg-muted) p-5 text-sm"
           >
-            Loading service libraries…
+            {tStatic("network.loading_service_libraries")}
           </p>
         ) : null}
         {detail && !loading ? (
@@ -253,7 +262,10 @@ export function NetworkWorkspace({
                 color="aurora"
                 label={`${ids.length} published ${ids.length === 1 ? "library" : "libraries"}`}
               />
-              <Badge color="dim" label="Evidence stays private" />
+              <Badge
+                color="dim"
+                label={tStatic("network.evidence_stays_private")}
+              />
             </div>
             <NetworkClaimForm
               key={`${detail.network.documentId}:${mandateId ?? "new"}:${formInitial?.submittedAt ?? ""}`}
@@ -268,15 +280,17 @@ export function NetworkWorkspace({
         ) : null}
       </div>
       <aside className="space-y-6">
-        <StaffPanel title="Your affiliations" compact>
+        <StaffPanel title={tStatic("network.your_affiliations")} compact>
           <p className="mt-0 text-sm text-(--t-ink-dim)">
-            Affiliation verifies where you work. Management access is reviewed
-            separately.
+            {tStatic(
+              "network.affiliation_verifies_where_you_work_management_access_is_reviewed_separately"
+            )}
           </p>
           {workspace && !workspace.affiliations.length ? (
             <p className="mb-4 text-base text-(--t-ink-dim)">
-              No affiliations yet. Verified connections can appear on your
-              profile when you choose to share them.
+              {tStatic(
+                "network.no_affiliations_yet_verified_connections_can_appear_on_your_profile_when_you_choose_to_share_them"
+              )}
             </p>
           ) : null}
           {workspace?.affiliations.map((row) => (
@@ -290,7 +304,9 @@ export function NetworkWorkspace({
               </p>
               <p className="text-base">
                 {row.publicDisplay
-                  ? "Shown on your public profile"
+                  ? tExisting(
+                      "staticUi.profileRoute.shown_on_your_public_profile"
+                    )
                   : "Private profile affiliation"}
               </p>
             </div>
@@ -298,31 +314,37 @@ export function NetworkWorkspace({
           <SidebarLinks flushEnd>
             <li>
               <Link className={STAFF_LINK} href="/profile/settings">
-                Manage profile affiliations
+                {tStatic("network.manage_profile_affiliations")}
               </Link>
             </li>
           </SidebarLinks>
         </StaffPanel>
         <details className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
           <summary className="min-h-11 cursor-pointer font-semibold text-(--t-ink-base)">
-            How access works
+            {tExisting("accessLocks.howAccessWorks")}
           </summary>
           <ul className="m-0 mt-4 list-none space-y-5 p-0">
             {[
               {
                 icon: "mdi:account-check-outline",
-                title: "Affiliation",
-                text: "Verifies your connection to an institution.",
+                title: tExisting("ui.affiliation"),
+                text: tStatic(
+                  "network.verifies_your_connection_to_an_institution"
+                ),
               },
               {
                 icon: "mdi:shield-check-outline",
-                title: "Library management",
-                text: "Grants access to specific library records after review. New additions are reviewed together as a batch.",
+                title: tStatic("network.library_management"),
+                text: tStatic(
+                  "network.grants_access_to_specific_library_records_after_review_new_additions_are_reviewed_together_as_a_batc"
+                ),
               },
               {
                 icon: "mdi:account-group-outline",
-                title: "Team membership",
-                text: "Enables shared workspaces and widgets. Public maps can follow a service as its membership changes.",
+                title: tStatic("network.team_membership"),
+                text: tStatic(
+                  "network.enables_shared_workspaces_and_widgets_public_maps_can_follow_a_service_as_its_membership_changes"
+                ),
               },
             ].map((item) => (
               <li key={item.title} className="flex gap-3">

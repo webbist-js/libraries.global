@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import { FACILITY_CHECKLIST } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -11,7 +11,9 @@ import { T } from "@/lib/design-tokens"
  * unlinks it and records it as absent.
  */
 export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const answers = ((fields as { answers?: unknown } | null)?.answers ??
     {}) as Record<string, unknown>
@@ -26,18 +28,21 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
   if (rows.length === 0)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No facility answers in this submission.
+        {tStatic("moderation.no_facility_answers_in_this_submission")}
       </p>
     )
 
   return (
     <div className="flex flex-col gap-3">
       <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
-        Approving links each Yes to the library and records each No as absent,
-        then publishes the library.
+        {tStatic(
+          "moderation.approving_links_each_yes_to_the_library_and_records_each_no_as_absent_then_publishes_the_library"
+        )}
       </p>
       <table className="w-full border-collapse">
-        <caption className="sr-only">Facility answers</caption>
+        <caption className="sr-only">
+          {tStatic("moderation.facility_answers")}
+        </caption>
         <thead>
           <tr>
             <th
@@ -45,14 +50,14 @@ export function FacilitiesPanel({ fields }: { readonly fields: unknown }) {
               className="py-2 pr-4 text-left text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Facility
+              {tStatic("moderation.facility")}
             </th>
             <th
               scope="col"
               className="py-2 text-left text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Answer
+              {tStatic("moderation.answer")}
             </th>
           </tr>
         </thead>

@@ -4,6 +4,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { SignInForm } from "@/app/[locale]/auth/signin/_components/SignInForm"
 import { LiveConsole } from "@/components/mobile/live/LiveConsole"
+import { withMessages } from "@/i18n/scoped-messages"
 import { staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
@@ -12,7 +13,7 @@ import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
 import { Link } from "@/lib/navigation"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-export default async function ConsolePage({
+async function ConsolePage({
   params,
 }: {
   params: Promise<{ locale: string; documentId: string }>
@@ -89,3 +90,5 @@ export default async function ConsolePage({
     />
   )
 }
+
+export default withMessages(ConsolePage, "[locale]/live/[documentId]/page")

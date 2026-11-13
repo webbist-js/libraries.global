@@ -1,39 +1,11 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { type SectionTab, SectionTabs } from "@/components/ds/SectionTabs"
 import { useNotifications } from "@/components/notifications/NotificationProvider"
 import { usePathname } from "@/lib/navigation"
 
-const TABS = [
-  {
-    id: "overview",
-    label: "Overview",
-    path: "",
-    icon: "mdi:view-grid-outline",
-  },
-  {
-    id: "contributions",
-    label: "Contributions",
-    path: "/contributions",
-    icon: "mdi:pencil-outline",
-  },
-  {
-    id: "following",
-    label: "Following",
-    path: "/following",
-    icon: "mdi:heart-outline",
-  },
-  {
-    id: "recognition",
-    label: "Recognition",
-    path: "/badges",
-    icon: "mdi:medal-outline",
-  },
-] as const
-
-type ProfileTabId = (typeof TABS)[number]["id"]
+type ProfileTabId = "overview" | "contributions" | "following" | "recognition"
 
 /** Profile section tabs, on the bottom edge of the ProfileHero band. */
 export function ProfileTabNav({
@@ -45,7 +17,36 @@ export function ProfileTabNav({
   isOwnProfile?: boolean
   counts?: Partial<Record<Exclude<ProfileTabId, "overview">, number>>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const TABS = [
+    {
+      id: "overview",
+      label: tStatic("profileRoute.overview"),
+      path: "",
+      icon: "mdi:view-grid-outline",
+    },
+    {
+      id: "contributions",
+      label: tStatic("profileRoute.contributions"),
+      path: "/contributions",
+      icon: "mdi:pencil-outline",
+    },
+    {
+      id: "following",
+      label: tStatic("profileRoute.following"),
+      path: "/following",
+      icon: "mdi:heart-outline",
+    },
+    {
+      id: "recognition",
+      label: tStatic("profileRoute.recognition"),
+      path: "/badges",
+      icon: "mdi:medal-outline",
+    },
+  ] as const
+
+  const tUi = useTranslations("ui")
 
   const pathname = usePathname()
   const { unread } = useNotifications()

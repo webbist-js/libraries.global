@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import {
   TOWN_BUILDINGS,
   TOWN_RIVER_PATH,
@@ -31,6 +33,8 @@ const MAIN_STREETS = new Set([
 
 /** A filled, street-constrained catchment over a readable fictional town basemap. */
 export function ReachTownIllustration() {
+  const tStatic = useTranslations("staticUi")
+
   const library = TOWN_NODES.library!
 
   return (
@@ -40,15 +44,8 @@ export function ReachTownIllustration() {
       aria-labelledby="home-town-title home-town-description"
       className="home-reach-illustration"
     >
-      <title id="home-town-title">
-        An illustrative fifteen-minute walking catchment
-      </title>
-      <desc id="home-town-description">
-        A translucent purple catchment branches out from a library along the
-        roads of a fictional town, narrowing as the walking time runs out.
-        Roads, buildings and parks remain visible beneath it. The river can be
-        crossed only at two bridges.
-      </desc>
+      <title id="home-town-title">{tStatic("home.townTitle")}</title>
+      <desc id="home-town-description">{tStatic("home.townDescription")}</desc>
       <rect
         x="-75"
         y="-50"
@@ -132,16 +129,16 @@ export function ReachTownIllustration() {
           EAST BANK
         </text>
         <text x="154" y="150" fontSize="8">
-          Town park
+          {tStatic("home.townPark")}
         </text>
         <text x="74" y="204" transform="rotate(-5 74 204)">
-          Market Street
+          {tStatic("home.marketStreet")}
         </text>
         <text x="279" y="326">
-          South Road
+          {tStatic("home.southRoad")}
         </text>
         <text x="488" y="384">
-          Station
+          {tStatic("home.station")}
         </text>
       </g>
       <g transform={`translate(${library.x} ${library.y})`}>
@@ -170,7 +167,7 @@ export function ReachTownIllustration() {
           fontWeight="600"
           fill="#17162B"
         >
-          Town library
+          {tStatic("home.townLibrary")}
         </text>
       </g>
       <g transform="translate(-55 -32)">
@@ -184,7 +181,7 @@ export function ReachTownIllustration() {
           fontWeight="600"
           fill="#514378"
         >
-          15 minute walk
+          {tStatic("home.fifteenMinuteWalk")}
         </text>
       </g>
     </svg>

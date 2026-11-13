@@ -2,6 +2,7 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { UtilityPage } from "@/components/utility/UtilityPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { parseVerifyEmailState } from "@/lib/auth-redirects"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -9,7 +10,7 @@ import { VerifyEmailContent } from "./_components/VerifyEmailContent"
 
 export const metadata = privateMetadata("Confirm your email")
 
-export default async function VerifyEmailSentPage({
+async function VerifyEmailSentPage({
   params,
   searchParams,
 }: PageProps<"/[locale]/auth/verify-email-sent">) {
@@ -23,3 +24,8 @@ export default async function VerifyEmailSentPage({
     </UtilityPage>
   )
 }
+
+export default withMessages(
+  VerifyEmailSentPage,
+  "[locale]/auth/verify-email-sent/page"
+)

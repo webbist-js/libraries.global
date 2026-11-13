@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import { EventListSkeleton } from "@/components/events/EventListSkeleton"
@@ -120,11 +120,13 @@ function DateScrollPicker({
 // ── Timeline Row ───────────────────────────────────────────────────────────────
 
 function TimelineRow({ event }: { event: TimelineEvent }) {
+  const tExisting = useTranslations()
+
   const start = new Date(event.startTime)
   const end = event.endTime ? new Date(event.endTime) : null
 
   const startLabel = event.allDay
-    ? "All day"
+    ? tExisting("eventListing.allday")
     : start.toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
@@ -254,6 +256,8 @@ interface EventTimelineProps {
 }
 
 export function EventTimeline({ filters }: EventTimelineProps) {
+  const tExisting = useTranslations()
+
   const [manualDate, setManualDate] = useState<Date>(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -321,7 +325,7 @@ export function EventTimeline({ filters }: EventTimelineProps) {
   const grouped = new Map<string, TimelineEvent[]>()
   for (const e of visible) {
     const key = e.allDay
-      ? "All day"
+      ? tExisting("eventListing.allday")
       : new Date(e.startTime).toLocaleTimeString("en-GB", {
           hour: "2-digit",
           minute: "2-digit",

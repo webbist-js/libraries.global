@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -24,29 +24,6 @@ const ACTION_LABEL: Record<string, string> = {
   blog_submission: "Journal article",
   topic_suggestion: "Suggested a topic",
   drive_proposal: "Proposed a drive",
-}
-
-const STATUS_CHIP: Record<string, { label: string; bg: string; fg: string }> = {
-  approved: {
-    label: "✓ Accepted",
-    bg: "var(--tint-public-bg)",
-    fg: "var(--tint-public-fg)",
-  },
-  pending: {
-    label: "In review",
-    bg: "var(--tint-academic-bg)",
-    fg: "var(--tint-academic-fg)",
-  },
-  needs_info: {
-    label: "Needs changes",
-    bg: "var(--t-palette-amber-bg)",
-    fg: "var(--t-palette-amber-fg)",
-  },
-  rejected: {
-    label: "Not accepted",
-    bg: "var(--tint-special-bg)",
-    fg: "var(--tint-special-fg)",
-  },
 }
 
 function formatDate(iso: string): string {
@@ -87,7 +64,32 @@ export function YourSubmissionsList({
   readonly submissions: HubSubmission[]
   readonly username?: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+  const STATUS_CHIP: Record<string, { label: string; bg: string; fg: string }> =
+    {
+      approved: {
+        label: tStatic("contributeRoute.accepted_2"),
+        bg: "var(--tint-public-bg)",
+        fg: "var(--tint-public-fg)",
+      },
+      pending: {
+        label: tStatic("contributeRoute.in_review"),
+        bg: "var(--tint-academic-bg)",
+        fg: "var(--tint-academic-fg)",
+      },
+      needs_info: {
+        label: tStatic("contributeRoute.needs_changes"),
+        bg: "var(--t-palette-amber-bg)",
+        fg: "var(--t-palette-amber-fg)",
+      },
+      rejected: {
+        label: tStatic("contributeRoute.not_accepted"),
+        bg: "var(--tint-special-bg)",
+        fg: "var(--tint-special-fg)",
+      },
+    }
+
+  const tUi = useTranslations("ui")
 
   const inReview = submissions.filter(
     (s) => s.status === "pending" || s.status === "needs_info"
@@ -116,7 +118,7 @@ export function YourSubmissionsList({
           className="text-sm font-semibold underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          See all submissions
+          {tStatic("contributeRoute.see_all_submissions")}
         </GlobalLink>
       </div>
 
@@ -130,14 +132,16 @@ export function YourSubmissionsList({
             <Icon height={20} icon="mdi:tray-arrow-up" width={20} />
           </span>
           <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-            Nothing submitted yet. Your first change will appear here.
+            {tStatic(
+              "contributeRoute.nothing_submitted_yet_your_first_change_will_appear_here"
+            )}
           </p>
           <GlobalLink
             href="#start"
             className="text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Choose something to do
+            {tStatic("contributeRoute.choose_something_to_do")}
           </GlobalLink>
         </div>
       ) : (
@@ -207,7 +211,7 @@ export function YourSubmissionsList({
             className="text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Track them in My submissions
+            {tStatic("contributeRoute.track_them_in_my_submissions")}
           </GlobalLink>
         </div>
       ) : null}
@@ -239,6 +243,10 @@ function summaryLine(submissions: HubSubmission[]): string {
 }
 
 export function SignInPromptCard() {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <section
       aria-labelledby="hub-sign-in"
@@ -246,15 +254,15 @@ export function SignInPromptCard() {
     >
       <div>
         <CardHeading id="hub-sign-in">
-          Every change starts with an account
+          {tStatic("contributeRoute.every_change_starts_with_an_account")}
         </CardHeading>
         <p
           className="mt-2 mb-0 max-w-[56ch] text-base leading-[1.6]"
           style={{ color: T.ink.dim }}
         >
-          Create a free account to suggest corrections, add libraries and share
-          photos. Every accepted change is credited to you, and you can vote on
-          what gets added next.
+          {tStatic(
+            "contributeRoute.create_a_free_account_to_suggest_corrections_add_libraries_and_share_photos_every_accepted_change_is"
+          )}
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
@@ -263,14 +271,14 @@ export function SignInPromptCard() {
           className="rounded-full px-6 py-2.5 text-base font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover)"
           style={{ background: T.action.primary }}
         >
-          Create a free account
+          {tExisting("featureAccess.createAccount")}
         </GlobalLink>
         <GlobalLink
           href="/auth/signin"
           className="text-sm underline underline-offset-[3px]"
           style={{ color: T.ink.dim }}
         >
-          Already have an account? Sign in
+          {tStatic("contributeRoute.already_have_an_account_sign_in")}
         </GlobalLink>
       </div>
     </section>

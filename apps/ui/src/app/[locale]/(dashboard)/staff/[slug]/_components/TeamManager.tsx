@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { StaffRole } from "@repo/access"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, Notice, Sheet, Switch } from "@/components/ds"
@@ -75,7 +75,11 @@ export function TeamManager({
   readonly full: boolean
   readonly mobile: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const locale = useLocale()
@@ -97,7 +101,7 @@ export function TeamManager({
   // The uncovered view lists members without a level, so the session's
   // role for this library stands in: an owner never reads "Editor".
   const yourRole: StaffRole = you?.staffRole ?? role
-  const yourAccess = `${yourRole === "owner" ? "Owner" : "Editor"}${you?.approvedAt ? ` since ${date(you.approvedAt)}` : ""}`
+  const yourAccess = `${yourRole === "owner" ? tExisting("teamInvitation.owner") : tExisting("authorBadges.editor")}${you?.approvedAt ? ` since ${date(you.approvedAt)}` : ""}`
   const pendingInvites = data.invites.filter((i) => i.status !== "expired")
 
   async function request(
@@ -156,7 +160,7 @@ export function TeamManager({
           <>
             <p className="m-0 mr-auto text-sm" style={{ color: T.ink.dim }}>
               <span className="font-semibold" style={{ color: T.ink.base }}>
-                Your access
+                {tStatic("staffRoute.your_access")}
               </span>{" "}
               · {yourAccess}
             </p>
@@ -177,7 +181,7 @@ export function TeamManager({
                   })
                 }
               >
-                Leave this library
+                {tStatic("staffRoute.leave_this_library")}
               </Button>
             ) : null}
             <Button
@@ -193,7 +197,7 @@ export function TeamManager({
                 width={16}
                 height={16}
               />
-              Report a problem
+              {tStatic("common.reportProblem")}
             </Button>
           </>
         }
@@ -223,7 +227,10 @@ export function TeamManager({
                   >
                     {member.name}
                     {member.isYou ? (
-                      <span style={{ color: T.ink.dim }}> (you)</span>
+                      <span style={{ color: T.ink.dim }}>
+                        {" "}
+                        {tStatic("common.youSuffix")}
+                      </span>
                     ) : null}
                   </p>
                   {full ? (
@@ -264,14 +271,24 @@ export function TeamManager({
                           })
                         }
                         options={[
-                          { value: "owner", label: "Owner" },
-                          { value: "editor", label: "Editor" },
+                          {
+                            value: "owner",
+                            label: tExisting("teamInvitation.owner"),
+                          },
+                          {
+                            value: "editor",
+                            label: tExisting("authorBadges.editor"),
+                          },
                         ]}
                       />
                     </label>
                   ) : (
                     <Badge
-                      label={member.staffRole === "owner" ? "Owner" : "Editor"}
+                      label={
+                        member.staffRole === "owner"
+                          ? tExisting("teamInvitation.owner")
+                          : tExisting("authorBadges.editor")
+                      }
                       color="dim"
                     />
                   )}
@@ -349,8 +366,10 @@ export function TeamManager({
                       {invite.emailMasked}
                     </p>
                     <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                      {invite.staffRole === "owner" ? "Owner" : "Editor"} ·
-                      invite open until {date(invite.expiresAt)}
+                      {invite.staffRole === "owner"
+                        ? tExisting("teamInvitation.owner")
+                        : tExisting("authorBadges.editor")}{" "}
+                      · invite open until {date(invite.expiresAt)}
                     </p>
                   </div>
                 </div>
@@ -378,7 +397,7 @@ export function TeamManager({
                         })
                       }
                     >
-                      Revoke
+                      {tStatic("common.revoke")}
                       <span className="sr-only">
                         {" "}
                         the invite for {invite.emailMasked}
@@ -432,7 +451,7 @@ export function TeamManager({
                   />
                 </label>
                 <label className="flex flex-col gap-2 text-sm font-semibold">
-                  Level
+                  {tStatic("common.level")}
                   <SelectField
                     name="staffRole"
                     value={String(inviteRole ?? "")}
@@ -444,8 +463,14 @@ export function TeamManager({
                     className={INPUT}
                     style={{ borderColor: T.border.hi }}
                     options={[
-                      { value: "editor", label: "Editor" },
-                      { value: "owner", label: "Owner" },
+                      {
+                        value: "editor",
+                        label: tExisting("authorBadges.editor"),
+                      },
+                      {
+                        value: "owner",
+                        label: tExisting("teamInvitation.owner"),
+                      },
                     ]}
                   />
                 </label>
@@ -461,7 +486,7 @@ export function TeamManager({
                     width={16}
                     height={16}
                   />
-                  Send invite
+                  {tStatic("common.sendInvite")}
                 </Button>
                 <p
                   className="m-0 basis-full text-sm"
@@ -496,9 +521,9 @@ export function TeamManager({
         ) : null}
         {!full ? (
           <p className="mt-4 mb-0 text-sm" style={{ color: T.ink.dim }}>
-            Each person claimed access on their own and a moderator checked it.
-            When a free staff workspace covers this library, its organiser can
-            invite colleagues here.
+            {tStatic(
+              "staffRoute.each_person_claimed_access_on_their_own_and_a_moderator_checked_it_when_a_free_staff_workspace_cover"
+            )}
           </p>
         ) : null}
         {full && !organiser ? (
@@ -583,7 +608,7 @@ export function TeamManager({
                 )
             }}
           >
-            {confirm?.danger ? "Yes, go ahead" : "Confirm"}
+            {confirm?.danger ? "Yes, go ahead" : tStatic("common.confirm")}
           </Button>
           <Button
             type="button"
@@ -619,7 +644,7 @@ export function TeamManager({
           }}
         >
           <label className="flex flex-col gap-2 text-sm font-semibold">
-            Tell the moderators what’s wrong
+            {tStatic("staffRoute.tell_the_moderators_what_s_wrong")}
             <textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
@@ -632,11 +657,12 @@ export function TeamManager({
             />
           </label>
           <p className="mt-2 mb-4 text-sm" style={{ color: T.ink.dim }}>
-            A moderator can remove anyone from a library’s staff. 10 to 1,000
-            characters.
+            {tStatic(
+              "staffRoute.a_moderator_can_remove_anyone_from_a_library_s_staff_10_to_1_000_characters"
+            )}
           </p>
           <Button type="submit" disabled={busy} variant="primary" size="pill">
-            Send report
+            {tExisting("discussions.sendReport")}
           </Button>
         </form>
       </Sheet>

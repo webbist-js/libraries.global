@@ -7,7 +7,7 @@ import { DriveCarousel } from "@/components/home/DriveCarousel"
 import { homepageContentAttributes } from "@/components/home/homepage.analytics"
 import { installAnalyticsClickTracking } from "@/lib/analytics-events"
 
-import messages from "../../../../locales/en.json"
+import messages from "../../../../locales/en"
 
 let reduced = false
 let finish: () => void

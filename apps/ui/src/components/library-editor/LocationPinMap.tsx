@@ -1,7 +1,6 @@
 "use client"
-
 import type { Map as MapLibreMap, Marker } from "maplibre-gl"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -64,7 +63,9 @@ export function LocationPinMap({
   /** The pin was dragged, or the map clicked. */
   readonly onMove: (lat: number, lng: number) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const captionId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -223,8 +224,9 @@ export function LocationPinMap({
         ) : null}
       </div>
       <figcaption id={captionId} style={fieldHintStyle}>
-        Drag the pin or click the map to move it. The latitude and longitude
-        boxes set it too.
+        {tStatic(
+          "libraryEditor.drag_the_pin_or_click_the_map_to_move_it_the_latitude_and_longitude_boxes_set_it_too"
+        )}
       </figcaption>
     </figure>
   )

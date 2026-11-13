@@ -9,7 +9,7 @@ import {
   publicLiveState,
   toMinutes,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { AppearanceControl } from "@/components/appearance/AppearanceControl"
@@ -68,7 +68,11 @@ export function LiveConsole({
   readonly canGoLive: boolean
   readonly mobileApp?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const id = initial.library.id,
     tt = initial.library.timetable
@@ -545,7 +549,7 @@ export function LiveConsole({
       expected: live ? expected(v.arrive) : undefined,
     }
   })
-  const routeLabel = `${routeDate ? weekdayName(routeDate) : "Today"}${tt && tt.cycle.weeks > 1 && routeDate ? `, Week ${live?.cycleWeek ?? cycleWeekOf(tt, routeDate)}` : ""} · ${route.length} ${route.length === 1 ? "stop" : "stops"}`
+  const routeLabel = `${routeDate ? weekdayName(routeDate) : tExisting("discussions.today")}${tt && tt.cycle.weeks > 1 && routeDate ? `, Week ${live?.cycleWeek ?? cycleWeekOf(tt, routeDate)}` : ""} · ${route.length} ${route.length === 1 ? "stop" : "stops"}`
   const routeTimes = route.length
     ? `${route[0]!.arrive}–${route.at(-1)!.depart}`
     : "No stops"
@@ -568,7 +572,7 @@ export function LiveConsole({
             className="flex min-h-14 cursor-pointer list-none items-center gap-1 rounded-full border px-4 text-sm font-semibold"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
           >
-            Menu
+            {tStatic("mobile.menu")}
           </summary>
           <nav
             aria-label={tUi("console_menu")}
@@ -581,7 +585,7 @@ export function LiveConsole({
                   className="flex min-h-11 items-center rounded-[10px] px-3 py-2 no-underline hover:bg-(--t-bg-surface)"
                   href={mobileApp ? "/" : "/live"}
                 >
-                  Switch library
+                  {tStatic("mobile.switch_library")}
                 </Link>
               </li>
               {role === "owner" && (
@@ -590,7 +594,7 @@ export function LiveConsole({
                     className="flex min-h-11 items-center rounded-[10px] px-3 py-2 no-underline hover:bg-(--t-bg-surface)"
                     href={staffHref("/live")}
                   >
-                    Live sharing settings
+                    {tStatic("common.liveSharingSettings")}
                   </Link>
                 </li>
               )}
@@ -630,7 +634,9 @@ export function LiveConsole({
       !initial.liveEnabled ||
       !tt ? (
         <section>
-          <h2 className="type-h2">You’re not set up to go live</h2>
+          <h2 className="type-h2">
+            {tStatic("mobile.you_re_not_set_up_to_go_live")}
+          </h2>
           <p className="my-4">
             {!initial.liveEnabled
               ? "Live sharing is temporarily unavailable."
@@ -641,7 +647,7 @@ export function LiveConsole({
                   : "The owner needs to allow live updates for this service."}
           </p>
           <Link className="live-button rounded-full" href={staffHref("/live")}>
-            Live sharing settings
+            {tStatic("common.liveSharingSettings")}
           </Link>
         </section>
       ) : finished ? (
@@ -668,7 +674,7 @@ export function LiveConsole({
               setConfirm(true)
             }}
           >
-            Restart with confirmation
+            {tStatic("mobile.restart_with_confirmation")}
           </button>
         </FinishedScreen>
       ) : active ? (
@@ -686,7 +692,7 @@ export function LiveConsole({
             {!online
               ? `Offline. ${queued} check-ins are saved on this phone.`
               : !visible
-                ? "Screen locked. Reopen the console to check in."
+                ? tStatic("mobile.screen_locked_reopen_the_console_to_check_in")
                 : live.mode === "approximate"
                   ? "Live · position shared · keep screen on"
                   : "Live · check-ins only"}
@@ -716,7 +722,7 @@ export function LiveConsole({
                   : "Leaving: last stop"
                 : next
                   ? "Arrived"
-                  : "End route"
+                  : tStatic("mobile.end_route")
             }
             busy={busy}
             onPrimary={() => {
@@ -757,7 +763,7 @@ export function LiveConsole({
             className="live-button mt-5 rounded-full"
             onClick={() => setSheet("end")}
           >
-            End route
+            {tStatic("mobile.end_route")}
           </button>
         </section>
       ) : (
@@ -793,14 +799,15 @@ export function LiveConsole({
             <>
               {mode === "approximate" && (
                 <p className="my-4 text-sm" style={{ color: T.ink.dim }}>
-                  Location is shared only between stops, rounded to about 250 m
-                  and a minute behind. Keep this screen on. Your browser will
-                  ask to use location after starting.
+                  {tStatic(
+                    "mobile.location_is_shared_only_between_stops_rounded_to_about_250_m_and_a_minute_behind_keep_this_screen_on"
+                  )}
                 </p>
               )}
               <p className="my-4 text-sm" style={{ color: T.ink.dim }}>
-                On iPhone, an installed app has its own sign-in. Sign in once
-                inside it.
+                {tStatic(
+                  "mobile.on_iphone_an_installed_app_has_its_own_sign_in_sign_in_once_inside_it"
+                )}
               </p>
               {confirmed && (
                 <button
@@ -815,7 +822,7 @@ export function LiveConsole({
                       })
                   }}
                 >
-                  Add a passkey
+                  {tStatic("mobile.add_a_passkey")}
                 </button>
               )}
             </>
@@ -841,7 +848,7 @@ export function LiveConsole({
             : sheet === "route"
               ? "Choose a day’s route"
               : sheet === "skip"
-                ? "Skip this stop"
+                ? tStatic("mobile.skip_this_stop")
                 : "Not running for the rest of today"
         }
       >
@@ -849,8 +856,9 @@ export function LiveConsole({
           {sheet === "end" ? (
             <>
               <p>
-                Sharing stops now. To restart today you’ll confirm it’s you
-                again.
+                {tStatic(
+                  "mobile.sharing_stops_now_to_restart_today_you_ll_confirm_it_s_you_again"
+                )}
               </p>
               <button
                 type="button"
@@ -858,7 +866,7 @@ export function LiveConsole({
                 disabled={busy || !online}
                 onClick={endRoute}
               >
-                Stop sharing
+                {tStatic("mobile.stop_sharing")}
               </button>
             </>
           ) : sheet === "route" ? (
@@ -891,13 +899,13 @@ export function LiveConsole({
           ) : (
             <>
               <label className="block text-base font-semibold">
-                Reason
+                {tStatic("common.reason")}
                 <SelectField
                   className="live-input mt-2 font-normal"
                   value={String(reason ?? "")}
                   onValueChange={(selectedValue) => setReason(selectedValue)}
                   options={[
-                    { value: "", label: "Choose a reason" },
+                    { value: "", label: tStatic("mobile.choose_a_reason") },
                     ...(sheet === "skip"
                       ? [
                           "Road closed",
@@ -912,7 +920,7 @@ export function LiveConsole({
               </label>
               {sheet === "breakdown" && (
                 <label className="block text-base font-semibold">
-                  Message for the public (optional)
+                  {tStatic("mobile.message_for_the_public_optional")}
                   <textarea
                     className="live-input mt-2 font-normal"
                     maxLength={240}

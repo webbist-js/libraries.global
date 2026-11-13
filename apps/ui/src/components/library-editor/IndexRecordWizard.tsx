@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { QueryClientContext } from "@tanstack/react-query"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   useCallback,
   useContext,
@@ -169,9 +169,13 @@ export function IndexRecordWizard({
   resumeSubmission,
   beforeSubmit,
 }: IndexRecordWizardProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const displayLocale = useLocale()
-  const tSave = useUiTranslations("draftSave")
+  const tSave = useTranslations("draftSave")
 
   const queryClient = useContext(QueryClientContext)
   const recoveryKey = useMemo(
@@ -632,8 +636,12 @@ export function IndexRecordWizard({
     queuedSave.current = null
     toast.success(
       staffNew
-        ? "Library sent for review. Approval will add it to your staff area."
-        : "Submission received — editorial review typically takes 1–3 days."
+        ? tExisting(
+            "ui.library_sent_for_review_approval_will_add_it_to_your_staff_area"
+          )
+        : tExisting(
+            "ui.submission_received_editorial_review_typically_takes_13_days"
+          )
     )
     queryClient?.invalidateQueries({ queryKey: ["my-submissions"] })
     queryClient?.invalidateQueries({ queryKey: ["draft"] })
@@ -644,13 +652,13 @@ export function IndexRecordWizard({
     setSubmitError(
       err?.message ?? "Submission failed. Your draft is kept; please retry."
     )
-    toast.error(err?.message ?? "Submission failed")
+    toast.error(err?.message ?? tExisting("ui.submission_failed"))
   }
 
   const submit = () => {
     if (saveBusy.current) return
     if (improve && changed.length === 0) {
-      toast.error("Change at least one field before sending.")
+      toast.error(tExisting("ui.change_at_least_one_field_before_sending"))
 
       return
     }
@@ -841,9 +849,9 @@ export function IndexRecordWizard({
               ) : null}
               {layout === "drawer" ? (
                 <div className="mt-3 flex flex-col gap-2 text-sm font-semibold sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:mt-0">
-                  <span>Section</span>
+                  <span>{tExisting("editorial.section")}</span>
                   <SelectField
-                    label="Editor section"
+                    label={tStatic("libraryEditor.editor_section")}
                     value={String(step)}
                     onValueChange={(value) => handleStepClick(Number(value))}
                     options={steps
@@ -885,12 +893,12 @@ export function IndexRecordWizard({
                 <Notice
                   icon="mdi:source-branch"
                   tone="warn"
-                  title="The published record changed"
+                  title={tStatic("libraryEditor.the_published_record_changed")}
                 >
                   <p>
-                    Review your proposal against the latest values. Your
-                    proposed changes will be kept; untouched fields will use the
-                    current record.
+                    {tStatic(
+                      "libraryEditor.review_your_proposal_against_the_latest_values_your_proposed_changes_will_be_kept_untouched_fields_w"
+                    )}
                   </p>
                   <button
                     type="button"
@@ -908,7 +916,7 @@ export function IndexRecordWizard({
                       setStep(LAST_STEP)
                     }}
                   >
-                    Compare with the latest record
+                    {tStatic("libraryEditor.compare_with_the_latest_record")}
                   </button>
                 </Notice>
               ) : null}
@@ -973,9 +981,9 @@ export function IndexRecordWizard({
                     title={tUi("you_re_editing_as_staff")}
                   >
                     <p className="m-0">
-                      Changes publish straight away and show in the record’s
-                      history. Fields marked “Reviewed by a moderator” go to a
-                      Moderator first.
+                      {tStatic(
+                        "libraryEditor.changes_publish_straight_away_and_show_in_the_record_s_history_fields_marked_reviewed_by_a_moderator"
+                      )}
                     </p>
                   </Notice>
                   {step === 3 && (
@@ -1016,8 +1024,9 @@ export function IndexRecordWizard({
                     title={tUi("adding_a_library_as_staff")}
                   >
                     <p className="m-0">
-                      An editor reviews the new record and your staff access
-                      together. Approval makes you an owner of this library.{" "}
+                      {tStatic(
+                        "libraryEditor.an_editor_reviews_the_new_record_and_your_staff_access_together_approval_makes_you_an_owner_of_this_"
+                      )}{" "}
                       {creationTeamId
                         ? tUi(
                             "it_will_also_be_covered_by_the_team_selected_below"
@@ -1186,7 +1195,7 @@ export function IndexRecordWizard({
                     className="min-h-11 rounded-full border px-5 text-sm font-semibold"
                     onClick={onCancel}
                   >
-                    Back to library
+                    {tStatic("common.backLibrary")}
                   </button>
                 ) : (
                   <Link

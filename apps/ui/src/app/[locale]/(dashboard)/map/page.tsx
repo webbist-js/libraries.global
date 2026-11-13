@@ -10,6 +10,7 @@ import { DashboardRouteTransition } from "@/components/dashboard/DashboardRouteT
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
 import { SavedViewsButton } from "@/components/saved/SavedViewsButton"
+import { withMessages } from "@/i18n/scoped-messages"
 import { scalableAtlasEnabled, ATLAS_COHORT_COOKIE } from "@/lib/atlas-rollout"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
@@ -29,7 +30,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
+async function MapPage({ params }: PageProps<"/[locale]/map">) {
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
@@ -77,3 +78,5 @@ export default async function MapPage({ params }: PageProps<"/[locale]/map">) {
     </DashboardRouteTransition>
   )
 }
+
+export default withMessages(MapPage, "[locale]/(dashboard)/map/page")

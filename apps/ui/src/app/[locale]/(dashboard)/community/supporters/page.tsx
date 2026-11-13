@@ -15,6 +15,7 @@ import { Badge } from "@/components/ds/Badge"
 import { StatBlock } from "@/components/ds/StatBlock"
 import { Container } from "@/components/elementary/Container"
 import GlobalLink from "@/components/global/GlobalLink"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import {
   fetchSupporters,
@@ -66,7 +67,7 @@ const STEPS = [
   { key: "milestone", icon: "mdi:heart-outline" },
 ] as const
 
-export default async function SupportersPage({
+async function SupportersPage({
   params,
   searchParams,
 }: {
@@ -495,3 +496,8 @@ export default async function SupportersPage({
     </div>
   )
 }
+
+export default withMessages(
+  SupportersPage,
+  "[locale]/(dashboard)/community/supporters/page"
+)

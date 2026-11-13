@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { createContext, useContext } from "react"
 
 import { OK } from "@/components/atlas/atlas-map.style"
@@ -28,7 +27,9 @@ export function AtlasAnalysisHeader({
   readonly onSettings?: () => void
   readonly badgeTone?: "area" | "pin"
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   const panel = useContext(AtlasAnalysisPanelContext)
 
   if (panel) return null
@@ -87,7 +88,7 @@ export function AtlasAnalysisHeader({
           className="flex min-h-9 items-center gap-1.5 self-start text-sm font-semibold"
           style={{ color: T.accent.primary }}
         >
-          <Icon name="settings" size={16} /> Layer settings
+          <Icon name="settings" size={16} /> {tStatic("atlas.layer_settings")}
         </button>
       ) : null}
     </header>

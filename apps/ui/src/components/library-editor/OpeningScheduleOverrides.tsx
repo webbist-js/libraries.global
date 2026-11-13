@@ -8,6 +8,7 @@ import {
   type OpeningTimeframe,
   type OpeningTimesStaffing,
 } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import type * as React from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -42,10 +43,12 @@ export function OpeningBlockDetails({
   frame: OpeningTimeframe
   onChange: (frame: OpeningTimeframe) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div style={row}>
       <label>
-        Access mode{" "}
+        {tStatic("libraryEditor.access_mode")}{" "}
         <SelectField
           style={control}
           value={String(frame.staffing ?? "")}
@@ -69,16 +72,16 @@ export function OpeningBlockDetails({
             onChange({ ...frame, overnight: event.target.checked })
           }
         />{" "}
-        Ends the next day
+        {tStatic("libraryEditor.ends_the_next_day")}
       </label>
       <label>
-        Access or booking note{" "}
+        {tStatic("libraryEditor.access_or_booking_note")}{" "}
         <input
           style={control}
           maxLength={1000}
           value={frame.note ?? ""}
           onChange={(event) => onChange({ ...frame, note: event.target.value })}
-          placeholder="e.g. library card required"
+          placeholder={tStatic("libraryEditor.e_g_library_card_required")}
         />
       </label>
     </div>
@@ -93,9 +96,15 @@ function Blocks({
   onChange: (value: OpeningTimeframe[]) => void
   label: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div>
-      {value.length === 0 ? <p>Closed on this date.</p> : null}
+      {value.length === 0 ? (
+        <p>{tStatic("libraryEditor.closed_on_this_date")}</p>
+      ) : null}
       {value.map((frame, n) => (
         <fieldset
           key={frame.id}
@@ -111,7 +120,7 @@ function Blocks({
           </legend>
           <div style={row}>
             <label>
-              From{" "}
+              {tExisting("staticUi.staff.from")}{" "}
               <input
                 style={control}
                 type="time"
@@ -126,10 +135,10 @@ function Blocks({
               />
             </label>
             <label>
-              Until{" "}
+              {tExisting("staticUi.staff.until")}{" "}
               <input
                 style={control}
-                aria-label="End time; 24:00 is midnight"
+                aria-label={tStatic("libraryEditor.end_time_24_00_is_midnight")}
                 value={frame.endTime}
                 placeholder="17:00"
                 pattern="[0-9]{2}:[0-9]{2}"
@@ -147,7 +156,7 @@ function Blocks({
               style={control}
               onClick={() => onChange(value.filter((_, i) => i !== n))}
             >
-              Remove block
+              {tStatic("libraryEditor.remove_block")}
             </button>
           </div>
           <OpeningBlockDetails
@@ -164,7 +173,7 @@ function Blocks({
         disabled={value.length >= 10}
         onClick={() => onChange([...value, fresh()])}
       >
-        Add opening block
+        {tStatic("libraryEditor.add_opening_block")}
       </button>
     </div>
   )
@@ -180,13 +189,17 @@ export function OpeningScheduleOverrides({
   onChange: (value: OpeningTimesValue) => void
   disabled?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const errors = validateOpeningSchedule(value)
 
   return (
     <fieldset disabled={disabled} style={{ border: 0, padding: 16, margin: 0 }}>
       {errors.length ? (
         <div role="alert">
-          <strong>Check the opening schedule</strong>
+          <strong>{tStatic("libraryEditor.check_the_opening_schedule")}</strong>
           <ul>
             {errors.map((error) => (
               <li key={error}>{error}</li>
@@ -196,20 +209,22 @@ export function OpeningScheduleOverrides({
       ) : null}
       <details>
         <summary style={{ minHeight: 44, cursor: "pointer", fontWeight: 600 }}>
-          Exceptions and seasonal hours
+          {tStatic("libraryEditor.exceptions_and_seasonal_hours")}
         </summary>
         <p>
-          A dated exception replaces that day. Seasonal hours replace the
-          regular week within the selected dates. Closure and changed-hours
-          notices take precedence.
+          {tStatic(
+            "libraryEditor.a_dated_exception_replaces_that_day_seasonal_hours_replace_the_regular_week_within_the_selected_date"
+          )}
         </p>
-        <h3 className="type-h3">Dated exceptions</h3>
+        <h3 className="type-h3">{tStatic("libraryEditor.dated_exceptions")}</h3>
         {(value.exceptions ?? []).map((exception, n) => (
           <fieldset key={n} style={{ margin: "12px 0", borderRadius: 8 }}>
-            <legend>Exception {n + 1}</legend>
+            <legend>
+              {tStatic("libraryEditor.exception")} {n + 1}
+            </legend>
             <div style={row}>
               <label>
-                Date{" "}
+                {tStatic("common.date")}{" "}
                 <input
                   style={control}
                   type="date"
@@ -234,11 +249,11 @@ export function OpeningScheduleOverrides({
                   })
                 }
               >
-                Remove exception
+                {tStatic("libraryEditor.remove_exception")}
               </button>
             </div>
             <Blocks
-              label={exception.date || "Exception"}
+              label={exception.date || tStatic("libraryEditor.exception")}
               value={exception.timeframes}
               onChange={(timeframes) =>
                 onChange({
@@ -265,9 +280,9 @@ export function OpeningScheduleOverrides({
             })
           }
         >
-          Add an exception
+          {tStatic("libraryEditor.add_an_exception")}
         </button>
-        <h3 className="type-h3">Seasonal hours</h3>
+        <h3 className="type-h3">{tStatic("libraryEditor.seasonal_hours")}</h3>
         {(value.seasons ?? []).map((season, n) => (
           <fieldset
             key={season.id}
@@ -277,7 +292,11 @@ export function OpeningScheduleOverrides({
             <div style={row}>
               {(["name", "from", "to"] as const).map((key) => (
                 <label key={key}>
-                  {key === "name" ? "Name" : key === "from" ? "Starts" : "Ends"}{" "}
+                  {key === "name"
+                    ? tExisting("ui.name")
+                    : key === "from"
+                      ? tExisting("articleContext.starts")
+                      : tExisting("ui.ends")}{" "}
                   <input
                     style={control}
                     type={key === "name" ? "text" : "date"}
@@ -303,7 +322,7 @@ export function OpeningScheduleOverrides({
                   })
                 }
               >
-                Remove season
+                {tStatic("libraryEditor.remove_season")}
               </button>
             </div>
             {season.days.map((day) => (
@@ -338,7 +357,7 @@ export function OpeningScheduleOverrides({
                       })
                     }
                   />{" "}
-                  Open on {day.day}
+                  {tStatic("libraryEditor.open_on")} {day.day}
                 </label>
                 {day.enabled ? (
                   <Blocks
@@ -391,7 +410,7 @@ export function OpeningScheduleOverrides({
             })
           }
         >
-          Add a season from this week
+          {tStatic("libraryEditor.add_a_season_from_this_week")}
         </button>
       </details>
     </fieldset>

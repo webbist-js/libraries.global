@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -117,6 +117,8 @@ export function Step({
   readonly disabled?: boolean
   readonly children: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <fieldset
       id={id}
@@ -146,7 +148,7 @@ export function Step({
         <div className="flex min-w-0 flex-col gap-1">
           <h2 className="type-h2 m-0" style={cardTitle}>
             <span className="sr-only">
-              Step {n}
+              {tStatic("common.step")} {n}
               {done ? ", done" : ""}:{" "}
             </span>
             {title}
@@ -259,13 +261,15 @@ export function CharCount({
   readonly length: number
   readonly max: number
 }) {
+  const tExisting = useTranslations()
+
   return (
     <span
       id={id}
       className="text-sm font-semibold"
       style={{ color: length > max ? T.accent.danger : T.ink.dim }}
     >
-      {fmt(length)} of {fmt(max)}
+      {fmt(length)} {tExisting("widgetPublic.of")} {fmt(max)}
       <span className="sr-only"> characters</span>
     </span>
   )

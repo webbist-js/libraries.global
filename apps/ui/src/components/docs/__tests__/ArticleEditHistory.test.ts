@@ -6,9 +6,9 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { cleanup, render } from "@/test/render"
 
-import czech from "../../../../locales/cs.json"
-import english from "../../../../locales/en.json"
-import french from "../../../../locales/fr.json"
+import czech from "../../../../locales/cs"
+import english from "../../../../locales/en"
+import french from "../../../../locales/fr"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })

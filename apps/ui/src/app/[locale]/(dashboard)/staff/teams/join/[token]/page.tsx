@@ -10,6 +10,7 @@ import {
 } from "@/components/staff/knowledge-links"
 import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import type { TeamInvitePreview } from "@/lib/staff/types"
@@ -22,7 +23,7 @@ import { TeamJoin } from "./_components/TeamJoin"
  * the Team, who sent it and the masked email it went to; the signed-in
  * email must match before "Join" works (Strapi checks again).
  */
-export default async function TeamJoinPage({
+async function TeamJoinPage({
   params,
 }: {
   readonly params: Promise<{ token: string }>
@@ -84,3 +85,8 @@ export default async function TeamJoinPage({
     </>
   )
 }
+
+export default withMessages(
+  TeamJoinPage,
+  "[locale]/(dashboard)/staff/teams/join/[token]/page"
+)

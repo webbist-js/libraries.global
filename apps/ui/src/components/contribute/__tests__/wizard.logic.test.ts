@@ -1,16 +1,16 @@
+import { createTranslator } from "next-intl"
 import { describe, expect, it } from "vitest"
 
+import messages from "../../../../locales/en"
 import {
-  blockerFor,
+  createWizardCopy,
+  createBlockerFor,
   buildSubmission,
   CATEGORIES,
-  CATEGORY_OPTIONS,
-  DRAWER_STEPS,
   draftKey,
   EMPTY_DRAFT,
   hubHref,
   parseHubParams,
-  STEP_LABELS,
   type WizardDraft,
 } from "../wizard.logic"
 
@@ -19,6 +19,14 @@ const draft = (patch: Partial<WizardDraft>): WizardDraft => ({
   ...EMPTY_DRAFT,
   ...patch,
 })
+
+const { CATEGORY_OPTIONS, DRAWER_STEPS, STEP_LABELS } = createWizardCopy(
+  createTranslator({ locale: "en", messages, namespace: "wizardCopy" })
+)
+
+const blockerFor = createBlockerFor(
+  createTranslator({ locale: "en", messages, namespace: "wizardCopy" })
+)
 
 describe("STEP_LABELS", () => {
   it("names three steps for every action", () => {

@@ -5,57 +5,46 @@ import { eventTypeTint } from "@/components/events/event-display"
 
 export const EVENT_TYPE_META = {
   talk: {
-    label: "Talk",
     icon: "mdi:microphone-outline",
     color: "var(--tint-national-fg)",
   },
   exhibition: {
-    label: "Exhibition",
     icon: "mdi:image-frame",
     color: "var(--tint-special-fg)",
   },
   storytime: {
-    label: "Storytime",
     icon: "mdi:book-open-page-variant-outline",
     color: "var(--tint-special-fg)",
   },
   book_club: {
-    label: "Book club",
     icon: "mdi:book-multiple-outline",
     color: "var(--t-palette-amber-fg)",
   },
   workshop: {
-    label: "Workshop",
     icon: "mdi:code-tags",
     color: "var(--tint-academic-fg)",
   },
   tour: {
-    label: "Tour",
     icon: "mdi:map-marker-outline",
     color: "var(--tint-public-fg)",
   },
   screening: {
-    label: "Screening",
     icon: "mdi:film-outline",
     color: "var(--tint-national-fg)",
   },
   reading_group: {
-    label: "Reading group",
     icon: "mdi:account-group-outline",
     color: "var(--t-palette-amber-fg)",
   },
   performance: {
-    label: "Performance",
     icon: "mdi:music-note-outline",
     color: "var(--tint-national-fg)",
   },
   drop_in: {
-    label: "Drop-in",
     icon: "mdi:home-outline",
     color: "var(--tint-public-fg)",
   },
   other: {
-    label: "Event",
     icon: "mdi:calendar-blank-outline",
     color: "var(--tint-neutral-fg)",
   },

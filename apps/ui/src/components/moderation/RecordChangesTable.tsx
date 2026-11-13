@@ -1,4 +1,5 @@
 import { normalizeMobileTimetable } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -122,6 +123,10 @@ export function RecordChangesTable({
   readonly fields: unknown
   readonly review: unknown
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const fields = (
     rawFields && typeof rawFields === "object" ? rawFields : {}
   ) as Record<string, unknown>
@@ -143,7 +148,7 @@ export function RecordChangesTable({
   if (changes.length === 0 && suggested.length === 0)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No field changes in this submission.
+        {tStatic("moderation.no_field_changes_in_this_submission")}
       </p>
     )
 
@@ -152,7 +157,9 @@ export function RecordChangesTable({
     if (!(key in source)) return ["—"]
     const v = source[key]
     if (key === "homeLibrary")
-      return [typeof v === "string" ? nameOf(v) : "None"]
+      return [
+        typeof v === "string" ? nameOf(v) : tExisting("articleConflict.none"),
+      ]
     if (RELATIONS.has(key))
       return Array.isArray(v) && v.length
         ? [v.map(nameOf).join(", ")]
@@ -163,10 +170,18 @@ export function RecordChangesTable({
 
   const after = (key: string, v: unknown): string[] => {
     if (key === "homeLibrary")
-      return [typeof v === "string" && v ? nameOf(v) : "None"]
+      return [
+        typeof v === "string" && v
+          ? nameOf(v)
+          : tExisting("articleConflict.none"),
+      ]
     if (RELATIONS.has(key)) {
       if (Array.isArray(v))
-        return [v.length ? v.map(nameOf).join(", ") : "None"]
+        return [
+          v.length
+            ? v.map(nameOf).join(", ")
+            : tExisting("articleConflict.none"),
+        ]
       const { connect, disconnect } = (v ?? {}) as Record<string, unknown>
 
       return [
@@ -227,7 +242,9 @@ export function RecordChangesTable({
         style={{ border: `1px solid ${T.border.line}`, background: T.bg.deep }}
       >
         <table className="w-full border-collapse">
-          <caption className="sr-only">Proposed changes to the record</caption>
+          <caption className="sr-only">
+            {tStatic("moderation.proposed_changes_to_the_record")}
+          </caption>
           <thead>
             <tr style={{ background: T.bg.surface }}>
               {[
@@ -292,7 +309,7 @@ export function RecordChangesTable({
                   {`New ${humanise(key).toLowerCase()} option`}
                 </th>
                 <td className={cell} style={{ color: T.ink.dim }}>
-                  Not in the list yet
+                  {tStatic("moderation.not_in_the_list_yet")}
                 </td>
                 <td className={cell}>
                   <Lines lines={list} color={T.accent.ok} />

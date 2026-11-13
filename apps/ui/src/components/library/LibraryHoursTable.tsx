@@ -11,7 +11,7 @@ import {
   noticeAddDays,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import {
@@ -137,8 +137,12 @@ export function LibraryHoursTable({
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
   const locale = useLocale()
   const today = useToday(timezone)
   const recordedHours = hasOpeningHours(openingTimes)
@@ -151,7 +155,7 @@ export function LibraryHoursTable({
   if (!hasHours && !recordedHours) {
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        Hours not added yet.
+        {tStatic("library.hours_not_added_yet")}
       </p>
     )
   }
@@ -275,7 +279,7 @@ export function LibraryHoursTable({
                           >
                             {OPENING_MODE_LABELS[
                               (frame.staffing ?? "open") as OpeningTimesStaffing
-                            ] ?? "Open"}
+                            ] ?? tExisting("ui.open")}
                           </span>
                           {frame.note ? (
                             <p
@@ -314,7 +318,7 @@ export function LibraryHoursTable({
                         <span className="block text-xs">
                           {OPENING_MODE_LABELS[
                             (first?.staffing ?? "open") as OpeningTimesStaffing
-                          ] ?? "Open"}
+                          ] ?? tExisting("ui.open")}
                         </span>
                       ) : null}
                     </span>
@@ -373,7 +377,7 @@ export function LibraryHoursTable({
                               {OPENING_MODE_LABELS[
                                 (frame.staffing ??
                                   "open") as OpeningTimesStaffing
-                              ] ?? "Open"}
+                              ] ?? tExisting("ui.open")}
                             </span>
                           </div>
                           {frame.note ? (
@@ -399,7 +403,7 @@ export function LibraryHoursTable({
         style={{ borderColor: T.border.line, background: T.bg.surface }}
       >
         <summary className="cursor-pointer text-sm font-semibold">
-          What the opening modes mean
+          {tStatic("library.what_the_opening_modes_mean")}
         </summary>
         <ul className="m-0 mt-3 grid list-none gap-3 p-0 text-sm sm:grid-cols-2">
           {modes.map((mode) => (
@@ -410,7 +414,8 @@ export function LibraryHoursTable({
                   className="h-3 w-6 shrink-0 rounded-sm"
                   style={{ background: MODE_STYLES[mode] ?? MODE_STYLES.open }}
                 />
-                {OPENING_MODE_LABELS[mode as OpeningTimesStaffing] ?? "Open"}
+                {OPENING_MODE_LABELS[mode as OpeningTimesStaffing] ??
+                  tExisting("ui.open")}
               </div>
               <p
                 className="m-0 mt-1 leading-relaxed"
@@ -444,6 +449,8 @@ export function LibraryOpenStatusBadge({
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const status = useOpenStatus(openingTimes, timezone, notices)
   const fixed: Record<string, string> = {
     permanently_closed: "Permanently closed",
@@ -467,7 +474,9 @@ export function LibraryOpenStatusBadge({
   if (!status || status.state === "unknown")
     return (
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        Current opening status unavailable · check the published hours
+        {tStatic(
+          "library.current_opening_status_unavailable_check_the_published_hours"
+        )}
       </p>
     )
   const open = status.state === "open"
@@ -505,6 +514,8 @@ export function LibraryTodayFact({
   readonly timezone: string | null
   readonly notices?: readonly LibraryNotice[]
 }) {
+  const tExisting = useTranslations()
+
   const status = useOpenStatus(openingTimes, timezone, notices)
   // Today and the notice-adjusted hours are only known on the client (the
   // page is static), so both come from one effect: the HTML never bakes in
@@ -552,7 +563,7 @@ export function LibraryTodayFact({
   return (
     <FactCard
       icon="mdi:clock-outline"
-      label={dayName ? `Today (${dayName})` : "Today"}
+      label={dayName ? `Today (${dayName})` : tExisting("discussions.today")}
       value={value}
     />
   )

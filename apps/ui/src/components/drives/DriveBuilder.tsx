@@ -11,7 +11,7 @@ import {
   VERIFY_SECTIONS,
   type VerifySection,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import {
   type FormEvent,
   Fragment,
@@ -305,7 +305,9 @@ function refusalMessage(json: unknown, status: number): string {
  * notice, a heading focused on arrival, and where to go next.
  */
 function ProposalSent() {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const ref = useRef<HTMLHeadingElement>(null)
   useEffect(() => {
@@ -330,10 +332,12 @@ function ProposalSent() {
         className="type-h2 m-0 outline-none"
         style={cardTitle}
       >
-        Thanks. We’ve got your proposal.
+        {tStatic("drive.thanks_we_ve_got_your_proposal")}
       </h2>
       <p className="m-0 text-base leading-[1.6]" style={{ color: T.ink.dim }}>
-        A moderator will review it. You’ll get an email when it’s decided.
+        {tStatic(
+          "drive.a_moderator_will_review_it_you_ll_get_an_email_when_it_s_decided"
+        )}
       </p>
       <div className="mt-1 flex flex-wrap gap-2.5">
         <Link
@@ -342,7 +346,7 @@ function ProposalSent() {
           style={secondaryStyle}
         >
           <Icon aria-hidden="true" icon="mdi:arrow-left" width={16} />
-          Back to the Noticeboard
+          {tStatic("drive.back_to_the_noticeboard")}
         </Link>
         <Link
           href="/contribute/submissions"
@@ -465,6 +469,10 @@ export function DriveBuilder({
   readonly userId?: string | null
   readonly restoreDraft?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [libraryTypeChoices, setLibraryTypeChoices] =
     useState<readonly string[]>(LIBRARY_TYPES)
   useEffect(() => {
@@ -481,7 +489,7 @@ export function DriveBuilder({
 
     return () => controller.abort()
   }, [])
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const proposing = mode === "propose"
@@ -886,7 +894,7 @@ export function DriveBuilder({
                   fontSize: "var(--type-body-size)",
                 }}
               >
-                Start again instead
+                {tStatic("drive.start_again_instead")}
               </button>
             </p>
           </Notice>
@@ -913,8 +921,9 @@ export function DriveBuilder({
           title={`This drive is ${drive?.status}`}
         >
           <p className="m-0" style={{ color: T.ink.base }}>
-            Only its words and where to look can change now. What it’s for,
-            where it runs and its dates are fixed.
+            {tStatic(
+              "drive.only_its_words_and_where_to_look_can_change_now_what_it_s_for_where_it_runs_and_its_dates_are_fixed"
+            )}
           </p>
         </Notice>
       ) : null}
@@ -922,8 +931,8 @@ export function DriveBuilder({
       <Step
         n={1}
         id={fieldId("focus")}
-        title="What’s the job?"
-        hint="One job per drive keeps it quick for helpers."
+        title={tStatic("drive.what_s_the_job")}
+        hint={tStatic("drive.one_job_per_drive_keeps_it_quick_for_helpers")}
         done={done[0]!}
         disabled={locked}
       >
@@ -957,15 +966,17 @@ export function DriveBuilder({
               className={legendClass}
               style={{ color: T.ink.base }}
             >
-              Which gaps?<Tag>Pick up to three</Tag>
+              {tStatic("drive.which_gaps")}
+              <Tag>{tStatic("drive.pick_up_to_three")}</Tag>
             </p>
             <p
               id="drive-gaps-hint"
               className={hintClass}
               style={{ color: T.ink.dim }}
             >
-              Each library’s task asks for all of them in one go. Numbers show
-              how many libraries in your scope are missing each one.
+              {tStatic(
+                "drive.each_library_s_task_asks_for_all_of_them_in_one_go_numbers_show_how_many_libraries_in_your_scope_are"
+              )}
             </p>
             <div className="flex flex-wrap gap-2">
               {PANEL_GAPS.map((gap) => {
@@ -1001,7 +1012,8 @@ export function DriveBuilder({
                 className={`${legendClass} mb-3`}
                 style={{ color: T.ink.base }}
               >
-                Which details?<Tag>Pick one or more</Tag>
+                {tStatic("drive.which_details")}
+                <Tag>{tStatic("drive.pick_one_or_more")}</Tag>
               </legend>
               <div className="flex flex-wrap gap-2">
                 {VERIFY_SECTIONS.map((section) => (
@@ -1020,7 +1032,9 @@ export function DriveBuilder({
               id={fieldId("verifyBefore")}
               label={tUi("not_confirmed_since")}
               tag="Required"
-              hint="Details nobody has ever confirmed count too."
+              hint={tStatic(
+                "drive.details_nobody_has_ever_confirmed_count_too"
+              )}
               hintId="drive-verify-before-hint"
             >
               <input
@@ -1066,7 +1080,7 @@ export function DriveBuilder({
               className="mt-2 mb-0 text-sm"
               style={{ color: T.ink.dim }}
             >
-              A record is done once it reaches this.
+              {tStatic("drive.a_record_is_done_once_it_reaches_this")}
             </p>
             <FieldMessage
               field="recordTarget"
@@ -1093,7 +1107,9 @@ export function DriveBuilder({
       <Step
         n={2}
         title={tUi("where")}
-        hint="Add one or more places at any level. Closed libraries are always left out."
+        hint={tStatic(
+          "drive.add_one_or_more_places_at_any_level_closed_libraries_are_always_left_out"
+        )}
         done={done[1]!}
         disabled={locked}
       >
@@ -1157,12 +1173,14 @@ export function DriveBuilder({
             </ul>
           ) : (
             <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-              No places yet. A library in any place you add is in the drive.
+              {tStatic(
+                "drive.no_places_yet_a_library_in_any_place_you_add_is_in_the_drive"
+              )}
             </p>
           )}
           {listCount > 0 && state.places.length > 0 ? (
             <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-              Your list of libraries replaces these places.
+              {tStatic("drive.your_list_of_libraries_replaces_these_places")}
             </p>
           ) : null}
           <FieldMessage field="places" message={errorOf("places")} />
@@ -1179,7 +1197,8 @@ export function DriveBuilder({
             className={`${legendClass} mb-3`}
             style={{ color: T.ink.base }}
           >
-            Library types<Tag>None chosen means every type</Tag>
+            {tExisting("optionSuggestions.lists.library_types")}
+            <Tag>{tStatic("drive.none_chosen_means_every_type")}</Tag>
           </legend>
           <div className="flex flex-wrap gap-2">
             {libraryTypeChoices.map((type) => (
@@ -1201,7 +1220,7 @@ export function DriveBuilder({
           onToggle={() => setNarrowOpen(!narrowShown)}
           icon="mdi:filter-variant"
           title={tUi("narrow_it_further")}
-          hint="Dataset, completeness or a list"
+          hint={tStatic("drive.dataset_completeness_or_a_list")}
           tinted
         >
           <Field
@@ -1231,9 +1250,9 @@ export function DriveBuilder({
 
           <Field
             id={fieldId("completenessBelow")}
-            label="Only libraries below N% complete"
+            label={tStatic("drive.only_libraries_below_n_complete")}
             tag="Optional"
-            hint="Leave it blank to include every record."
+            hint={tStatic("drive.leave_it_blank_to_include_every_record")}
             hintId="drive-completeness-hint"
           >
             <span className="flex items-center gap-2">
@@ -1301,7 +1320,7 @@ export function DriveBuilder({
                 className="mt-2 mb-0 text-sm"
                 style={{ color: T.accent.danger }}
               >
-                Not found: {unknownLibraries.join(", ")}.
+                {tStatic("drive.not_found")} {unknownLibraries.join(", ")}.
               </p>
             ) : null}
             <FieldMessage field="libraries" message={errorOf("libraries")} />
@@ -1311,8 +1330,10 @@ export function DriveBuilder({
 
       <Step
         n={3}
-        title="Where should helpers look?"
-        hint="Facts from a library’s own website are fine. Data copied from map services isn’t."
+        title={tStatic("drive.where_should_helpers_look")}
+        hint={tStatic(
+          "drive.facts_from_a_library_s_own_website_are_fine_data_copied_from_map_services_isn_t"
+        )}
         done={done[2]!}
       >
         <div className="flex flex-col gap-3">
@@ -1405,7 +1426,9 @@ export function DriveBuilder({
                       id={fieldId("whereLicence")}
                       label={tUi("licence_note")}
                       tag="Optional"
-                      hint="On what terms the answers can be used, as helpers will read it."
+                      hint={tStatic(
+                        "drive.on_what_terms_the_answers_can_be_used_as_helpers_will_read_it"
+                      )}
                       hintId="drive-licence-hint"
                     >
                       <textarea
@@ -1443,8 +1466,10 @@ export function DriveBuilder({
 
       <Step
         n={4}
-        title="Words for the card"
-        hint="We’ve drafted these from your choices. Change anything."
+        title={tStatic("drive.words_for_the_card")}
+        hint={tStatic(
+          "drive.we_ve_drafted_these_from_your_choices_change_anything"
+        )}
         done={done[3]!}
       >
         <Field
@@ -1458,7 +1483,9 @@ export function DriveBuilder({
               max={TITLE_MAX}
             />
           }
-          hint="Put *asterisks* around a word to show it in italics on the card."
+          hint={tStatic(
+            "drive.put_asterisks_around_a_word_to_show_it_in_italics_on_the_card"
+          )}
           hintId="drive-title-hint"
           hintBelow
         >
@@ -1521,7 +1548,8 @@ export function DriveBuilder({
             className={`${legendClass} mb-2`}
             style={{ color: T.ink.base }}
           >
-            How to help<Tag>One to five short steps</Tag>
+            {tExisting("drivePage.howToHelp")}
+            <Tag>{tStatic("drive.one_to_five_short_steps")}</Tag>
           </p>
           <ol className="m-0 flex list-none flex-col gap-2 p-0">
             {state.steps.map((step, i) => (
@@ -1577,7 +1605,7 @@ export function DriveBuilder({
               onClick={() => write("steps", { steps: [...state.steps, ""] })}
             >
               <Icon aria-hidden="true" icon="mdi:plus" width={16} />
-              Add a step
+              {tStatic("drive.add_a_step")}
             </button>
             <button
               type="button"
@@ -1591,7 +1619,7 @@ export function DriveBuilder({
                 fontFamily: T.font.sans,
               }}
             >
-              Redraft from my choices
+              {tStatic("drive.redraft_from_my_choices")}
             </button>
           </div>
           <FieldMessage field="steps" message={errorOf("steps")} />
@@ -1600,8 +1628,10 @@ export function DriveBuilder({
 
       <Step
         n={5}
-        title="When, and what counts as done?"
-        hint="Drives run up to 90 days, midnight to midnight UTC."
+        title={tStatic("drive.when_and_what_counts_as_done")}
+        hint={tStatic(
+          "drive.drives_run_up_to_90_days_midnight_to_midnight_utc"
+        )}
         done={done[4]!}
         disabled={locked}
       >
@@ -1652,7 +1682,7 @@ export function DriveBuilder({
             >
               {closes ? (
                 <>
-                  Closes on{" "}
+                  {tStatic("drive.closes_on")}{" "}
                   <strong style={{ color: T.ink.base }}>{closes}</strong>
                 </>
               ) : (
@@ -1798,7 +1828,7 @@ export function DriveBuilder({
               className="inline-flex cursor-pointer items-center rounded-full px-5 py-3 text-base font-semibold transition-colors hover:bg-(--t-bg-surface)"
               style={{ ...secondaryStyle, fontFamily: T.font.sans }}
             >
-              Save draft
+              {tStatic("drive.save_draft")}
             </button>
           ) : null}
           <button

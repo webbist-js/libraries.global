@@ -1,11 +1,10 @@
 "use client"
-
 import {
   DRIVE_PLACE_LEVELS,
   type DrivePlaceLevel,
   type DriveScope,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { DriveTitle } from "@/components/drives/DriveTitle"
@@ -95,7 +94,7 @@ function ChangeDatesForm({
   readonly startsAt: string
   readonly endsAt: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const opensId = useId()
@@ -239,12 +238,16 @@ export function DriveProposalPanel({
   readonly proposal: DriveProposalReview | null
   readonly applicant: RoleApplicant | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   if (!proposal) {
     return (
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        This proposal’s drive could not be read.
+        {tStatic("moderation.this_proposal_s_drive_could_not_be_read")}
       </p>
     )
   }
@@ -263,7 +266,9 @@ export function DriveProposalPanel({
     <div className="flex flex-col gap-6">
       {proposal.discussions && (
         <section className="grid gap-2 rounded-xl border border-(--t-border-line) p-4">
-          <h3 className={`type-h3 ${heading}`}>Requested conversation feed</h3>
+          <h3 className={`type-h3 ${heading}`}>
+            {tStatic("moderation.requested_conversation_feed")}
+          </h3>
           <p className="m-0 text-sm">
             {proposal.discussions.enabled
               ? "Enable conversations and link the following threads. Original authorship and moderation are retained."
@@ -277,7 +282,7 @@ export function DriveProposalPanel({
                     href={`/community/discussions/${encodeURIComponent(id)}`}
                     className="text-sm text-(--t-accent-primary) underline"
                   >
-                    Review conversation {index + 1}
+                    {tStatic("moderation.review_conversation")} {index + 1}
                     {proposal.discussions?.featuredThreadId === id
                       ? " · Featured"
                       : ""}
@@ -327,7 +332,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          Where
+          {tStatic("moderation.where")}
         </h3>
         <ul
           className="m-0 flex list-none flex-col gap-1 p-0 text-base"
@@ -341,11 +346,11 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          Counts
+          {tStatic("moderation.counts")}
         </h3>
         {counts === null ? (
           <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-            Counts are unavailable right now.
+            {tStatic("moderation.counts_are_unavailable_right_now")}
           </p>
         ) : (
           <>
@@ -356,7 +361,9 @@ export function DriveProposalPanel({
               <Notice
                 tone="warn"
                 icon="mdi:alert-outline"
-                title="Too big to finish: over 2,000 to do. Ask for a split by region, or reject it."
+                title={tStatic(
+                  "moderation.too_big_to_finish_over_2_000_to_do_ask_for_a_split_by_region_or_reject_it"
+                )}
               />
             ) : null}
             {counts.todo === 0 ? (
@@ -372,7 +379,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          Dates
+          {tStatic("moderation.dates")}
         </h3>
         <div className="flex flex-wrap items-center gap-2">
           <p className="m-0 text-base" style={{ color: T.ink.base }}>
@@ -380,7 +387,7 @@ export function DriveProposalPanel({
           </p>
           {datesEdited ? (
             <Badge
-              label="Changed by a Moderator"
+              label={tStatic("moderation.changed_by_a_moderator")}
               color="gold"
               icon="mdi:pencil-outline"
             />
@@ -395,7 +402,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          How to help
+          {tExisting("drivePage.howToHelp")}
         </h3>
         <ol
           className="m-0 flex list-decimal flex-col gap-1 pl-5 text-base"
@@ -435,7 +442,7 @@ export function DriveProposalPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          Proposed by
+          {tStatic("moderation.proposed_by")}
         </h3>
         <ApplicantSummary
           applicant={applicant}
@@ -460,7 +467,7 @@ export function DriveProposalPanel({
       {OPEN.has(status) ? (
         <div className="flex flex-col gap-2">
           <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-            Change dates
+            {tStatic("moderation.change_dates")}
           </h3>
           <ChangeDatesForm
             documentId={documentId}
@@ -482,11 +489,11 @@ export function DriveProposalPanel({
               className="font-semibold underline underline-offset-2"
               style={{ color: T.accent.primary }}
             >
-              Open the drive →
+              {tStatic("moderation.open_the_drive")}
             </Link>
           </p>
           <p className="m-0 text-sm">
-            The editorial board pins and features drives.
+            {tStatic("moderation.the_editorial_board_pins_and_features_drives")}
           </p>
         </Notice>
       ) : null}

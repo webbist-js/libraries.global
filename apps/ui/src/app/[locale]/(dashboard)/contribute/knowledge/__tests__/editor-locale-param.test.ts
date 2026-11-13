@@ -111,8 +111,7 @@ describe("article editor pages read ?locale=", () => {
 
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl")
-  const messages = (await import("../../../../../../../locales/en.json"))
-    .default
+  const messages = (await import("../../../../../../../locales/en")).default
 
   return {
     getTranslations: async (config: string | { namespace?: string }) =>

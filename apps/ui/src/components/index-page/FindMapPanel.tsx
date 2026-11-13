@@ -1,7 +1,6 @@
 // apps/ui/src/components/index-page/FindMapPanel.tsx
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { analyticsAttributes } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
@@ -21,7 +20,11 @@ export function FindMapPanel({
   hits: LibrarySearchHitV2[]
   stops?: MobileStopHit[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const withGeo = hits.filter((h) => h._geo)
   const pinnedStops = stops.filter((stop) => stop._geo).slice(0, 1000)
@@ -71,7 +74,9 @@ export function FindMapPanel({
               className="w-full rounded-lg"
               viewBox="0 0 300 220"
               role="img"
-              aria-label="Relative positions of library buildings and nearby mobile stops. Buildings are circles; mobile stops are green squares."
+              aria-label={tStatic(
+                "profileIndex.relative_positions_of_library_buildings_and_nearby_mobile_stops_buildings_are_circles_mobile_stops_a"
+              )}
             >
               {withGeo.map((hit) => {
                 const p = point(hit._geo!)
@@ -109,7 +114,7 @@ export function FindMapPanel({
               })}
             </svg>
             <p className="m-0 text-base">
-              ● Library buildings · ■ Mobile stops
+              {tStatic("profileIndex.library_buildings_mobile_stops")}
             </p>
           </>
         )}
@@ -128,7 +133,8 @@ export function FindMapPanel({
           <path d="M9 4v14M15 6v14" />
         </svg>
         <p className="m-0 text-base font-semibold">
-          {withGeo.length} of {hits.length} results have map coordinates
+          {withGeo.length} {tExisting("widgetPublic.of")} {hits.length} results
+          have map coordinates
         </p>
         <Link
           href="/map"
@@ -140,7 +146,7 @@ export function FindMapPanel({
           className="rounded-full px-5 py-2.5 text-base font-semibold text-white no-underline"
           style={{ background: T.action.primary }}
         >
-          Open the full map
+          {tStatic("profileIndex.open_the_full_map")}
         </Link>
       </div>
 
@@ -150,7 +156,7 @@ export function FindMapPanel({
             className="cursor-pointer text-base font-semibold"
             style={{ color: T.ink.base }}
           >
-            Map as text
+            {tStatic("profileIndex.map_as_text")}
           </summary>
           <ul className="m-0 mt-2 flex list-none flex-col gap-1.5 p-0">
             {withGeo.slice(0, 30).map((h) => (

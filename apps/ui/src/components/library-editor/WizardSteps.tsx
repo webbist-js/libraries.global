@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import type React from "react"
 
@@ -34,6 +33,8 @@ import {
 // ── Step 1 — Identity ─────────────────────────────────────────────────────────
 
 function StepBasics({ f, set }: StepProps) {
+  const tStatic = useTranslations("staticUi")
+
   const [libraryTypes, setLibraryTypes] = useState(LIBRARY_TYPES)
   useEffect(() => {
     const controller = new AbortController()
@@ -52,7 +53,7 @@ function StepBasics({ f, set }: StepProps) {
 
     return () => controller.abort()
   }, [])
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <fieldset
@@ -127,7 +128,9 @@ function StepBasics({ f, set }: StepProps) {
           id="operatorName"
           value={f.operatorName}
           onChange={set}
-          hint="The council, organisation or service that runs this vehicle."
+          hint={tStatic(
+            "libraryEditor.the_council_organisation_or_service_that_runs_this_vehicle"
+          )}
         />
       )}
       <TextareaField
@@ -136,7 +139,9 @@ function StepBasics({ f, set }: StepProps) {
         value={f.summary}
         onChange={set}
         rows={3}
-        hint="2–4 sentences. Appears in search results and listing cards."
+        hint={tStatic(
+          "libraryEditor.2_4_sentences_appears_in_search_results_and_listing_cards"
+        )}
       />
       {(f.operationalStatus === "permanently_closed" ||
         f.operationalStatus === "temporarily_closed") && (
@@ -146,7 +151,9 @@ function StepBasics({ f, set }: StepProps) {
           value={f.closureReason}
           onChange={set}
           rows={2}
-          hint="Briefly explain why or when the library closed."
+          hint={tStatic(
+            "libraryEditor.briefly_explain_why_or_when_the_library_closed"
+          )}
         />
       )}
     </fieldset>
@@ -156,7 +163,7 @@ function StepBasics({ f, set }: StepProps) {
 // ── Stops & times — mobile libraries only ────────────────────────────────────
 
 function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const timetableReadOnly = useIsShared("mobileTimetable")
 
@@ -209,7 +216,9 @@ function StepTimetable({ f, set, setFormData, timetableContext }: StepProps) {
 // ── Visit — shared contact, services and access fields ───────────────────────
 
 function StepVisit({ f, set, setFormData }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const mobile = f.libraryType === "Mobile"
 
@@ -263,7 +272,9 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           onChange={set}
           placeholder="https://"
           type="url"
-          hint="Counts as the contact link if there’s no website."
+          hint={tStatic(
+            "libraryEditor.counts_as_the_contact_link_if_there_s_no_website"
+          )}
         />
         <Field
           label={tUi("membership_reader_registration_url")}
@@ -307,7 +318,9 @@ function StepVisit({ f, set, setFormData }: StepProps) {
           value={f.virtualTourEmbed}
           onChange={set}
           placeholder="<iframe…>"
-          hint="Paste the embed snippet if you have one."
+          hint={tStatic(
+            "libraryEditor.paste_the_embed_snippet_if_you_have_one"
+          )}
         />
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -333,14 +346,16 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         id="admissionInfo"
         value={f.admissionInfo}
         onChange={set}
-        placeholder="Free general admission. Reader pass required for reading rooms…"
+        placeholder={tStatic(
+          "libraryEditor.free_general_admission_reader_pass_required_for_reading_rooms"
+        )}
       />
       <Field
         label={tUi("languages_served")}
         id="languagesServed"
         value={f.languagesServed}
         onChange={set}
-        placeholder="English, Welsh"
+        placeholder={tStatic("libraryEditor.english_welsh")}
       />
       <TextareaField
         label={tUi("getting_there_transit_info")}
@@ -355,7 +370,9 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         value={f.visitNotes}
         onChange={set}
         rows={3}
-        placeholder="What visitors should know — queues, bag policies, photography rules…"
+        placeholder={tStatic(
+          "libraryEditor.what_visitors_should_know_queues_bag_policies_photography_rules"
+        )}
       />
 
       {f.libraryType !== "Mobile" &&
@@ -406,7 +423,9 @@ function StepVisit({ f, set, setFormData }: StepProps) {
         onChange={(ids) =>
           setFormData((prev) => ({ ...prev, accessibility: ids }))
         }
-        hint="Use the access notes below for details about using these facilities."
+        hint={tStatic(
+          "libraryEditor.use_the_access_notes_below_for_details_about_using_these_facilities"
+        )}
       />
       <TextareaField
         label={tUi("accessibility_notes")}
@@ -440,7 +459,9 @@ function StepVisit({ f, set, setFormData }: StepProps) {
 // ── Step 4 — Collections ──────────────────────────────────────────────────────
 
 function StepCollections({ f, set }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <fieldset
@@ -466,14 +487,18 @@ function StepCollections({ f, set }: StepProps) {
         id="collectionSize"
         value={f.collectionSize}
         onChange={set}
-        hint="Approximate total — include unit (e.g. '170 million items', '2.4 million volumes')"
+        hint={tStatic(
+          "libraryEditor.approximate_total_include_unit_e_g_170_million_items_2_4_million_volumes"
+        )}
       />
       <Field
         label={tUi("collection_types")}
         id="collectionTypes"
         value={f.collectionTypes}
         onChange={set}
-        placeholder="Books, Manuscripts, Maps, Sound recordings"
+        placeholder={tStatic(
+          "libraryEditor.books_manuscripts_maps_sound_recordings"
+        )}
       />
       <TextareaField
         label={tUi("special_collections_notable_holdings")}
@@ -487,7 +512,7 @@ function StepCollections({ f, set }: StepProps) {
           id="classificationSystem"
           value={f.classificationSystem}
           onChange={set}
-          placeholder="Dewey, LC, UDC, proprietary"
+          placeholder={tStatic("libraryEditor.dewey_lc_udc_proprietary")}
         />
         <Field
           label={tUi("iiif_endpoint_url")}
@@ -505,7 +530,7 @@ function StepCollections({ f, set }: StepProps) {
 // ── Step 5 — Building ─────────────────────────────────────────────────────────
 
 function StepBuilding({ f, set }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <fieldset
@@ -576,7 +601,9 @@ function StepBuilding({ f, set }: StepProps) {
 // ── Step 6 — Imagery ──────────────────────────────────────────────────────────
 
 function StepImagery({ f, set, setFormData }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <fieldset
@@ -610,15 +637,17 @@ function StepImagery({ f, set, setFormData }: StepProps) {
         id="imageCredit"
         value={f.imageCredit}
         onChange={set}
-        placeholder="Photographer name, CC BY-SA 4.0"
-        hint="Optional. Applies to all uploaded images."
+        placeholder={tStatic("libraryEditor.photographer_name_cc_by_sa_4_0")}
+        hint={tStatic("libraryEditor.optional_applies_to_all_uploaded_images")}
       />
       <TextareaField
         label={tUi("image_notes")}
         id="imageNote"
         value={f.imageNote}
         onChange={set}
-        placeholder="Describe the shots — exterior, interior reading room, etc."
+        placeholder={tStatic(
+          "libraryEditor.describe_the_shots_exterior_interior_reading_room_etc"
+        )}
       />
     </fieldset>
   )
@@ -627,7 +656,7 @@ function StepImagery({ f, set, setFormData }: StepProps) {
 // ── Step 7 — Sources ──────────────────────────────────────────────────────────
 
 function StepSources({ f, set, setFormData, improving }: StepProps) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <fieldset

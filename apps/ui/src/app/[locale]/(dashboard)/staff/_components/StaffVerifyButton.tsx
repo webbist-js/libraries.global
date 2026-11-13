@@ -1,6 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { VerifySection } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -29,6 +31,8 @@ export function StaffVerifyButton({
   /** The pill's text; defaults to "Confirm {section}". */
   label?: string
 }) {
+  const tExisting = useTranslations()
+
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [done, setDone] = useState("")
@@ -50,12 +54,16 @@ export function StaffVerifyButton({
         throw new Error(
           r.status === 429
             ? "Too many confirmations in a short time. Wait a moment, then try again."
-            : (data.error?.message ?? "Please try again.")
+            : (data.error?.message ?? tExisting("apiIndividualCheckout.retry"))
         )
       setDone(`Confirmed: ${what} marked as checked today.`)
       router.refresh()
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Please try again.")
+      setError(
+        e instanceof Error
+          ? e.message
+          : tExisting("apiIndividualCheckout.retry")
+      )
     } finally {
       setBusy(false)
     }

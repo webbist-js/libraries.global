@@ -211,7 +211,8 @@ describe("API account dashboard", () => {
       target: { value: "Council website" },
     })
     fireEvent.submit(
-      screen.getByRole("button", { name: "Create key" }).closest("form")!
+      (screen.getByRole("button", { name: "Create key" }) as HTMLButtonElement)
+        .form!
     )
     await waitFor(() => expect(screen.getByText(secret)).toBeTruthy())
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
@@ -269,7 +270,7 @@ describe("API account dashboard", () => {
     fireEvent.click(
       within(dialog).getByRole("checkbox", { name: /Library records/ })
     )
-    fireEvent.submit(create.closest("form")!)
+    fireEvent.submit(create.form!)
     await waitFor(() => expect(fetcher).toHaveBeenCalled())
     expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toEqual({
       action: "create",
@@ -446,9 +447,16 @@ it("keeps the API overview free of key tooling and usage tables", () => {
     <TeamApiDashboard initial={initial} confirming={false} section="overview" />
   )
   expect(screen.queryByRole("button", { name: "Create key" })).toBeNull()
+  // The overview shows a compact summary that links to the usage view,
+  // never the usage panel's meters.
   expect(
-    screen.queryByRole("heading", { name: "This billing period" })
-  ).toBeNull()
+    screen.getByRole("region", { name: "Current billing period" })
+  ).toBeTruthy()
+  expect(
+    screen.getByRole("link", { name: /View usage/ }).getAttribute("href")
+  ).toBe("/developers/usage")
+  expect(screen.queryAllByRole("progressbar")).toHaveLength(0)
+  expect(document.getElementById("api-usage")).toBeNull()
   expect(screen.queryByRole("heading", { name: "Using the API" })).toBeNull()
 })
 
@@ -495,7 +503,7 @@ it("requires confirmation before a key may spend credits or submit proposals", a
   expect(create.disabled).toBe(true)
   fireEvent.click(dialog.getByRole("checkbox", { name: /I confirm this key/ }))
   expect(create.disabled).toBe(false)
-  fireEvent.submit(create.closest("form")!)
+  fireEvent.submit(create.form!)
   await waitFor(() => expect(fetcher).toHaveBeenCalled())
   expect(JSON.parse(fetcher.mock.calls[0]?.[1]?.body as string)).toMatchObject({
     action: "create",

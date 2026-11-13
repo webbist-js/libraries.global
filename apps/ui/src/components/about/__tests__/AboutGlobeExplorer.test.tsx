@@ -1,13 +1,5 @@
 // @vitest-environment happy-dom
 
-import {
-  act,
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -17,6 +9,7 @@ import type {
   GlobeHover,
 } from "@/components/about/about-globe.types"
 import { AboutGlobeExplorer } from "@/components/about/AboutGlobeExplorer"
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@/test/render"
 
 const countries: AboutGlobeCountry[] = [
   {
@@ -66,15 +59,7 @@ const record: AboutGlobeRecord = {
     },
   ],
 }
-vi.mock("next-intl", () => ({
-  useLocale: () => "en",
-  useTranslations: () => (key: string) =>
-    ({
-      search_countries: "Search countries",
-      search_countries_2: "Search countries…",
-      no_results: "No results",
-    })[key],
-}))
+
 vi.mock("@iconify/react", () => ({ Icon: () => <span aria-hidden="true" /> }))
 vi.mock("@/components/global/GlobalLink", () => ({
   default: ({

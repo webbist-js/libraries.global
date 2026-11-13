@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -20,7 +19,9 @@ export function PhotoUpload({
   readonly photo: WizardDraft["photo"]
   readonly onChange: (photo: WizardDraft["photo"]) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const [busy, setBusy] = useState(false)
@@ -72,7 +73,7 @@ export function PhotoUpload({
             className={`${SECONDARY} h-10 px-4 text-base`}
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
-            Replace
+            {tStatic("contribute.replace")}
           </button>
         </div>
       ) : (

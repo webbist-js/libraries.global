@@ -1,5 +1,3 @@
-// Server-rendered content sections for the library detail page (v2).
-
 import {
   appendSourceRecords,
   libraryTypeName,
@@ -8,7 +6,9 @@ import {
   hasOpeningHours,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useFormatter, useTranslations as useUiTranslations } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
+
+// Server-rendered content sections for the library detail page (v2).
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -83,7 +83,7 @@ function ExternalLink({
   readonly href: string
   readonly children: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <a
@@ -116,6 +116,10 @@ function HoursNote({
   /** Whether "Still right?" can confirm them. */
   readonly canVerify: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div
       className="mt-4 rounded-xl p-4 text-sm leading-relaxed"
@@ -133,10 +137,11 @@ function HoursNote({
         : null}
       {manyRanges ? (
         <>
-          Some days list three time ranges, possibly staffed and self-service
-          hours.{" "}
+          {tStatic(
+            "library.some_days_list_three_time_ranges_possibly_staffed_and_self_service_hours"
+          )}{" "}
           <OpenCorrectionLink category="Opening hours" className={LINK}>
-            Help clarify
+            {tStatic("library.help_clarify")}
           </OpenCorrectionLink>
           .{" "}
         </>
@@ -144,7 +149,7 @@ function HoursNote({
       {!hasHours ? (
         <>
           <OpenCorrectionLink category="Opening hours" className={LINK}>
-            Add the opening hours
+            {tExisting("libraryPage.tasks.addHours")}
           </OpenCorrectionLink>
           .{" "}
         </>
@@ -159,10 +164,10 @@ function HoursNote({
             className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 font-semibold"
             sections={["hours", "status"]}
           >
-            These are right
+            {tStatic("library.these_are_right")}
             <span className="sr-only">
               {" "}
-              Confirm the opening hours and open status
+              {tStatic("library.confirm_the_opening_hours_and_open_status")}
             </span>
           </OpenVerifyLink>
         ) : null}
@@ -171,7 +176,7 @@ function HoursNote({
             category="Opening hours"
             className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 font-semibold"
           >
-            Something’s changed
+            {tStatic("library.something_s_changed")}
           </OpenCorrectionLink>
         ) : null}
       </div>
@@ -180,8 +185,12 @@ function HoursNote({
 }
 
 export function LibraryVisitSection({ library }: { readonly library: Lib }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   const rec = asRecord(library)
   const coords = formatCoordinates(
@@ -211,13 +220,14 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
     return (
       <LibrarySectionCard
         id="visit"
-        title="Online access"
+        title={tExisting("libraryPage.onlineAccess")}
         iconPath={LIB_ICONS.pin}
       >
         <LibraryVisitRail library={library} embedded />
         <p>
-          Use the official website or catalogue to access this library’s
-          resources.
+          {tStatic(
+            "library.use_the_official_website_or_catalogue_to_access_this_library_s_resources"
+          )}
         </p>
         {(["admissionInfo", "visitNotes"] as const).map((key) =>
           typeof rec[key] === "string" && rec[key] ? (
@@ -226,11 +236,11 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
         )}
         {library.website ? (
           <a className={LINK} href={library.website}>
-            Visit the official website
+            {tStatic("library.visit_the_official_website")}
           </a>
         ) : (
           <OpenCorrectionLink category="Something else" className={LINK}>
-            Add an access link
+            {tStatic("library.add_an_access_link")}
           </OpenCorrectionLink>
         )}
       </LibrarySectionCard>
@@ -298,12 +308,12 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             </address>
           ) : (
             <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-              Address not added yet.{" "}
+              {tStatic("library.address_not_added_yet")}{" "}
               <OpenCorrectionLink
                 category="Address or location"
                 className={LINK}
               >
-                Add it
+                {tStatic("library.add_it")}
               </OpenCorrectionLink>
             </p>
           )}
@@ -323,8 +333,11 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
                   className={`${LINK} text-sm`}
                   sections={["address"]}
                 >
-                  Still right?
-                  <span className="sr-only"> Confirm the address</span>
+                  {tStatic("common.stillRight")}
+                  <span className="sr-only">
+                    {" "}
+                    {tStatic("library.confirm_the_address")}
+                  </span>
                 </OpenVerifyLink>
               ) : null}
             </div>
@@ -366,7 +379,8 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             <p className="mt-4 mb-0 flex gap-2 text-sm leading-normal">
               <LibIcon d={LIB_ICONS.train} size={17} />
               <span>
-                <strong>Nearest station:</strong> {nearestStation}
+                <strong>{tStatic("library.nearest_station")}</strong>{" "}
+                {nearestStation}
               </span>
             </p>
           ) : null}
@@ -374,7 +388,8 @@ export function LibraryVisitSection({ library }: { readonly library: Lib }) {
             <p className="mt-3 mb-0 flex gap-2 text-sm leading-normal">
               <LibIcon d={LIB_ICONS.train} size={17} />
               <span>
-                <strong>Getting there:</strong> {transitInfo}
+                <strong>{tStatic("library.getting_there")}</strong>{" "}
+                {transitInfo}
               </span>
             </p>
           ) : null}
@@ -393,8 +408,10 @@ export function LibraryFacilitiesSection({
   readonly library: Lib
   readonly path: string
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   const rec = asRecord(library)
   const rows = facilityRows(library).filter((row) => row.category !== "service")
@@ -407,7 +424,7 @@ export function LibraryFacilitiesSection({
       tPage("recordedDetails", { known, total: rows.length })
     ) : (
       <>
-        Spotted something wrong?{" "}
+        {tStatic("library.spotted_something_wrong")}{" "}
         <OpenCorrectionLink category="Accessibility" className={LINK}>
           {tUi("suggest_a_correction")}
         </OpenCorrectionLink>
@@ -441,8 +458,9 @@ export function LibraryFacilitiesSection({
         {unknown > 0
           ? "Your answer goes to a reviewer before it’s shown. "
           : null}
-        Please check with the library before visiting if something matters to
-        you.
+        {tStatic(
+          "library.please_check_with_the_library_before_visiting_if_something_matters_to_you"
+        )}
       </p>
     </LibrarySectionCard>
   )
@@ -491,7 +509,9 @@ function CardAction({ children }: { readonly children: React.ReactNode }) {
 }
 
 export function LibraryHistorySection({ library }: { readonly library: Lib }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const entries = historyEntries(library)
 
@@ -542,12 +562,14 @@ export function LibraryHistorySection({ library }: { readonly library: Lib }) {
         </ol>
       ) : (
         <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
-          Not documented yet. When it opened, moved or was rebuilt all help.
+          {tStatic(
+            "library.not_documented_yet_when_it_opened_moved_or_was_rebuilt_all_help"
+          )}
         </p>
       )}
       <CardAction>
         <OpenCorrectionLink category="Something else" className={LINK}>
-          Add a date or event
+          {tStatic("library.add_a_date_or_event")}
         </OpenCorrectionLink>
       </CardAction>
     </LibrarySectionCard>
@@ -566,8 +588,12 @@ export function LibraryCollectionsSection({
   readonly footer?: React.ReactNode
   readonly library: Lib
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   const rec = asRecord(library)
 
@@ -582,12 +608,13 @@ export function LibraryCollectionsSection({
         dashed
       >
         <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
-          Not documented yet. Local studies, languages and special holdings are
-          especially useful.
+          {tStatic(
+            "library.not_documented_yet_local_studies_languages_and_special_holdings_are_especially_useful"
+          )}
         </p>
         <CardAction>
           <OpenCorrectionLink category="Collections" className={LINK}>
-            Describe the collections
+            {tStatic("library.describe_the_collections")}
           </OpenCorrectionLink>
         </CardAction>
       </LibrarySectionCard>
@@ -671,7 +698,7 @@ export function LibraryCollectionsSection({
         {timeline.length > 0 ? (
           <ol
             id="history"
-            aria-label="Library timeline"
+            aria-label={tStatic("library.library_timeline")}
             className="m-0 grid scroll-mt-24 list-none gap-2.5 p-0"
             style={{
               gridTemplateColumns:
@@ -706,7 +733,7 @@ export function LibraryCollectionsSection({
 
         {visibleCollections.length > 0 ? (
           <dl
-            aria-label="Collection figures"
+            aria-label={tStatic("library.collection_figures")}
             className="m-0 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
           >
             {visibleCollections.map((stat, index) => (
@@ -719,7 +746,7 @@ export function LibraryCollectionsSection({
                   className="order-2 mt-0.5 text-sm"
                   style={{ color: T.ink.dim }}
                 >
-                  {stat.category ?? "Collection figure"}
+                  {stat.category ?? tExisting("libraryPage.collectionFigure")}
                 </dt>
                 <dd
                   className="order-1 m-0 text-[26px] leading-tight"
@@ -755,14 +782,14 @@ export function LibraryCollectionsSection({
           >
             {buildingInfo || architect ? (
               <div>
-                <dt className="font-bold">The building</dt>
+                <dt className="font-bold">{tStatic("library.the_building")}</dt>
                 <dd className="mt-0.5 mb-0" style={{ color: T.ink.dim }}>
                   {buildingPreview ? (
                     <p className="m-0">{buildingPreview}</p>
                   ) : null}
                   {architect && !buildingPreview?.includes(architect) ? (
                     <p className={buildingPreview ? "mt-2 mb-0" : "m-0"}>
-                      Architect: {architect}
+                      {tStatic("library.architect")} {architect}
                     </p>
                   ) : null}
                 </dd>
@@ -770,7 +797,7 @@ export function LibraryCollectionsSection({
             ) : null}
             {operator ? (
               <div>
-                <dt className="font-bold">Run by</dt>
+                <dt className="font-bold">{tExisting("ui.run_by")}</dt>
                 <dd className="mt-0.5 mb-0" style={{ color: T.ink.dim }}>
                   {operator}
                 </dd>
@@ -875,12 +902,12 @@ export function LibraryCollectionsSection({
               <>
                 {catalogueUrl ? (
                   <ExternalLink href={catalogueUrl}>
-                    Search the catalogue
+                    {tExisting("libraryPage.catalogue")}
                   </ExternalLink>
                 ) : null}
                 {iiifEndpoint ? (
                   <ExternalLink href={iiifEndpoint}>
-                    Digitised collections
+                    {tExisting("libraryPage.digitalCollections")}
                   </ExternalLink>
                 ) : null}
               </>
@@ -894,7 +921,7 @@ export function LibraryCollectionsSection({
                       className="type-small-heading mt-0 mb-2"
                       style={{ color: T.ink.base }}
                     >
-                      The building
+                      {tStatic("library.the_building")}
                     </h3>
                     <p className="m-0">{buildingInfo}</p>
                   </div>
@@ -940,7 +967,9 @@ export function LibraryEventsEmpty({
   readonly librarySlug: string
   readonly libraryName: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (inline)
     return (
@@ -950,15 +979,17 @@ export function LibraryEventsEmpty({
         style={{ color: T.ink.dim }}
       >
         <p className="m-0">
-          <strong style={{ color: T.ink.base }}>Events:</strong> none listed
-          yet; no events feed connected.
+          <strong style={{ color: T.ink.base }}>
+            {tStatic("library.events")}
+          </strong>{" "}
+          none listed yet; no events feed connected.
         </p>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <OpenCorrectionLink
             category="Something else"
             className="inline-flex min-h-11 items-center text-sm underline underline-offset-[3px]"
           >
-            Add a key date
+            {tStatic("library.add_a_key_date")}
           </OpenCorrectionLink>
           <span aria-hidden="true">·</span>
           <LibraryEventsEmptyAction
@@ -980,8 +1011,9 @@ export function LibraryEventsEmpty({
       dashed
     >
       <p className="m-0 text-sm leading-normal" style={{ color: T.ink.dim }}>
-        No events listed yet. Staff can connect the library&rsquo;s events
-        calendar from the staff area.
+        {tStatic(
+          "library.no_events_listed_yet_staff_can_connect_the_library_rsquo_s_events_calendar_from_the_staff_area"
+        )}
       </p>
       <CardAction>
         <LibraryEventsEmptyAction
@@ -1013,8 +1045,8 @@ export function LibraryChangesSection({
   readonly stats?: LibraryHistoryStats | null
   readonly datasets?: DatasetRecord[]
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
   const formatter = useFormatter()
   const rec = asRecord(library)
   const sourceRecords = appendSourceRecords(
@@ -1206,12 +1238,16 @@ export function LibraryReuseSection({
   /** The record's canonical, absolute URL. */
   readonly url: string
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   const rec = asRecord(library)
   const citation = buildCitation({
-    name: library.name ?? "Library",
+    name: library.name ?? tExisting("ui.library"),
     entityRef: library.entityRef,
     updatedAt:
       (rec.contentUpdatedAt as string | null) ??
@@ -1282,7 +1318,7 @@ export function LibraryReuseSection({
             href="/knowledge/data-api/the-public-api"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
-            API docs
+            {tStatic("library.api_docs")}
           </GlobalLink>
         </div>
       </div>

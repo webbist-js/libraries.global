@@ -6,7 +6,7 @@ import {
   type LibraryNoticeType,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -46,7 +46,7 @@ const noticeInputStyle = {
 }
 
 function RequiredTag() {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <span
@@ -103,7 +103,11 @@ export function LibraryNoticeForm({
   onCancel?: () => void
   onBusyChange?: (busy: boolean) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const uid = useId()
   const messageRef = useRef<HTMLTextAreaElement>(null)
@@ -182,7 +186,11 @@ export function LibraryNoticeForm({
       onSaved?.(result.notice)
     } catch (e) {
       measured("error")
-      setError(e instanceof Error ? e.message : "Please try again.")
+      setError(
+        e instanceof Error
+          ? e.message
+          : tExisting("apiIndividualCheckout.retry")
+      )
     } finally {
       setBusy(false)
       onBusyChange?.(false)
@@ -212,8 +220,8 @@ export function LibraryNoticeForm({
           ? reactivate
             ? "Reactivate notice"
             : initial
-              ? "Edit notice"
-              : "Post a new notice"
+              ? tExisting("ui.edit_notice")
+              : tStatic("staff.post_a_new_notice")
           : undefined
       }
       aria-labelledby={embedded || drawer ? undefined : field("heading")}
@@ -238,7 +246,9 @@ export function LibraryNoticeForm({
               {initial ? tUi("edit_notice") : tUi("post_a_notice")}
             </h2>
             <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
-              Publishes straight away. Dates use the library’s timezone.
+              {tStatic(
+                "staff.publishes_straight_away_dates_use_the_library_s_timezone"
+              )}
             </p>
           </div>
         )}
@@ -268,23 +278,28 @@ export function LibraryNoticeForm({
           <>
             <div className="flex flex-col gap-1.5">
               <label htmlFor={field("scope")} style={fieldLabelStyle}>
-                Applies to
+                {tStatic("staff.applies_to")}
               </label>
               <SelectField
                 className="min-h-[54px] rounded-2xl px-4 text-base"
                 id={field("scope")}
-                label="Applies to"
+                label={tStatic("staff.applies_to")}
                 disabled={busy}
                 value={scope}
                 onValueChange={(value) =>
                   setScope(value as LibraryNotice["scope"])
                 }
                 options={[
-                  { value: "service", label: "Whole service" },
-                  { value: "day", label: "One day’s route" },
-                  { value: "stop", label: "One stop" },
+                  { value: "service", label: tStatic("staff.whole_service") },
+                  { value: "day", label: tStatic("staff.one_day_s_route") },
+                  { value: "stop", label: tStatic("staff.one_stop") },
                   ...(type === "not_running"
-                    ? [{ value: "term_time", label: "Term-time stops" }]
+                    ? [
+                        {
+                          value: "term_time",
+                          label: tStatic("staff.term_time_stops"),
+                        },
+                      ]
                     : []),
                 ]}
               />
@@ -293,12 +308,12 @@ export function LibraryNoticeForm({
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor={field("week")} style={fieldLabelStyle}>
-                    Week
+                    {tStatic("common.week")}
                   </label>
                   <SelectField
                     className="min-h-[54px] rounded-2xl px-4 text-base"
                     id={field("week")}
-                    label="Week"
+                    label={tStatic("common.week")}
                     disabled={busy}
                     value={String(week)}
                     onValueChange={(value) => setWeek(Number(value))}
@@ -310,12 +325,12 @@ export function LibraryNoticeForm({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor={field("day")} style={fieldLabelStyle}>
-                    Day
+                    {tStatic("common.day")}
                   </label>
                   <SelectField
                     className="min-h-[54px] rounded-2xl px-4 text-base"
                     id={field("day")}
-                    label="Day"
+                    label={tStatic("common.day")}
                     disabled={busy}
                     value={day}
                     onValueChange={(value) => setDay(value as typeof day)}
@@ -329,12 +344,12 @@ export function LibraryNoticeForm({
             {scope === "stop" && (
               <div className="flex flex-col gap-1.5">
                 <label htmlFor={field("stop")} style={fieldLabelStyle}>
-                  Stop
+                  {tStatic("staff.stop")}
                 </label>
                 <SelectField
                   className="min-h-[54px] rounded-2xl px-4 text-base"
                   id={field("stop")}
-                  label="Stop"
+                  label={tStatic("staff.stop")}
                   disabled={busy}
                   required
                   value={stopId}
@@ -348,12 +363,12 @@ export function LibraryNoticeForm({
             )}
             <div className="flex flex-col gap-1.5">
               <label htmlFor={field("reason")} style={fieldLabelStyle}>
-                Reason
+                {tStatic("common.reason")}
               </label>
               <SelectField
                 className="min-h-[54px] rounded-2xl px-4 text-base"
                 id={field("reason")}
-                label="Reason"
+                label={tStatic("common.reason")}
                 disabled={busy}
                 value={reason}
                 onValueChange={setReason}
@@ -379,7 +394,7 @@ export function LibraryNoticeForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <label htmlFor={field("from")} style={fieldLabelStyle}>
-              From
+              {tStatic("staff.from")}
             </label>
             <input
               id={field("from")}
@@ -394,7 +409,7 @@ export function LibraryNoticeForm({
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor={field("to")} style={fieldLabelStyle}>
-              Until{" "}
+              {tStatic("staff.until")}{" "}
               <span style={{ color: T.ink.dim, fontWeight: 400 }}>
                 {tUi("optional")}{" "}
               </span>
@@ -411,14 +426,14 @@ export function LibraryNoticeForm({
           </div>
         </div>
         <p style={fieldHintStyle}>
-          An open-ended notice stays visible for 30 days.
+          {tStatic("staff.an_open_ended_notice_stays_visible_for_30_days")}
         </p>
         {type === "changed_hours" && (
           <OpeningTimesEditor value={hours} onChange={setHours} />
         )}
         <div className="flex flex-col gap-1.5">
           <label htmlFor={field("message")} style={fieldLabelStyle}>
-            Message
+            {tExisting("contactForm.message")}
             <RequiredTag />
           </label>
           <textarea
@@ -433,7 +448,9 @@ export function LibraryNoticeForm({
             required
             maxLength={280}
             disabled={busy}
-            placeholder="What changes, for which dates, and when it’s back to normal."
+            placeholder={tStatic(
+              "staff.what_changes_for_which_dates_and_when_it_s_back_to_normal"
+            )}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             aria-invalid={messageMissing || undefined}
@@ -476,8 +493,9 @@ export function LibraryNoticeForm({
               width={18}
               className="shrink-0"
             />
-            Notice {reactivate ? "reactivated" : initial ? "updated" : "posted"}
-            . It will show on your library’s page for the selected dates.
+            {tStatic("staff.notice")}{" "}
+            {reactivate ? "reactivated" : initial ? "updated" : "posted"}. It
+            will show on your library’s page for the selected dates.
           </p>
         )}
       </div>
@@ -496,7 +514,7 @@ export function LibraryNoticeForm({
             disabled={busy}
             onClick={onCancel}
           >
-            Cancel
+            {tExisting("ui.cancel")}
           </Button>
         ) : null}
         <Button
@@ -507,7 +525,7 @@ export function LibraryNoticeForm({
           type="submit"
         >
           {busy
-            ? "Saving…"
+            ? tExisting("ui.saving")
             : reactivate
               ? "Reactivate notice"
               : initial

@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { libraryTypeName, type LibraryTypeValue } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { OpeningTimesValue } from "@/components/library/library-page.helpers"
@@ -50,6 +51,8 @@ export function LocationLibraryCard({
   readonly place?: string | null
   readonly gaps?: LocationGapKey[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const name = library.name ?? ""
   const tint = tintForLibraryType(libraryTypeName(library.libraryType))
   const photo = formatStrapiMediaUrl(
@@ -85,7 +88,9 @@ export function LocationLibraryCard({
               icon="mdi:bank-outline"
               width={26}
             />
-            <span className="text-xs font-semibold">No photo yet</span>
+            <span className="text-xs font-semibold">
+              {tStatic("common.noPhoto")}
+            </span>
           </div>
         )}
       </div>
@@ -167,7 +172,7 @@ export function LocationLibraryCard({
             className="m-0 mt-0.5 flex flex-wrap items-center gap-1.5 text-sm"
             style={{ color: T.ink.dim }}
           >
-            <span className="font-semibold">Missing:</span>
+            <span className="font-semibold">{tStatic("common.missing")}</span>
             {gaps.map((gap) => (
               <span
                 key={gap}

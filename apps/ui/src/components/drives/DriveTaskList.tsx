@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { PaginationControls } from "@/components/ds/PaginationControls"
@@ -75,8 +74,10 @@ export function DriveTaskList({
   readonly icon?: string
   readonly onSelect: (task: DriveTask) => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("drivePage")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
+  const t = useTranslations("drivePage")
 
   const id = useId()
   const [text, setText] = useState(query)
@@ -174,7 +175,7 @@ export function DriveTaskList({
               }
               width={20}
             />
-            Near me
+            {tStatic("common.nearMe")}
           </button>
         </div>
         {nearError ? (

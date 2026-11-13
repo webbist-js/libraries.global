@@ -1,16 +1,7 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
-
-const typeGroups = [
-  { label: "Public", types: ["Public", "Municipal"] },
-  { label: "Academic", types: ["Academic", "University"] },
-  { label: "National", types: ["National"] },
-  { label: "State & Parliamentary", types: ["State", "Parliamentary"] },
-  { label: "Special & Archive", types: ["Special", "Archive"] },
-  { label: "Mobile", types: ["Mobile"] },
-  { label: "Digital", types: ["Digital"] },
-  { label: "Other", types: ["Monastic", "Private", "Cultural", "Other"] },
-]
 
 export type PlaceGapInsight = {
   key: string
@@ -122,6 +113,30 @@ export function PlaceInsights({
   readonly childrenAvailable?: boolean
   readonly gapRows?: readonly PlaceGapInsight[] | null
 }) {
+  const tPlace = useTranslations("placeCopy")
+  const tStatic = useTranslations("staticUi")
+  const typeGroups = [
+    { label: tStatic("location.public"), types: ["Public", "Municipal"] },
+    { label: tStatic("location.academic"), types: ["Academic", "University"] },
+    { label: tStatic("location.national"), types: ["National"] },
+    {
+      label: tStatic("location.state_parliamentary"),
+      types: ["State", "Parliamentary"],
+    },
+    {
+      label: tStatic("location.special_archive"),
+      types: ["Special", "Archive"],
+    },
+    { label: tStatic("location.mobile"), types: ["Mobile"] },
+    { label: tStatic("location.digital"), types: ["Digital"] },
+    {
+      label: tStatic("location.other"),
+      types: ["Monastic", "Private", "Cultural", "Other"],
+    },
+  ]
+
+  const tExisting = useTranslations()
+
   if (!total) return null
   const small = total < 10
   const href = (extra: Record<string, string>) =>
@@ -182,11 +197,11 @@ export function PlaceInsights({
   if (small)
     return (
       <section
-        aria-label={`What the index shows for ${name}`}
+        aria-label={tPlace("showsFor", { name })}
         className="rounded-2xl border p-6"
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
-        <h2 className="type-h2 m-0">The index in {name}</h2>
+        <h2 className="type-h2 m-0">{tPlace("indexIn", { name })}</h2>
         <p
           className="mt-3 mb-0 text-base leading-relaxed"
           style={{ color: T.ink.dim }}
@@ -214,11 +229,13 @@ export function PlaceInsights({
         </p>
         {gapRows === null ? (
           <p role="status" className="text-sm">
-            Missing-detail counts are temporarily unavailable.
+            {tStatic(
+              "location.missing_detail_counts_are_temporarily_unavailable"
+            )}
           </p>
         ) : missing.length ? (
           <p className="mt-3 mb-0 text-sm leading-relaxed">
-            Help with a missing detail:{" "}
+            {tStatic("location.help_with_a_missing_detail")}{" "}
             {missing.slice(0, 3).map((row, index) => (
               <span key={row.key}>
                 {index ? " · " : ""}
@@ -243,15 +260,15 @@ export function PlaceInsights({
   return (
     <section aria-labelledby={"insights-" + slug}>
       <h2 id={"insights-" + slug} className="type-h2 m-0" style={headingStyle}>
-        What the index shows for {name}
+        {tPlace("showsFor", { name })}
       </h2>
       <p
         className="mt-3 mb-6 text-base leading-relaxed"
         style={{ color: T.ink.dim }}
       >
-        A picture of the libraries documented here, and where contributions
-        could help. These figures describe the index, not every library that
-        exists.
+        {tStatic(
+          "location.a_picture_of_the_libraries_documented_here_and_where_contributions_could_help_these_figures_describe"
+        )}
       </p>
       <div className="grid items-stretch gap-4 lg:grid-cols-3">
         <article
@@ -259,7 +276,7 @@ export function PlaceInsights({
           style={cardStyle}
         >
           <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
-            Library types
+            {tExisting("optionSuggestions.lists.library_types")}
           </h3>
           <p className="mb-4 text-sm" style={{ color: T.ink.dim }}>
             {small
@@ -268,7 +285,7 @@ export function PlaceInsights({
           </p>
           {!typesAvailable ? (
             <p role="status" className="text-sm">
-              Type counts are temporarily unavailable.
+              {tStatic("location.type_counts_are_temporarily_unavailable")}
             </p>
           ) : (
             <ul className="m-0 list-none p-0">
@@ -284,7 +301,7 @@ export function PlaceInsights({
               ))}
               {untyped > 0 ? (
                 <InsightRow
-                  label="Type not recorded"
+                  label={tStatic("location.type_not_recorded")}
                   count={untyped}
                   total={total}
                   small={small}
@@ -296,8 +313,9 @@ export function PlaceInsights({
             className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
             style={{ color: T.ink.dim }}
           >
-            Select a type to search it. A mobile library counts once, not once
-            per timetable stop.
+            {tStatic(
+              "location.select_a_type_to_search_it_a_mobile_library_counts_once_not_once_per_timetable_stop"
+            )}
           </p>
         </article>
         <article
@@ -305,11 +323,11 @@ export function PlaceInsights({
           style={cardStyle}
         >
           <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
-            Where records are
+            {tStatic("location.where_records_are")}
           </h3>
           {!childrenAvailable || !typesAvailable ? (
             <p role="status" className="text-sm">
-              Place counts are temporarily unavailable.
+              {tStatic("location.place_counts_are_temporarily_unavailable")}
             </p>
           ) : (
             <>
@@ -370,7 +388,9 @@ export function PlaceInsights({
                 className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
                 style={{ color: T.ink.dim }}
               >
-                Geographic shares exclude digital libraries.
+                {tStatic(
+                  "location.geographic_shares_exclude_digital_libraries"
+                )}
                 {unassigned
                   ? " " +
                     number(unassigned) +
@@ -385,15 +405,18 @@ export function PlaceInsights({
           style={cardStyle}
         >
           <h3 className="type-h3 m-0 mb-3" style={headingStyle}>
-            Missing details
+            {tStatic("location.missing_details")}
           </h3>
           <p className="mb-4 text-sm" style={{ color: T.ink.dim }}>
-            Records needing each detail, out of those it applies to.
+            {tStatic(
+              "location.records_needing_each_detail_out_of_those_it_applies_to"
+            )}
           </p>
           {gapRows === null ? (
             <p role="status" className="text-sm leading-relaxed">
-              Gap counts are temporarily unavailable. You can still improve a
-              library you know.
+              {tStatic(
+                "location.gap_counts_are_temporarily_unavailable_you_can_still_improve_a_library_you_know"
+              )}
             </p>
           ) : (
             <>
@@ -413,7 +436,7 @@ export function PlaceInsights({
               {missing.length > 5 ? (
                 <details className="text-sm">
                   <summary className="min-h-11 cursor-pointer py-3 font-semibold">
-                    Show all missing details
+                    {tStatic("location.show_all_missing_details")}
                   </summary>
                   <ul className="m-0 list-none p-0">
                     {missing.slice(5).map((row) => (
@@ -432,15 +455,16 @@ export function PlaceInsights({
               ) : null}
               {!missing.length ? (
                 <p className="text-sm">
-                  No gaps are reported for these details.
+                  {tStatic("location.no_gaps_are_reported_for_these_details")}
                 </p>
               ) : null}
               <p
                 className="mt-auto mb-0 pt-4 text-sm leading-[1.5]"
                 style={{ color: T.ink.dim }}
               >
-                One record may need several details. These counts overlap and
-                cannot be added together.
+                {tStatic(
+                  "location.one_record_may_need_several_details_these_counts_overlap_and_cannot_be_added_together"
+                )}
               </p>
             </>
           )}

@@ -9,6 +9,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import dynamic from "next/dynamic"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { ErrorBoundary } from "react-error-boundary"
 
@@ -64,6 +65,10 @@ export function AboutHero({
   readonly markers: readonly LibraryMarker[]
   readonly countries: readonly AboutGlobeCountry[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const heroRef = useRef<HTMLElement>(null)
   const stageRef = useRef<HTMLDivElement>(null)
   const copyRef = useRef<HTMLDivElement>(null)
@@ -240,7 +245,7 @@ export function AboutHero({
             inert={scrollStory && expanded ? true : undefined}
           >
             <p className="about-eyebrow about-hero-eyebrow">
-              About Libraries Global
+              {tStatic("common.aboutLibrariesGlobal")}
             </p>
             <h1
               id="about-title"
@@ -251,18 +256,18 @@ export function AboutHero({
               }}
             >
               <Emphasis
-                text="An open record of *the world's libraries.*"
+                text={tStatic("about.an_open_record_of_the_world_s_libraries")}
                 emStyle={{ color: T.accent.primary }}
               />
             </h1>
             <p className="about-hero-intro">
-              Find a library, see what it offers and plan a visit. Libraries
-              Global brings together public sources and contributions from the
-              people who know each place.
+              {tStatic(
+                "about.find_a_library_see_what_it_offers_and_plan_a_visit_libraries_global_brings_together_public_sources_a"
+              )}
             </p>
             <div className="about-hero-actions">
               <GlobalLink href="/libraries" className="about-button">
-                Explore the index{" "}
+                {tStatic("about.explore_the_index")}{" "}
                 <ArrowUpRight className="size-4" aria-hidden="true" />
               </GlobalLink>
               <button
@@ -270,7 +275,7 @@ export function AboutHero({
                 onClick={exploreGlobe}
                 className="about-button about-button-secondary"
               >
-                Explore the globe{" "}
+                {tStatic("about.explore_the_globe")}{" "}
                 <ArrowDown className="size-4" aria-hidden="true" />
               </button>
             </div>
@@ -278,7 +283,7 @@ export function AboutHero({
               href="#our-purpose"
               className="about-text-link about-hero-skip"
             >
-              Read about the project{" "}
+              {tStatic("about.read_about_the_project")}{" "}
               <ArrowDown className="size-4" aria-hidden="true" />
             </GlobalLink>
           </div>
@@ -316,31 +321,37 @@ export function AboutHero({
           id="about-globe-guide"
           inert={!expanded ? true : undefined}
         >
-          <p className="about-eyebrow">Reading the globe</p>
-          <h2 className="type-h2">Where the record reaches.</h2>
+          <p className="about-eyebrow">{tStatic("about.reading_the_globe")}</p>
+          <h2 className="type-h2">
+            {tStatic("about.where_the_record_reaches")}
+          </h2>
           {markers.length > 0 ? (
             <>
               <p>
-                Warm lights show published library locations, grouped at world
-                scale. Brighter points mark featured libraries.
+                {tStatic(
+                  "about.warm_lights_show_published_library_locations_grouped_at_world_scale_brighter_points_mark_featured_li"
+                )}
               </p>
               <p>
-                The arcs are illustrative links between nearby featured
-                libraries.
+                {tStatic(
+                  "about.the_arcs_are_illustrative_links_between_nearby_featured_libraries"
+                )}
               </p>
               <p>
-                An unlit area is a gap in the index. There may be libraries
-                there that we haven&apos;t recorded yet.
+                {tStatic(
+                  "about.an_unlit_area_is_a_gap_in_the_index_there_may_be_libraries_there_that_we_haven_apos_t_recorded_yet"
+                )}
               </p>
             </>
           ) : (
             <p>
-              Location data is unavailable at the moment. You can still browse
-              library records in the index.
+              {tStatic(
+                "about.location_data_is_unavailable_at_the_moment_you_can_still_browse_library_records_in_the_index"
+              )}
             </p>
           )}
           <GlobalLink href="/map" className="about-text-link">
-            Open the atlas{" "}
+            {tExisting("homepageFallback.open_the_atlas")}{" "}
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </GlobalLink>
         </div>
@@ -348,11 +359,11 @@ export function AboutHero({
           <p>
             {coarsePointer
               ? touchRotation
-                ? "Drag to rotate · Tap Done to continue scrolling"
-                : "Scroll to continue · Tap Rotate to explore"
+                ? tStatic("aboutControl.drag")
+                : tStatic("aboutControl.scroll")
               : interactionReady
-                ? "Hover a country or connection · Click to pin · Esc to close"
-                : "Drag to rotate · Arrow keys when focused"}
+                ? tStatic("aboutControl.hover")
+                : tExisting("staticUi.home.globeDrag")}
           </p>
           <div>
             {coarsePointer ? (
@@ -362,7 +373,9 @@ export function AboutHero({
                 onClick={() => setTouchRotation((value) => !value)}
                 aria-pressed={touchRotation}
               >
-                {touchRotation ? "Done" : "Rotate"}
+                {touchRotation
+                  ? tExisting("ui.done")
+                  : tStatic("aboutControl.rotate")}
               </button>
             ) : null}
             <button
@@ -372,10 +385,10 @@ export function AboutHero({
               disabled={reducedMotion}
               title={
                 reducedMotion
-                  ? "Globe motion disabled by your reduced-motion preference"
+                  ? tStatic("aboutControl.disabled")
                   : paused
-                    ? "Play globe motion"
-                    : "Pause globe motion"
+                    ? tStatic("aboutControl.play")
+                    : tStatic("aboutControl.pauseGlobe")
               }
               aria-pressed={!paused && !reducedMotion}
             >
@@ -385,14 +398,16 @@ export function AboutHero({
                 <Pause className="size-3.5" aria-hidden="true" />
               )}
               <span>
-                {paused || reducedMotion ? "Motion paused" : "Pause motion"}
+                {paused || reducedMotion
+                  ? tStatic("aboutControl.paused")
+                  : tStatic("aboutControl.pause")}
               </span>
             </button>
             <button
               type="button"
               className="about-motion-toggle"
               onClick={() => setResetKey((value) => value + 1)}
-              aria-label="Reset globe rotation"
+              aria-label={tStatic("about.reset_globe_rotation")}
             >
               <RotateCcw className="size-3.5" aria-hidden="true" />
             </button>

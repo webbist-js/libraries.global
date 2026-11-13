@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { ChoiceCard, Notice } from "@/components/ds"
@@ -45,8 +44,14 @@ function UsernameStatusText({
 }: {
   status: ProfileForm["usernameStatus"]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (status === "checking")
-    return <span style={{ color: T.ink.dim }}>Checking…</span>
+    return (
+      <span style={{ color: T.ink.dim }}>
+        {tStatic("profileIndex.checking")}
+      </span>
+    )
   if (status === "available")
     return (
       <span
@@ -54,7 +59,7 @@ function UsernameStatusText({
         style={{ color: T.accent.ok }}
       >
         <Icon aria-hidden="true" icon="mdi:check-circle-outline" width={16} />
-        Available
+        {tStatic("profileIndex.available")}
       </span>
     )
   if (status === "taken")
@@ -64,7 +69,7 @@ function UsernameStatusText({
         style={{ color: T.accent.danger }}
       >
         <Icon aria-hidden="true" icon="mdi:alert-circle-outline" width={16} />
-        Taken
+        {tStatic("profileIndex.taken")}
       </span>
     )
 
@@ -72,7 +77,11 @@ function UsernameStatusText({
 }
 
 export function IdentitySection({ form }: { form: ProfileForm }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const uid = useId()
   const ids = {
@@ -98,7 +107,9 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       id="identity"
       title={tUi("identity")}
       requirement="required"
-      lead="How you appear on the records you contribute to and on your profile page."
+      lead={tStatic(
+        "profileIndex.how_you_appear_on_the_records_you_contribute_to_and_on_your_profile_page"
+      )}
     >
       <AvatarUpload
         currentUrl={form.avatarUrl}
@@ -131,7 +142,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         </div>
         <div>
           <label htmlFor={ids.lastName} style={fieldLabel}>
-            Last name<Tag>{tUi("optional_59be71")}</Tag>
+            {tStatic("profileIndex.last_name")}
+            <Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <input
             id={ids.lastName}
@@ -150,7 +162,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
             live description, not part of its name. */}
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
           <label htmlFor={ids.username} style={{ ...fieldLabel, margin: 0 }}>
-            Username<Tag>{tUi("required")}</Tag>
+            {tStatic("profileIndex.username")}
+            <Tag>{tUi("required")}</Tag>
           </label>
           <span
             id={ids.usernameStatus}
@@ -193,7 +206,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
         <div>
           <label htmlFor={ids.pronouns} style={fieldLabel}>
-            Pronouns<Tag>{tUi("required")}</Tag>
+            {tStatic("profileIndex.pronouns")}
+            <Tag>{tUi("required")}</Tag>
           </label>
           <SelectField
             id={ids.pronouns}
@@ -208,7 +222,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
         </div>
         <div>
           <label htmlFor={ids.city} style={fieldLabel}>
-            City<Tag>{tUi("optional_59be71")}</Tag>
+            {tStatic("profileIndex.city")}
+            <Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <input
             id={ids.city}
@@ -239,7 +254,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
             htmlFor={ids.timezone}
             style={fieldLabel}
           >
-            Timezone<Tag>{tUi("optional_59be71")}</Tag>
+            {tStatic("profileIndex.timezone")}
+            <Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <TimezoneCombobox
             id={ids.timezone}
@@ -254,14 +270,15 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
       <div>
         <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
           <label htmlFor={ids.bio} style={{ ...fieldLabel, margin: 0 }}>
-            Short bio<Tag>{tUi("optional_59be71")}</Tag>
+            {tStatic("profileIndex.short_bio")}
+            <Tag>{tUi("optional_59be71")}</Tag>
           </label>
           <span
             id={ids.bioCount}
             className="text-sm font-semibold"
             style={{ color: T.ink.dim }}
           >
-            {form.bio.length} of {BIO_MAX}
+            {form.bio.length} {tExisting("widgetPublic.of")} {BIO_MAX}
           </span>
         </div>
         <textarea
@@ -272,10 +289,14 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
           value={form.bio}
           maxLength={BIO_MAX}
           onChange={(e) => form.setBio(e.target.value)}
-          placeholder="e.g. Cataloguer at a parish library in Fife, mostly working on Scottish manuscripts."
+          placeholder={tStatic(
+            "profileIndex.e_g_cataloguer_at_a_parish_library_in_fife_mostly_working_on_scottish_manuscripts"
+          )}
         />
         <p id={ids.bioHelp} style={fieldHint}>
-          Shown at the top of your profile. Plain text only.
+          {tStatic(
+            "profileIndex.shown_at_the_top_of_your_profile_plain_text_only"
+          )}
         </p>
       </div>
     </SectionCard>
@@ -286,6 +307,8 @@ export function IdentitySection({ form }: { form: ProfileForm }) {
 
 /** A claim the profile already has, or the one just made on this page. */
 function ClaimNotice({ name, verified }: { name: string; verified: boolean }) {
+  const tStatic = useTranslations("staticUi")
+
   if (verified)
     return (
       <Notice
@@ -294,7 +317,9 @@ function ClaimNotice({ name, verified }: { name: string; verified: boolean }) {
         title={`Verified at ${name}`}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
-          You can look after this library’s record from its Staff area.
+          {tStatic(
+            "profileIndex.you_can_look_after_this_library_s_record_from_its_staff_area"
+          )}
         </p>
       </Notice>
     )
@@ -306,7 +331,7 @@ function ClaimNotice({ name, verified }: { name: string; verified: boolean }) {
       title={`Claim sent for ${name}`}
     >
       <p className="m-0" style={{ color: T.ink.base }}>
-        A moderator will check it and email you.
+        {tStatic("profileIndex.a_moderator_will_check_it_and_email_you")}
       </p>
     </Notice>
   )
@@ -322,7 +347,11 @@ export function AffiliationSection({
   claimedLibraries?: readonly ClaimedLibrary[]
   isVerifiedLibrarian?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const uid = useId()
   const jobTitleId = `${uid}-job-title`
@@ -339,7 +368,9 @@ export function AffiliationSection({
       id="affiliation"
       title={tUi("affiliation")}
       requirement="required"
-      lead="How are you connected to libraries? This shapes which review queues you fast-track and what badges you can earn."
+      lead={tStatic(
+        "profileIndex.how_are_you_connected_to_libraries_this_shapes_which_review_queues_you_fast_track_and_what_badges_yo"
+      )}
     >
       <div
         role="radiogroup"
@@ -365,7 +396,8 @@ export function AffiliationSection({
 
       <div className="sm:max-w-[calc(50%-6px)]">
         <label htmlFor={jobTitleId} style={fieldLabel}>
-          Job title<Tag>{tUi("optional_59be71")}</Tag>
+          {tStatic("profileIndex.job_title")}
+          <Tag>{tUi("optional_59be71")}</Tag>
         </label>
         <input
           id={jobTitleId}
@@ -374,7 +406,7 @@ export function AffiliationSection({
           autoComplete="organization-title"
           value={form.jobTitle}
           onChange={(e) => form.setJobTitle(e.target.value)}
-          placeholder="e.g. Senior curator"
+          placeholder={tStatic("profileIndex.e_g_senior_curator")}
         />
       </div>
 
@@ -414,16 +446,16 @@ export function AffiliationSection({
                 style={{ color: T.ink.base }}
               >
                 {hasClaim
-                  ? "Claim another library"
+                  ? tExisting("staffWorkspace.claimAnother")
                   : "Are you affiliated with a library on the atlas?"}
               </h3>
               <p
                 className="m-0 mt-1 text-base leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
-                Search libraries by name, city or entity ref. Verified
-                affiliations get a green tick on every contribution record and
-                unlock the Verified Librarian badge.
+                {tStatic(
+                  "profileIndex.search_libraries_by_name_city_or_entity_ref_verified_affiliations_get_a_green_tick_on_every_contribu"
+                )}
               </p>
             </div>
           </div>
@@ -444,7 +476,7 @@ export function AffiliationSection({
           }}
         >
           <Icon aria-hidden="true" icon="mdi:plus" width={16} />
-          Claim another library
+          {tExisting("staffWorkspace.claimAnother")}
         </button>
       ) : null}
       <NetworkAffiliationEditor />
@@ -455,7 +487,9 @@ export function AffiliationSection({
 // ── Interests & languages ─────────────────────────────────────────────────────
 
 export function InterestsSection({ form }: { form: ProfileForm }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const uid = useId()
   const languageId = `${uid}-language`
@@ -479,11 +513,13 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
       id="interests"
       title={tUi("interests_languages")}
       requirement="optional"
-      lead="We use these to suggest contribution paths and route translation requests in your direction."
+      lead={tStatic(
+        "profileIndex.we_use_these_to_suggest_contribution_paths_and_route_translation_requests_in_your_direction"
+      )}
     >
       <fieldset className="m-0 min-w-0 border-0 p-0">
         <legend style={{ ...fieldLabel, marginBottom: 12 }}>
-          Topics you care about
+          {tStatic("profileIndex.topics_you_care_about")}
         </legend>
         <InterestsChips
           selected={form.interests}
@@ -494,10 +530,10 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
 
       <fieldset className="m-0 min-w-0 border-0 p-0">
         <legend style={{ ...fieldLabel, margin: 0 }}>
-          Languages you can review in
+          {tStatic("profileIndex.languages_you_can_review_in")}
         </legend>
         <p style={{ ...fieldHint, margin: "4px 0 14px" }}>
-          Add each language with how well you know it.
+          {tStatic("profileIndex.add_each_language_with_how_well_you_know_it")}
         </p>
 
         {form.languages.length > 0 ? (
@@ -543,7 +579,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
               value={String(addingLang ?? "")}
               onValueChange={(selectedValue) => setAddingLang(selectedValue)}
               options={[
-                { value: "", label: "Choose a language" },
+                { value: "", label: tStatic("profileIndex.choose_a_language") },
                 ...LANGUAGE_OPTIONS.filter(
                   (l) => !form.languages.some((ll) => ll.code === l.code)
                 ).map((l) => ({
@@ -555,7 +591,7 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
           </div>
           <div>
             <label htmlFor={proficiencyId} style={fieldLabel}>
-              Proficiency
+              {tStatic("profileIndex.proficiency")}
             </label>
             <SelectField
               id={proficiencyId}
@@ -594,13 +630,17 @@ export function InterestsSection({ form }: { form: ProfileForm }) {
 // ── External links ────────────────────────────────────────────────────────────
 
 export function LinksSection({ form }: { form: ProfileForm }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const uid = useId()
   const fields = [
     {
       id: `${uid}-website`,
-      label: "Website",
+      label: tExisting("newsletterForm.website"),
       value: form.website,
       set: form.setWebsite,
       type: "url",
@@ -637,7 +677,9 @@ export function LinksSection({ form }: { form: ProfileForm }) {
       id="links"
       title={tUi("external_links")}
       requirement="optional"
-      lead="Shown on your public profile. Add only the ones you’re happy to share."
+      lead={tStatic(
+        "profileIndex.shown_on_your_public_profile_add_only_the_ones_you_re_happy_to_share"
+      )}
     >
       <div className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
         {fields.map((f) => (
@@ -691,13 +733,17 @@ export function VisibilityChoice({
 }
 
 export function VisibilitySection({ form }: { form: ProfileForm }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   return (
     <SectionCard
       id="visibility"
       title={tUi("profile_visibility")}
-      lead="You can change this any time in Settings. A verified affiliation badge shows either way."
+      lead={tStatic(
+        "profileIndex.you_can_change_this_any_time_in_settings_a_verified_affiliation_badge_shows_either_way"
+      )}
     >
       <VisibilityChoice
         value={form.visibility}

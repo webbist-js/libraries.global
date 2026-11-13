@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import {
@@ -24,6 +24,8 @@ export function LibraryAboutDisclosure({
   readonly label?: string
   readonly title?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-base">
       {children ? (
@@ -51,7 +53,9 @@ export function LibraryAboutDisclosure({
                 className="text-sm"
                 style={{ color: T.ink.dim }}
               >
-                The history, building and collections recorded for this library.
+                {tStatic(
+                  "library.the_history_building_and_collections_recorded_for_this_library"
+                )}
               </DialogDescription>
             </DialogHeader>
             <div

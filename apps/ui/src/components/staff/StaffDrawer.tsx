@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import { Drawer } from "@/components/ds/Drawer"
@@ -100,8 +99,10 @@ export function StaffDrawer({
   readonly open?: boolean
   readonly onAfterClose?: () => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("workspaceDrawer")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
+  const t = useTranslations("workspaceDrawer")
 
   const staff = useStaff()
   const { libraries } = staff
@@ -295,7 +296,7 @@ export function StaffDrawer({
                   className="m-0 max-w-[12ch] shrink-0 text-right text-xs"
                   style={{ color: T.ink.dim }}
                 >
-                  Live updates: ask an owner
+                  {tStatic("staff.live_updates_ask_an_owner")}
                 </p>
               )}
             </section>
@@ -342,7 +343,7 @@ export function StaffDrawer({
                   className="font-semibold underline underline-offset-[3px]"
                   style={{ color: T.accent.primary }}
                 >
-                  Claim {pageLibrary!.name}
+                  {tStatic("staff.claim")} {pageLibrary!.name}
                 </Link>
               ) : null}
             </span>

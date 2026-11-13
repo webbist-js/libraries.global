@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { facilityRows } from "@/components/library/facility-rows"
 import { OpenCorrectionLink } from "@/components/library/LibraryCorrection"
 import { LibraryFeatureDetails } from "@/components/library/LibraryFeatureDetails"
@@ -15,6 +17,10 @@ export function LibraryAmenitiesSection({
   readonly library: PopulatedLibraryData
   readonly includeAmenities?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const rows = facilityRows(library)
 
   return (
@@ -31,7 +37,11 @@ export function LibraryAmenitiesSection({
           <LibrarySectionCard
             key={kind}
             id={kind === "amenity" ? "facilities" : "services"}
-            title={kind === "amenity" ? "Facilities" : "Services"}
+            title={
+              kind === "amenity"
+                ? tExisting("optionSuggestions.lists.amenities")
+                : tExisting("ui.services")
+            }
             iconPath={LIB_ICONS.book}
           >
             {kind === "service" ? (
@@ -62,7 +72,7 @@ export function LibraryAmenitiesSection({
                   </ul>
                 ) : (
                   <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                    No services are documented yet.
+                    {tStatic("library.no_services_are_documented_yet")}
                   </p>
                 )}
                 {(["no", "unknown"] as const).map((state) => {
@@ -77,7 +87,10 @@ export function LibraryAmenitiesSection({
                       style={{ color: T.ink.dim }}
                     >
                       <span className="font-semibold">
-                        {state === "no" ? "Not available" : "Not recorded"}:
+                        {state === "no"
+                          ? "Not available"
+                          : tExisting("widgetPublic.not_recorded")}
+                        :
                       </span>{" "}
                       {names.join(", ")}
                     </p>
@@ -101,7 +114,7 @@ export function LibraryAmenitiesSection({
                     category="Services and facilities"
                     className="inline-flex min-h-11 items-center text-sm underline underline-offset-[3px]"
                   >
-                    Add a service
+                    {tStatic("library.add_a_service")}
                   </OpenCorrectionLink>
                 </div>
               </>
@@ -123,10 +136,10 @@ export function LibraryAmenitiesSection({
                       </dt>
                       <dd className="m-0 font-semibold">
                         {row.state === "yes"
-                          ? "Yes"
+                          ? tExisting("ui.yes")
                           : row.state === "no"
-                            ? "No"
-                            : "Not recorded"}
+                            ? tExisting("ui.no")
+                            : tExisting("widgetPublic.not_recorded")}
                       </dd>
                     </div>
                   ))}
@@ -135,7 +148,7 @@ export function LibraryAmenitiesSection({
                   category="Services and facilities"
                   className="inline-flex min-h-11 items-center text-sm font-semibold underline"
                 >
-                  Suggest a correction
+                  {tExisting("ui.suggest_a_correction")}
                 </OpenCorrectionLink>
               </>
             )}
@@ -151,19 +164,23 @@ export function LibraryAdditionalDetails({
 }: {
   readonly library: PopulatedLibraryData
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const rec = library as unknown as Record<string, unknown>
   const fields = [
-    { key: "operatorName", label: "Run by" },
-    { key: "operatorType", label: "Operator type" },
-    { key: "architect", label: "Architect" },
-    { key: "buildingInfo", label: "Building" },
+    { key: "operatorName", label: tExisting("ui.run_by") },
+    { key: "operatorType", label: tExisting("ui.operator_type") },
+    { key: "architect", label: tExisting("ui.architect") },
+    { key: "buildingInfo", label: tStatic("library.building") },
   ].filter((field) => typeof rec[field.key] === "string" && rec[field.key])
   if (!fields.length) return null
 
   return (
     <LibrarySectionCard
       id="building"
-      title="About the library"
+      title={tStatic("library.about_the_library")}
       iconPath={LIB_ICONS.building}
     >
       <dl className="m-0 space-y-4">

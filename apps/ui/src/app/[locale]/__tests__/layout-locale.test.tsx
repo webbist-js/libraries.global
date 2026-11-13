@@ -7,9 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
 import { betaShellRequest } from "@/lib/proxies/betaGate"
 
-import cs from "../../../../locales/cs.json"
-import en from "../../../../locales/en.json"
-import fr from "../../../../locales/fr.json"
+import cs from "../../../../locales/cs"
+import en from "../../../../locales/en"
+import fr from "../../../../locales/fr"
 
 const {
   requestConfig,

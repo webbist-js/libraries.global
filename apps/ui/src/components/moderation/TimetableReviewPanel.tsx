@@ -7,7 +7,7 @@ import {
   type MobileTimetable,
   type MobileVisit,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { DiffCard } from "@/components/ds/DiffCard"
 import { Notice } from "@/components/ds/Notice"
@@ -36,20 +36,24 @@ export function TimetableReviewPanel({
   readonly previousHash?: string
   readonly timezone?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const diff = diffTimetable(before, after),
     stale = previousHash !== undefined && previousHash !== timetableHash(before)
   const visitText = (visit: MobileVisit, tt: MobileTimetable | null) =>
-    `${tt?.stops.find((s) => s.id === visit.stopId)?.name ?? "Stop"}: ${DAY_LABEL[visit.day] ?? visit.day} ${visit.arrive}–${visit.depart} · ${tt ? describeRepeat(visit, tt.cycle) : ""}${visit.validFrom ? ` · from ${shortDate(visit.validFrom)}` : ""}${visit.validTo ? ` · until ${shortDate(visit.validTo)}` : ""}`
+    `${tt?.stops.find((s) => s.id === visit.stopId)?.name ?? tExisting("staticUi.atlas.stop")}: ${DAY_LABEL[visit.day] ?? visit.day} ${visit.arrive}–${visit.depart} · ${tt ? describeRepeat(visit, tt.cycle) : ""}${visit.validFrom ? ` · from ${shortDate(visit.validFrom)}` : ""}${visit.validTo ? ` · until ${shortDate(visit.validTo)}` : ""}`
   const rows = [
     ...diff.stopsAdded.map((stop) => ({
-      label: "Stop added",
+      label: tStatic("moderation.stop_added"),
       now: "No stop",
       suggested: `${stop.name}${stop.where ? ` · ${stop.where}` : ""}`,
     })),
     ...diff.stopsRemoved.map((stop) => ({
-      label: "Stop removed",
+      label: tStatic("moderation.stop_removed"),
       now: stop.name,
       suggested: "No longer a stop",
     })),
@@ -59,24 +63,24 @@ export function TimetableReviewPanel({
       suggested: `${after.name} · ${after.where}${fields.includes("location") ? ` · ${after.location ? `${after.location.lat}, ${after.location.lng}` : "No pin"}` : ""}`,
     })),
     ...diff.visitsAdded.map((visit) => ({
-      label: "Visit added",
+      label: tStatic("moderation.visit_added"),
       now: "No visit",
       suggested: visitText(visit, after),
     })),
     ...diff.visitsRemoved.map((visit) => ({
-      label: "Visit removed",
+      label: tStatic("moderation.visit_removed"),
       now: visitText(visit, before),
       suggested: "No longer visiting",
     })),
     ...diff.visitsChanged.map((change) => ({
-      label: "Visit changed",
+      label: tStatic("moderation.visit_changed"),
       now: visitText(change.before, before),
       suggested: visitText(change.after, after),
     })),
     ...(diff.cycleChanged
       ? [
           {
-            label: "Cycle",
+            label: tStatic("moderation.cycle"),
             now: before
               ? `${before.cycle.weeks} weeks · starts ${weekdayName(before.cycle.anchor)} ${shortDate(before.cycle.anchor)}`
               : "No timetable",
@@ -102,8 +106,9 @@ export function TimetableReviewPanel({
             title={tUi("the_timetable_changed_after_this_was_suggested")}
           >
             <p className="m-0" style={{ color: T.ink.base }}>
-              Decline this suggestion; it cannot be applied to the current
-              timetable.
+              {tStatic(
+                "moderation.decline_this_suggestion_it_cannot_be_applied_to_the_current_timetable"
+              )}
             </p>
           </Notice>
         </div>
@@ -121,17 +126,21 @@ export function TimetableReviewPanel({
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
             <span aria-hidden="true" className="group-open:hidden">
-              Compare stop pins
+              {tStatic("moderation.compare_stop_pins")}
             </span>
             <span aria-hidden="true" className="hidden group-open:inline">
-              Hide stop pins
+              {tStatic("moderation.hide_stop_pins")}
             </span>
-            <span className="sr-only">Compare stop pins</span>
+            <span className="sr-only">
+              {tStatic("moderation.compare_stop_pins")}
+            </span>
           </summary>
           <div className="mt-3 grid gap-4 md:grid-cols-2">
             {before && (
               <section>
-                <h4 className="type-h4 m-0 mb-2">Current pins</h4>
+                <h4 className="type-h4 m-0 mb-2">
+                  {tStatic("moderation.current_pins")}
+                </h4>
                 <MobileRouteMap
                   tt={before}
                   notices={[]}
@@ -142,7 +151,9 @@ export function TimetableReviewPanel({
             )}
             {after && (
               <section>
-                <h4 className="type-h4 m-0 mb-2">Suggested pins</h4>
+                <h4 className="type-h4 m-0 mb-2">
+                  {tStatic("moderation.suggested_pins")}
+                </h4>
                 <MobileRouteMap
                   tt={after}
                   notices={[]}

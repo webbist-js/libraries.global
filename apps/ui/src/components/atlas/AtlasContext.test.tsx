@@ -5,8 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { AtlasContextLegend } from "./AtlasContext"
 import { AtlasPopulationDensityControls } from "./AtlasPopulationDensity"
-
-import messages from "../../../locales/en.json"
+import messages from "../../../locales/en"
 
 describe("deprivation classification labels", () => {
   it("shows publisher categories without labelling them deciles", () => {

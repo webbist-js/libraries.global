@@ -1,5 +1,5 @@
 "use client"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Card } from "@/components/ds"
@@ -24,7 +24,9 @@ export function NearbyMobileLibraries({
   radiusKm: number
   onStops?: (hits: MobileStopHit[]) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [hits, setHits] = useState<MobileStopHit[]>([]),
     [error, setError] = useState(false)
@@ -59,10 +61,12 @@ export function NearbyMobileLibraries({
       style={{ borderColor: T.edge.ok, background: TYPE_TINT.public.bg }}
     >
       <h2 className="type-panel-title mt-0 mb-3">
-        Mobile libraries that stop near you
+        {tStatic("mobile.mobile_libraries_that_stop_near_you")}
       </h2>
       {error ? (
-        <p role="status">Nearby mobile stops are temporarily unavailable.</p>
+        <p role="status">
+          {tStatic("mobile.nearby_mobile_stops_are_temporarily_unavailable")}
+        </p>
       ) : (
         <ul className="m-0 list-none space-y-4 p-0">
           {hits.map((hit) => (
@@ -76,7 +80,7 @@ export function NearbyMobileLibraries({
                   <strong>{hit.library_name}</strong>
                 )}
                 <p className="my-1 text-sm" style={{ color: T.ink.dim }}>
-                  Nearest stop
+                  {tStatic("mobile.nearest_stop")}
                   {hit._geoDistance != null
                     ? ` · ${(hit._geoDistance / 1000).toFixed(1)} km`
                     : ""}

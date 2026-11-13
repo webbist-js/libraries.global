@@ -1,18 +1,19 @@
 // @vitest-environment happy-dom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, fireEvent, screen } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import type { AnchorHTMLAttributes, ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { HOMEPAGE_DEFAULTS } from "@/components/home/homepage.content"
 import { ClosingSection } from "@/components/home/sections/ClosingSection"
 import { FeaturedLibrariesSection } from "@/components/home/sections/FeaturedLibrariesSection"
 import { LibraryStaffSection } from "@/components/home/sections/LibraryStaffSection"
 import { installAnalyticsClickTracking } from "@/lib/analytics-events"
 import { installGoogleAnalytics } from "@/lib/google-analytics"
 import type { PopulatedFeaturedLibraryData } from "@/lib/strapi-api/content/server"
+import { HOMEPAGE_DEFAULTS } from "@/test/homepage-defaults"
+import { render } from "@/test/render"
 
-import messages from "../../../../locales/en.json"
+import messages from "../../../../locales/en"
 
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({ data: null, isPending: false, error: null }),

@@ -7,6 +7,7 @@ import { use } from "react"
 import { placeLabels } from "@/components/location/location-page.helpers"
 import { RegionDetailPage } from "@/components/region/RegionDetailPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { placeGapCounts } from "@/lib/find-search"
 import { placeGapInsights } from "@/lib/place-insights-server"
@@ -88,7 +89,7 @@ export function generateStaticParams() {
   return []
 }
 
-export default function RegionPage(props: {
+function RegionPage(props: {
   params: Promise<{
     locale: string
     continent: string
@@ -179,3 +180,8 @@ export default function RegionPage(props: {
     </>
   )
 }
+
+export default withMessages(
+  RegionPage,
+  "[locale]/(dashboard)/[continent]/[country]/[region]/page"
+)

@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -49,7 +48,11 @@ export function ReportProblemForm({
   readonly canEdit: boolean
   readonly contentLocale?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [category, setCategory] = useState<string>(CATEGORIES[0])
   const [proposal, setProposal] = useState("")
@@ -118,32 +121,32 @@ export function ReportProblemForm({
         <strong style={{ color: T.ink.base }}>{title}</strong>.{" "}
         {canEdit ? (
           <>
-            Prefer to fix it yourself?{" "}
+            {tStatic("contributeRoute.prefer_to_fix_it_yourself")}{" "}
             <Link
               href={editHref}
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Open it in the editor
+              {tStatic("contributeRoute.open_it_in_the_editor")}
             </Link>
             .
           </>
         ) : (
           <>
-            Want to edit pages yourself?{" "}
+            {tStatic("contributeRoute.want_to_edit_pages_yourself")}{" "}
             <Link
               href={editorApplyHref("knowledge")}
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Apply to be a Knowledge editor
+              {tExisting("contributeActions.apply_to_be_a_knowledge_editor")}
             </Link>
             .
           </>
         )}
       </p>
       <label className="flex flex-col gap-2 text-base font-semibold">
-        What needs changing?
+        {tExisting("wizardCopy.what_needs_changing_question")}
         <SelectField
           value={String(category ?? "")}
           onValueChange={(selectedValue) => setCategory(selectedValue)}
@@ -155,9 +158,11 @@ export function ReportProblemForm({
         />
       </label>
       <label className="flex flex-col gap-2 text-base font-semibold">
-        Describe the issue
+        {tStatic("contributeRoute.describe_the_issue")}
         <span className="text-sm font-normal" style={{ color: T.ink.dim }}>
-          Quote the passage if you can, and say what it should be instead.
+          {tStatic(
+            "contributeRoute.quote_the_passage_if_you_can_and_say_what_it_should_be_instead"
+          )}
         </span>
         <textarea
           required
@@ -170,7 +175,7 @@ export function ReportProblemForm({
       <label className="flex flex-col gap-2 text-base font-semibold">
         {tUi("source_url")}{" "}
         <span className="font-normal" style={{ color: T.ink.dim }}>
-          · Recommended
+          {tStatic("contributeRoute.recommended")}
         </span>
         <input
           type="url"
@@ -186,7 +191,7 @@ export function ReportProblemForm({
           className="m-0 text-sm font-semibold"
           style={{ color: T.accent.danger }}
         >
-          Couldn’t send — please try again.
+          {tStatic("contributeRoute.couldn_t_send_please_try_again")}
         </p>
       )}
       <div className="flex items-center gap-3">
@@ -201,7 +206,9 @@ export function ReportProblemForm({
             fontFamily: T.font.sans,
           }}
         >
-          {state === "saving" ? tUi("sending") : "Send for review"}
+          {state === "saving"
+            ? tUi("sending")
+            : tExisting("discussions.submit")}
         </button>
         <Link
           href="/knowledge"

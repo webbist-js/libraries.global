@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { usePathname } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { useOptionalDashboardOverlay } from "@/components/dashboard/DashboardFrame"
 import { WorkspaceHero as PageHero } from "@/components/dashboard/WorkspaceHero"
@@ -52,8 +52,12 @@ export function StaffShell({
   /** The viewer's own staff claim unlocks the free staff tools here. */
   readonly canSeeTeam: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const tDashboard = useUiTranslations("dashboard")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tDashboard = useTranslations("dashboard")
 
   const { library, counts, role } = overview
   useStaffWorkspaceRecord({
@@ -90,7 +94,7 @@ export function StaffShell({
           icon="mdi:lock-outline"
         />
       ) : tab.id === "live" ? (
-        <Badge label="Mobile" color="ok" />
+        <Badge label={tExisting("ui.mobile")} color="ok" />
       ) : undefined,
   }))
 
@@ -109,7 +113,7 @@ export function StaffShell({
               { label: library.name },
             ]
       }
-      eyebrow="Library staff"
+      eyebrow={tExisting("staffOnboarding.eyebrow")}
       eyebrowIcon="mdi:shield-account-outline"
       chips={
         <span
@@ -122,7 +126,9 @@ export function StaffShell({
             icon={mobile ? "mdi:bus-side" : "mdi:library-outline"}
             width={15}
           />
-          {mobile ? "Mobile library" : `${library.libraryType} library`}
+          {mobile
+            ? tStatic("common.mobileLibrary")
+            : `${library.libraryType} library`}
         </span>
       }
       title={staffHeroTitle(library.name)}
@@ -131,7 +137,7 @@ export function StaffShell({
           {meta.operatorName ? <span>{meta.operatorName}</span> : null}
           {mobile && meta.homeLibrary ? (
             <span>
-              Based at{" "}
+              {tStatic("staffRoute.based_at")}{" "}
               {meta.homeLibrary.path ? (
                 <Link
                   href={meta.homeLibrary.path}
@@ -186,7 +192,7 @@ export function StaffShell({
             className="inline-flex min-h-11 w-fit items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Claim another library
+            {tExisting("staffWorkspace.claimAnother")}
             <Icon
               aria-hidden="true"
               height={15}
@@ -199,7 +205,7 @@ export function StaffShell({
             className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Add a new library
+            {tStatic("common.addNewLibrary")}
             <Icon icon="mdi:plus" aria-hidden="true" width={15} />
           </Link>
         </div>

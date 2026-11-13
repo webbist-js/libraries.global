@@ -1,7 +1,9 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { NetworkSummary } from "@repo/shared-data"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useState, useTransition, useEffect } from "react"
 
 import { NetworkPicker } from "@/components/networks/NetworkPicker"
@@ -13,6 +15,10 @@ import type { NetworkDetail } from "@/lib/networks/types"
 import type { TeamDetail } from "@/lib/staff/types"
 
 export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [selected, setSelected] = useState<NetworkSummary | null>(null),
     [addLibraries, setAddLibraries] = useState(true),
     [message, setMessage] = useState(""),
@@ -68,7 +74,9 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
         router.refresh()
       } catch (failure) {
         setMessage(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
@@ -100,8 +108,9 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
       </summary>
       <div className="mt-5 grid gap-5 border-t border-(--t-border-line) pt-5">
         <p className="m-0 max-w-[66ch] text-sm leading-relaxed text-(--t-ink-dim)">
-          Connect your service for widget defaults. Confirm whether to add its
-          current published libraries to Team coverage.
+          {tStatic(
+            "network.connect_your_service_for_widget_defaults_confirm_whether_to_add_its_current_published_libraries_to_t"
+          )}
         </p>
         <NetworkPicker onSelect={setSelected} disabled={pending} />
         {selected ? (
@@ -115,11 +124,12 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
                 onChange={(event) => setAddLibraries(event.target.checked)}
                 disabled={pending}
               />
-              Add its current libraries to Team coverage
+              {tStatic("network.add_its_current_libraries_to_team_coverage")}
             </label>
             <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
-              Existing libraries remain. Future source additions require a
-              separate coverage decision and a batch management review.
+              {tStatic(
+                "network.existing_libraries_remain_future_source_additions_require_a_separate_coverage_decision_and_a_batch_m"
+              )}
             </p>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
               <Button
@@ -129,13 +139,13 @@ export function TeamNetworkConnection({ team }: { readonly team: TeamDetail }) {
                 disabled={pending}
                 onClick={connect}
               >
-                Confirm connection
+                {tStatic("network.confirm_connection")}
               </Button>
               <Link
                 className={`${STAFF_LINK} inline-flex min-h-11 items-center text-sm`}
                 href={`/staff/networks?network=${selected.documentId}`}
               >
-                Request service management
+                {tStatic("network.request_service_management")}
               </Link>
             </div>
           </div>
