@@ -6,7 +6,6 @@ import {
   type AppearancePreference,
 } from "@/lib/appearance"
 import { addCollection, disableCache } from "@iconify/react"
-import icons from "@iconify-json/mdi/icons.json"
 import {
   DocsContainer,
   type DocsContainerProps,
@@ -17,6 +16,8 @@ import { NextIntlClientProvider } from "next-intl"
 import { useState, useSyncExternalStore, type ReactNode } from "react"
 import { useGlobals } from "storybook/preview-api"
 import { themes } from "storybook/theming"
+// eslint-disable-next-line import-x/no-unresolved -- Vite virtual module from ./mdi-icons.ts
+import icons from "virtual:storybook-mdi-icons"
 
 import { resetAsyncStories } from "./AsyncStory"
 import { isFixtureLocale, loadCatalogue, loadedCatalogue } from "./catalogues"
