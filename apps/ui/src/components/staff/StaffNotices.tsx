@@ -8,7 +8,7 @@ import {
   type LibraryNotice,
 } from "@repo/shared-data"
 import { useQueryClient } from "@tanstack/react-query"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useRef, useState } from "react"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
@@ -95,6 +95,10 @@ function NoticeRow({
   readonly onEnd: () => void
   readonly onReactivate: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const ended = !!notice.endedAt || noticeEndDate(notice) < today
   const active = noticeIsActive(notice, today)
   const closure = ["closure", "not_running"].includes(notice.type)
@@ -152,7 +156,7 @@ function NoticeRow({
             onClick={onReactivate}
           >
             <Icon aria-hidden icon="mdi:refresh" width={17} />
-            Reactivate
+            {tStatic("staff.reactivate")}
           </Button>
         ) : (
           <>
@@ -163,7 +167,7 @@ function NoticeRow({
               disabled={busy}
               onClick={onEdit}
             >
-              Edit
+              {tExisting("ui.edit")}
             </Button>
             <Button
               type="button"
@@ -172,7 +176,7 @@ function NoticeRow({
               disabled={busy}
               onClick={onEnd}
             >
-              End now
+              {tStatic("staff.end_now")}
             </Button>
           </>
         )}
@@ -197,7 +201,11 @@ export function StaffNotices({
   /** The route locale, for dates. */
   locale?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const router = useRouter()
   const queryClient = useQueryClient()
   const titleId = useId()
@@ -260,7 +268,11 @@ export function StaffNotices({
       setEnding(null)
       setAnnounce("Notice ended. You can reactivate it from Past notices.")
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Please try again.")
+      setError(
+        e instanceof Error
+          ? e.message
+          : tExisting("apiIndividualCheckout.retry")
+      )
     } finally {
       setBusy(false)
     }
@@ -282,7 +294,7 @@ export function StaffNotices({
       ? "Reactivate notice"
       : editor?.mode === "edit"
         ? tUi("edit_notice")
-        : "Post a new notice"
+        : tStatic("staff.post_a_new_notice")
   const renderRow = (notice: LibraryNotice) => (
     <NoticeRow
       key={notice.id}
@@ -303,7 +315,9 @@ export function StaffNotices({
     <div data-staff-notices="" className="flex min-w-0 flex-col gap-6">
       <WorkspacePageHeader
         title={tUi("notices")}
-        lead="Publish updates for visitors, or reactivate a past notice."
+        lead={tStatic(
+          "staff.publish_updates_for_visitors_or_reactivate_a_past_notice"
+        )}
         actions={
           <Button
             ref={postButton}
@@ -313,7 +327,7 @@ export function StaffNotices({
             onClick={() => openEditor({ mode: "new" })}
           >
             <Icon aria-hidden icon="mdi:plus" width={20} />
-            Post a new notice
+            {tStatic("staff.post_a_new_notice")}
           </Button>
         }
       />
@@ -326,7 +340,7 @@ export function StaffNotices({
       >
         <div className="mb-6 flex flex-wrap items-center gap-3">
           <h2 id="current-notices-heading" className="type-h2 m-0">
-            Current & upcoming
+            {tStatic("staff.current_upcoming")}
           </h2>
           <Badge label={String(current.length)} color="aurora" />
         </div>
@@ -354,18 +368,22 @@ export function StaffNotices({
       >
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <h2 id="past-notices-heading" className="type-h2 m-0">
-            Past notices
+            {tStatic("staff.past_notices")}
           </h2>
           <Badge label={String(past.length)} color="dim" />
         </div>
         <p className="m-0 mb-6 text-sm text-(--t-ink-dim)">
-          Reactivate a notice to review its message and choose new dates.
+          {tStatic(
+            "staff.reactivate_a_notice_to_review_its_message_and_choose_new_dates"
+          )}
         </p>
         {past.length ? (
           <ul className="m-0 list-none p-0">{past.map(renderRow)}</ul>
         ) : (
           <p className="m-0 text-base text-(--t-ink-dim)">
-            Ended and expired notices will stay here for reuse.
+            {tStatic(
+              "staff.ended_and_expired_notices_will_stay_here_for_reuse"
+            )}
           </p>
         )}
       </section>
@@ -381,8 +399,9 @@ export function StaffNotices({
               {ending.message}
             </p>
             <p className="m-0 mt-2 text-sm text-(--t-ink-dim)">
-              It stops showing on the library page and in search straight away.
-              You can reactivate it later from Past notices.
+              {tStatic(
+                "staff.it_stops_showing_on_the_library_page_and_in_search_straight_away_you_can_reactivate_it_later_from_pa"
+              )}
             </p>
             {error ? (
               <p
@@ -409,7 +428,7 @@ export function StaffNotices({
                 disabled={busy}
                 onClick={() => setEnding(null)}
               >
-                Keep it
+                {tStatic("staff.keep_it")}
               </Button>
             </div>
           </>

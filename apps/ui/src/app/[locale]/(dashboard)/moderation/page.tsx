@@ -19,6 +19,7 @@ import {
   workspaceQueueState,
   workspaceCategoryViews,
 } from "@/components/moderation/workspace-state"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { fetchModeration } from "@/lib/moderation-proxy"
 import { fetchDiscussionReviewCount } from "@/lib/moderation-work-counts"
@@ -129,7 +130,7 @@ function QueueContent({
   )
 }
 
-export default async function ModerationQueuePage({
+async function ModerationQueuePage({
   searchParams,
 }: {
   searchParams: SearchParams
@@ -241,3 +242,8 @@ export default async function ModerationQueuePage({
     </>
   )
 }
+
+export default withMessages(
+  ModerationQueuePage,
+  "[locale]/(dashboard)/moderation/page"
+)

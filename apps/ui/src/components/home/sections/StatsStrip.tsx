@@ -1,5 +1,5 @@
 import { Globe, Library, SquarePen, Users } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import type { HomepageStats } from "@/components/home/homepage.types"
@@ -14,7 +14,9 @@ export function StatsStrip({
   readonly stats: HomepageStats | null
   readonly appearance?: "default" | "hero"
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (!stats) return null
   const hero = appearance === "hero"
@@ -74,9 +76,7 @@ export function StatsStrip({
           {tUi("the_index_so_far")}
         </p>
         {hero ? (
-          <p className="home-hero-stats-intro">
-            An open record, built together.
-          </p>
+          <p className="home-hero-stats-intro">{tStatic("home.openRecord")}</p>
         ) : null}
         <GlobalLink
           href="/knowledge/data-api/how-we-count"
@@ -86,7 +86,7 @@ export function StatsStrip({
               : "inline-flex items-center gap-1.5 text-sm font-medium text-(--t-accent-primary) no-underline transition-colors hover:text-(--t-accent-primary-hover) hover:underline hover:underline-offset-4"
           }
         >
-          How we count
+          {tStatic("home.howCount")}
         </GlobalLink>
       </div>
       <dl

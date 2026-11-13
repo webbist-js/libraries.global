@@ -169,6 +169,10 @@ export function AtlasReachAnalysis({
   /** The viewer's allowance is the API customer's hourly one, not weekly. */
   readonly hourlyAllowance?: boolean
 }) {
+  const tCopy = useTranslations("atlasCopy")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("atlasAnalysis")
   const result =
     library &&
@@ -203,7 +207,8 @@ export function AtlasReachAnalysis({
               className="space-y-2 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4"
             >
               <p className="m-0 text-xs font-semibold">
-                Within {minutes} minutes · {t(mode)}
+                {tExisting("atlasInsights.within")} {minutes} minutes ·{" "}
+                {t(mode)}
               </p>
               <p className="m-0 text-[40px] leading-tight font-semibold text-(--t-accent-primary) tabular-nums">
                 {result.contours
@@ -225,7 +230,7 @@ export function AtlasReachAnalysis({
             onChange={(value) => onMinutes(Number(value))}
             options={ATLAS_REACH_MINUTES.map((value) => ({
               value: String(value),
-              label: `${value} min`,
+              label: tCopy("minutes", { count: value }),
             }))}
           />
           <AtlasInspectSettings

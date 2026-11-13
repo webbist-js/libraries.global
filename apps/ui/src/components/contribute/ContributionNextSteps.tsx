@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 import { useMounted } from "@/hooks/useMounted"
 import { authClient } from "@/lib/auth-client"
@@ -9,6 +10,8 @@ export function ContributionNextSteps({
 }: {
   readonly steps?: readonly string[]
 }) {
+  const tExisting = useTranslations()
+
   const { data: session } = authClient.useSession()
   const mounted = useMounted()
   const signedIn = mounted && Boolean(session?.user)
@@ -34,7 +37,9 @@ export function ContributionNextSteps({
 
   return (
     <div>
-      <h3 className="type-small-heading m-0 mb-3">What happens next</h3>
+      <h3 className="type-small-heading m-0 mb-3">
+        {tExisting("libraryClaim.next")}
+      </h3>
       <ol className="m-0 list-none space-y-2.5 p-0">
         {items.map((step, index) => (
           <li

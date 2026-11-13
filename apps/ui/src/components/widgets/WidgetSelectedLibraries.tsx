@@ -1,5 +1,7 @@
 "use client"
+
 import type { WidgetLibrary, WidgetSelectionSpec } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -25,6 +27,10 @@ export function WidgetSelectedLibraries({
   readonly resolving: boolean
   readonly unresolvedIds: string[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const rows = publicRows.filter((row) =>
@@ -35,11 +41,11 @@ export function WidgetSelectedLibraries({
 
   return (
     <div className="space-y-6">
-      <StaffPanel title="Selected libraries">
+      <StaffPanel title={tStatic("widget.selected_libraries")}>
         <SearchField
           id="selected-libraries-search"
           className="mb-4"
-          placeholder="Search selected libraries"
+          placeholder={tStatic("widget.search_selected_libraries")}
           onClear={() => {
             setSearch("")
             setPage(1)
@@ -53,8 +59,9 @@ export function WidgetSelectedLibraries({
           }}
         />
         <p className="mb-4 text-sm text-(--t-ink-dim)">
-          Selections can include libraries outside your Team. Including a record
-          never grants permission to edit it.
+          {tStatic(
+            "widget.selections_can_include_libraries_outside_your_team_including_a_record_never_grants_permission_to_edit_it"
+          )}
         </p>
         <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
           {rows.slice((current - 1) * 10, current * 10).map((r) => (
@@ -64,7 +71,9 @@ export function WidgetSelectedLibraries({
                   <strong>{r.name}</strong>
                   <p className="my-1 text-sm text-(--t-ink-dim)">
                     {r.city ?? r.country} ·{" "}
-                    {r.location ? "Mapped" : "No coordinates"}
+                    {r.location
+                      ? tExisting("widgetSettings.mapped")
+                      : "No coordinates"}
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {r.why.map((why) => (
@@ -85,7 +94,7 @@ export function WidgetSelectedLibraries({
                     })
                   }
                 >
-                  Exclude
+                  {tStatic("widget.exclude")}
                 </Button>
               </div>
             </li>
@@ -93,12 +102,14 @@ export function WidgetSelectedLibraries({
         </ul>
         {!rows.length && !resolving ? (
           <p role="status" className="py-6">
-            No matching published libraries. Change the sources or filters.
+            {tStatic(
+              "widget.no_matching_published_libraries_change_the_sources_or_filters"
+            )}
           </p>
         ) : null}
         <nav
           className="mt-4 flex justify-between gap-3"
-          aria-label="Selected library pages"
+          aria-label={tStatic("widget.selected_library_pages")}
         >
           <Button
             variant="surface"
@@ -106,7 +117,7 @@ export function WidgetSelectedLibraries({
             disabled={current <= 1}
             onClick={() => setPage(current - 1)}
           >
-            Previous
+            {tExisting("ui.previous")}
           </Button>
           <span className="self-center text-sm">
             {current} / {pages}
@@ -117,7 +128,7 @@ export function WidgetSelectedLibraries({
             disabled={current >= pages}
             onClick={() => setPage(current + 1)}
           >
-            Next
+            {tExisting("ui.next")}
           </Button>
         </nav>
       </StaffPanel>
@@ -146,13 +157,15 @@ export function WidgetSelectedLibraries({
                     })
                   }
                 >
-                  Undo exclusion
+                  {tStatic("widget.undo_exclusion")}
                 </Button>
               </li>
             ))}
           </ul>
           {!spec.excludeLibraryIds.length ? (
-            <p className="text-sm text-(--t-ink-dim)">No exclusions.</p>
+            <p className="text-sm text-(--t-ink-dim)">
+              {tStatic("widget.no_exclusions")}
+            </p>
           ) : null}
         </StaffPanel>
       ) : null}
@@ -160,11 +173,12 @@ export function WidgetSelectedLibraries({
         <Notice
           tone="warn"
           icon="mdi:eye-off-outline"
-          title="Unresolved library references"
+          title={tStatic("widget.unresolved_library_references")}
         >
           <p>
-            These records are unpublished, deleted or do not pass the current
-            filters. They are excluded from public counts.
+            {tStatic(
+              "widget.these_records_are_unpublished_deleted_or_do_not_pass_the_current_filters_they_are_excluded_from_public_counts"
+            )}
           </p>
           <ul>
             {unresolvedIds.map((id) => (

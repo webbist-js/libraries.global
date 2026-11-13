@@ -9,9 +9,8 @@ import {
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import messages from "../../../../locales/en"
 import ContactModal from "../ContactModal"
-
-import messages from "../../../../locales/en.json"
 
 const fetchMock = vi.fn()
 const close = vi.fn()

@@ -1,7 +1,6 @@
 // apps/ui/src/components/index-page/FindFilterSidebar.tsx
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import {
   FilterGroup,
@@ -58,7 +57,9 @@ export function FindFilterSidebar({
   /** Place pages keep their scope fixed while reusing the index filters. */
   showLocation?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const groupCount = (key: TypeGroupKey) => {
     const group = TYPE_GROUPS.find((g) => g.key === key)
@@ -122,7 +123,7 @@ export function FindFilterSidebar({
         <FilterOption
           type="checkbox"
           name="includeInactive"
-          label="Include closed and planned"
+          label={tStatic("profileIndex.include_closed_and_planned")}
           checked={Boolean(state.includeInactive)}
           onChange={() =>
             onChange({ includeInactive: !state.includeInactive, page: 0 })
@@ -194,7 +195,7 @@ export function FindFilterSidebar({
         <FilterOption
           type="checkbox"
           name="staffNow"
-          label="Staff on hand now"
+          label={tStatic("profileIndex.staff_on_hand_now")}
           checked={state.staffNow ?? false}
           onChange={() => onChange({ staffNow: !state.staffNow, page: 0 })}
         />
@@ -293,7 +294,7 @@ export function FindFilterSidebar({
               className="p-0 text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Distance
+              {tStatic("profileIndex.distance")}
             </legend>
             <div
               className="mt-1 flex flex-col"
@@ -312,7 +313,9 @@ export function FindFilterSidebar({
               ))}
             </div>
             {state.nearLat == null ? (
-              <FilterHelper>Turn on “Use my location” to enable</FilterHelper>
+              <FilterHelper>
+                {tStatic("profileIndex.turn_on_use_my_location_to_enable")}
+              </FilterHelper>
             ) : null}
           </fieldset>
           <label className="mt-3 flex min-h-11 items-center gap-3">
@@ -324,7 +327,7 @@ export function FindFilterSidebar({
                 onChange({ nearIncludeMobile: e.target.checked })
               }
             />
-            Include mobile library stops
+            {tStatic("profileIndex.include_mobile_library_stops")}
           </label>
         </FilterGroup>
       ) : null}

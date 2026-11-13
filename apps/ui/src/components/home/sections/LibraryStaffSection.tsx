@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { homepageLinkAttributes } from "@/components/home/homepage.analytics"
 import { plainHomepageTitle } from "@/components/home/homepage.constants"
@@ -11,6 +13,8 @@ export function LibraryStaffSection({
   readonly band: CtaBand
   readonly tools: readonly LinkCard[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section
       className="home-frame home-split home-staff"
@@ -18,7 +22,7 @@ export function LibraryStaffSection({
       aria-labelledby="home-staff-title"
     >
       <div>
-        <p className="home-kicker">For libraries</p>
+        <p className="home-kicker">{tStatic("home.forLibraries")}</p>
         <h2 id="home-staff-title" className="type-h2">
           {plainHomepageTitle(band.title)}
         </h2>
@@ -46,7 +50,7 @@ export function LibraryStaffSection({
             {...homepageLinkAttributes("/staff")}
             className="home-text-link"
           >
-            Explore staff area
+            {tStatic("home.exploreStaff")}
           </GlobalLink>
         </div>
       </div>

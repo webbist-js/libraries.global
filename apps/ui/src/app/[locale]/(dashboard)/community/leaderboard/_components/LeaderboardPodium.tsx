@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -25,6 +25,8 @@ const CARD_CLASS =
   "box-border flex min-w-0 flex-col items-center justify-end gap-[8px] rounded-3xl px-[12px] py-[20px] text-center"
 
 function RankChip({ rank }: { readonly rank: number }) {
+  const tStatic = useTranslations("staticUi")
+
   const first = rank === 1
 
   return (
@@ -36,7 +38,7 @@ function RankChip({ rank }: { readonly rank: number }) {
           : { background: T.accent.chip, color: T.accent.primaryHover }
       }
     >
-      Rank {rank}
+      {tStatic("communityRoute.rank")} {rank}
     </span>
   )
 }
@@ -48,6 +50,8 @@ function OpenSpot({
   readonly rank: number
   readonly periodPhrase: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <li
       className={`${CARD_CLASS} ${SM_ORDER[rank]}`}
@@ -82,7 +86,7 @@ function OpenSpot({
           color: T.ink.base,
         }}
       >
-        Open spot
+        {tStatic("common.openSpot")}
       </strong>
       <span
         className="max-w-[24ch] text-sm leading-[1.45]"
@@ -191,7 +195,7 @@ export function LeaderboardPodium({
   /** The period as it reads in a sentence: "this month", "ever". */
   readonly periodPhrase: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <ol

@@ -64,40 +64,91 @@ function ApiUsageSummary({
   readonly data: ApiDashboard
   readonly locale: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
   const warnings = warningSummary(data.warnings)
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-(--t-ink-dim) tabular-nums">
-        <span>
-          This period: {count(data.usage.requests)} of{" "}
-          {count(data.limits.requests)} requests
-        </span>
-        <span>
-          {formatApiBytes(data.usage.bytes, locale)} of{" "}
-          {formatApiBytes(data.limits.bytes, locale)} response data
-        </span>
-        <span>
-          {count(data.usage.credits)} of {count(data.limits.analysisCredits)}{" "}
-          analysis credits
-        </span>
-        {data.usage.resetsAt ? (
-          <span>Resets {formatPeriodTime(data.usage.resetsAt, locale)}</span>
-        ) : null}
+    <section
+      aria-label={tStatic("staff.current_billing_period")}
+      className="flex flex-col gap-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="type-h3 m-0">{tStatic("staff.this_billing_period")}</h2>
         <Link
           href="/developers/usage"
-          className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
+          className="inline-flex min-h-11 items-center gap-2 font-semibold text-(--t-accent-primary) underline underline-offset-4"
         >
-          View usage
+          {tStatic("staff.view_usage")} <span aria-hidden>→</span>
         </Link>
       </div>
-      {warnings.length ? (
-        <p role="status" className="m-0 text-sm font-semibold">
-          Usage alert: {warnings.join("; ")}.
+      <dl className="m-0 grid gap-4 md:grid-cols-3">
+        {[
+          {
+            label: tExisting("teamApiSubscription.requests"),
+            used: data.usage.requests,
+            limit: data.limits.requests,
+            format: count,
+          },
+          {
+            label: tExisting("teamApiSubscription.responseData"),
+            used: data.usage.bytes,
+            limit: data.limits.bytes,
+            format: (n: number) => formatApiBytes(n, locale),
+          },
+          {
+            label: tExisting("teamApiSubscription.credits"),
+            used: data.usage.credits,
+            limit: data.limits.analysisCredits,
+            format: count,
+          },
+        ].map((metric) => (
+          <div
+            key={metric.label}
+            className="min-w-0 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-5"
+          >
+            <dt className="text-sm font-semibold text-(--t-ink-dim)">
+              {metric.label}
+            </dt>
+            <dd className="m-0 mt-3">
+              <span className="type-stat block tabular-nums">
+                {metric.format(metric.used)}
+              </span>
+              <span className="mt-2 block text-sm text-(--t-ink-dim)">
+                {tExisting("widgetPublic.of")} {metric.format(metric.limit)}{" "}
+                included
+              </span>
+              <div
+                aria-hidden
+                className="mt-4 h-1.5 overflow-hidden rounded-full bg-(--t-bg-muted)"
+              >
+                <div
+                  className="h-full rounded-full bg-(--t-accent-primary)"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, metric.limit > 0 ? (metric.used / metric.limit) * 100 : 0))}%`,
+                  }}
+                />
+              </div>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {data.usage.resetsAt ? (
+        <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
+          {tStatic("staff.allowance_resets")}{" "}
+          {formatPeriodTime(data.usage.resetsAt, locale)}{" "}
+          {tStatic("staff.shared_across_all_api_keys")}
         </p>
       ) : null}
-    </div>
+      {warnings.length ? (
+        <p role="status" className="m-0 text-sm font-semibold">
+          {tStatic("staff.usage_alert")} {warnings.join("; ")}.
+        </p>
+      ) : null}
+    </section>
   )
 }
 
@@ -112,15 +163,19 @@ function KeyPagination({
   pending: boolean
   onPage: (offset: number) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (!page || (page.offset === 0 && !page.hasMore)) return null
 
   return (
     <nav
-      aria-label="API key pages"
+      aria-label={tStatic("staff.api_key_pages")}
       className="mt-4 flex flex-wrap items-center justify-between gap-3"
     >
       <span className="text-sm text-(--t-ink-dim)">
-        Keys {page.offset + 1}–{page.offset + count}
+        {tStatic("staff.keys")} {page.offset + 1}–{page.offset + count}
       </span>
       <div className="flex gap-2">
         <Button
@@ -129,7 +184,7 @@ function KeyPagination({
           disabled={pending || page.offset === 0}
           onClick={() => onPage(Math.max(0, page.offset - 50))}
         >
-          Previous
+          {tExisting("ui.previous")}
         </Button>
         <Button
           variant="surface"
@@ -137,7 +192,7 @@ function KeyPagination({
           disabled={pending || !page.hasMore}
           onClick={() => onPage(page.offset + 50)}
         >
-          Next
+          {tExisting("ui.next")}
         </Button>
       </div>
     </nav>
@@ -160,6 +215,10 @@ function TeamKeyList({
   pending: boolean
   setConfirmation: (change: KeyChange | null) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("teamApiKeys")
   const count = (value: number) => new Intl.NumberFormat(locale).format(value)
 
@@ -175,8 +234,8 @@ function TeamKeyList({
             const status = key.revokedAt
               ? "Revoked"
               : expired
-                ? "Expired"
-                : "Active"
+                ? tExisting("staticUi.mobile.expired")
+                : tExisting("membershipPage.apiActive")
 
             return (
               <li
@@ -236,7 +295,7 @@ function TeamKeyList({
                           })
                         }
                       >
-                        Regenerate
+                        {tStatic("staff.regenerate")}
                       </Button>
                       <Button
                         type="button"
@@ -252,7 +311,7 @@ function TeamKeyList({
                           })
                         }
                       >
-                        Revoke
+                        {tStatic("common.revoke")}
                       </Button>
                     </div>
                   ) : null}
@@ -307,13 +366,17 @@ function KeyChangeConfirmation({
   request: (body: unknown) => void
   onCancel: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (!confirmation) return null
 
   return (
     <div
       className="mt-5 rounded-2xl border border-(--t-border-hi) bg-(--t-bg-surface) p-5"
       role="group"
-      aria-label="Confirm key change"
+      aria-label={tStatic("staff.confirm_key_change")}
     >
       <p className="m-0 text-base font-semibold">
         {confirmation.action === "rotate"
@@ -338,7 +401,7 @@ function KeyChangeConfirmation({
             })
           }
         >
-          Confirm
+          {tStatic("common.confirm")}
         </Button>
         <Button
           type="button"
@@ -347,7 +410,7 @@ function KeyChangeConfirmation({
           disabled={pending}
           onClick={onCancel}
         >
-          Cancel
+          {tExisting("ui.cancel")}
         </Button>
       </div>
     </div>
@@ -365,6 +428,8 @@ function ApiDashboardHeader({
   pending: boolean
   onRefresh: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
       {data.active ? (
@@ -385,7 +450,7 @@ function ApiDashboardHeader({
           onClick={onRefresh}
         >
           <Icon icon="mdi:refresh" aria-hidden="true" width={17} height={17} />
-          Refresh usage
+          {tStatic("staff.refresh_usage")}
         </Button>
       </div>
     </div>
@@ -479,6 +544,8 @@ export function TeamApiDashboard({
   readonly initial: ApiDashboard
   readonly confirming: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [data, setData] = useState(initial)
   const [now, setNow] = useState(() => Date.now())
   const [error, setError] = useState("")
@@ -602,7 +669,7 @@ export function TeamApiDashboard({
       {error ? (
         <Notice
           tone="warn"
-          title="API request not completed"
+          title={tStatic("staff.api_request_not_completed")}
           icon="mdi:alert-circle-outline"
         >
           <span role="alert">{error}</span>
@@ -614,12 +681,28 @@ export function TeamApiDashboard({
       ) : null}
       {visibility.usage ? <ApiUsagePanel data={data} locale={locale} /> : null}
       {visibility.overage ? (
-        <ApiOveragePanel
-          data={data}
-          locale={locale}
-          pending={pending}
-          request={request}
-        />
+        section === "overview" ? (
+          <details className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
+            <summary className="cursor-pointer rounded font-semibold focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)">
+              {tStatic("staff.spending_controls_and_next_invoice")}
+            </summary>
+            <div className="mt-5">
+              <ApiOveragePanel
+                data={data}
+                locale={locale}
+                pending={pending}
+                request={request}
+              />
+            </div>
+          </details>
+        ) : (
+          <ApiOveragePanel
+            data={data}
+            locale={locale}
+            pending={pending}
+            request={request}
+          />
+        )
       ) : null}
       {visibility.keys ? (
         <StaffPanel

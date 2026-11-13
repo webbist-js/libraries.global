@@ -108,6 +108,7 @@ const searchKnowledge = (query: string, locale: string) =>
   searchWikiArticles(query, null, 40, locale)
 
 function DocsSearchResults({ query }: { query: string }) {
+  const t = useUiTranslations("articleSearch")
   const locale = useLocale()
   const { results, loading, searched, active } = useArticleSearch({
     query,
@@ -123,7 +124,7 @@ function DocsSearchResults({ query }: { query: string }) {
         <p
           style={{ color: T.ink.dim, fontSize: "var(--type-body-small-size)" }}
         >
-          Searching…
+          {t("searching")}
         </p>
       ) : searched && results.length === 0 ? (
         <div
@@ -137,7 +138,7 @@ function DocsSearchResults({ query }: { query: string }) {
             fontSize: "var(--type-body-size)",
           }}
         >
-          No pages found for &ldquo;{query}&rdquo;.
+          {t("knowledge.empty", { query })}
         </div>
       ) : (
         <>
@@ -148,8 +149,7 @@ function DocsSearchResults({ query }: { query: string }) {
               marginBottom: "20px",
             }}
           >
-            {results.length} result{results.length !== 1 ? "s" : ""} for &ldquo;
-            {query}&rdquo;
+            {t("results", { count: results.length, query })}
           </p>
           <div
             style={{ display: "flex", flexDirection: "column", gap: "12px" }}
@@ -166,6 +166,7 @@ function DocsSearchResults({ query }: { query: string }) {
 
 function SearchPageInner() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("articleSearch")
 
   const searchParams = useSearchParams()
   const query = searchParams.get("q") ?? ""
@@ -179,13 +180,13 @@ function SearchPageInner() {
           { label: tUi("search") },
         ]}
         compact
-        eyebrow="Knowledge base"
+        eyebrow={t("knowledge.eyebrow")}
         eyebrowAccent={DOCS_VERSION}
         eyebrowIcon="mdi:book-open-outline"
         title={
           query
-            ? `Results for *“${query.replaceAll("*", "")}”*`
-            : "Search the *docs*"
+            ? t("title", { query: query.replaceAll("*", "") })
+            : t("knowledge.title")
         }
       >
         <form
@@ -211,7 +212,7 @@ function SearchPageInner() {
           <DocsSearchResults query={query} />
           {!query.trim() && (
             <p style={{ color: T.ink.dim, fontSize: "var(--type-body-size)" }}>
-              Enter a search term to find documentation pages.
+              {t("knowledge.hint")}
             </p>
           )}
         </Container>

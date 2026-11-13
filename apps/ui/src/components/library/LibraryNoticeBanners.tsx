@@ -6,7 +6,7 @@ import {
   noticeLocalDate,
   type LibraryNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Notice, StatusBadge } from "@/components/ds"
@@ -20,7 +20,9 @@ export function LibraryNoticeBanners({
   notices: readonly LibraryNotice[]
   timezone: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [today, setToday] = useState<string | null>(null)
   useEffect(() => {
@@ -58,7 +60,8 @@ export function LibraryNoticeBanners({
           style={{ borderColor: T.border.line, background: T.bg.deep }}
         >
           <StatusBadge tone="info" icon="mdi:calendar-clock-outline">
-            From {shortDate(n.from)} · {LIBRARY_NOTICE_LABELS[n.type]}
+            {tExisting("staticUi.staff.from")} {shortDate(n.from)} ·{" "}
+            {LIBRARY_NOTICE_LABELS[n.type]}
           </StatusBadge>
           <p className="m-0 min-w-0 flex-1 text-base leading-[1.5]">
             {n.message}

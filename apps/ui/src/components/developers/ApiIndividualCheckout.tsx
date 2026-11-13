@@ -30,7 +30,7 @@ export function ApiIndividualCheckout({
 
   if (!prospect.verified)
     return (
-      <StaffPanel title={t("verifyTitle")} compact>
+      <StaffPanel title={t("verifyTitle")} id="api-checkout" compact>
         <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
           {t("verifyBody")}{" "}
           <Link

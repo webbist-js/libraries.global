@@ -1,10 +1,12 @@
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
+import { useTranslations } from "next-intl"
 
 import { ProfilePrivacyControls } from "@/app/[locale]/profile/[username]/_components/ProfilePrivacyControls"
 import { OverviewSection } from "@/app/[locale]/profile/[username]/_components/sections/OverviewSection"
 import GlobalLink from "@/components/global/GlobalLink"
 import { PublicNetworkAffiliations } from "@/components/networks/PublicNetworkAffiliations"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
@@ -15,6 +17,8 @@ import {
 import type { UserProfile } from "@/lib/types/profile"
 
 function ProfileOverviewBanner({ profile }: { profile: UserProfile }) {
+  const tExisting = useTranslations()
+
   return (
     <ProfilePrivacyControls
       initialPrefs={profile.publicPrefs}
@@ -41,14 +45,14 @@ function ProfileOverviewBanner({ profile }: { profile: UserProfile }) {
           className="text-base font-semibold underline underline-offset-4"
           style={{ color: T.accent.primary }}
         >
-          Edit profile
+          {tExisting("dashboard.editProfile")}
         </GlobalLink>
       }
     />
   )
 }
 
-export default async function ProfileOverviewPage({
+async function ProfileOverviewPage({
   params,
 }: {
   params: Promise<{ username: string }>
@@ -83,3 +87,8 @@ export default async function ProfileOverviewPage({
     </>
   )
 }
+
+export default withMessages(
+  ProfileOverviewPage,
+  "[locale]/(dashboard)/profile/[username]/page"
+)

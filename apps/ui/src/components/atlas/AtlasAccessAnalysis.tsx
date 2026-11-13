@@ -1,14 +1,10 @@
 "use client"
-
 import type {
   AtlasAccessMetric,
   AtlasBounds,
   AtlasLibraryAccessResponse,
 } from "@repo/shared-data"
-import {
-  useTranslations,
-  useTranslations as useUiTranslations,
-} from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMemo, useState, type ReactNode } from "react"
 
 import {
@@ -85,7 +81,11 @@ export function AtlasAccessAnalysis({
   readonly tab?: AnalysisTab
   readonly onTab?: (tab: AnalysisTab) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const tAnalysis = useTranslations("atlasAnalysis")
 
   const [localTab, setLocalTab] = useState<AnalysisTab>("overview"),
@@ -169,7 +169,7 @@ export function AtlasAccessAnalysis({
     <AtlasAnalysisWorkspace
       title={tUi("library_access")}
       badge={tAnalysis("areaLayer")}
-      description={`${metric === "per100k" ? "Libraries per 100k people" : "People per library"} · ${areaKind}`}
+      description={`${metric === "per100k" ? "Libraries per 100k people" : tStatic("atlas.people_per_library")} · ${areaKind}`}
       {...{ collapsed, onCollapse, onClose, onSettings }}
       tab={tab}
       lead={
@@ -180,21 +180,21 @@ export function AtlasAccessAnalysis({
         ) : null
       }
       tabs={[
-        { id: "overview", label: "Overview" },
-        { id: "explore", label: "Explore" },
-        { id: "compare", label: "Compare" },
+        { id: "overview", label: tExisting("dashboard.overview") },
+        { id: "explore", label: tExisting("ui.explore") },
+        { id: "compare", label: tStatic("atlas.compare") },
       ]}
       onTab={changeTab}
       context={
         response ? (
           <AtlasInspectSettings
-            summary={`${metric === "per100k" ? "Per 100k residents" : "Residents per library"} · ${areaKind} · ${analysisScope === "view" ? "In map view" : "All areas"}`}
+            summary={`${metric === "per100k" ? "Per 100k residents" : "Residents per library"} · ${areaKind} · ${analysisScope === "view" ? tStatic("atlas.in_map_view") : tStatic("atlas.all_areas")}`}
           >
             {settings}
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <label className="flex items-center gap-2 font-semibold">
-                  Scope
+                  {tExisting("discussions.restrictionScope")}
                   <SelectField
                     label={tUi("analysis_scope")}
                     value={viewBounds ? analysisScope : "all"}
@@ -205,10 +205,10 @@ export function AtlasAccessAnalysis({
                     options={[
                       {
                         value: "view",
-                        label: "In map view",
+                        label: tStatic("atlas.in_map_view"),
                         disabled: !viewBounds,
                       },
-                      { value: "all", label: "All areas" },
+                      { value: "all", label: tStatic("atlas.all_areas") },
                     ]}
                   />
                 </label>
@@ -251,7 +251,7 @@ export function AtlasAccessAnalysis({
     >
       {error ? (
         <div role="alert" className="text-sm">
-          The library access comparison couldn’t load.{" "}
+          {tStatic("atlas.the_library_access_comparison_couldn_t_load")}{" "}
           <button
             type="button"
             onClick={onRetry}
@@ -261,7 +261,7 @@ export function AtlasAccessAnalysis({
           </button>
         </div>
       ) : !response ? (
-        <AtlasLoadingSkeleton label="Loading library access…" />
+        <AtlasLoadingSkeleton label={tStatic("atlas.loading_library_access")} />
       ) : (
         <>
           {tab === "overview" ? (
@@ -356,7 +356,7 @@ export function AtlasAccessAnalysis({
                   setTimeout(() => URL.revokeObjectURL(url), 1000)
                 }}
               >
-                Download area comparison CSV
+                {tStatic("atlas.download_area_comparison_csv")}
               </button>
             }
           />

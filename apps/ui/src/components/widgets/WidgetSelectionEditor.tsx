@@ -7,6 +7,7 @@ import {
   type WidgetSelectionSpec,
 } from "@repo/shared-data"
 import { useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -52,6 +53,10 @@ export function WidgetSelectionEditor({
   readonly workspace: WidgetWorkspace
   readonly initial: WidgetSelection | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const router = useRouter(),
     team = workspace.team,
     initialSpec = initialSelectionSpec(initial, team.primaryNetwork)
@@ -125,7 +130,7 @@ export function WidgetSelectionEditor({
       const row = latest.selections.find(
         (s) => s.documentId === initial?.documentId
       )
-      if (!row) throw new Error("This selection is unavailable.")
+      if (!row) throw new Error("selection_unavailable")
       setVersion(row.version)
       if (!keepMine) {
         setSpec(row.spec)
@@ -161,10 +166,7 @@ export function WidgetSelectionEditor({
         ],
         excludeLibraryIds: spec.excludeLibraryIds,
       })
-      if (!access.libraryIds.length)
-        setError(
-          "There are no approved library staff assignments to import. Pending claims are excluded."
-        )
+      if (!access.libraryIds.length) setError("no_assignments")
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -178,11 +180,12 @@ export function WidgetSelectionEditor({
       <Dialog open={discardOpen} onOpenChange={setDiscardOpen}>
         <DialogContent>
           <DialogTitle className="type-h2">
-            Discard unsaved selection changes?
+            {tStatic("widget.discard_unsaved_selection_changes")}
           </DialogTitle>
           <DialogDescription>
-            Your saved selection and published widgets will keep their current
-            versions. Cancel to save these changes first.
+            {tStatic(
+              "widget.your_saved_selection_and_published_widgets_will_keep_their_current_versions_cancel_to_save_these_changes_first"
+            )}
           </DialogDescription>
           <div className="flex justify-end gap-3">
             <Button
@@ -190,14 +193,14 @@ export function WidgetSelectionEditor({
               size="pill"
               onClick={() => setDiscardOpen(false)}
             >
-              Keep editing
+              {tStatic("widget.keep_editing")}
             </Button>
             <Button
               variant="primary"
               size="pill"
               onClick={() => router.push(backHref)}
             >
-              Discard and return
+              {tStatic("widget.discard_and_return")}
             </Button>
           </div>
         </DialogContent>
@@ -212,7 +215,7 @@ export function WidgetSelectionEditor({
           size="pill"
           onClick={() => resolution.retry()}
         >
-          Retry data
+          {tStatic("widget.retry_data")}
         </Button>
       ) : null}
 
@@ -224,7 +227,7 @@ export function WidgetSelectionEditor({
             disabled={busy}
             onClick={() => loadTheir()}
           >
-            Load their version
+            {tStatic("widget.load_their_version")}
           </Button>
           <Button
             variant="surface"
@@ -232,40 +235,41 @@ export function WidgetSelectionEditor({
             disabled={busy}
             onClick={() => loadTheir(true)}
           >
-            Keep mine for review on top
+            {tStatic("widget.keep_mine_for_review_on_top")}
           </Button>
         </div>
       ) : null}
       {!team.active ? (
         <Notice
           tone="warn"
-          title="Workspace closed — selection is read only"
+          title={tStatic("widget.workspace_closed_selection_is_read_only")}
           icon="mdi:pause-circle-outline"
         />
       ) : null}
       {initial?.usedBy?.length ? (
         <Notice
           tone="info"
-          title={`Shared with ${initial.usedBy.length} ${initial.usedBy.length === 1 ? "widget" : "widgets"}`}
+          title={tStatic("widget.sharedWith", { count: initial.usedBy.length })}
           icon="mdi:link-variant"
         >
           <p>
-            Saving updates the drafts of{" "}
-            {initial.usedBy.map((w) => w.name).join(", ")}. Publish each widget
-            separately to update its live version. Selections that follow a
-            source still pick up public membership changes.
+            {tStatic("widget.sharedDrafts", {
+              names: initial.usedBy.map((w) => w.name).join(", "),
+            })}
           </p>
         </Notice>
       ) : null}
       <SegmentedControl
-        label="Selection editor"
+        label={tStatic("widget.selection_editor")}
         value={tab}
         onChange={setTab}
         options={[
-          { value: "libraries", label: "1. Choose libraries" },
+          { value: "libraries", label: tStatic("widget.chooseLibraries") },
           {
             value: "groups",
-            label: `2. Comparison groups (${spec.groups.length})`,
+            label: tStatic("widget.comparisonTab", {
+              count: spec.groups.length,
+            }),
           },
         ]}
       />
@@ -347,7 +351,7 @@ export function WidgetSelectionEditor({
           onClick={save}
         >
           {busy
-            ? "Saving…"
+            ? tExisting("ui.saving")
             : widgetId
               ? "Save & return to widget"
               : "Save selection"}

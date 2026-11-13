@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import {
   type ComponentProps,
   type ReactNode,
@@ -43,6 +43,8 @@ export function ContributionList<I extends ContributionItem, F extends string>({
   /** A line under the title, e.g. where the rest of the list lives. */
   intro?: ReactNode
 }) {
+  const tExisting = useTranslations()
+
   const titleId = useId()
   const [active, setActive] = useState<F>(filters[0]!.id)
 
@@ -109,7 +111,7 @@ export function ContributionList<I extends ContributionItem, F extends string>({
           className="m-0 border-t px-6 py-6 text-base"
           style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
         >
-          Nothing here yet.
+          {tExisting("roadmap.emptyStage")}
         </p>
       ) : (
         grouped.map((group) => (

@@ -1,11 +1,12 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { verifyLinkErrorPath } from "@/lib/auth-redirects"
 import { getSessionSSR } from "@/lib/auth-server"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
-export default async function PostSigninPage({
+async function PostSigninPage({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string; error?: string }>
@@ -35,3 +36,5 @@ export default async function PostSigninPage({
 
   redirect(destination)
 }
+
+export default withMessages(PostSigninPage, "[locale]/auth/post-signin/page")

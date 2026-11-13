@@ -1,0 +1,489 @@
+{
+  "membershipContent": {
+    "standing": {
+      "public": "未ログイン",
+      "explorer": "エクスプローラー",
+      "contributor": "貢献者",
+      "supporter": "サポーター"
+    },
+    "offers": {
+      "explorer": {
+        "name": "エクスプローラー",
+        "who": "無料アカウントを持つすべての方。",
+        "price": "無料",
+        "priceNote": "メールアドレスで登録できます。カードも試用期間もありません。",
+        "cta": {
+          "signUp": "無料アカウントを作成"
+        },
+        "items": {
+          "records": "アカウントの有無にかかわらず、すべての図書館情報、地図、一覧を利用",
+          "contribute": "修正、写真、新しい図書館を提案",
+          "follow": "図書館のフォロー、イベントの保存、ディスカッションへの参加",
+          "contextLayers": "アトラスの背景レイヤー：英国の対応地域の困窮度と車のない世帯",
+          "libraryAccess": "図書館へのアクセス：国および対応する地域の人口比較",
+          "history": "図書館へのすべての変更を項目ごとに確認",
+          "savedViews": "表示と検索をそれぞれ最大{savedViews}件保存",
+          "export": "アトラスから最大{exportRows}行を1日{exportsPerDay}回エクスポート",
+          "alerts": "保存した検索の通知",
+          "notes": "任意の図書館への非公開メモ"
+        }
+      },
+      "contributor": {
+        "name": "貢献者",
+        "who": "投稿が1件以上採用されたすべての方。",
+        "price": "無料",
+        "priceNote": "最初の投稿が採用されると取得。",
+        "cta": {
+          "contribute": "情報提供を始める"
+        },
+        "items": {
+          "everythingExplorer": "エクスプローラーの全機能",
+          "reach": "図書館1館の到達範囲を7日間ごとに{reachPerWeek}回新規計算。計算済みの結果を開くのは無料",
+          "credit": "採用されたすべての変更のクレジットと貢献履歴",
+          "supporter": "投稿が{supporterAt}件採用されるとサポーター認定",
+          "noAuthority": "認定によって編集権限や職員認証が付与されることはありません。ポイントとバッジは別に集計します。"
+        }
+      },
+      "staff": {
+        "name": "認証済み職員",
+        "who": "図書館や図書館サービスで働く方。",
+        "price": "無料",
+        "priceNote": "図書館に役割を確認した後。",
+        "cta": {
+          "claim": "図書館の職員認証を申請"
+        },
+        "items": {
+          "workspace": "認証された各図書館の職員エリア",
+          "editing": "図書館の登録情報の編集、お知らせの投稿、変更提案への回答",
+          "organisation": "同僚の招待と図書館の管理のための無料組織",
+          "widgets": "埋め込み可能な図書館検索、一覧、グラフ、統計",
+          "traffic": "図書館ページのアクセスレポート",
+          "scope": "権限は認証された図書館だけに適用されます。組織に参加するだけでは編集権限は得られません。"
+        }
+      },
+      "api": {
+        "name": "APIアクセス",
+        "who": "独自のツールを接続する開発者、研究者、組織。",
+        "price": "月額{apiPrice}",
+        "priceNote": "税込みです。支払い前にStripeで最終請求額を確認できます。",
+        "cta": {
+          "developers": "開発者ページへ"
+        },
+        "items": {
+          "allowance": "各請求期間に{apiRequests}リクエスト、{apiMib} MiBのレスポンスデータ、{apiCredits}分析クレジット",
+          "keys": "無制限のキー、利用状況ダッシュボード、リクエストリファレンス、プレイグラウンド",
+          "overage": "任意の超過利用。月額上限（{capMin}～{capMax}）を選べます。有効にするまでオフです。",
+          "reach": "運営担当者はアトラスの到達範囲を拡張利用できます。1時間に{apiReachPerHour}回の新規計算、最大{apiReachLibraries}館のサービス全体の到達範囲",
+          "noOrganisation": "個人または組織として購入できます。",
+          "noAuthority": "APIキーはアプリケーションを識別します。図書館の編集、認証、検索での優遇を付与することはありません。"
+        }
+      },
+      "sponsor": {
+        "name": "スポンサー",
+        "who": "公共サービスに資金を提供したい組織。",
+        "price": "個別に相談",
+        "priceNote": "支援する作業、期間、報告方法を話し合って決めます。",
+        "cta": {
+          "contact": "スポンサーについて相談する",
+          "sponsor": "スポンサーについて"
+        },
+        "items": {
+          "programmes": "公開アクセス、データ品質、翻訳、地理的な収録範囲、オープンなツールへの資金支援",
+          "reporting": "四半期の活動報告と年次の成果報告",
+          "acknowledgement": "希望に応じてスポンサーページに名称とロゴを掲載",
+          "independence": "スポンサーは登録情報、順位、認証、編集審査に関与できません。スポンサー契約は慈善寄付ではありません。"
+        }
+      }
+    },
+    "columns": {
+      "public": {
+        "name": "アカウントなし",
+        "price": "無料"
+      },
+      "explorer": {
+        "name": "エクスプローラー",
+        "price": "無料"
+      },
+      "contributor": {
+        "name": "貢献者",
+        "price": "無料・貢献により取得"
+      },
+      "staff": {
+        "name": "認証済み職員",
+        "price": "無料"
+      },
+      "api": {
+        "name": "APIアクセス",
+        "price": "{apiPrice}/月"
+      }
+    },
+    "groups": {
+      "facts": "図書館の基本情報",
+      "account": "参加する",
+      "atlas": "アトラスの分析",
+      "watching": "図書館のウォッチと比較",
+      "staff": "図書館職員の方へ",
+      "api": "開発者向け"
+    },
+    "rows": {
+      "records": "開館時間とサービスを含むすべての図書館情報",
+      "map": "検索、地図、一覧",
+      "reading": "ジャーナル、ナレッジ、イベント、掲示板、公開ディスカッション",
+      "downloads": "図書館情報のダウンロード",
+      "apiReference": "APIドキュメントとリクエストリファレンス",
+      "contribute": "修正、写真、新しい図書館を提案",
+      "follow": "図書館のフォローとイベントの保存",
+      "discussions": "ディスカッションの開始、返信、リアクション",
+      "drives": "コミュニティの共同活動に参加",
+      "savedViews": "表示と検索の保存",
+      "atlas_contextLayers": "背景レイヤー：困窮度と車のない世帯（英国の対応地域）",
+      "atlas_analysis": "図書館へのアクセス：人口比較",
+      "atlas_compare": "2地域間の図書館へのアクセスを比較",
+      "atlas_export": "アトラスの結果をCSVまたはGeoJSONでエクスポート",
+      "atlas_reach": "図書館1館の移動時間による到達範囲",
+      "atlas_serviceReach": "複数館にわたるサービス全体の到達範囲",
+      "library_history": "図書館へのすべての変更を項目ごとに確認",
+      "library_watch": "図書館の変更や休館をウォッチ",
+      "index_alerts": "保存した検索の通知",
+      "index_compare": "最大6館を並べて比較",
+      "library_notes": "任意の図書館への非公開メモ",
+      "events_personalFeed": "個人用カレンダーフィード",
+      "index_export": "出典付きの検索結果をエクスポート",
+      "data_benchmark": "類似サービスと比較評価",
+      "data_explorerExport": "算出した指標をエクスポート",
+      "staffWorkspace": "認証された図書館の職員エリア",
+      "staffEditing": "登録情報の編集、お知らせの投稿、提案への回答",
+      "staffOrganisation": "招待機能付きの無料組織",
+      "staffWidgets": "ウェブサイト用の埋め込みウィジェット",
+      "staffTraffic": "アクセスレポート",
+      "api_key": "APIキーと利用状況ダッシュボード",
+      "apiAllowance": "請求期間ごとのAPI利用枠",
+      "apiOverage": "自分で上限を設定する任意の超過利用",
+      "apiPlayground": "自分のキーでプレイグラウンドのリクエストを実行"
+    },
+    "cells": {
+      "savedViews": "{savedViews}",
+      "exportRows": "{exportRows}行",
+      "reachWeek": "週{reachPerWeek}回",
+      "reachHour": "1時間{apiReachPerHour}回",
+      "serviceLibraries": "最大{apiReachLibraries}館",
+      "apiAllowance": "{apiRequests}リクエスト"
+    },
+    "copy": {
+      "lead": "図書館の基本情報も、それを調べたり改善したりするツールも無料です。APIアクセスとスポンサー契約がサービスの運営費を支えます。",
+      "metaDescription": "エクスプローラー、貢献者、認証済み職員は無料です。APIアクセスは月額{apiPrice}です。組織は公共サービスのスポンサーになれます。支払いによって信頼を買うことはできません。",
+      "promiseAds": "広告は一切なし",
+      "promiseTrust": "お金で信頼は買えません",
+      "promiseData": "オープンデータは開かれたまま",
+      "offersTitle": "参加の方法",
+      "offersLead": "Libraries Globalの大半は無料です。有料サービスは運営を支えますが、登録情報の審査や順位には影響しません。",
+      "independence": "APIアクセスの購入やスポンサー契約によって、コミュニティでの役割、編集の審査方法、図書館の表示位置が変わることはありません。",
+      "compare": "すべてを並べて比較",
+      "current": "利用中",
+      "includes": "含まれるもの",
+      "signedIn": "ログイン済み",
+      "openStaff": "職員エリアを開く",
+      "manageApi": "APIアクセスを管理",
+      "soon": "近日公開",
+      "soonShort": "まもなく",
+      "included": "含まれる",
+      "notIncluded": "含まれない",
+      "feature": "機能",
+      "compareTwo": "2つの選択肢を比較",
+      "comparisonCaption": "{group}：{first}と{second}",
+      "availableCount": "現在{count, number}件を利用可能",
+      "roadmapCount": "ロードマップに{count, number}件",
+      "questions": "質問",
+      "contactLead": "他に質問がありますか？運営担当者が5営業日以内に返信します。",
+      "ask": "質問する",
+      "supporterEyebrow": "貢献で得るもの、購入は不可",
+      "supporterTitle": "サポーター：{supporterAt}件の採用された投稿",
+      "supporterBody": "サポーターは投稿が{supporterAt}件採用された方への認定です。プロフィールのマークと、任意のサポーターページ掲載を選べます。ツール、利用枠、権限は追加されず、購入もできません。",
+      "meetSupporters": "サポーターを見る",
+      "freeGroupTitle": "誰でも無料",
+      "freeGroupLead": "カードも試用期間もありません。参加に応じて使えるツールが増えます。",
+      "paidGroupTitle": "組織向け",
+      "paidGroupLead": "サービスを資金面で支える2つの方法。",
+      "moreInComparison": "比較表に{count, plural, one {さらに#件} other {さらに#件}}"
+    },
+    "policies": {
+      "heading": "規約と返金",
+      "lead": "APIアクセスの購入前にお読みください。各ページを印刷・保存できます。",
+      "languageNote": "現在、これらのポリシーは英語で提供しています。",
+      "terms": "会員・API利用規約",
+      "termsBody": "月額料金、含まれる利用枠、任意の超過利用、請求期間、アカウントについて。",
+      "refunds": "解約と返金",
+      "refundsBody": "更新の停止、返金申請、法定の解約権について。"
+    },
+    "faq": {
+      "0": {
+        "q": "無料で何が使えますか？",
+        "a": "APIアクセス以外のすべてです。アカウントがなくても、すべての図書館情報の閲覧と地図の利用ができます。無料アカウント（エクスプローラー）では、背景レイヤー、比較、変更履歴、表示の保存、最大{exportRows}行のエクスポートが加わります。最初の投稿が採用されると貢献者となり、週{reachPerWeek}回の到達範囲の計算を利用できます。"
+      },
+      "1": {
+        "q": "サポーターの仕組みは？",
+        "a": "図書館の新規登録、修正、写真、翻訳、記事など、採用された実質的な投稿を1件ずつ数えます。連続活動、ボーナス、管理上の調整は含みません。プロフィールには件数と{supporterAt}件までの進捗が表示されます。サポーター認定でツールや権限は追加されません。"
+      },
+      "2": {
+        "q": "APIアクセスの料金は？",
+        "a": "月額{apiPrice}（税込み）で、各請求期間に{apiRequests}リクエスト、{apiMib} MiBのレスポンスデータ、{apiCredits}分析クレジットを利用できます。超過利用は有効にするまでオフです。有効にした場合は、追加リクエスト1件当たり{requestPrice}、追加データ1 MiB当たり{mibPrice}、追加分析クレジット1単位当たり{creditPrice}で、月額上限は{capMin}～{capMax}です。"
+      },
+      "3": {
+        "q": "APIアクセスの購入には組織が必要ですか？",
+        "a": "いいえ。個人で購入する場合は、あなたを唯一の運営担当者とする無料の組織を作成するので、後から同僚を追加できます。運営担当者はキーと請求を管理し、メンバーは利用状況を確認できます。"
+      },
+      "4": {
+        "q": "支払いやスポンサー契約で編集権限を得られますか？",
+        "a": "いいえ。図書館の登録情報を編集するには、その図書館の認証済み職員権限が必要で、図書館に確認します。APIアクセス、スポンサー契約、認定、組織への参加によって付与されることはありません。"
+      },
+      "5": {
+        "q": "スポンサー契約には何が含まれますか？",
+        "a": "データ品質や翻訳などの作業プログラムを支援し、四半期の活動報告と年次の成果報告を提供します。金額は各スポンサーと相談して決めます。{contactEmail}へメールするか、お問い合わせフォームをご利用ください。慈善寄付ではなく、APIアクセスは含まれません。"
+      },
+      "6": {
+        "q": "APIアクセスは解約できますか？",
+        "a": "はい。開発者ページの請求管理からいつでも解約できます。有料期間の終了までは利用を継続できます。法定の権利については解約・返金ポリシーをご覧ください。"
+      }
+    },
+    "sheet": {
+      "title": "図書館の基本情報は無料です。",
+      "titleEmphasis": "いつでも。",
+      "lead": "住所、開館時間、サービス、コミュニティが整備したすべての情報は、誰にでも公開されます。ログインしてアトラスのツールを使い、投稿が1件採用されると到達範囲を利用できます。さらに必要な場合はAPIアクセスを購入できます。",
+      "here": "現在の利用区分",
+      "signIn": "ログイン",
+      "contribute": "情報提供",
+      "api": "APIアクセスについて",
+      "reachTitle": "投稿が1件採用されると、週2回の到達範囲の計算を利用できます。",
+      "reachBody": "APIのお客様は1時間{apiReachPerHour}回と、サービス全体の到達範囲を利用できます。",
+      "allPlans": "すべての選択肢を見る",
+      "openTitle": "オープンソース、オープンデータ。",
+      "openBody": "図書館の登録情報はコミュニティが維持するオープンデータで、アトラスのコードはオープンソースです。",
+      "layers": {
+        "basics": "密度、夜間開館、休館のレイヤー",
+        "mobile": "移動図書館の経路と停車場所",
+        "population": "人口密度と対応するグリッド",
+        "access": "アクセシビリティ、イベント、情報充実度のレイヤー"
+      }
+    }
+  },
+  "membershipPage": {
+    "title": "あなたの参加状況",
+    "hero": "あなたの*参加状況*",
+    "lead": "貢献、職員権限、APIアカウントをそれぞれ分けて表示します。",
+    "plansTitle": "プランと料金",
+    "plansEyebrow": "プランと料金",
+    "plansHero": "誰でも無料、*APIアクセスだけ有料*",
+    "offersNav": "参加の方法",
+    "comparePlans": "プランを比較",
+    "questionsPoliciesNav": "質問とポリシー",
+    "membershipQuestions": "質問がありますか？",
+    "plansHelpLead": "含まれる内容を比較し、以下の回答を読むか、お問い合わせください。",
+    "askQuestion": "質問する",
+    "settingsLead": "参加状況、職員権限、APIアカウントはプロフィールに表示されます。",
+    "plansLink": "プランと料金",
+    "yourStanding": "あなたの参加状況",
+    "acceptedCount": "{count, plural, one {採用された投稿#件} other {採用された投稿#件}}",
+    "recentlyActive": "最近活動あり",
+    "notRecentlyActive": "最近の活動なし",
+    "viewStanding": "参加状況を見る",
+    "standingTitle": "あなたの参加状況",
+    "standingBody": {
+      "public": "ログインして参加状況を確認してください。",
+      "explorer": "すべての無料ツールを利用できます。最初の投稿が採用されると貢献者となり、週{reachPerWeek}回の到達範囲の計算を利用できます。",
+      "contributor": "7日間ごとに、図書館1館の到達範囲を{reachPerWeek}回新規計算できます。投稿が{supporterAt}件採用されるとサポーター認定を受けます。",
+      "supporter": "ありがとうございます。採用された投稿が{supporterAt}件に達しました。サポーターは認定のみで、ツールと到達範囲の利用枠は貢献者と同じです。"
+    },
+    "progressLabel": "サポーターまでの進捗",
+    "progressValue": "{total, number}件中{count, number}件",
+    "nextMilestone": {
+      "contributor": "{count, plural, one {貢献者まで採用された投稿#件} other {貢献者まで採用された投稿#件}}",
+      "supporter": "{count, plural, one {サポーターまであと#件の採用} other {サポーターまであと#件の採用}}"
+    },
+    "milestoneReached": "サポーターに到達しました。",
+    "activityNote": "「最近活動あり」は、過去{activityDays}日間に投稿が採用されたことを示します。別の指標として表示され、参加区分は変わりません。",
+    "recognition": "公開での認定表示",
+    "recognitionLead": "サポーターページへの掲載とプロフィールのサポーターマークの表示を選べます。それぞれ個別に保存されます。",
+    "recognitionUnavailable": "プロフィールの設定を読み込めませんでした。ページを再読み込みするか、アカウント設定を開いてください。",
+    "startContributing": "情報提供を始める",
+    "yourContributions": "自分の貢献",
+    "standingIndependence": "参加区分は、ポイントや支払いではなく採用された投稿で決まります。編集権限や職員認証を付与することはありません。",
+    "staffTitle": "認証済みの職員権限",
+    "approvedLibraries": "{count, plural, one {#館} other {#館}}",
+    "noStaffAccess": "なし",
+    "staffLead": "各図書館での役割を確認したため、これらの図書館を編集・管理できます。",
+    "claimExplanation": "図書館で働いている場合は、職員認証を申請して登録情報を更新できます。申請は無料で、まずモデレーターが役割を確認します。",
+    "staffRoles": {
+      "owner": "所有者",
+      "editor": "編集者"
+    },
+    "canGoLive": "公開可能",
+    "organisations": "所属する組織",
+    "organisationOrganiser": "運営担当者",
+    "organisationMember": "メンバー",
+    "organisationNote": "組織は同僚向けの無料ワークスペースです。所属するだけでは図書館の編集権限は得られません。",
+    "manageLibraries": "担当図書館を管理",
+    "claimLibrary": "図書館の職員認証を申請",
+    "openOrganisation": "組織を開く",
+    "apiTitle": "APIアカウント",
+    "organisationUnnamed": "あなたの組織",
+    "apiLead": "これらのアカウントのキー、利用状況、請求は開発者ページで管理します。",
+    "apiNone": "APIアカウントはありません。APIアクセスは月額{apiPrice}で、開発者ページから購入できます。",
+    "apiActive": "有効",
+    "apiInactive": "無効",
+    "openDevelopers": "開発者ページへ",
+    "apiIndependence": "APIアクセスは別途課金されます。図書館の編集権限や職員認証を付与することはありません。",
+    "helpAndAccess": "ヘルプとその他の選択肢",
+    "waysToTakePart": "参加の方法",
+    "waysLead": "エクスプローラー、貢献者、認証済み職員は無料です。有料の選択肢はAPIアクセスとスポンサー契約です。",
+    "sponsorLink": "サービスのスポンサーになる",
+    "termsAndHelp": "規約とヘルプ",
+    "terms": "会員・API利用規約",
+    "cancellationAndRefunds": "解約と返金"
+  },
+  "membershipStaff": {
+    "eyebrow": "図書館職員の方へ",
+    "title": "図書館の登録情報を<em>無料で</em>管理。",
+    "lead": "職員認証を受けると、担当する図書館の職員向けツールを無料で利用できます。職員権限は販売しておらず、支払いによって取得することもできません。",
+    "step0Title": "図書館の職員認証を申請",
+    "step0Body": "図書館のページから、職場のメールアドレスで申請します。",
+    "step1Title": "図書館に確認します",
+    "step1Body": "通常5営業日以内です。",
+    "step2Title": "職員向けツールが使えるようになります",
+    "step2Body": "職員エリアで、認証された図書館だけを管理できます。",
+    "benefit0": "図書館の登録情報を直接編集",
+    "benefit1": "お知らせや休館情報を掲載",
+    "benefit2": "変更提案を確認・回答",
+    "benefit3": "時間割を管理し、ライブ配信",
+    "benefit4": "同僚向けの無料組織と埋め込みウィジェット",
+    "openStaff": "職員エリアを開く",
+    "claim": "図書館の職員認証を申請",
+    "team": "複数の図書館を運営していますか？無料の組織を作成できます",
+    "eachLibrary": "認証を受けた各図書館で利用できます。",
+    "endorsement": "認証済みの登録情報は、職員が詳細を管理していることを示します。図書館がLibraries Globalを推奨しているという意味ではありません。"
+  },
+  "membershipPreferences": {
+    "saved": "サポーターの表示設定を保存しました",
+    "failed": "設定を保存できませんでした。もう一度お試しください。",
+    "listedCompact": "このページに自分を表示",
+    "listed": "サポーターページに自分を表示",
+    "listedDescription": "名前と公開している所在地を表示します。いつでも非表示にできます。",
+    "settings": "サポーターマークの設定",
+    "badgeDescription": "このマークは貢献による認定だけを示します。役割や有料サービスの利用は示しません。",
+    "privateProfile": "非公開・限定公開のプロフィールは掲載されません。設定でプロフィールを公開してから、掲載するか選んでください。"
+  },
+  "membershipCompare": {
+    "lead": "各列は異なる参加方法を表しており、上下関係ではありません。「近日公開」の機能はロードマップに掲載されています。",
+    "controls": "比較の操作",
+    "availability": "機能の提供状況",
+    "allFeatures": "すべての機能",
+    "availableNow": "現在利用可能",
+    "expandAll": "すべてのグループを展開",
+    "collapseAll": "すべてのグループを折りたたむ",
+    "showing": "{total}機能のうち{count}件を表示",
+    "highlightHint": "列の見出しを選ぶと、その列を強調表示できます。",
+    "firstPlan": "1つ目の選択肢",
+    "secondPlan": "2つ目の選択肢",
+    "roadmapLink": "ロードマップに掲載"
+  },
+  "sponsorPage": {
+    "metaTitle": "スポンサーシップ",
+    "metaDescription": "Libraries Globalの公開アクセス、データ品質、翻訳、地理的な収録範囲、オープンなツールを支援できます。支援対象、スポンサーへの提供内容、独立性の原則をご紹介します。すべてのスポンサー契約は対話から始まります。",
+    "title": "スポンサーシップ",
+    "eyebrow": "スポンサーシップ",
+    "heroTitle": "世界の*図書館*のオープンな記録を支える",
+    "lead": "Libraries Globalは、独立したオープンな図書館一覧です。スポンサーの資金は具体的な公共のための作業に充てられ、使途を報告します。登録情報への影響力を購入することはできません。",
+    "nav": {
+      "programmes": "スポンサーが支えるもの",
+      "recognition": "スポンサーへの提供内容",
+      "independence": "独立性",
+      "sponsors": "現在のスポンサー",
+      "enquire": "お問い合わせ"
+    },
+    "programmes": {
+      "title": "スポンサーが支えるもの",
+      "lead": "各スポンサー契約は1つ以上のプログラムを支えます。契約前に、対象を話し合って決めます。",
+      "items": {
+        "publicAccess": {
+          "title": "公開アクセス",
+          "body": "一覧、地図、図書館ページを、広告なしで誰でも無料で利用できるように維持します。"
+        },
+        "dataQuality": {
+          "title": "データ品質",
+          "body": "図書館の登録情報の確認、出典の追加、修正、コミュニティの投稿の審査。"
+        },
+        "translation": {
+          "title": "翻訳",
+          "body": "より多くの人が母語で利用できるよう、サイトとガイドを翻訳します。"
+        },
+        "coverage": {
+          "title": "地理的な収録範囲",
+          "body": "まだ十分に収録できていない国や地域の図書館データを取り込み、維持します。"
+        },
+        "tooling": {
+          "title": "オープンなツール",
+          "body": "誰でも再利用できるオープンソースコード、オープンデータのエクスポート、ドキュメント。"
+        }
+      },
+      "reportingTitle": "四半期・年次報告",
+      "reportingBody": "すべてのスポンサーに、支援するプログラムの四半期活動報告と年次成果報告を提供します。"
+    },
+    "recognition": {
+      "title": "スポンサーへの提供内容",
+      "items": {
+        "acknowledgement": {
+          "title": "名称とロゴの掲載",
+          "body": "同意いただいた場合、組織の名称とロゴをこのページに掲載します。同意なく掲載することはありません。"
+        },
+        "entry": {
+          "title": "事実に基づくスポンサー紹介",
+          "body": "スポンサー資金で行う作業について、このページに短く事実に基づいて紹介します。"
+        },
+        "briefings": {
+          "title": "進捗説明",
+          "body": "四半期・年次報告に加え、プログラムの進捗を定期的に説明します。"
+        }
+      }
+    },
+    "independence": {
+      "title": "独立性",
+      "summary": "スポンサー契約で影響力は得られません",
+      "items": {
+        "influence": "スポンサーは図書館の登録情報、順位、検索結果、認証、編集審査に関与できません。",
+        "charity": "スポンサー契約は慈善寄付ではなく、税控除の対象になるとは表明していません。",
+        "api": "スポンサー契約にAPIの利用枠は含まれません。APIアクセスは月額{price}の別サービスで、<link>開発者ページ</link>から利用できます。"
+      }
+    },
+    "sponsors": {
+      "title": "現在のスポンサー",
+      "lead": "現在Libraries Globalを支援し、名称の公開に同意している組織です。",
+      "empty": "スポンサーはまだ掲載されていません。",
+      "emptyDetail": "名称の公開に同意いただいたスポンサーをここに掲載します。",
+      "unavailable": "現在、スポンサー一覧を表示できません。",
+      "unavailableDetail": "後でもう一度お試しください。",
+      "tiers": {
+        "founding": "創設スポンサー",
+        "service": "サービススポンサー",
+        "community": "コミュニティスポンサー",
+        "custom": "スポンサー"
+      }
+    },
+    "enquire": {
+      "title": "スポンサーについて相談する",
+      "body": "すべてのスポンサー契約は、支援したい作業、期間、報告方法についての対話から始まります。金額は相談の上で決めます。",
+      "action": "スポンサーについて相談する",
+      "email": "メールでのお問い合わせは<link>{email}</link>へ。",
+      "terms": {
+        "contract": "スポンサー契約は個別に見積もり・契約を行います。",
+        "invoice": "通常、スポンサー料金は請求書でご請求します。",
+        "tax": "税の扱いは各契約で確認します。"
+      }
+    },
+    "sidebar": {
+      "title": "スポンサーのお問い合わせ",
+      "body": "公開アクセス、データ品質、翻訳、収録範囲、オープンなツールへの資金支援についてご相談ください。",
+      "action": "お問い合わせ",
+      "api": "APIアクセス"
+    },
+    "heroHow": "スポンサーの仕組み"
+  }
+}

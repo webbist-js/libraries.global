@@ -3,13 +3,12 @@ import { cleanup, render, screen } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, expect, it, vi } from "vitest"
 
+import cs from "../../../../../../../../locales/cs"
+import es from "../../../../../../../../locales/es"
+import fr from "../../../../../../../../locales/fr"
 import { OfferCards } from "../OfferCards"
 import { PlanCompareTable } from "../PlanCompareTable"
 import { PlansFaq } from "../PlansFaq"
-
-import cs from "../../../../../../../../locales/cs.json"
-import es from "../../../../../../../../locales/es.json"
-import fr from "../../../../../../../../locales/fr.json"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/components/contact/ContactModalProvider", () => ({

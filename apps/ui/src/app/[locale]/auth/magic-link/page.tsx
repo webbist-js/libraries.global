@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { UtilityPage } from "@/components/utility/UtilityPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { POST_SIGNIN_PATH } from "@/lib/auth-redirects"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -10,7 +11,7 @@ import { MagicLinkErrorContent } from "./_components/MagicLinkErrorContent"
 
 export const metadata = privateMetadata("Sign-in link")
 
-export default async function MagicLinkPage({
+async function MagicLinkPage({
   params,
   searchParams,
 }: PageProps<"/[locale]/auth/magic-link">) {
@@ -28,3 +29,5 @@ export default async function MagicLinkPage({
     </UtilityPage>
   )
 }
+
+export default withMessages(MagicLinkPage, "[locale]/auth/magic-link/page")

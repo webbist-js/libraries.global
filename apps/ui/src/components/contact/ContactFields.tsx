@@ -1,5 +1,4 @@
 "use client"
-
 import { Lightbulb, MessageSquare, ThumbsUp, TriangleAlert } from "lucide-react"
 import { useTranslations } from "next-intl"
 import type { RefObject } from "react"
@@ -194,6 +193,8 @@ export function ContactDetails({
   email,
   setEmail,
 }: DetailProps) {
+  const tExisting = useTranslations()
+
   const t = useTranslations("contactModal")
   const isIssue = feedback ? topic === "problem" : type === "report_issue"
   const promptKey = feedback
@@ -326,7 +327,7 @@ export function ContactDetails({
       </p>
       <div className={styles.honeypot} aria-hidden="true">
         <label>
-          Website
+          {tExisting("newsletterForm.website")}
           <input name="website" tabIndex={-1} autoComplete="off" />
         </label>
       </div>

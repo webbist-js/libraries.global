@@ -6,6 +6,7 @@ import {
   WIDGET_TYPES,
   type WidgetConfig,
 } from "@repo/shared-data"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
@@ -13,11 +14,8 @@ import { SelectField } from "@/components/ds/SelectField"
 import { Switch } from "@/components/ds/Switch"
 import { StaffPanel, STAFF_FIELD } from "@/components/staff/StaffPanel"
 import { WidgetField } from "@/components/widgets/WidgetControls"
-import {
-  widgetTypeLabels,
-  type WidgetDraft,
-  type WidgetWorkspace,
-} from "@/lib/widgets/client"
+import type { WidgetDraft, WidgetWorkspace } from "@/lib/widgets/client"
+import { widgetCopy } from "@/lib/widgets/copy"
 
 type SettingsProps = {
   readonly draft: WidgetDraft
@@ -25,28 +23,8 @@ type SettingsProps = {
   readonly busy: boolean
   readonly edit: (update: Partial<WidgetDraft>) => void
 }
-const CHOICE_LABELS: Record<string, string> = {
-  both: "Map and list",
-  map: "Map",
-  list: "List",
-  cards: "Cards",
-  libraries: "Number of libraries",
-  facility: "Recorded feature",
-  count: "Count",
-  percentage: "Percentage",
-  horizontal: "Horizontal",
-  vertical: "Vertical",
-  none: "No border",
-  subtle: "Subtle",
-  strong: "Strong",
-  square: "Square",
-  soft: "Softly rounded",
-  round: "Round",
-  comfortable: "Comfortable",
-  compact: "Compact",
-}
-const languageNames = new Intl.DisplayNames(["en"], { type: "language" })
-function formControls({ draft, team, busy, edit }: SettingsProps) {
+function useFormControls({ draft, team, busy, edit }: SettingsProps) {
+  const tSettings = useTranslations("widgetSettings")
   const config = (key: keyof WidgetConfig, value: unknown) =>
     edit({ config: { ...draft.config, [key]: value } })
   const switches = (items: [keyof WidgetConfig, string, string?][]) =>
@@ -72,7 +50,7 @@ function formControls({ draft, team, busy, edit }: SettingsProps) {
         onValueChange={(value) => config(key, value)}
         options={values.map((value) => ({
           value,
-          label: CHOICE_LABELS[value] ?? value,
+          label: tSettings(value as Parameters<typeof tSettings>[0]),
         }))}
         disabled={!team.active || busy}
       />
@@ -83,38 +61,49 @@ function formControls({ draft, team, busy, edit }: SettingsProps) {
 }
 
 function WidgetContentSettings(props: SettingsProps) {
+  const tSettings = useTranslations("widgetSettings")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const locale = useLocale()
+  const languageNames = new Intl.DisplayNames([locale], { type: "language" })
   const { draft, edit, team, busy } = props
-  const { config, choose, switches } = formControls(props)
+  const { config, choose, switches } = useFormControls(props)
 
   return (
     <div className="space-y-5">
       {draft.type === "chart" || draft.type === "stat" ? (
         <>
-          {choose("metric", "Metric", ["libraries", "facility"])}
+          {choose("metric", tSettings("metric"), ["libraries", "facility"])}
           {draft.config.metric === "facility" ? (
-            <WidgetField label="Recorded feature">
+            <WidgetField label={tStatic("widget.recorded_feature")}>
               <SelectField
-                label="Recorded feature"
+                label={tStatic("widget.recorded_feature")}
                 value={String(draft.config.facility)}
                 onValueChange={(value) => config("facility", Number(value))}
                 options={FACILITY_CHECKLIST.map((item, index) => ({
                   value: String(index),
-                  label: item.label,
+                  label: widgetCopy(locale, item.label),
                 }))}
                 disabled={!team.active || busy}
               />
             </WidgetField>
           ) : null}
           {draft.config.metric === "facility"
-            ? choose("chartMode", "Show values as", ["count", "percentage"])
+            ? choose("chartMode", tSettings("chartMode"), [
+                "count",
+                "percentage",
+              ])
             : null}
           <p className="rounded-xl bg-(--t-bg-surface) p-3 text-xs leading-relaxed text-(--t-ink-dim)">
             {draft.config.metric === "facility"
-              ? "Yes, no and not recorded stay separate. Percentages use only libraries with a recorded answer."
-              : "Counts show the number of libraries in each group. Choose a recorded feature to compare what those libraries offer."}
+              ? tSettings("featureHelp")
+              : tSettings("countHelp")}
           </p>
           {draft.type === "chart"
-            ? choose("orientation", "Chart orientation", [
+            ? choose("orientation", tSettings("orientation"), [
                 "horizontal",
                 "vertical",
               ])
@@ -122,9 +111,9 @@ function WidgetContentSettings(props: SettingsProps) {
         </>
       ) : null}
       <h3 className="type-h3 border-b border-(--t-border-line) pb-3">
-        Title & introduction
+        {tStatic("widget.title_introduction")}
       </h3>
-      <WidgetField label="Public title">
+      <WidgetField label={tStatic("widget.public_title")}>
         <input
           className={STAFF_FIELD}
           value={draft.config.title}
@@ -132,7 +121,7 @@ function WidgetContentSettings(props: SettingsProps) {
           onChange={(e) => config("title", e.target.value)}
         />
       </WidgetField>
-      <WidgetField label="Introduction">
+      <WidgetField label={tStatic("widget.introduction")}>
         <textarea
           className={`${STAFF_FIELD} min-h-20`}
           maxLength={1000}
@@ -142,12 +131,12 @@ function WidgetContentSettings(props: SettingsProps) {
       </WidgetField>
       <details className="border-t border-(--t-border-line) pt-3">
         <summary className="min-h-11 cursor-pointer text-sm font-semibold">
-          Language, accessibility & internal name
+          {tStatic("widget.language_accessibility_internal_name")}
         </summary>
         <div className="space-y-5 pt-2">
           <WidgetField
-            label="Internal widget name"
-            hint="Only your Team sees this."
+            label={tStatic("widget.internal_widget_name")}
+            hint={tStatic("widget.only_your_team_sees_this")}
           >
             <input
               className={STAFF_FIELD}
@@ -157,8 +146,10 @@ function WidgetContentSettings(props: SettingsProps) {
             />
           </WidgetField>
           <WidgetField
-            label="Accessible description"
-            hint="Describe the purpose and population of this widget."
+            label={tStatic("widget.accessible_description")}
+            hint={tStatic(
+              "widget.describe_the_purpose_and_population_of_this_widget"
+            )}
           >
             <textarea
               className={`${STAFF_FIELD} min-h-20`}
@@ -167,9 +158,9 @@ function WidgetContentSettings(props: SettingsProps) {
               onChange={(e) => config("description", e.target.value)}
             />
           </WidgetField>
-          <WidgetField label="Content language">
+          <WidgetField label={tExisting("discovery.languages")}>
             <SelectField
-              label="Content language"
+              label={tExisting("discovery.languages")}
               value={draft.config.locale}
               onValueChange={(value) => config("locale", value)}
               options={SUPPORTED_LOCALES.map((value) => ({
@@ -180,15 +171,19 @@ function WidgetContentSettings(props: SettingsProps) {
             />
           </WidgetField>
           <p className="text-xs text-(--t-ink-dim)">
-            Published translations are used where available; English fallback is
-            labelled on each record.
+            {tStatic(
+              "widget.published_translations_are_used_where_available_english_fallback_is_labelled_on_each_record"
+            )}
           </p>
         </div>
       </details>
       {draft.type === "directory" ? (
         <>
-          {choose("directoryLayout", "Directory layout", ["cards", "list"])}
-          <WidgetField label="Libraries per page">
+          {choose("directoryLayout", tSettings("directoryLayout"), [
+            "cards",
+            "list",
+          ])}
+          <WidgetField label={tStatic("widget.libraries_per_page")}>
             <input
               className={STAFF_FIELD}
               type="number"
@@ -201,25 +196,17 @@ function WidgetContentSettings(props: SettingsProps) {
         </>
       ) : null}
       {draft.type === "finder"
-        ? choose("mapMode", "Default presentation", ["both", "map", "list"])
+        ? choose("mapMode", tSettings("mapMode"), ["both", "map", "list"])
         : null}
       {draft.type === "finder" || draft.type === "directory" ? (
         <details className="border-t border-(--t-border-line) pt-3">
           <summary className="min-h-11 cursor-pointer text-sm font-semibold">
-            Library information
+            {tStatic("widget.library_information")}
           </summary>
           {switches([
-            [
-              "showHours",
-              "Opening information",
-              "Regular recorded hours, with a link for temporary changes.",
-            ],
-            [
-              "showAccess",
-              "Accessibility information",
-              "Unknown values remain not recorded.",
-            ],
-            ["showLinks", "Links to original library records"],
+            ["showHours", tSettings("showHours"), tSettings("hoursHelp")],
+            ["showAccess", tSettings("showAccess"), tSettings("accessHelp")],
+            ["showLinks", tSettings("showLinks")],
           ])}
         </details>
       ) : null}
@@ -228,13 +215,19 @@ function WidgetContentSettings(props: SettingsProps) {
 }
 
 function WidgetAppearanceSettings(props: SettingsProps) {
+  const tSettings = useTranslations("widgetSettings")
+
+  const tStatic = useTranslations("staticUi")
+
   const { draft, team } = props
-  const { config, choose, switches } = formControls(props)
+  const { config, choose, switches } = useFormControls(props)
 
   return (
     <div className="space-y-5">
       <fieldset>
-        <legend className="mb-3 text-sm font-semibold">Accent colour</legend>
+        <legend className="mb-3 text-sm font-semibold">
+          {tStatic("widget.accent_colour")}
+        </legend>
         <div className="flex flex-wrap gap-2">
           {Object.entries(WIDGET_ACCENTS).map(([key, color]) => (
             <label
@@ -254,17 +247,19 @@ function WidgetAppearanceSettings(props: SettingsProps) {
               >
                 {draft.config.accent === key ? "✓" : ""}
               </span>
-              {key.charAt(0).toUpperCase() + key.slice(1)}
+              {tSettings(key as keyof typeof WIDGET_ACCENTS)}
             </label>
           ))}
         </div>
       </fieldset>
-      {choose("border", "Border", ["none", "subtle", "strong"])}
-      {choose("radius", "Corners", ["square", "soft", "round"])}
-      {choose("density", "Spacing", ["comfortable", "compact"])}
+      {choose("border", tSettings("border"), ["none", "subtle", "strong"])}
+      {choose("radius", tSettings("radius"), ["square", "soft", "round"])}
+      {choose("density", tSettings("density"), ["comfortable", "compact"])}
       <WidgetField
-        label="Fallback iframe height"
-        hint="Between 240 and 1,600 pixels. Optional auto-height works within the same bounds."
+        label={tStatic("widget.fallback_iframe_height")}
+        hint={tStatic(
+          "widget.between_240_and_1_600_pixels_optional_auto_height_works_within_the_same_bounds"
+        )}
       >
         <input
           className={STAFF_FIELD}
@@ -276,9 +271,9 @@ function WidgetAppearanceSettings(props: SettingsProps) {
         />
       </WidgetField>
       <div className="border-t border-(--t-border-line) pt-4">
-        <h3 className="type-h3">Branding</h3>
+        <h3 className="type-h3">{tStatic("widget.branding")}</h3>
         <Switch
-          label="Hide Powered by Libraries Global"
+          label={tStatic("widget.hide_powered_by_libraries_global")}
           checked={draft.config.hidePowered}
           disabled={
             (!team.branding && !draft.config.hidePowered) || !team.active
@@ -286,13 +281,15 @@ function WidgetAppearanceSettings(props: SettingsProps) {
           onChange={(v) => config("hidePowered", v)}
           description={
             team.branding
-              ? "Widget branding entitlement is active."
-              : "Requires the Widget branding add-on. Contact Libraries Global for availability."
+              ? tSettings("brandingActive")
+              : tSettings("brandingRequired")
           }
         />
-        {switches([["showPublisher", "Show the publishing organisation"]])}
+        {switches([["showPublisher", tSettings("showPublisher")]])}
         <p className="text-xs text-(--t-ink-dim)">
-          Map attribution and source credits are always displayed.
+          {tStatic(
+            "widget.map_attribution_and_source_credits_are_always_displayed"
+          )}
         </p>
       </div>
     </div>
@@ -300,72 +297,79 @@ function WidgetAppearanceSettings(props: SettingsProps) {
 }
 
 function WidgetInteractionSettings(props: SettingsProps) {
+  const tSettings = useTranslations("widgetSettings")
+
   const { draft } = props
-  const { switches } = formControls(props)
+  const { switches } = useFormControls(props)
 
   return (
     <div>
       {switches(
         draft.type === "finder"
           ? [
-              ["search", "Search within the selection"],
-              ["facilityFilter", "Offer step-free entrance filter"],
-              [
-                "locate",
-                "Offer Use my location",
-                "Requested only on click. Never stored.",
-              ],
-              ["clusters", "Group nearby map markers"],
-              ["labels", "Always show map labels"],
-              ["reset", "Reset view button"],
+              ["search", tSettings("search")],
+              ["facilityFilter", tSettings("facilityFilter")],
+              ["locate", tSettings("locate"), tSettings("locateHelp")],
+              ["clusters", tSettings("clusters")],
+              ["labels", tSettings("labels")],
+              ["reset", tSettings("reset")],
             ]
           : draft.type === "directory"
             ? [
-                ["search", "Search within the selection"],
-                ["facilityFilter", "Offer step-free entrance filter"],
+                ["search", tSettings("search")],
+                ["facilityFilter", tSettings("facilityFilter")],
               ]
             : draft.type === "chart"
               ? [
-                  ["valueLabels", "Value labels"],
-                  ["showTable", "Show data table by default"],
+                  ["valueLabels", tSettings("valueLabels")],
+                  ["showTable", tSettings("showTable")],
                 ]
-              : [["showPublisher", "Show the publishing organisation"]]
+              : [["showPublisher", tSettings("showPublisher")]]
       )}
     </div>
   )
 }
 
 export function WidgetSettingsPanel(props: SettingsProps) {
+  const tSettings = useTranslations("widgetSettings")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const { draft, team, busy, edit } = props
   const [tab, setTab] = useState("content")
 
   return (
     <StaffPanel compact>
       <fieldset disabled={!team.active || busy} className="space-y-5">
-        <WidgetField label="Widget type">
+        <WidgetField label={tStatic("widget.widget_type")}>
           <SelectField
-            label="Widget type"
+            label={tStatic("widget.widget_type")}
             value={draft.type}
             onValueChange={(value) =>
               edit({ type: value as typeof draft.type })
             }
             options={WIDGET_TYPES.map((value) => ({
               value,
-              label: widgetTypeLabels[value],
+              label: tSettings(value),
             }))}
             disabled={!team.active || busy}
           />
         </WidgetField>
         <SegmentedControl
-          label="Widget settings"
+          label={tStatic("widget.widget_settings")}
           layout="equal"
           size="sm"
           value={tab}
           onChange={setTab}
           options={[
-            { value: "content", label: "Content" },
-            { value: "appearance", label: "Appearance" },
-            { value: "interaction", label: "Interaction" },
+            { value: "content", label: tSettings("content") },
+            {
+              value: "appearance",
+              label: tExisting("profileSettingsToolbar.appearance"),
+            },
+            { value: "interaction", label: tSettings("interaction") },
           ]}
         />
         {tab === "content" ? (

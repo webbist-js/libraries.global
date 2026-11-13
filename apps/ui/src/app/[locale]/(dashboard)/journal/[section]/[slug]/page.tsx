@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 
 import BlogArticlePage from "@/components/blog/BlogArticlePage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   articleContentLanguage,
   contentLanguageSuffix,
@@ -79,7 +80,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function BlogArticleRoute(props: {
+async function BlogArticleRoute(props: {
   params: Promise<{ locale: string; section: string; slug: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
@@ -150,3 +151,8 @@ export default async function BlogArticleRoute(props: {
     </>
   )
 }
+
+export default withMessages(
+  BlogArticleRoute,
+  "[locale]/(dashboard)/journal/[section]/[slug]/page"
+)

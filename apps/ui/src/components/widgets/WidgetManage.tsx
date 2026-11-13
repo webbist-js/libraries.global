@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { TeamWidget } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -34,6 +35,10 @@ export function WidgetManage({
   readonly busy: boolean
   readonly siteUrl: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const team = workspace.team,
     [confirmation, setConfirmation] = useState<{
       action: string
@@ -57,17 +62,17 @@ export function WidgetManage({
             disabled={busy || !team.active}
             onClick={() => onAction("duplicate")}
           >
-            Duplicate as draft
+            {tStatic("widget.duplicate_as_draft")}
           </Button>
         </div>
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <StaffPanel title="Publication history">
+        <StaffPanel title={tStatic("widget.publication_history")}>
           {widget.history.length ? (
             <p className="mb-5 text-sm text-(--t-ink-dim)">
-              Restoring copies a previous configuration and selection into a new
-              draft. Review and publish it to change the live widget. Showing
-              the latest 50 publications.
+              {tStatic(
+                "widget.restoring_copies_a_previous_configuration_and_selection_into_a_new_draft_review_and_publish_it_to_change_the_l"
+              )}
             </p>
           ) : null}
           <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
@@ -77,7 +82,9 @@ export function WidgetManage({
                 className="flex flex-wrap items-center justify-between gap-4 py-4"
               >
                 <div>
-                  <strong>Version {r.version}</strong>
+                  <strong>
+                    {tStatic("common.version")} {r.version}
+                  </strong>
                   <p className="mt-1 text-sm text-(--t-ink-dim)">
                     {new Intl.DateTimeFormat("en", {
                       dateStyle: "medium",
@@ -90,7 +97,10 @@ export function WidgetManage({
                   </p>
                 </div>
                 {widget.release?.documentId === r.documentId ? (
-                  <Badge label="Current publication" color="ok" />
+                  <Badge
+                    label={tStatic("widget.current_publication")}
+                    color="ok"
+                  />
                 ) : null}
                 {team.organiser ? (
                   <Button
@@ -105,7 +115,7 @@ export function WidgetManage({
                       })
                     }
                   >
-                    Restore to draft
+                    {tStatic("widget.restore_to_draft")}
                   </Button>
                 ) : null}
               </li>
@@ -115,7 +125,7 @@ export function WidgetManage({
             <EmptyState
               compact
               icon="mdi:history"
-              lead="Your first publication starts here"
+              lead={tStatic("widget.your_first_publication_starts_here")}
               detail="Each publication will appear here, so you can restore an earlier design later."
               action={
                 <Link
@@ -125,7 +135,7 @@ export function WidgetManage({
                   })}
                   href={`/staff/teams/widgets/${widget.documentId}/publish`}
                 >
-                  Review and publish the draft
+                  {tStatic("widget.review_and_publish_the_draft")}
                 </Link>
               }
             />
@@ -135,11 +145,11 @@ export function WidgetManage({
               href={`/staff/teams/widgets/${widget.documentId}/publish`}
               className="mt-4 inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline"
             >
-              Review and publish the draft
+              {tStatic("widget.review_and_publish_the_draft")}
             </Link>
           ) : null}
         </StaffPanel>
-        <StaffPanel title="Aggregate usage">
+        <StaffPanel title={tStatic("widget.aggregate_usage")}>
           <div className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl bg-(--t-bg-surface) p-4">
               <Icon
@@ -152,7 +162,7 @@ export function WidgetManage({
                 {widget.loads.toLocaleString()}
               </p>
               <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
-                Data loads
+                {tStatic("widget.data_loads")}
               </p>
             </div>
             <div className="rounded-2xl bg-(--t-bg-surface) p-4">
@@ -166,22 +176,23 @@ export function WidgetManage({
                 {widget.blockedReports.toLocaleString()}
               </p>
               <p className="mt-1 text-xs font-semibold text-(--t-ink-dim)">
-                Blocked reports
+                {tStatic("widget.blocked_reports")}
               </p>
             </div>
           </div>
           <p className="mt-4 text-sm text-(--t-ink-dim)">
-            Totals since creation. Loads count data requests, rather than unique
-            visitors. Browser reports of blocked embeds may be incomplete.
+            {tStatic(
+              "widget.totals_since_creation_loads_count_data_requests_rather_than_unique_visitors_browser_reports_of_blocked_embeds_"
+            )}
           </p>
           <p className="mt-4 text-xs text-(--t-ink-dim)">
-            No visitor identities, locations, searches or page URLs are stored
-            by widgets. Allowed origins describe permission, not proof of
-            installation.
+            {tStatic(
+              "widget.no_visitor_identities_locations_searches_or_page_urls_are_stored_by_widgets_allowed_origins_describe_permissio"
+            )}
           </p>
         </StaffPanel>
       </div>
-      <StaffPanel title="Allowed websites">
+      <StaffPanel title={tStatic("widget.allowed_websites")}>
         <OriginEditor
           initial={widget.origins}
           onChange={setOrigins}
@@ -195,7 +206,7 @@ export function WidgetManage({
             disabled={busy || !team.active}
             onClick={() => onAction("origins", { origins })}
           >
-            Save allowed websites
+            {tStatic("widget.save_allowed_websites")}
           </Button>
         ) : null}
       </StaffPanel>
@@ -231,7 +242,7 @@ export function WidgetManage({
               size="pill"
               onClick={() => setConfirmation(null)}
             >
-              Cancel
+              {tExisting("ui.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -244,7 +255,7 @@ export function WidgetManage({
                 }
               }}
             >
-              Confirm
+              {tStatic("common.confirm")}
             </Button>
           </div>
         </DialogContent>
@@ -264,13 +275,15 @@ function WidgetLifecycle({
   readonly busy: boolean
   readonly onConfirm: (value: { action: string; title: string }) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
-    <StaffPanel title="Widget lifecycle" compact>
+    <StaffPanel title={tStatic("widget.widget_lifecycle")} compact>
       <p className="mb-4 text-sm text-(--t-ink-dim)">
         {widget.publishedVersion
           ? "Pause or unpublish to take this widget offline. Archive it when you no longer need it."
           : "This draft is private to your Team. Archive it if you no longer need it."}{" "}
-        Your publication history is retained.
+        {tStatic("widget.your_publication_history_is_retained")}
       </p>
       <div className="flex flex-wrap gap-3">
         {active && widget.state === "paused" ? (
@@ -278,7 +291,7 @@ function WidgetLifecycle({
             className={buttonVariants({ variant: "surface", size: "pill" })}
             href={`/staff/teams/widgets/${widget.documentId}/publish`}
           >
-            Review & resume
+            {tStatic("widget.review_resume")}
           </Link>
         ) : null}
         {widget.publishedVersion > 0 &&
@@ -295,7 +308,7 @@ function WidgetLifecycle({
               })
             }
           >
-            Pause widget
+            {tStatic("widget.pause_widget")}
           </Button>
         ) : null}
         {widget.publishedVersion > 0 && widget.state !== "unpublished" ? (
@@ -310,7 +323,7 @@ function WidgetLifecycle({
               })
             }
           >
-            Unpublish
+            {tStatic("widget.unpublish")}
           </Button>
         ) : null}
         <Button
@@ -324,7 +337,7 @@ function WidgetLifecycle({
             })
           }
         >
-          Archive
+          {tStatic("widget.archive")}
         </Button>
       </div>
     </StaffPanel>

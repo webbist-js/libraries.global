@@ -23,7 +23,7 @@ import {
   type AtlasPopulationLevel,
   type AtlasReachMode,
 } from "@repo/shared-data"
-import { useLocale, useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -317,9 +317,15 @@ export function AtlasExplorer({
   readonly feedbackPrompt?: ReactNode
   readonly scalable?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const tContext = useUiTranslations("atlasContext")
-  const tGaps = useUiTranslations("atlasDataGaps")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tContext = useTranslations("atlasContext")
+  const tGaps = useTranslations("atlasDataGaps")
   const [gapEncounter, setGapEncounter] = useState(0)
   const [explicitGap, setExplicitGap] = useState<{
     gap: AtlasDataGap
@@ -331,11 +337,11 @@ export function AtlasExplorer({
   }, [])
   const gapPrompt = useAtlasDataGapPrompt()
   const handleHideGapPrompt = gapPrompt.hide
-  const tNetwork = useUiTranslations("atlasNetwork")
-  const tLock = useUiTranslations("accessLocks")
-  const tDrawers = useUiTranslations("atlasDrawers")
-  const tInspect = useUiTranslations("atlasInspect")
-  const tList = useUiTranslations("atlasList")
+  const tNetwork = useTranslations("atlasNetwork")
+  const tLock = useTranslations("accessLocks")
+  const tDrawers = useTranslations("atlasDrawers")
+  const tInspect = useTranslations("atlasInspect")
+  const tList = useTranslations("atlasList")
 
   const mapRef = useRef<AtlasMapHandle>(null)
   const recentCameraId = useRef<string | null>(null)
@@ -448,7 +454,7 @@ export function AtlasExplorer({
     cell: AtlasDensitySelection
     data: string
   } | null>(null)
-  const tDensity = useUiTranslations("atlasDensity")
+  const tDensity = useTranslations("atlasDensity")
   const [perCapitaOpacity, setPerCapitaOpacity] = useState(0.85)
   const [populationLevel, setPopulationLevel] =
     useState<AtlasPopulationDetail>("auto")
@@ -1353,12 +1359,12 @@ export function AtlasExplorer({
         label: lib.name,
         sub:
           lib.type === "Mobile"
-            ? "Mobile library"
+            ? tStatic("common.mobileLibrary")
             : [lib.city, lib.region, lib.country].filter(Boolean).join(", "),
       })
       if (isMobile) setSheet(expandAtlasSheet)
     },
-    [remember, isMobile]
+    [remember, isMobile, tStatic]
   )
 
   const restoreListFocus = () =>
@@ -1953,12 +1959,16 @@ export function AtlasExplorer({
       ) : null}
       {usableLayers.includes("mobile") && mobiles.routesUnavailable ? (
         <p role="status" className="text-sm" style={{ color: T.ink.dim }}>
-          Some road routes are unavailable. Their stops are still shown.
+          {tStatic(
+            "atlas.some_road_routes_are_unavailable_their_stops_are_still_shown"
+          )}
         </p>
       ) : null}
       {mobiles.error ? (
         <p role="status" className="text-sm">
-          Mobile stops are unavailable. The library map is still available.
+          {tStatic(
+            "atlas.mobile_stops_are_unavailable_the_library_map_is_still_available"
+          )}
         </p>
       ) : null}
       {tab === "search" ? (
@@ -2023,7 +2033,7 @@ export function AtlasExplorer({
       ) : null}
       {tab === "filter" && scalable && !data.counts ? (
         <p role="status" className="p-6">
-          Loading filter counts…
+          {tStatic("atlas.loading_filter_counts")}
         </p>
       ) : tab === "filter" ? (
         <AtlasFiltersTab
@@ -2413,7 +2423,7 @@ export function AtlasExplorer({
           title={tUi("no_confirmed_matches_in_this_map_area")}
           body="Other libraries may offer these features; their records do not confirm them yet. Change the selection or compare the records."
           action={{
-            label: "Compare records",
+            label: tStatic("atlas.compare_records"),
             onClick: () => setAccessibilityView("compare"),
           }}
         />
@@ -2421,9 +2431,12 @@ export function AtlasExplorer({
       {mapError === "style" ? (
         <AtlasBanner
           tone="info"
-          title="The basemap didn’t load."
+          title={tStatic("atlas.the_basemap_didn_t_load")}
           body="Library data is still available in the list view."
-          action={{ label: "Open list", onClick: () => setList(true) }}
+          action={{
+            label: tExisting("ui.open_list"),
+            onClick: () => setList(true),
+          }}
         />
       ) : null}
       {replaced ? (
@@ -2453,7 +2466,9 @@ export function AtlasExplorer({
       {!hintDismissed && mapReady && projection === "globe" && !isMobile ? (
         <AtlasToast onDismiss={dismissHint}>
           <Icon name="globe" size={16} color={T.accent.primary} />
-          Zoomed out, the map is a globe. It flattens as you zoom in.
+          {tStatic(
+            "atlas.zoomed_out_the_map_is_a_globe_it_flattens_as_you_zoom_in"
+          )}
         </AtlasToast>
       ) : null}
     </>
@@ -2816,8 +2831,8 @@ export function AtlasExplorer({
       ? [
           {
             id: "library",
-            label: "Library",
-            title: "Selected library",
+            label: tExisting("ui.library"),
+            title: tExisting("ui.selected_library"),
             detail: data.selectionLoading
               ? "Loading record…"
               : "Record unavailable",
@@ -2841,7 +2856,7 @@ export function AtlasExplorer({
                         className="min-h-11 font-semibold underline"
                         onClick={() => data.retry()}
                       >
-                        Try again
+                        {tExisting("ui.try_again")}
                       </button>
                     </div>
                   )}
@@ -2890,14 +2905,14 @@ export function AtlasExplorer({
                               }}
                               className="min-h-11 rounded-full bg-(--t-action-primary) px-4 font-semibold text-white"
                             >
-                              Switch to this library
+                              {tExisting("atlasInspect.switchLibrary")}
                             </button>
                             <button
                               type="button"
                               onClick={() => setAskReachScope(false)}
                               className="min-h-11 px-3 font-semibold"
                             >
-                              Keep service
+                              {tExisting("atlasInspect.keepService")}
                             </button>
                           </div>
                         </div>
@@ -2915,7 +2930,7 @@ export function AtlasExplorer({
       ? [
           {
             id: "stop",
-            label: "Stop",
+            label: tStatic("atlas.stop"),
             title: selectedStop.name,
             detail: `Mobile library · ${selectedStop.library_name}`,
             content: (
@@ -2936,7 +2951,7 @@ export function AtlasExplorer({
       ? [
           {
             id: "country",
-            label: panelCountry?.name ?? "Country",
+            label: panelCountry?.name ?? tExisting("ui.country"),
             title: panelCountry?.name ?? "Choose a country",
             detail: panelCountry
               ? `Country · ${panelCountry.libraries.toLocaleString("en-GB")} libraries`
@@ -2978,7 +2993,7 @@ export function AtlasExplorer({
         mode === "reach" &&
         (networkReach.stale || networkReach.response?.state === "pending")
           ? networkReach.stale
-            ? "Update needed"
+            ? tExisting("atlasDrawers.updateNeeded")
             : "Calculating"
           : undefined,
       content: renderAnalysis(mode),
@@ -3018,7 +3033,7 @@ export function AtlasExplorer({
       .map((id) => ({
         id,
         layer: id,
-        label: id === "mobile" ? "Routes" : "Events",
+        label: id === "mobile" ? "Routes" : tExisting("ui.events"),
         title: layerDef(id).name,
         detail:
           id === "mobile"
@@ -3042,7 +3057,7 @@ export function AtlasExplorer({
                         setMobileRouteLines(event.target.checked)
                       }
                     />
-                    Show route lines
+                    {tStatic("common.showRoutes")}
                   </label>
                   {stopList}
                 </>
@@ -3055,8 +3070,8 @@ export function AtlasExplorer({
                     }}
                   />
                   <div className="flex justify-between text-xs text-(--t-ink-dim)">
-                    <span>Low</span>
-                    <span>High</span>
+                    <span>{tStatic("atlas.low")}</span>
+                    <span>{tStatic("atlas.high")}</span>
                   </div>
                   <p>{ABOUT[id]}</p>
                 </>
@@ -3095,7 +3110,7 @@ export function AtlasExplorer({
         layers: usableLayers,
         mode: analysisMode,
         target: inspectTarget,
-        message: `${entry.label} turned off`,
+        message: tCopy("turnOff", { layer: entry.label }),
       })
       onToggleLayer(entry.layer)
     } else
@@ -3286,7 +3301,7 @@ export function AtlasExplorer({
         <AtlasToast
           onDismiss={() => setUndoLayers(null)}
           action={{
-            label: "Undo",
+            label: tExisting("ui.undo"),
             onClick: () => {
               setLayers(undoLayers.layers)
               setAnalysisMode(undoLayers.mode)
@@ -3300,7 +3315,7 @@ export function AtlasExplorer({
       ) : null}
       {locateFailed ? (
         <AtlasToast onDismiss={() => setLocateFailed(false)}>
-          Location unavailable. Check your browser permissions and try again.
+          {tExisting("atlasInspect.locationUnavailable")}
         </AtlasToast>
       ) : null}
     </>
@@ -3480,7 +3495,7 @@ export function AtlasExplorer({
             }}
           >
             <nav
-              aria-label="Atlas workspace"
+              aria-label={tStatic("atlas.atlas_workspace")}
               className="flex shrink-0 items-center gap-1.5 border-b border-(--t-border-line) px-3 pb-2 max-[350px]:[&_svg]:hidden"
             >
               <button
@@ -3493,7 +3508,7 @@ export function AtlasExplorer({
                 }}
                 className="min-h-10 flex-1 rounded-full bg-(--t-bg-surface) text-sm font-semibold whitespace-nowrap aria-pressed:bg-(--t-accent-chip) aria-pressed:text-(--t-accent-primary)"
               >
-                Explore
+                {tExisting("ui.explore")}
               </button>
               <button
                 type="button"
@@ -3588,7 +3603,7 @@ export function AtlasExplorer({
       {map}
       <DashboardContextTransition routeKey="/map">
         <aside
-          aria-label="Explore panel"
+          aria-label={tExisting("ui.explore_panel")}
           className={`${panelStyles.stack} absolute inset-y-0 left-0 z-20 flex min-h-0 flex-col overflow-clip border-r border-(--t-border-line) bg-(--t-bg-deep)`}
           style={{
             width: collapsed ? 72 : LEFT_W,
@@ -3598,7 +3613,7 @@ export function AtlasExplorer({
           {collapsed ? (
             <>
               <nav
-                aria-label="Explore"
+                aria-label={tExisting("ui.explore")}
                 className="flex flex-col items-center gap-1.5 p-2 pt-3"
               >
                 {(
@@ -3636,7 +3651,7 @@ export function AtlasExplorer({
                 {feedbackPrompt}
                 <button
                   type="button"
-                  aria-label="Expand Explore"
+                  aria-label={tStatic("atlas.expand_explore")}
                   onClick={() =>
                     animateAtlas(() => {
                       setUserCollapsed(false)
@@ -3656,7 +3671,7 @@ export function AtlasExplorer({
                 {tabs}
                 <button
                   type="button"
-                  aria-label="Collapse panel"
+                  aria-label={tExisting("ui.collapse_panel")}
                   onClick={() =>
                     animateAtlas(() => {
                       setUserCollapsed(true)
@@ -3690,7 +3705,7 @@ export function AtlasExplorer({
       {inspectEntries.length ? (
         <aside
           id="atlas-analysis-panel"
-          aria-label="Inspect dock"
+          aria-label={tStatic("atlas.inspect_dock")}
           className="absolute inset-y-0 right-0 z-20 flex min-h-0 flex-col"
           style={{
             width: inspectMinimised ? 64 : RIGHT_W,
@@ -3739,7 +3754,7 @@ export function AtlasExplorer({
         </>
       ) : (
         <section
-          aria-label="Library list"
+          aria-label={tStatic("atlas.library_list")}
           className="absolute inset-y-0 right-0 z-20 flex min-w-0 flex-col overflow-hidden border-l border-(--t-border-line) bg-(--t-bg-deep)"
           style={{
             left: leftEdge,
@@ -3763,7 +3778,7 @@ function MapButtons({
   readonly onZoomOut?: () => void
   readonly onLocate: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const btn = "flex size-11 items-center justify-center bg-(--t-bg-deep)"
 

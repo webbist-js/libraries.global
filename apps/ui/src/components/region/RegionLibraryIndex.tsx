@@ -7,7 +7,7 @@ import {
   gapDefinition,
   type GapKey,
 } from "@repo/shared-data"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   useCallback,
   useEffect,
@@ -88,6 +88,10 @@ export function RegionLibraryIndex({
   readonly featuredIds?: readonly string[]
   readonly nearby?: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const initialState = useMemo<FindState>(
     () => ({
@@ -231,17 +235,17 @@ export function RegionLibraryIndex({
     const category =
       gap === "hours"
         ? mobile
-          ? "Stops & times"
-          : "Opening hours"
+          ? tExisting("ui.stops_times")
+          : tExisting("ui.opening_hours")
         : gap === "accessibility"
-          ? "Accessibility"
+          ? tExisting("ui.accessibility")
           : gap === "services"
             ? "Services and facilities"
             : gap === "contact"
               ? "Website or catalogue"
               : gap === "address"
                 ? "Address or location"
-                : "Something else"
+                : tExisting("contactModal.feedback.tasks.other")
     const action =
       gap === "accessibility"
         ? `${path}#access`
@@ -275,13 +279,13 @@ export function RegionLibraryIndex({
     const improve = gap ? (
       <GlobalLink
         href={action}
-        aria-label={`${gap === "hours" && mobile ? "Add stops and times" : `Add ${gapDefinition(gap, libraryTypeName(hit.libraryType)).label.toLowerCase()}`} for ${hit.name}`}
+        aria-label={`${gap === "hours" && mobile ? tExisting("libraryPage.tasks.addStops") : `Add ${gapDefinition(gap, libraryTypeName(hit.libraryType)).label.toLowerCase()}`} for ${hit.name}`}
         className={ACTION_CLASS}
         style={{ background: T.accent.chip, color: T.accent.primary }}
       >
         <Icon aria-hidden="true" icon="mdi:plus" width={15} height={15} />
         {gap === "hours" && mobile
-          ? "Add stops and times"
+          ? tExisting("libraryPage.tasks.addStops")
           : `Add ${gapDefinition(gap, libraryTypeName(hit.libraryType)).label.toLowerCase()}`}
       </GlobalLink>
     ) : null
@@ -318,7 +322,7 @@ export function RegionLibraryIndex({
                   href={`${path}#stops`}
                   className="inline-flex min-h-11 items-center text-sm underline"
                 >
-                  Stops and times
+                  {tStatic("common.stopsTimes")}
                 </GlobalLink>
               ) : null}
             </div>
@@ -384,7 +388,7 @@ export function RegionLibraryIndex({
                 onClick={() => setRetry((value) => value + 1)}
                 className="mt-3 min-h-11 font-semibold underline"
               >
-                Try again
+                {tExisting("ui.try_again")}
               </button>
               {" · "}
               <GlobalLink href={fullHref} className="font-semibold underline">
@@ -447,7 +451,7 @@ export function RegionLibraryIndex({
         onClose={closeFilters}
         showLabel={
           count === null
-            ? "Show results"
+            ? tExisting("publishing.showResults")
             : `Show ${count.toLocaleString("en-GB")} results`
         }
       >

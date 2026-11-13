@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { EarnedBadge } from "@/app/api/profile/[username]/badges/route"
@@ -51,7 +50,9 @@ export function BadgesSection({
   streak?: number | null
   pointsThisMonth?: number | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadge[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,7 +102,9 @@ export function BadgesSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="type-h2 sr-only">Recognition summary</h2>
+      <h2 className="type-h2 sr-only">
+        {tStatic("profileRoute.recognition_summary")}
+      </h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-live="polite">
         <StatCard
           label={tUi("total_points")}
@@ -144,7 +147,9 @@ export function BadgesSection({
           <SectionTitle as="h2" id="rc-progress">
             {tUi("progress")}
           </SectionTitle>
-          <TextLink href="/community/leaderboard">View leaderboard</TextLink>
+          <TextLink href="/community/leaderboard">
+            {tStatic("profileRoute.view_leaderboard")}
+          </TextLink>
         </div>
 
         {progress != null && nextTierName ? (
@@ -174,7 +179,8 @@ export function BadgesSection({
             </p>
             {pointsThisMonth ? (
               <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                {pointsThisMonth.toLocaleString()} points this month
+                {pointsThisMonth.toLocaleString()}{" "}
+                {tStatic("profileRoute.points_this_month")}
               </p>
             ) : null}
           </div>
@@ -191,10 +197,16 @@ export function BadgesSection({
           style={{ borderTopColor: T.border.divider }}
         >
           {[
-            { label: "Rare badges", value: loading ? "—" : String(rareCount) },
-            { label: "Latest badge", value: latest?.name ?? "None yet" },
             {
-              label: "Next up",
+              label: tStatic("profileRoute.rare_badges"),
+              value: loading ? "—" : String(rareCount),
+            },
+            {
+              label: tStatic("profileRoute.latest_badge"),
+              value: latest?.name ?? "None yet",
+            },
+            {
+              label: tStatic("profileRoute.next_up"),
               value:
                 earnedCount < BADGE_CATALOG.length
                   ? (lockedList[0]?.name ?? "—")
@@ -224,7 +236,7 @@ export function BadgesSection({
       >
         <div className="flex items-baseline justify-between gap-2 pb-4">
           <SectionTitle as="h2" id="rc-earned">
-            Earned
+            {tStatic("profileRoute.earned")}
           </SectionTitle>
           <span
             className="text-base"
@@ -238,7 +250,9 @@ export function BadgesSection({
         </div>
         {loading ? null : earnedList.length === 0 ? (
           <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-            No badges earned yet. A first accepted contribution earns one.
+            {tStatic(
+              "profileRoute.no_badges_earned_yet_a_first_accepted_contribution_earns_one"
+            )}
           </p>
         ) : (
           <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
@@ -265,7 +279,7 @@ export function BadgesSection({
         >
           <div className="flex items-baseline justify-between gap-2 pb-4">
             <SectionTitle as="h2" id="rc-locked">
-              Still to earn
+              {tStatic("profileRoute.still_to_earn")}
             </SectionTitle>
             <span className="text-base" style={{ color: T.ink.dim }}>
               {lockedList.length} {lockedList.length === 1 ? "badge" : "badges"}

@@ -48,6 +48,10 @@ export function LibraryHero({
   /** Set when this is the default-locale stand-in for a missing translation. */
   readonly untranslatedLocale?: string | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("libraryPage")
   const rec = library as unknown as Record<string, unknown>
   const mobile = libraryTypeName(library.libraryType) === "Mobile"
@@ -55,7 +59,7 @@ export function LibraryHero({
   const tint = tintForLibraryType(libraryTypeName(library.libraryType))
   const typeLabel = libraryTypeName(library.libraryType)
     ? libraryTypeName(library.libraryType) === "Other"
-      ? "Library"
+      ? tExisting("ui.library")
       : `${libraryTypeName(library.libraryType)} library`
     : null
   const openingTimes =
@@ -104,7 +108,7 @@ export function LibraryHero({
               >
                 {rec.hasStaff
                   ? "Maintained by library staff"
-                  : "Community maintained"}
+                  : tExisting("staticUi.atlas.community_maintained")}
               </span>
             </div>
 
@@ -129,7 +133,7 @@ export function LibraryHero({
                 <LibIcon d={LIB_ICONS.pin} size={16} />
                 {shortName ? (
                   <>
-                    Also known as{" "}
+                    {tStatic("library.also_known_as")}{" "}
                     <span style={{ color: T.ink.base }}>{shortName}</span>
                     {locationLine ? " · " : ""}
                   </>
@@ -218,7 +222,9 @@ export function LibraryHero({
               }
               photo={formatStrapiMediaUrl(library.heroImage?.url) ?? null}
               name={
-                library.heroImage?.alternativeText || library.name || "Library"
+                library.heroImage?.alternativeText ||
+                library.name ||
+                tExisting("ui.library")
               }
               caption={library.heroImage?.caption}
               gallery={(
@@ -246,7 +252,11 @@ export function LibraryHero({
                   : null
               }
               mapLabel={
-                mobile ? "Route and stops" : digital ? "Online access" : "Map"
+                mobile
+                  ? "Route and stops"
+                  : digital
+                    ? tExisting("libraryPage.onlineAccess")
+                    : tExisting("staticUi.atlas.map")
               }
               map={
                 mobile ? (
@@ -258,7 +268,9 @@ export function LibraryHero({
                       borderColor: T.border.line,
                     }}
                   >
-                    Explore the route and stops in the timetable below
+                    {tStatic(
+                      "library.explore_the_route_and_stops_in_the_timetable_below"
+                    )}
                   </a>
                 ) : libraryTypeName(library.libraryType) === "Digital" ? (
                   <div
@@ -268,7 +280,9 @@ export function LibraryHero({
                       borderColor: T.border.line,
                     }}
                   >
-                    Online library · use the official access links
+                    {tStatic(
+                      "library.online_library_use_the_official_access_links"
+                    )}
                   </div>
                 ) : coords && directionsUrl ? (
                   <LibraryHeroMap
@@ -289,13 +303,13 @@ export function LibraryHero({
                       width={30}
                     />
                     <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                      This record has no map location yet.
+                      {tStatic("library.this_record_has_no_map_location_yet")}
                     </p>
                     <OpenCorrectionLink
                       category="Address or location"
                       className="text-sm font-semibold underline underline-offset-[3px]"
                     >
-                      Add the location
+                      {tExisting("libraryPage.missing.nearby.locationAction")}
                     </OpenCorrectionLink>
                   </div>
                 )

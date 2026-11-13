@@ -36,6 +36,8 @@ export function ClosingSection({
   readonly openLinks: readonly LinkCard[]
   readonly plansIntro: SectionIntro
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("homepageTrust")
 
   return (
@@ -70,7 +72,7 @@ export function ClosingSection({
               className="home-button home-button-outline"
               title={plansIntro.text ?? undefined}
             >
-              Plans
+              {tStatic("home.plans")}
             </GlobalLink>
           </div>
         </div>
@@ -97,7 +99,10 @@ export function ClosingSection({
           })}
         </div>
       </div>
-      <nav className="home-frame home-open-links" aria-label="Open by design">
+      <nav
+        className="home-frame home-open-links"
+        aria-label={tStatic("home.openDesign")}
+      >
         {openLinks.map((link) => (
           <GlobalLink
             key={link.title}

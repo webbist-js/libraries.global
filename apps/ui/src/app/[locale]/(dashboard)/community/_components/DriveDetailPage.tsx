@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { DiscussionFeed } from "@/components/discussions/DiscussionFeed"
@@ -106,7 +106,9 @@ function finalSentence(final: NonNullable<Drive["final"]>): string {
 
 /** The notice at the top of a drive that isn't open: finished, cancelled or scheduled. */
 function DriveStateNotice({ drive }: { readonly drive: Drive }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (drive.status === "closed") {
     const final = drive.final
@@ -134,7 +136,9 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
         title={tUi("this_drive_was_cancelled")}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
-          Anything already sent for it is still reviewed on its own.
+          {tStatic(
+            "communityRoute.anything_already_sent_for_it_is_still_reviewed_on_its_own"
+          )}
         </p>
       </Notice>
     )
@@ -147,7 +151,9 @@ function DriveStateNotice({ drive }: { readonly drive: Drive }) {
         title={tUi("this_drive_hasnt_opened_yet")}
       >
         <p className="m-0" style={{ color: T.ink.base }}>
-          Its tasks appear here when it opens. The counts above are today’s.
+          {tStatic(
+            "communityRoute.its_tasks_appear_here_when_it_opens_the_counts_above_are_today_s"
+          )}
         </p>
       </Notice>
     )
@@ -166,12 +172,16 @@ function JournalStoryCard({
 }: {
   readonly story: Pick<BlogArticleSummary, "title" | "slug" | "section">
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const href = `/journal/${story.section?.slug ?? "general"}/${story.slug}`
 
   return (
     <section aria-labelledby="drive-story-heading" style={CARD}>
       <h2 id="drive-story-heading" className="type-h2 sr-only">
-        Journal story
+        {tExisting("publishing.journalStory")}
       </h2>
       <Link
         href={href}
@@ -183,7 +193,7 @@ function JournalStoryCard({
           icon="mdi:newspaper-variant-outline"
           width={19}
         />
-        Read the story: {story.title}
+        {tStatic("communityRoute.read_the_story")} {story.title}
       </Link>
     </section>
   )
@@ -216,7 +226,9 @@ export function DriveDetailPage({
   /** The Journal article `drive.storySlug` names, when it exists. */
   readonly story?: Pick<BlogArticleSummary, "title" | "slug" | "section"> | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const credited = drive.status === "open" || drive.status === "closed"
   const title = plainDriveTitle(drive.title)
@@ -276,7 +288,9 @@ export function DriveDetailPage({
               />
             ) : (
               <p className="m-0 text-sm text-(--t-ink-dim)">
-                Progress shows once the drive is counted, within the hour.
+                {tExisting(
+                  "staticUi.drive.progress_shows_once_the_drive_is_counted_within_the_hour"
+                )}
               </p>
             )}
           </section>

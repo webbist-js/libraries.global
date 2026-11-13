@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import {
   FilterGroup,
@@ -20,12 +20,12 @@ import {
   type EventTypeKey,
 } from "@/components/events/EventTypeChip"
 
-const WHEN_OPTIONS: { value: WhenScope; label: string }[] = [
-  { value: "any", label: "Any time" },
-  { value: "today", label: "Today" },
-  { value: "weekend", label: "This weekend" },
-  { value: "7d", label: "Next 7 days" },
-  { value: "30d", label: "Next 30 days" },
+const WHEN_OPTIONS: { value: WhenScope }[] = [
+  { value: "any" },
+  { value: "today" },
+  { value: "weekend" },
+  { value: "7d" },
+  { value: "30d" },
 ]
 
 const TIME_SLOTS: TimeSlot[] = ["morning", "afternoon", "evening", "allday"]
@@ -56,8 +56,8 @@ export function EventsFilterPanel({
   readonly timeCounts: Map<TimeSlot, number>
   readonly freeCount: number
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("eventListing")
+  const tUi = useTranslations("ui")
+  const t = useTranslations("eventListing")
 
   const toggleType = (type: string) => {
     const types = filters.types.includes(type)

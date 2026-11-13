@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useId, useState, useSyncExternalStore } from "react"
 
@@ -102,7 +101,7 @@ function Alert({
 }
 
 function GeoStatus({ note }: { readonly note: GeoNote }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   if (note.kind === "refused")
     return (
@@ -144,7 +143,11 @@ export function LocationLookup({
   /** The device reported where it is. */
   readonly onLocate: (lat: number, lng: number) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const inputId = `${id}-input`
@@ -290,7 +293,9 @@ export function LocationLookup({
             }}
             onFocus={() => setOpen(true)}
             onKeyDown={onKeyDown}
-            placeholder="e.g. British Library, or 96 Euston Road, London"
+            placeholder={tStatic(
+              "libraryEditor.e_g_british_library_or_96_euston_road_london"
+            )}
             role="combobox"
             spellCheck={false}
             style={{ ...fieldInputStyle, paddingLeft: "46px" }}
@@ -366,7 +371,9 @@ export function LocationLookup({
               width={18}
               height={18}
             />
-            {locating ? "Finding you…" : "Use my location"}
+            {locating
+              ? "Finding you…"
+              : tExisting("widgetPublic.use_my_location")}
           </button>
         ) : null}
       </div>

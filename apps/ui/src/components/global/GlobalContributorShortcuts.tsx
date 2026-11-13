@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -102,7 +101,9 @@ function MobileTile({
  * panel, one accordion each with the first open, then the Membership row.
  */
 function MobileShortcuts() {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const menu = useContributeMenu(true)
   const titleId = useId()
@@ -136,7 +137,7 @@ function MobileShortcuts() {
           className="m-0 mx-1 text-sm font-semibold"
           style={{ color: T.ink.dim }}
         >
-          Loading your shortcuts…
+          {tExisting("contributeMenu.loading")}
         </p>
       ) : null}
       {cards.map((card, index) => (

@@ -8,7 +8,7 @@ import GlobalLink from "@/components/global/GlobalLink"
 import { ContributionActions } from "@/components/home/ContributionActions"
 import { installAnalyticsClickTracking } from "@/lib/analytics-events"
 
-import messages from "../../../../locales/en.json"
+import messages from "../../../../locales/en"
 
 const actor = vi.hoisted(() => ({ signedIn: false }))
 vi.mock("@/lib/access-client", () => ({

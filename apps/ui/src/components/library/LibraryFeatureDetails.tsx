@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import StrapiBlocksContent from "@/components/library/StrapiBlocksContent"
@@ -29,6 +29,8 @@ export function LibraryFeatureDetails({
   readonly children?: ReactNode
   readonly className?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const blocks = Array.isArray(description) ? description : []
   if (!summary?.trim() && blocks.length === 0) return <>{children ?? name}</>
 
@@ -72,8 +74,9 @@ export function LibraryFeatureDetails({
             className="text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
-            About this feature. Check with the library for availability and any
-            requirements.
+            {tStatic(
+              "library.about_this_feature_check_with_the_library_for_availability_and_any_requirements"
+            )}
           </DialogDescription>
         </DialogHeader>
         {summary?.trim() ? (

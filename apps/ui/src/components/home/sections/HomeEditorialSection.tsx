@@ -1,6 +1,6 @@
 import { BookOpen } from "lucide-react"
 import Image from "next/image"
-import type { Locale } from "next-intl"
+import { type Locale, useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import {
@@ -23,6 +23,8 @@ export function HomeEditorialSection({
   readonly links: readonly LinkCard[]
   readonly locale: Locale
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const articles = [stories.featured, ...stories.sideStories]
     .filter((article) => article !== null)
     .slice(0, 2)
@@ -31,7 +33,7 @@ export function HomeEditorialSection({
     <section
       className="home-frame home-editorial"
       data-homepage-surface="paper"
-      aria-label="Journal and Knowledge"
+      aria-label={tStatic("home.editorial")}
     >
       <div>
         <SectionHeader
@@ -43,7 +45,7 @@ export function HomeEditorialSection({
               {...homepageLinkAttributes("/journal")}
               className="home-text-link"
             >
-              All stories
+              {tStatic("home.allStories")}
             </GlobalLink>
           }
         />
@@ -78,7 +80,10 @@ export function HomeEditorialSection({
                   <p className="home-card-summary">
                     {article.summary}{" "}
                     <span className="home-reading-time">
-                      · {article.readMinutes} min read
+                      ·{" "}
+                      {tStatic("home.readingTime", {
+                        count: article.readMinutes ?? 0,
+                      })}
                     </span>
                   </p>
                 </GlobalLink>
@@ -87,20 +92,20 @@ export function HomeEditorialSection({
           </div>
         ) : (
           <p className="home-section-copy">
-            Stories, field notes and perspectives from the world of libraries.{" "}
+            {tStatic("home.journalEmpty")}{" "}
             <GlobalLink
               href="/journal"
               {...homepageLinkAttributes("/journal")}
               className="home-text-link"
             >
-              Explore the Journal
+              {tStatic("home.exploreJournal")}
             </GlobalLink>
           </p>
         )}
       </div>
       <nav aria-labelledby="home-knowledge-title" className="home-knowledge">
         <h2 id="home-knowledge-title" className="type-h3">
-          Knowledge &amp; help
+          {tStatic("home.knowledgeHelp")}
         </h2>
         <ul className="home-link-rows">
           {links.map((link) => (
@@ -119,7 +124,7 @@ export function HomeEditorialSection({
           {...homepageLinkAttributes("/knowledge")}
           className="home-text-link"
         >
-          All guides
+          {tStatic("home.allGuides")}
         </GlobalLink>
       </nav>
     </section>

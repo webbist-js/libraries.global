@@ -15,9 +15,8 @@ import {
 import { NextIntlClientProvider } from "next-intl"
 import { afterEach, expect, it, vi } from "vitest"
 
+import messages from "../../../../locales/en"
 import { AtlasNetworkReach, useNetworkReach } from "../AtlasNetworkReach"
-
-import messages from "../../../../locales/en.json"
 
 afterEach(() => {
   cleanup()

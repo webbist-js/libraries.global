@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -34,6 +35,10 @@ export function FeaturedDrive({
   readonly now?: Date
   readonly children?: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const { drive, progress, helpers, href, place } = view
   const { tint } = focusChipOf(drive.focus)
 
@@ -60,7 +65,9 @@ export function FeaturedDrive({
             icon={drive.pinned ? "mdi:pin-outline" : "mdi:star-outline"}
             width={14}
           />
-          {drive.pinned ? "Pinned drive" : "Featured drive"}
+          {drive.pinned
+            ? "Pinned drive"
+            : tExisting("workspaceDrawer.featuredDrive")}
         </span>
         <DriveFocusChip focus={drive.focus} />
         {place ? (
@@ -103,7 +110,9 @@ export function FeaturedDrive({
         />
       ) : (
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-          Progress shows once the drive is counted, within the hour.
+          {tStatic(
+            "drive.progress_shows_once_the_drive_is_counted_within_the_hour"
+          )}
         </p>
       )}
 
@@ -112,7 +121,7 @@ export function FeaturedDrive({
           href={href}
           className={buttonVariants({ variant: "primary", size: "pill" })}
         >
-          Join this drive
+          {tExisting("homepageContribute.joinDrive")}
         </GlobalLink>
         <GlobalLink
           href={howHref ?? `${href}#rules`}
@@ -124,7 +133,7 @@ export function FeaturedDrive({
           })}
           style={{ color: T.ink.base }}
         >
-          How drives work
+          {tExisting("homepageContribute.howDrivesWork")}
         </GlobalLink>
       </div>
 

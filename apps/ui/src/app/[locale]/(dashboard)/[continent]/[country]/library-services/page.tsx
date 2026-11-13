@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { DashboardSidebarCta } from "@/components/dashboard/DashboardSidebarCta"
@@ -10,6 +11,7 @@ import { PageHero } from "@/components/ds"
 import { MainContent } from "@/components/ds/MainContent"
 import { Container } from "@/components/elementary/Container"
 import { NetworkDirectory } from "@/components/networks/NetworkDirectory"
+import { withMessages } from "@/i18n/scoped-messages"
 import { networkQuery } from "@/lib/networks/query"
 import { publicNetworkList } from "@/lib/networks/server"
 import { buildMetadata } from "@/lib/seo/metadata"
@@ -30,7 +32,7 @@ export async function generateMetadata({
     locale,
   })
 }
-export default async function CountryServices({
+async function CountryServices({
   params,
   searchParams,
 }: {
@@ -41,6 +43,10 @@ export default async function CountryServices({
   }>
   readonly searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
   const { locale, continent, country } = await params,
     place = await fetchCountry(country, locale as Locale)
   if (!place?.data || place.data.continent?.slug !== continent) notFound()
@@ -57,7 +63,7 @@ export default async function CountryServices({
     />
   )
   const sections = [
-    { href: "#network-overview", label: "Overview" },
+    { href: "#network-overview", label: tExisting("dashboard.overview") },
     { href: "#network-results", label: "Browse the directory" },
   ]
 
@@ -75,13 +81,13 @@ export default async function CountryServices({
               href: `/${continent}/${country}`,
               label: place.data.name ?? country,
             },
-            { label: "Services and networks" },
+            { label: tStatic("common.servicesNetworks") },
           ]}
         />
       }
       navigationFooter={
         <DashboardSidebarCta
-          title="Connect your libraries"
+          title={tStatic("common.connectLibraries")}
           body="Represent a library service, university system or consortium and help keep its member records up to date."
           action={{ href: "/staff/networks", label: "Represent a network" }}
           secondary={{
@@ -92,7 +98,7 @@ export default async function CountryServices({
       }
       navigation={
         <InformationNavigation
-          label="Browse"
+          label={tExisting("dashboard.browse")}
           links={[
             ...sections,
             { href: "/library-networks", label: "All services and networks" },
@@ -118,7 +124,7 @@ export default async function CountryServices({
                 basePath={`/${continent}/${country}/library-services`}
               />
             ) : (
-              <p>The service directory is temporarily unavailable.</p>
+              <p>{tStatic("common.serviceDirectoryUnavailable")}</p>
             )}
           </div>
         </Container>
@@ -126,3 +132,8 @@ export default async function CountryServices({
     </DashboardPage>
   )
 }
+
+export default withMessages(
+  CountryServices,
+  "[locale]/(dashboard)/[continent]/[country]/library-services/page"
+)

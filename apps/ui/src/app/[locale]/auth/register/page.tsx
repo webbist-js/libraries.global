@@ -1,6 +1,7 @@
 import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { AuthLeftPanel } from "../_components/AuthLeftPanel"
@@ -9,9 +10,7 @@ import { RegisterForm } from "./_components/RegisterForm"
 
 export const metadata = privateMetadata("Create an account")
 
-export default async function RegisterPage({
-  params,
-}: PageProps<"/[locale]/auth/register">) {
+async function RegisterPage({ params }: PageProps<"/[locale]/auth/register">) {
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
 
@@ -25,3 +24,5 @@ export default async function RegisterPage({
     </AuthShell>
   )
 }
+
+export default withMessages(RegisterPage, "[locale]/auth/register/page")

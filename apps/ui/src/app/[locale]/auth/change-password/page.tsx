@@ -1,11 +1,9 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import type { Locale } from "next-intl"
-import {
-  getTranslations as getUiTranslations,
-  setRequestLocale,
-} from "next-intl/server"
+import { setRequestLocale, getTranslations } from "next-intl/server"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR, hasPasswordSignIn } from "@/lib/auth-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -15,13 +13,12 @@ import { ChangePasswordForm } from "./_components/ChangePasswordForm"
 
 export const metadata = privateMetadata("Change password")
 
-export default async function ChangePasswordPage({
+async function ChangePasswordPage({
   params,
 }: PageProps<"/[locale]/auth/change-password">) {
-  const tUi = await getUiTranslations("ui")
-
   const { locale } = (await params) as { locale: Locale }
   setRequestLocale(locale)
+  const tUi = await getTranslations("ui")
 
   // authGuard sends signed-out visitors to sign-in first; this is the backstop.
   const requestHeaders = await headers()
@@ -46,3 +43,8 @@ export default async function ChangePasswordPage({
     </AuthShell>
   )
 }
+
+export default withMessages(
+  ChangePasswordPage,
+  "[locale]/auth/change-password/page"
+)

@@ -74,6 +74,10 @@ export function ContributeSection({
   readonly tasks: readonly ContributionTask[]
   readonly drives: readonly DriveView[]
 }) {
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("homepageContribute")
 
   return (
@@ -107,7 +111,7 @@ export function ContributeSection({
               href={band.secondaryHref ?? "/contribute/index/new"}
               className="home-button home-button-paper"
             >
-              {band.secondaryLabel ?? "Add a library"}
+              {band.secondaryLabel ?? tExisting("ui.add_a_library")}
             </GlobalLink>
           }
         />
@@ -157,7 +161,8 @@ export function ContributeSection({
         ) : (
           <div className="home-task-card">
             <h3 className="home-kicker">
-              {tasksIntro.title ?? "Open tasks right now"}
+              {tasksIntro.title ??
+                tExisting("homepageFallback.open_tasks_right_now")}
             </h3>
             <ul className="home-link-rows">
               {tasks.length ? (
@@ -179,7 +184,8 @@ export function ContributeSection({
                     href="/contribute/index/new"
                     {...homepageLinkAttributes("/contribute/index/new")}
                   >
-                    Add a missing library <Plus aria-hidden="true" size={18} />
+                    {tStatic("home.addLibrary")}{" "}
+                    <Plus aria-hidden="true" size={18} />
                   </GlobalLink>
                 </li>
               )}
@@ -189,7 +195,7 @@ export function ContributeSection({
               {...homepageLinkAttributes("/contribute")}
               className="home-text-link"
             >
-              All ways to contribute
+              {tStatic("home.contributeWays")}
             </GlobalLink>
           </div>
         )}

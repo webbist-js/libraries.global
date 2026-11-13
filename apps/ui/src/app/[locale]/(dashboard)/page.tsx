@@ -3,6 +3,7 @@ import type { Locale } from "next-intl"
 
 import { LibraryHomePage } from "@/components/home/LibraryHomePage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo/json-ld"
 import {
   absoluteUrl,
@@ -31,9 +32,7 @@ export async function generateMetadata(props: {
   })
 }
 
-export default async function HomePage(props: {
-  params: Promise<{ locale: string }>
-}) {
+async function HomePage(props: { params: Promise<{ locale: string }> }) {
   const locale = (await props.params).locale as Locale
 
   return (
@@ -51,3 +50,5 @@ export default async function HomePage(props: {
     </>
   )
 }
+
+export default withMessages(HomePage, "[locale]/(dashboard)/page")

@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import * as z from "zod"
@@ -23,35 +23,47 @@ import {
 import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButtons"
 import { newPasswordSchema } from "@/app/[locale]/auth/_components/password-rules"
 import { rememberPendingEmail } from "@/app/[locale]/auth/_components/pending-email"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import GlobalLink from "@/components/global/GlobalLink"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { VERIFY_EMAIL_PATH } from "@/lib/auth-redirects"
 import { T } from "@/lib/design-tokens"
 import { MINIMUM_ACCOUNT_AGE } from "@/lib/legal-consent"
 
-const RegisterFormSchema = z.object({
-  displayName: z
-    .string()
-    .trim()
-    .min(1, "Enter the name to show on your profile")
-    .max(60, "Keep it to 60 characters or fewer"),
-  email: z
-    .string()
-    .min(1, "Enter your email address")
-    .email("Enter a valid email address"),
-  password: newPasswordSchema,
-  terms: z
-    .boolean()
-    .refine(
-      (v) => v === true,
-      "Confirm you're 18 or over and accept the terms and privacy notice"
-    ),
-})
+const RegisterFormSchema = (
+  tStatic: ReturnType<typeof useTranslations<"staticUi">>
+) =>
+  z.object({
+    displayName: z
+      .string()
+      .trim()
+      .min(1, tStatic("auth.enter_the_name_to_show_on_your_profile"))
+      .max(60, tStatic("auth.keep_it_to_60_characters_or_fewer")),
+    email: z
+      .string()
+      .min(1, tStatic("auth.enter_your_email_address"))
+      .email(tStatic("auth.enter_a_valid_email_address")),
+    password: newPasswordSchema(tStatic),
+    terms: z
+      .boolean()
+      .refine(
+        (v) => v === true,
+        tStatic(
+          "auth.confirm_you_re_18_or_over_and_accept_the_terms_and_privacy_notice"
+        )
+      ),
+  })
 
-type RegisterFormValues = z.infer<typeof RegisterFormSchema>
+type RegisterFormValues = z.infer<ReturnType<typeof RegisterFormSchema>>
 
 export function RegisterForm() {
-  const tUi = useUiTranslations("ui")
+  const { heading, tFlow } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const { registerMutation } = useUserMutations()
 
@@ -61,7 +73,7 @@ export function RegisterForm() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
-    resolver: zodResolver(RegisterFormSchema),
+    resolver: zodResolver(RegisterFormSchema(tStatic)),
     defaultValues: {
       displayName: "",
       email: "",
@@ -86,9 +98,11 @@ export function RegisterForm() {
           globalThis.location.href = VERIFY_EMAIL_PATH
         },
         onError: (error) => {
-          const msg = error?.message ?? "Registration failed"
+          const msg = error?.message ?? tExisting("auth.register.status.fail")
           const display = /already exists/i.test(msg)
-            ? "An account with this email already exists. Sign in instead, or reset your password."
+            ? tStatic(
+                "auth.an_account_with_this_email_already_exists_sign_in_instead_or_reset_your_password"
+              )
             : msg
           toast.error(display)
         },
@@ -106,9 +120,8 @@ export function RegisterForm() {
   return (
     <>
       <AuthHeading
-        title="Join the"
-        italic="index."
-        subtitle="Free for readers, librarians and researchers."
+        title={heading("join")}
+        subtitle={tStatic("auth.free_for_readers_librarians_and_researchers")}
       />
 
       {/* A native submit (before hydration) POSTs to this page instead of
@@ -172,27 +185,27 @@ export function RegisterForm() {
 
         <div>
           <AuthCheckbox
-            label={
-              <>
-                I&rsquo;m {MINIMUM_ACCOUNT_AGE} or over, and I agree to the{" "}
+            label={tFlow.rich("consent", {
+              age: MINIMUM_ACCOUNT_AGE,
+              terms: (chunks) => (
                 <GlobalLink
                   href="/legal/terms"
                   style={{ color: T.accent.primary }}
                   className="underline underline-offset-[3px]"
                 >
-                  terms of use
-                </GlobalLink>{" "}
-                and{" "}
+                  {chunks}
+                </GlobalLink>
+              ),
+              privacy: (chunks) => (
                 <GlobalLink
                   href="/legal/privacy"
                   style={{ color: T.accent.primary }}
                   className="underline underline-offset-[3px]"
                 >
-                  privacy notice
+                  {chunks}
                 </GlobalLink>
-                .
-              </>
-            }
+              ),
+            })}
             {...fieldA11y("terms", errors.terms?.message)}
             {...register("terms")}
           />
@@ -202,13 +215,15 @@ export function RegisterForm() {
         <AuthPrimaryButton
           disabled={registerMutation.isPending || isSubmitting}
         >
-          {registerMutation.isPending ? "Creating account…" : tUi("continue")}
+          {registerMutation.isPending
+            ? tStatic("auth.creating_account")
+            : tUi("continue")}
         </AuthPrimaryButton>
       </form>
 
       <AuthSwitchPrompt
-        prompt="Already have an account?"
-        linkLabel="Sign in"
+        prompt={tExisting("auth.register.signInLinkLinkDescription")}
+        linkLabel={tExisting("ui.sign_in")}
         href="/auth/signin"
       />
 

@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import { membershipPropsOf } from "@/components/membership/membership-props"
 import { MembershipDashboard } from "@/components/membership/MembershipDashboard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getContributionSession } from "@/lib/contribution-session-server"
 import { readMembershipData } from "@/lib/membership-page-server"
 import { redirect } from "@/lib/navigation"
@@ -16,7 +17,7 @@ export async function generateMetadata() {
 }
 
 /** The same standing, staff and API sections as the profile drawer. */
-export default async function ContributionMembershipPage({
+async function ContributionMembershipPage({
   params,
 }: {
   readonly params: Promise<{ locale: Locale }>
@@ -56,3 +57,8 @@ export default async function ContributionMembershipPage({
     </>
   )
 }
+
+export default withMessages(
+  ContributionMembershipPage,
+  "[locale]/(dashboard)/contribute/membership/page"
+)

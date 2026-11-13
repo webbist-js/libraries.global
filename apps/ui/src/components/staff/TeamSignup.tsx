@@ -1,6 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { useId, useRef, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
@@ -30,6 +31,10 @@ export function TeamSignup({
   readonly initialNetwork?: string
   readonly user: { name: string; email: string }
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const requestId = useRef(crypto.randomUUID())
   const nameId = useId()
   const [network, setNetwork] = useState<TeamNetworkSelection>(null)
@@ -69,19 +74,21 @@ export function TeamSignup({
         router.push("/staff/teams")
       } catch (failure) {
         setError(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
 
   if (!verified)
     return (
-      <StaffPanel title="Verify your email" compact>
+      <StaffPanel title={tStatic("staff.verify_your_email")} compact>
         <p className="text-base leading-relaxed text-(--t-ink-dim)">
-          Verify your email before creating a Team.
+          {tStatic("staff.verify_your_email_before_creating_a_team")}
         </p>
         <Link className={STAFF_LINK} href="/profile/settings">
-          Open account settings
+          {tExisting("apiIndividualCheckout.openSettings")}
         </Link>
       </StaffPanel>
     )
@@ -100,13 +107,13 @@ export function TeamSignup({
 
   return (
     <div className="mx-auto max-w-3xl">
-      <StaffPanel title="Your Team, together" compact>
+      <StaffPanel title={tStatic("staff.your_team_together")} compact>
         <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
-          Step 2 of 2 · Name your Team
+          {tStatic("staff.step_2_of_2_name_your_team")}
         </p>
         <SignupCoverage network={network} />
         <form
-          className="space-y-4"
+          className="flex flex-col gap-4"
           onSubmit={(event) => {
             event.preventDefault()
             if (!pending && name.trim()) create()
@@ -117,7 +124,7 @@ export function TeamSignup({
               htmlFor={nameId}
               className="mb-2 block text-base font-semibold"
             >
-              Team name
+              {tStatic("staff.team_name")}
             </label>
             <Input
               id={nameId}
@@ -130,8 +137,8 @@ export function TeamSignup({
             />
           </div>
           <p className="m-0 text-base leading-relaxed text-(--t-ink-dim)">
-            Teams are free. You become its Organiser as {user.email}. Library
-            editing still needs verified access for each library.
+            Creating a Team is free. You’ll manage it as {user.email}. Editing
+            library records requires verified staff access for each library.
           </p>
           {error ? (
             <p
@@ -149,7 +156,9 @@ export function TeamSignup({
               disabled={pending || !name.trim()}
               aria-busy={pending}
             >
-              {pending ? "Creating…" : "Create your Team"}
+              {pending
+                ? "Creating…"
+                : tExisting("staticUi.staffRoute.create_your_team")}
             </Button>
             <Button
               type="button"
@@ -158,7 +167,7 @@ export function TeamSignup({
               disabled={pending}
               onClick={() => setNetworkChosen(false)}
             >
-              Change library selection
+              {tStatic("staff.change_library_selection")}
             </Button>
           </div>
         </form>
@@ -172,6 +181,8 @@ function SignupCoverage({
 }: {
   readonly network: TeamNetworkSelection
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="mb-5 flex items-center gap-3 rounded-2xl bg-(--t-bg-surface) p-4">
       <Icon
@@ -190,7 +201,7 @@ function SignupCoverage({
             : "Add your libraries in the staff workspace after setup."}
         </p>
       </div>
-      <Badge color="aurora" label="Starting coverage" />
+      <Badge color="aurora" label={tStatic("staff.starting_coverage")} />
     </div>
   )
 }

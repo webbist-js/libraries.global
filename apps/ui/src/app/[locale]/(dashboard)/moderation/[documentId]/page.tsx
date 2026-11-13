@@ -2,7 +2,8 @@ import { Icon } from "@iconify/react"
 import { reviewCategoryOf } from "@repo/access"
 import { isStaleTimetableSuggestion } from "@repo/shared-data"
 import { notFound } from "next/navigation"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 import type { ReactNode } from "react"
 
 import { BackLink } from "@/components/ds/BackLink"
@@ -33,6 +34,7 @@ import {
 import { NetworkClaimReview } from "@/components/moderation/NetworkClaimReview"
 import { reviewReturnHref } from "@/components/moderation/queue-navigation"
 import { ReviewLockGate } from "@/components/moderation/ReviewLockGate"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { T } from "@/lib/design-tokens"
@@ -234,9 +236,14 @@ function targetLinks(
 }
 
 function LoadFailed() {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <>
-      <ModerationHero title="Review a *submission*" leaf="Review" />
+      <ModerationHero
+        title={tStatic("networkModeration.review_a_submission")}
+        leaf="Review"
+      />
       <div className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-16 sm:px-8">
         <p
           role="alert"
@@ -246,7 +253,9 @@ function LoadFailed() {
             color: T.accent.danger,
           }}
         >
-          This submission could not be loaded. Try again in a moment.
+          {tStatic(
+            "networkModeration.this_submission_could_not_be_loaded_try_again_in_a_moment"
+          )}
         </p>
       </div>
     </>
@@ -294,14 +303,16 @@ function contributorNoteFor(detail: ModerationDetail) {
     : (detail.note ?? "")
 }
 
-export default async function ReviewSubmissionPage({
+async function ReviewSubmissionPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string; documentId: string }>
   searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const { documentId } = await params
   const search = await (searchParams ?? Promise.resolve({}))
@@ -317,7 +328,7 @@ export default async function ReviewSubmissionPage({
   if (accessUnknown)
     return (
       <ModerationAccessUnavailable
-        title="Review a *submission*"
+        title={tStatic("networkModeration.review_a_submission")}
         leaf="Review"
         path={`/moderation/${documentId}`}
       />
@@ -370,7 +381,7 @@ export default async function ReviewSubmissionPage({
 
       <div className="mx-auto grid w-full max-w-[1360px] gap-8 px-4 pt-8 pb-16 text-base [--spacing:0.25rem] sm:px-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="lg:col-span-2">
-          <BackLink href={returnTo}>Back to the queue</BackLink>
+          <BackLink href={returnTo}>{tStatic("common.backQueue")}</BackLink>
         </div>
         <div className="flex min-w-0 flex-col gap-6">
           <Section title={tUi("about_this_submission")}>
@@ -437,7 +448,7 @@ export default async function ReviewSubmissionPage({
           <Section title={tUi("history")}>
             {d.reviewNote && events.every((e) => !e.note) ? (
               <p className="m-0 text-base" style={{ color: T.ink.base }}>
-                <strong>Moderator note: </strong>
+                <strong>{tStatic("networkModeration.moderator_note")} </strong>
                 {d.reviewNote}
               </p>
             ) : null}
@@ -463,7 +474,9 @@ export default async function ReviewSubmissionPage({
               </Link>
             ) : created ? (
               <p className="m-0" style={{ color: T.ink.dim }}>
-                Approval created a new library record.
+                {tStatic(
+                  "networkModeration.approval_created_a_new_library_record"
+                )}
               </p>
             ) : null}
             {links.map((l) => (
@@ -493,7 +506,7 @@ export default async function ReviewSubmissionPage({
                 width={16}
                 height={16}
               />
-              Back to the queue
+              {tStatic("common.backQueue")}
             </Link>
           </nav>
         </aside>
@@ -501,3 +514,8 @@ export default async function ReviewSubmissionPage({
     </>
   )
 }
+
+export default withMessages(
+  ReviewSubmissionPage,
+  "[locale]/(dashboard)/moderation/[documentId]/page"
+)

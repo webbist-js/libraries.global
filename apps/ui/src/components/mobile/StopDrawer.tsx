@@ -7,7 +7,7 @@ import {
   type MobileTimetable,
   type TimetableNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Sheet } from "@/components/ds"
 import { analyticsAttributes } from "@/lib/analytics-events"
@@ -38,7 +38,11 @@ export function StopDrawer({
   /** Where "Suggest a correction for this stop" goes. */
   readonly correctionHref?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const now = useMobileClock(),
     stop = tt.stops.find((row) => row.id === stopId),
@@ -56,7 +60,7 @@ export function StopDrawer({
       open={!!stop}
       onClose={onClose}
       side="right"
-      title={stop?.name ?? "Stop"}
+      title={stop?.name ?? tStatic("mobile.stop")}
     >
       {stop ? (
         <>
@@ -76,7 +80,7 @@ export function StopDrawer({
                 </li>
               ))}
           </ul>
-          <h3 className="type-h3 mt-4 mb-2">Next visits</h3>
+          <h3 className="type-h3 mt-4 mb-2">{tStatic("common.nextVisits")}</h3>
           {next.length ? (
             <table className="w-full text-left">
               <caption className="sr-only">
@@ -84,8 +88,8 @@ export function StopDrawer({
               </caption>
               <thead>
                 <tr>
-                  <th scope="col">Date</th>
-                  <th scope="col">Time</th>
+                  <th scope="col">{tStatic("common.date")}</th>
+                  <th scope="col">{tStatic("common.time")}</th>
                   <th scope="col">{tUi("status")}</th>
                 </tr>
               </thead>
@@ -120,7 +124,8 @@ export function StopDrawer({
                       <td>
                         {cancelled ? (
                           <span style={{ color: T.accent.danger }}>
-                            Not stopping{reason ? ` · ${reason}` : ""}
+                            {tStatic("common.notStopping")}
+                            {reason ? ` · ${reason}` : ""}
                           </span>
                         ) : (
                           "Scheduled"
@@ -134,7 +139,9 @@ export function StopDrawer({
           ) : (
             <p>
               {now
-                ? "No visits scheduled in the next six months."
+                ? tExisting(
+                    "staticUi.atlas.no_visits_scheduled_in_the_next_six_months"
+                  )
                 : "Visit dates appear when the page is ready."}
             </p>
           )}
@@ -152,7 +159,7 @@ export function StopDrawer({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Directions ↗
+                {tStatic("mobile.directions")}
               </a>
             ) : null}
             <a
@@ -166,12 +173,13 @@ export function StopDrawer({
                 content_id: stop.id,
               })}
             >
-              Download six months of visits (.ics)
+              {tStatic("mobile.download_six_months_of_visits_ics")}
             </a>
           </div>
           <p className="text-sm" style={{ color: T.ink.dim }}>
-            A downloaded calendar is a snapshot. Check this page for changes
-            before travelling.
+            {tStatic(
+              "mobile.a_downloaded_calendar_is_a_snapshot_check_this_page_for_changes_before_travelling"
+            )}
           </p>
           {correctionHref ? (
             <p className="mt-4 text-sm">
@@ -180,7 +188,7 @@ export function StopDrawer({
                 className="inline-flex min-h-11 items-center font-semibold underline underline-offset-[3px]"
                 style={{ color: T.accent.primary }}
               >
-                Suggest a correction for this stop
+                {tStatic("mobile.suggest_a_correction_for_this_stop")}
               </Link>
             </p>
           ) : null}

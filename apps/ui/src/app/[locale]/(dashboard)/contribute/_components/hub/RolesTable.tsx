@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
@@ -21,88 +21,15 @@ const CLAIM: Cell = { kind: "claim" }
 
 type Row = { label: string; cells: [Cell, Cell, Cell, Cell, Cell, Cell] }
 
-const ROWS: Row[] = [
-  {
-    label: "Suggest corrections, photos and sources",
-    cells: [YES, YES, YES, YES, YES, YES],
-  },
-  { label: "Add a missing library", cells: [YES, YES, YES, YES, YES, YES] },
-  {
-    label: "Suggest Knowledge edits and translations, pitch Journal pieces",
-    cells: [YES, YES, YES, YES, YES, YES],
-  },
-  {
-    label: "Vote on suggested additions",
-    cells: [YES, YES, YES, YES, YES, YES],
-  },
-  {
-    label: "Start discussions, reply, react and follow conversations",
-    cells: [YES, YES, YES, YES, YES, YES],
-  },
-  {
-    label: "Edit a library’s record and connect its events feed",
-    cells: [
-      NO,
-      { kind: "yes", note: "For your library" },
-      CLAIM,
-      CLAIM,
-      CLAIM,
-      CLAIM,
-    ],
-  },
-  {
-    label: "Publish approved Knowledge edits directly",
-    cells: [NO, NO, YES, NO, NO, YES],
-  },
-  {
-    label: "Publish approved Journal edits directly",
-    cells: [NO, NO, NO, YES, NO, YES],
-  },
-  {
-    label: "Review submissions in their queue and language",
-    cells: [NO, NO, NO, NO, YES, { kind: "yes", note: "Every queue" }],
-  },
-  {
-    label: "Review discussion messages and reports",
-    cells: [
-      NO,
-      NO,
-      NO,
-      NO,
-      { kind: "yes", note: "With Discussions queue and language access" },
-      YES,
-    ],
-  },
-]
-
-const COLUMNS: { title: string; sub: string; apply?: string }[] = [
-  { title: "Contributor", sub: "Anyone with an account" },
-  { title: "Verified library staff", sub: "Confirmed through a library claim" },
-  {
-    title: "Knowledge editor",
-    sub: "After five accepted changes",
-    apply: "/contribute/knowledge/apply?role=wiki_editor",
-  },
-  {
-    title: "Journal editor",
-    sub: "After five accepted changes",
-    apply: "/contribute/knowledge/apply?role=journal_editor",
-  },
-  {
-    title: "Moderator",
-    sub: "After five accepted changes",
-    apply: "/contribute/knowledge/apply?role=moderator",
-  },
-  { title: "Editorial board", sub: "Reviews every queue and language" },
-]
-
 function CellValue({ cell }: { cell: Cell }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (cell.kind === "claim")
     return (
       <span className="text-sm" style={{ color: T.ink.dim }}>
-        With a library claim
+        {tStatic("contributeRoute.with_a_library_claim")}
       </span>
     )
   if (cell.kind === "no") {
@@ -124,17 +51,114 @@ function CellValue({ cell }: { cell: Cell }) {
 }
 
 export function RolesTable() {
+  const tStatic = useTranslations("staticUi")
+  const ROWS: Row[] = [
+    {
+      label: tStatic("contributeRoute.suggest_corrections_photos_and_sources"),
+      cells: [YES, YES, YES, YES, YES, YES],
+    },
+    {
+      label: tStatic("contributeRoute.add_a_missing_library"),
+      cells: [YES, YES, YES, YES, YES, YES],
+    },
+    {
+      label: tStatic(
+        "contributeRoute.suggest_knowledge_edits_and_translations_pitch_journal_pieces"
+      ),
+      cells: [YES, YES, YES, YES, YES, YES],
+    },
+    {
+      label: tStatic("contributeRoute.vote_on_suggested_additions"),
+      cells: [YES, YES, YES, YES, YES, YES],
+    },
+    {
+      label: tStatic(
+        "contributeRoute.start_discussions_reply_react_and_follow_conversations"
+      ),
+      cells: [YES, YES, YES, YES, YES, YES],
+    },
+    {
+      label: tStatic(
+        "contributeRoute.edit_a_library_s_record_and_connect_its_events_feed"
+      ),
+      cells: [
+        NO,
+        { kind: "yes", note: "For your library" },
+        CLAIM,
+        CLAIM,
+        CLAIM,
+        CLAIM,
+      ],
+    },
+    {
+      label: tStatic(
+        "contributeRoute.publish_approved_knowledge_edits_directly"
+      ),
+      cells: [NO, NO, YES, NO, NO, YES],
+    },
+    {
+      label: tStatic("contributeRoute.publish_approved_journal_edits_directly"),
+      cells: [NO, NO, NO, YES, NO, YES],
+    },
+    {
+      label: tStatic(
+        "contributeRoute.review_submissions_in_their_queue_and_language"
+      ),
+      cells: [NO, NO, NO, NO, YES, { kind: "yes", note: "Every queue" }],
+    },
+    {
+      label: tStatic("contributeRoute.review_discussion_messages_and_reports"),
+      cells: [
+        NO,
+        NO,
+        NO,
+        NO,
+        { kind: "yes", note: "With Discussions queue and language access" },
+        YES,
+      ],
+    },
+  ]
+  const COLUMNS: { title: string; sub: string; apply?: string }[] = [
+    {
+      title: tStatic("contributeRoute.contributor"),
+      sub: tStatic("contributeModule.anyone_with_an_account"),
+    },
+    {
+      title: tStatic("contributeRoute.verified_library_staff"),
+      sub: tStatic("contributeModule.confirmed_through_a_library_claim"),
+    },
+    {
+      title: tStatic("contributeRoute.knowledge_editor"),
+      sub: tStatic("contributeModule.after_five_accepted_changes"),
+      apply: "/contribute/knowledge/apply?role=wiki_editor",
+    },
+    {
+      title: tStatic("contributeRoute.journal_editor"),
+      sub: tStatic("contributeModule.after_five_accepted_changes"),
+      apply: "/contribute/knowledge/apply?role=journal_editor",
+    },
+    {
+      title: tStatic("contributeRoute.moderator"),
+      sub: tStatic("contributeModule.after_five_accepted_changes"),
+      apply: "/contribute/knowledge/apply?role=moderator",
+    },
+    {
+      title: tStatic("contributeRoute.editorial_board"),
+      sub: tStatic("contributeModule.reviews_every_queue_and_language"),
+    },
+  ]
+
+  const tExisting = useTranslations()
+
   return (
     <div className="px-6 pb-6 sm:px-8 sm:pb-8">
       <p
         className="mt-0 mb-4 max-w-[75ch] text-sm leading-relaxed"
         style={{ color: T.ink.dim }}
       >
-        Roles are granted for care and accuracy, never bought with points or a
-        plan. Every change is reviewed, whatever your role: editor roles change
-        what happens once an edit is approved. Discussion posts and edits need
-        another authorised reviewer, including posts by editors, moderators and
-        the board.
+        {tStatic(
+          "contributeRoute.roles_are_granted_for_care_and_accuracy_never_bought_with_points_or_a_plan_every_change_is_reviewed_"
+        )}
       </p>
 
       <div
@@ -142,7 +166,9 @@ export function RolesTable() {
         style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
       >
         <table className="w-full min-w-[1100px] border-collapse text-left">
-          <caption className="sr-only">Roles and what they can do</caption>
+          <caption className="sr-only">
+            {tStatic("contributeRoute.roles_and_what_they_can_do")}
+          </caption>
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.border.divider}` }}>
               <th
@@ -150,7 +176,7 @@ export function RolesTable() {
                 className="px-6 py-4 text-sm font-medium"
                 style={{ color: T.ink.dim }}
               >
-                What you can do
+                {tExisting("staffOnboarding.benefitsNav")}
               </th>
               {COLUMNS.map((column) => (
                 <th key={column.title} scope="col" className="px-6 py-4">
@@ -173,7 +199,7 @@ export function RolesTable() {
                       className="mt-1 inline-block text-sm font-semibold underline underline-offset-[3px]"
                       style={{ color: T.accent.primary }}
                     >
-                      Apply
+                      {tStatic("contributeRoute.apply")}
                     </GlobalLink>
                   ) : null}
                 </th>
@@ -209,17 +235,20 @@ export function RolesTable() {
       </div>
 
       <p className="mt-3 mb-0 text-sm" style={{ color: T.ink.dim }}>
-        Points raise how much you can send at once, never your role.
+        {tStatic(
+          "contributeRoute.points_raise_how_much_you_can_send_at_once_never_your_role"
+        )}
       </p>
       <p className="mt-1.5 mb-0 text-sm" style={{ color: T.ink.dim }}>
-        Staff verification lets you steward your library&rsquo;s record. It
-        doesn&rsquo;t mean the library endorses this project.{" "}
+        {tStatic(
+          "contributeRoute.staff_verification_lets_you_steward_your_library_rsquo_s_record_it_doesn_rsquo_t_mean_the_library_en"
+        )}{" "}
         <GlobalLink
           href="/contribute/claim"
           className="underline underline-offset-[3px]"
           style={{ color: T.accent.primary }}
         >
-          Claim your library
+          {tExisting("membershipStaff.step0Title")}
         </GlobalLink>
       </p>
     </div>

@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge, EmptyState } from "@/components/ds"
@@ -18,6 +17,7 @@ import {
 import { T } from "@/lib/design-tokens"
 import { cn } from "@/lib/styles"
 
+import { ReviewResponsePicker } from "./ReviewResponsePicker"
 import {
   decisionErrorMessage,
   humanise,
@@ -104,8 +104,12 @@ function SuggestionCard({
     patch?: Partial<OptionSuggestion>
   ) => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("optionSuggestions")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const t = useTranslations("optionSuggestions")
   const [feature, setFeature] = useState({
     summary: "",
     description: "",
@@ -256,7 +260,9 @@ function SuggestionCard({
           <strong className="font-semibold text-(--t-ink-base)">
             {s.libraries.length}
           </strong>{" "}
-          {s.libraries.length === 1 ? "library" : "libraries"}
+          {s.libraries.length === 1
+            ? tExisting("widgetPublic.library")
+            : tExisting("widgetPublic.libraries_lower")}
         </span>
       </div>
       {librariesLine(s) ? (
@@ -276,7 +282,7 @@ function SuggestionCard({
               className="text-sm font-semibold"
               style={{ color: T.ink.dim }}
             >
-              Name if accepted
+              {tStatic("moderation.name_if_accepted")}
             </label>
             <input
               id={nameId}
@@ -299,6 +305,15 @@ function SuggestionCard({
                   : "publicNote"
               )}
             </label>
+            <ReviewResponsePicker
+              context={{
+                submissionType: "option_suggestion",
+                itemName: s.name,
+              }}
+              note={note}
+              onChange={setNote}
+              disabled={busy}
+            />
             <textarea
               id={noteId}
               rows={3}
@@ -473,7 +488,7 @@ function SuggestionCard({
                   className={SECONDARY}
                   onClick={() => void decide("review")}
                 >
-                  Mark under review
+                  {tStatic("moderation.mark_under_review")}
                 </button>
               ) : null}
               {s.status === "open" || s.status === "reviewing" ? (
@@ -482,7 +497,7 @@ function SuggestionCard({
                   className={SECONDARY}
                   onClick={() => void decide("plan")}
                 >
-                  Mark planned
+                  {tStatic("moderation.mark_planned")}
                 </button>
               ) : null}
               <button
@@ -490,7 +505,7 @@ function SuggestionCard({
                 className={PRIMARY}
                 onClick={() => void decide("accept")}
               >
-                Accept
+                {tExisting("discussions.approve")}
               </button>
               <button
                 type="button"
@@ -498,7 +513,7 @@ function SuggestionCard({
                 style={{ color: T.accent.danger }}
                 onClick={() => void decide("decline")}
               >
-                Decline
+                {tStatic("moderation.decline")}
               </button>
             </>
           )}
@@ -509,7 +524,9 @@ function SuggestionCard({
                 className="text-sm font-semibold"
                 style={{ color: T.accent.danger }}
               >
-                Remove this suggestion? This can’t be undone.
+                {tStatic(
+                  "moderation.remove_this_suggestion_this_can_t_be_undone"
+                )}
               </span>
               <button
                 type="button"
@@ -517,7 +534,7 @@ function SuggestionCard({
                 style={{ color: T.accent.danger }}
                 onClick={() => void decide("remove")}
               >
-                Yes, remove
+                {tStatic("moderation.yes_remove")}
               </button>
               <button
                 type="button"
@@ -558,7 +575,9 @@ export function OptionSuggestionsBoard({
   readonly round?: SuggestionReviewRound | null
   readonly initial: OptionSuggestion[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [items, setItems] = useState(() =>
     initial.filter((s) => UNDECIDED_STATUSES.has(s.status))
@@ -593,7 +612,7 @@ export function OptionSuggestionsBoard({
           href="#suggestion-review-schedule"
           className="inline-flex min-h-[44px] items-center gap-2 self-start text-base font-semibold text-(--t-accent-primary) underline underline-offset-4 lg:hidden"
         >
-          Review schedule
+          {tStatic("moderation.review_schedule")}
           <Icon aria-hidden icon="mdi:arrow-down" width={17} />
         </a>
         <div
@@ -669,7 +688,7 @@ export function OptionSuggestionsBoard({
                     size="pill"
                     onClick={() => setFilter("")}
                   >
-                    Show all suggestions
+                    {tStatic("moderation.show_all_suggestions")}
                   </Button>
                 ) : undefined
               }
@@ -690,7 +709,7 @@ export function OptionSuggestionsBoard({
       </div>
       <aside
         id="suggestion-review-schedule"
-        aria-label="Review schedule"
+        aria-label={tStatic("moderation.review_schedule")}
         className="min-w-0 scroll-mt-(--sticky-content-top) lg:sticky lg:top-(--sticky-content-top) lg:col-start-2 lg:row-start-1 lg:max-h-(--sticky-content-max-height) lg:overflow-y-auto lg:overscroll-contain"
       >
         <SuggestionRoundControls initial={round} />

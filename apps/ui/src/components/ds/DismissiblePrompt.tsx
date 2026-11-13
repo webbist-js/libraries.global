@@ -42,7 +42,7 @@ export function DismissiblePrompt({
   readonly className?: string
   readonly children: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("sharedControls.prompt")
 
   const [hidden, setHidden] = useState<"session" | "settings" | null>(null)
   const statusRef = useRef<HTMLParagraphElement>(null)
@@ -82,21 +82,19 @@ export function DismissiblePrompt({
         className="m-0 text-sm"
         style={{ color: T.ink.dim }}
       >
-        {hidden === "settings" ? (
-          <>
-            Hidden. You can turn it back on in{" "}
-            <GlobalLink
-              href="/profile/settings#notifications"
-              className="font-semibold underline underline-offset-2"
-              style={{ color: T.accent.primary }}
-            >
-              {tUi("settings")}{" "}
-            </GlobalLink>
-            .
-          </>
-        ) : (
-          "Hidden until you close your browser."
-        )}
+        {hidden === "settings"
+          ? t.rich("settings", {
+              settings: (chunks) => (
+                <GlobalLink
+                  href="/profile/settings#notifications"
+                  className="font-semibold underline underline-offset-2"
+                  style={{ color: T.accent.primary }}
+                >
+                  {chunks}
+                </GlobalLink>
+              ),
+            })
+          : t("session")}
       </p>
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { type SectionTab, SectionTabs } from "@/components/ds"
 
@@ -9,44 +9,38 @@ export type CommunityTabCounts = Partial<
   Record<"noticeboard" | "suggestions", number>
 >
 
-const COMMUNITY_TABS: readonly SectionTab[] = [
+const COMMUNITY_TABS = [
   {
     id: "noticeboard",
     href: "/community",
-    label: "Noticeboard",
     icon: "mdi:pin-outline",
   },
   {
     id: "leaderboard",
     href: "/community/leaderboard",
-    label: "Leaderboard",
     icon: "mdi:trophy-outline",
   },
   {
     id: "suggestions",
     href: "/community/suggestions",
-    label: "Suggestions",
     icon: "mdi:thumb-up-outline",
   },
   {
     id: "discussions",
     href: "/community/discussions",
-    label: "Discussions",
     icon: "mdi:forum-outline",
   },
   {
     id: "roadmap",
     href: "/community/roadmap",
-    label: "Roadmap",
     icon: "mdi:map-marker-path",
   },
   {
     id: "supporters",
     href: "/community/supporters",
-    label: "Supporters",
     icon: "mdi:heart-outline",
   },
-]
+] as const
 
 /** Sub-routes that belong under a tab: drive pages sit under the Noticeboard. */
 const SEGMENT_TO_TAB: Record<string, string> = {
@@ -69,11 +63,18 @@ export function activeCommunityTab(pathname: string): string | null {
 }
 
 /** The tabs with their counts: open drives, open suggestions. Zero shows none. */
-export function communityTabs(counts?: CommunityTabCounts): SectionTab[] {
+export function communityTabs(
+  t: ReturnType<typeof useTranslations<"communityTabs">>,
+  counts?: CommunityTabCounts
+): SectionTab[] {
   return COMMUNITY_TABS.map((tab) => {
     const count = counts?.[tab.id as keyof CommunityTabCounts]
 
-    return count && count > 0 ? { ...tab, count } : tab
+    return {
+      ...tab,
+      label: t(tab.id),
+      ...(count && count > 0 ? { count } : {}),
+    }
   })
 }
 
@@ -83,8 +84,9 @@ export function CommunityNavBar({
 }: {
   readonly counts?: CommunityTabCounts
 }) {
-  const tUi = useUiTranslations("ui")
-  const tDiscussions = useUiTranslations("discussions")
+  const tTabs = useTranslations("communityTabs")
+  const tUi = useTranslations("ui")
+  const tDiscussions = useTranslations("discussions")
 
   const pathname = usePathname() ?? ""
 
@@ -92,7 +94,7 @@ export function CommunityNavBar({
     <SectionTabs
       activeId={activeCommunityTab(pathname)}
       label={tUi("community")}
-      tabs={communityTabs(counts).map((tab) =>
+      tabs={communityTabs(tTabs, counts).map((tab) =>
         tab.id === "discussions"
           ? { ...tab, label: tDiscussions("threads") }
           : tab

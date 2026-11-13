@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -62,7 +61,9 @@ function CountrySlugCombobox({
    */
   labelledBy: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -177,7 +178,7 @@ function CountrySlugCombobox({
               style={optionStyle(!value)}
               className="hover:bg-(--t-bg-surface)"
             >
-              All countries
+              {tExisting("atlasNetwork.allCountries")}
             </button>
             {filtered.length === 0 && (
               <div
@@ -228,6 +229,8 @@ function SelectedLibrary({
   hit: LibraryHit
   onChange: () => void
 }) {
+  const tExisting = useTranslations()
+
   const place = placeOf(hit)
 
   return (
@@ -268,7 +271,8 @@ function SelectedLibrary({
         className="shrink-0 cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold underline underline-offset-[3px]"
         style={{ color: T.accent.primary }}
       >
-        Change<span className="sr-only"> library</span>
+        {tExisting("atlasNetwork.changeService")}
+        <span className="sr-only"> {tExisting("widgetPublic.library")}</span>
       </button>
     </div>
   )
@@ -287,7 +291,11 @@ export function LibraryClaimSearch({
     result: ClaimResult & { libraryName: string; entityRef: string }
   ) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [continentSlug, setContinentSlug] = useState("")
   const [countrySlug, setCountrySlug] = useState("")
@@ -372,7 +380,7 @@ export function LibraryClaimSearch({
       })
       const json = (await res.json()) as ClaimResult & { error?: string }
       if (!res.ok) {
-        toast.error(json.error ?? "Claim failed")
+        toast.error(json.error ?? tStatic("profileIndex.claim_failed"))
 
         return
       }
@@ -383,7 +391,7 @@ export function LibraryClaimSearch({
         entityRef: selected.entityRef ?? String(selected.id),
       })
     } catch {
-      toast.error("Claim failed")
+      toast.error(tStatic("profileIndex.claim_failed"))
     } finally {
       setClaiming(false)
     }
@@ -404,7 +412,7 @@ export function LibraryClaimSearch({
               handleContinentChange(selectedValue)
             }
             options={[
-              { value: "", label: "All continents" },
+              { value: "", label: tStatic("profileIndex.all_continents") },
               ...CONTINENTS.map((c) => ({
                 value: String(c.slug),
                 label: String(c.name),
@@ -447,13 +455,15 @@ export function LibraryClaimSearch({
 
       {searching ? (
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-          Searching…
+          {tExisting("siteSearch.loading")}
         </p>
       ) : null}
 
       {!searching && hits.length === 0 && query.trim() ? (
         <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-          No libraries found. Try a different name or broaden your filters.
+          {tStatic(
+            "profileIndex.no_libraries_found_try_a_different_name_or_broaden_your_filters"
+          )}
         </p>
       ) : null}
 
@@ -501,7 +511,7 @@ export function LibraryClaimSearch({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor={ids.role} style={fieldLabel}>
-                Your role
+                {tExisting("teamInvitation.yourRole")}
               </label>
               <input
                 id={ids.role}
@@ -509,13 +519,14 @@ export function LibraryClaimSearch({
                 type="text"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                placeholder="e.g. Reference Librarian"
+                placeholder={tStatic("profileIndex.e_g_reference_librarian")}
               />
             </div>
 
             <div>
               <label htmlFor={ids.department} style={fieldLabel}>
-                Department<Tag>{tUi("optional_59be71")}</Tag>
+                {tStatic("profileIndex.department")}
+                <Tag>{tUi("optional_59be71")}</Tag>
               </label>
               <input
                 id={ids.department}
@@ -523,7 +534,7 @@ export function LibraryClaimSearch({
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Rare Books"
+                placeholder={tStatic("profileIndex.e_g_rare_books")}
               />
             </div>
           </div>

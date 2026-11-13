@@ -1,5 +1,6 @@
 import { Globe } from "lucide-react"
 import Image from "next/image"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import Emphasis from "@/components/home/Emphasis"
@@ -18,6 +19,8 @@ export function AtlasSection({
     alternativeText?: string | null
   } | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const imageUrl = formatStrapiMediaUrl(image?.url)
 
   return (
@@ -29,16 +32,16 @@ export function AtlasSection({
         <div>
           <p className="home-kicker home-atlas-eyebrow">
             <Globe size={14} strokeWidth={1.8} aria-hidden="true" />
-            The Atlas
+            {tStatic("home.atlas")}
           </p>
           <h2 id="atlas-title" className="type-display-band">
             <Emphasis text={band.title ?? ""} />
           </h2>
           <p className="home-section-copy">{band.text}</p>
           <ul className="home-atlas-labels">
-            <li>UK travel-time analysis</li>
-            <li>Reach · free for contributors</li>
-            <li>Library map · free</li>
+            <li>{tStatic("home.travelAnalysis")}</li>
+            <li>{tStatic("home.reachFree")}</li>
+            <li>{tStatic("home.mapFree")}</li>
           </ul>
           <div className="home-inline-links">
             <GlobalLink
@@ -62,7 +65,7 @@ export function AtlasSection({
             {imageUrl ? (
               <Image
                 src={imageUrl}
-                alt={image?.alternativeText ?? "Library access in the Atlas"}
+                alt={image?.alternativeText ?? tStatic("home.atlasAlt")}
                 fill
                 sizes="(min-width: 1100px) 600px, 90vw"
               />
@@ -77,8 +80,8 @@ export function AtlasSection({
               className="text-inherit no-underline after:absolute after:inset-0 focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)"
             >
               {imageUrl
-                ? "Explore library access in the Atlas"
-                : "Illustrative town · a fifteen-minute walking catchment"}
+                ? tStatic("home.exploreAccess")
+                : tStatic("home.illustrativeTown")}
               <span className="sr-only"> · {band.primaryLabel}</span>
             </GlobalLink>
           </figcaption>

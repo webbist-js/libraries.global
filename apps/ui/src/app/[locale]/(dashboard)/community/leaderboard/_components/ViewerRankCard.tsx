@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
 
@@ -19,6 +21,8 @@ export function ViewerRankCard({
   /** The period as it reads in a sentence: "this month", "ever". */
   readonly periodPhrase: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div
       className="flex flex-wrap items-center gap-[14px] rounded-[20px] px-[18px] py-[14px]"
@@ -40,9 +44,11 @@ export function ViewerRankCard({
       >
         {rank == null ? (
           <>
-            <strong>You’re not ranked yet.</strong>{" "}
+            <strong>{tStatic("communityRoute.you_re_not_ranked_yet")}</strong>{" "}
             <span style={{ color: T.ink.dim }}>
-              Rankings start with your first approved change.
+              {tStatic(
+                "communityRoute.rankings_start_with_your_first_approved_change"
+              )}
             </span>
           </>
         ) : (
@@ -53,7 +59,7 @@ export function ViewerRankCard({
         href="/contribute/index"
         className="inline-flex min-h-[44px] items-center rounded-full bg-(--t-action-primary) px-[18px] text-base font-semibold text-white no-underline hover:bg-(--t-action-primary-hover)"
       >
-        Make a change
+        {tStatic("communityRoute.make_a_change")}
       </GlobalLink>
     </div>
   )

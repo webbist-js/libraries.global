@@ -2,6 +2,7 @@ import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { redirect } from "@/lib/navigation"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -11,7 +12,7 @@ import { requireModerator } from "../_components/moderator"
 export const metadata = privateMetadata("Discussion moderation")
 
 /** Existing bookmarks retain their access check and open the shared workspace. */
-export default async function DiscussionModerationPage({
+async function DiscussionModerationPage({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -37,3 +38,8 @@ export default async function DiscussionModerationPage({
     locale: isSupportedLocale(locale) ? locale : DEFAULT_LOCALE,
   })
 }
+
+export default withMessages(
+  DiscussionModerationPage,
+  "[locale]/(dashboard)/moderation/discussions/page"
+)

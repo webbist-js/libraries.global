@@ -1,6 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { NetworkSummary } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -22,6 +24,8 @@ export function TeamNetworkChoice({
   readonly initialNetwork?: string
   readonly onChoose: (choice: TeamNetworkSelection) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [choice, setChoice] = useState<TeamNetworkSelection>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("")
@@ -59,14 +63,17 @@ export function TeamNetworkChoice({
 
   return (
     <div className="mx-auto grid max-w-5xl items-start gap-7 lg:grid-cols-[minmax(0,1fr)_260px]">
-      <StaffPanel title="Start with your library service" compact>
+      <StaffPanel
+        title={tStatic("network.start_with_your_library_service")}
+        compact
+      >
         <p className="mb-5 text-xs font-semibold tracking-wide text-(--t-accent-primary) uppercase">
-          Step 1 of 2 · Your libraries
+          {tStatic("network.step_1_of_2_your_libraries")}
         </p>
         <p className="mb-5 text-(--t-ink-dim)">
-          Choose your institution to start with its published libraries and use
-          it as the default source for widgets. This choice does not verify
-          staff authority.
+          {tStatic(
+            "network.choose_your_institution_to_start_with_its_published_libraries_and_use_it_as_the_default_source_for_w"
+          )}
         </p>
         <NetworkPicker
           disabled={busy}
@@ -76,7 +83,7 @@ export function TeamNetworkChoice({
         />
         {choice ? (
           <div className="mt-5 space-y-3 rounded-2xl border border-(--t-accent-primary)/20 bg-(--t-accent-chip)/40 p-5">
-            <Badge color="aurora" label="Selected service" />
+            <Badge color="aurora" label={tStatic("network.selected_service")} />
             <p className="font-semibold">{choice.network.name}</p>
             <p className="text-sm text-(--t-ink-dim)">
               <strong className="text-(--t-ink-base)">
@@ -91,13 +98,13 @@ export function TeamNetworkChoice({
               disabled={busy}
               onClick={() => onChoose(choice)}
             >
-              Continue with this service
+              {tStatic("network.continue_with_this_service")}
             </Button>
           </div>
         ) : null}
         {busy ? (
           <p role="status" className="mt-4 text-sm text-(--t-ink-dim)">
-            Loading service libraries…
+            {tStatic("network.loading_service_libraries")}
           </p>
         ) : null}
         {error ? (
@@ -116,13 +123,13 @@ export function TeamNetworkChoice({
             disabled={busy}
             onClick={() => onChoose(null)}
           >
-            Choose libraries myself
+            {tStatic("network.choose_libraries_myself")}
           </Button>
           <a
             className={STAFF_LINK}
             href={`mailto:${CONTACT_EMAIL}?subject=Missing%20library%20service`}
           >
-            Can’t find your service?
+            {tStatic("network.can_t_find_your_service")}
           </a>
         </div>
       </StaffPanel>
@@ -130,30 +137,37 @@ export function TeamNetworkChoice({
         <span className="flex size-11 items-center justify-center rounded-full bg-(--t-accent-chip) text-(--t-accent-primary)">
           <Icon aria-hidden icon="mdi:account-group-outline" width={23} />
         </span>
-        <h2 className="type-panel-title">A shared workspace</h2>
+        <h2 className="type-panel-title">
+          {tStatic("network.a_shared_workspace")}
+        </h2>
         <ol className="list-decimal space-y-5 pl-5 text-base text-(--t-ink-dim)">
           <li>
             <strong className="block text-(--t-ink-base)">
-              Connect your libraries
+              {tStatic("common.connectLibraries")}
             </strong>
-            Start with a service or choose records individually.
+            {tStatic(
+              "network.start_with_a_service_or_choose_records_individually"
+            )}
           </li>
           <li>
             <strong className="block text-(--t-ink-base)">
-              Set up your Team
+              {tStatic("network.set_up_your_team")}
             </strong>
-            Name your Team. Workspaces are free.
+            {tStatic("network.name_your_team_workspaces_are_free")}
           </li>
           <li>
             <strong className="block text-(--t-ink-base)">
-              Invite & create
+              {tStatic("network.invite_create")}
             </strong>
-            Bring colleagues together and publish your first widget.
+            {tStatic(
+              "network.bring_colleagues_together_and_publish_your_first_widget"
+            )}
           </li>
         </ol>
         <p className="border-t border-(--t-border-line) pt-5 text-xs leading-relaxed text-(--t-ink-dim)">
-          Library management authority is reviewed separately. New service
-          additions are reviewed as a batch.
+          {tStatic(
+            "network.library_management_authority_is_reviewed_separately_new_service_additions_are_reviewed_as_a_batch"
+          )}
         </p>
       </aside>
     </div>

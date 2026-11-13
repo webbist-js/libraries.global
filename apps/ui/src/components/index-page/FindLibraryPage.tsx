@@ -2,7 +2,7 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   type ReactNode,
   useCallback,
@@ -75,8 +75,12 @@ export function FindLibraryPage({
   /** Open drives, for "There's a drive for this search". */
   drives?: readonly FindDrive[]
 }) {
-  const tUi = useUiTranslations("ui")
-  const workspace = useUiTranslations("communityDashboard")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
+  const workspace = useTranslations("communityDashboard")
 
   const locale = useLocale()
   const router = useRouter()
@@ -331,7 +335,7 @@ export function FindLibraryPage({
         eyebrow="Library index"
         eyebrowIcon="mdi:map-search-outline"
         lead={`Search ${statsTotal.toLocaleString("en-GB")} published records by name, place, type and facilities. The index grows as contributors document more libraries.`}
-        title="Find a library, *anywhere.*"
+        title={tStatic("profileIndex.find_a_library_anywhere")}
       >
         <LibrarySearchBox
           id="find-q"
@@ -366,7 +370,7 @@ export function FindLibraryPage({
           className="mt-4 inline-block font-semibold underline underline-offset-4"
           href="/library-networks"
         >
-          Explore library services and networks
+          {tStatic("profileIndex.explore_library_services_and_networks")}
         </Link>
       </PageHero>
 
@@ -528,10 +532,11 @@ export function FindLibraryPage({
                   color: T.ink.base,
                 }}
               >
-                ← Previous
+                {tStatic("profileIndex.previous")}
               </button>
               <span className="text-base" style={{ color: T.ink.dim }}>
-                Page {page + 1} of {pageCount}
+                {tStatic("common.page")} {page + 1}{" "}
+                {tExisting("widgetPublic.of")} {pageCount}
               </span>
               <button
                 type="button"
@@ -544,7 +549,7 @@ export function FindLibraryPage({
                   color: T.ink.base,
                 }}
               >
-                Next →
+                {tStatic("profileIndex.next")}
               </button>
             </nav>
           ) : null}
@@ -554,9 +559,9 @@ export function FindLibraryPage({
               className="mt-3 text-center text-sm"
               style={{ color: T.ink.dim }}
             >
-              Showing the first {FIND_MAX_REACHABLE.toLocaleString("en-GB")} of{" "}
-              {total.toLocaleString("en-GB")}. Add a search term or a filter to
-              reach the rest.
+              Showing the first {FIND_MAX_REACHABLE.toLocaleString("en-GB")}{" "}
+              {tExisting("widgetPublic.of")} {total.toLocaleString("en-GB")}.
+              Add a search term or a filter to reach the rest.
             </p>
           ) : null}
         </section>

@@ -1,10 +1,10 @@
 "use client"
-
 import {
   parseWidgetOrigins,
   type TeamWidget,
   type WidgetResolved,
 } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -17,11 +17,7 @@ import {
 } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
 import { WidgetError, WidgetField } from "@/components/widgets/WidgetControls"
-import {
-  widgetEmbedCode,
-  widgetTypeLabels,
-  type WidgetWorkspace,
-} from "@/lib/widgets/client"
+import { widgetEmbedCode, type WidgetWorkspace } from "@/lib/widgets/client"
 
 export function OriginEditor({
   initial,
@@ -32,6 +28,8 @@ export function OriginEditor({
   readonly onChange: (values: string[]) => void
   readonly disabled: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [origins, setOrigins] = useState(initial),
     [input, setInput] = useState(""),
     [error, setError] = useState<string | null>(null)
@@ -78,8 +76,10 @@ export function OriginEditor({
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1">
             <WidgetField
-              label="Add an allowed website"
-              hint="Use an exact HTTPS origin. Add www and other subdomains separately."
+              label={tStatic("widget.add_an_allowed_website")}
+              hint={tStatic(
+                "widget.use_an_exact_https_origin_add_www_and_other_subdomains_separately"
+              )}
             >
               <input
                 className={STAFF_FIELD}
@@ -101,7 +101,7 @@ export function OriginEditor({
             disabled={!input.trim()}
             onClick={add}
           >
-            Add website
+            {tStatic("widget.add_website")}
           </Button>
         </div>
       ) : null}
@@ -116,6 +116,11 @@ export function WidgetEmbed({
   readonly widget: TeamWidget
   readonly siteUrl: string
 }) {
+  const tSettings = useTranslations("widgetSettings")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [copied, setCopied] = useState(false),
     [error, setError] = useState<string | null>(null),
     code = widgetEmbedCode(
@@ -129,19 +134,22 @@ export function WidgetEmbed({
       setCopied(true)
       setError(null)
     } catch {
-      setError("Copy isn't available here. Select and copy the code below.")
+      setError(tSettings("copyUnavailable"))
     }
   }
 
   return (
     <div className="space-y-5">
-      <StaffPanel title="Embed code">
+      <StaffPanel title={tStatic("widget.embed_code")}>
         <p className="mb-4 text-sm text-(--t-ink-dim)">
-          The address stays the same across publications. Paste this into an
-          HTML or Embed block on your website.
+          {tStatic(
+            "widget.the_address_stays_the_same_across_publications_paste_this_into_an_html_or_embed_block_on_your_website"
+          )}
         </p>
         <label className="block">
-          <span className="sr-only">Widget iframe code</span>
+          <span className="sr-only">
+            {tStatic("widget.widget_iframe_code")}
+          </span>
           <textarea
             readOnly
             className={`${STAFF_FIELD} min-h-52 font-mono text-sm`}
@@ -151,7 +159,7 @@ export function WidgetEmbed({
         </label>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button variant="primary" size="pill" onClick={copy}>
-            {copied ? "Copied" : "Copy embed code"}
+            {copied ? tExisting("ui.copied") : "Copy embed code"}
           </Button>
           <span role="status" className="text-sm">
             {copied ? "Embed code copied." : ""}
@@ -162,50 +170,57 @@ export function WidgetEmbed({
             target="_blank"
             rel="noopener noreferrer"
           >
-            Open hosted view
+            {tStatic("widget.open_hosted_view")}
           </a>
         </div>
         <WidgetError error={error} />
       </StaffPanel>
-      <StaffPanel title="Installing it" compact>
+      <StaffPanel title={tStatic("widget.installing_it")} compact>
         <ol className="list-decimal space-y-3 pl-5 text-sm">
           <li>
-            Add an HTML or Embed block, paste the code and publish your website.
+            {tStatic(
+              "widget.add_an_html_or_embed_block_paste_the_code_and_publish_your_website"
+            )}
           </li>
           <li>
-            Check the actual host origin, including any www prefix, is allowed
-            above.
+            {tStatic(
+              "widget.check_the_actual_host_origin_including_any_www_prefix_is_allowed_above"
+            )}
           </li>
           <li>
-            The iframe has a fixed fallback height. The optional resize script
-            adjusts it to the content.
+            {tStatic(
+              "widget.the_iframe_has_a_fixed_fallback_height_the_optional_resize_script_adjusts_it_to_the_content"
+            )}
           </li>
           <li>
-            If your site uses Content Security Policy, allow this site&apos;s
-            origin in frame-src and, if using the script, script-src.
+            {tStatic(
+              "widget.if_your_site_uses_content_security_policy_allow_this_site_apos_s_origin_in_frame_src_and_if_using_the_script_s"
+            )}
           </li>
           <li>
-            The browser blocks unauthorised frames before they can display a
-            notice. Keep the fallback link under the iframe so visitors can open
-            the hosted view.
+            {tStatic(
+              "widget.the_browser_blocks_unauthorised_frames_before_they_can_display_a_notice_keep_the_fallback_link_under_the_ifram"
+            )}
           </li>
         </ol>
       </StaffPanel>
     </div>
   )
 }
-function libraryCount(count: number) {
-  return `${count} ${count === 1 ? "library" : "libraries"}`
-}
-
-function recordChecks(widget: TeamWidget, resolved: WidgetResolved | null) {
+function recordChecks(
+  widget: TeamWidget,
+  resolved: WidgetResolved | null,
+  tSettings: ReturnType<typeof useTranslations<"widgetSettings">>
+) {
   return [
     {
       applies: widget.type === "finder",
       label:
         widget.config.mapMode === "map" && !resolved?.diagnostics.mapped
-          ? "A map-only finder needs a mapped library. Choose map and list, or list only, to include libraries without coordinates."
-          : `${libraryCount(resolved?.diagnostics.missingCoordinates ?? 0)} missing coordinates — retained in lists and counts`,
+          ? tSettings("mapRequired")
+          : tSettings("missingCoordinatesCount", {
+              count: resolved?.diagnostics.missingCoordinates ?? 0,
+            }),
       tone: resolved?.diagnostics.missingCoordinates ? "warn" : "ok",
       blocks:
         widget.type === "finder" &&
@@ -216,7 +231,9 @@ function recordChecks(widget: TeamWidget, resolved: WidgetResolved | null) {
       applies:
         (widget.type === "finder" || widget.type === "directory") &&
         widget.config.showHours,
-      label: `${libraryCount(resolved?.diagnostics.missingHours ?? 0)} without recorded hours — shown as not recorded`,
+      label: tSettings("missingHoursCount", {
+        count: resolved?.diagnostics.missingHours ?? 0,
+      }),
       tone: resolved?.diagnostics.missingHours ? "warn" : "ok",
       blocks: false,
     },
@@ -226,45 +243,46 @@ function publicationChecks(
   widget: TeamWidget,
   resolved: WidgetResolved | null,
   resolving: boolean,
-  active: boolean
+  active: boolean,
+  tSettings: ReturnType<typeof useTranslations<"widgetSettings">>
 ) {
   const checks = [
     {
       label: resolving
-        ? "Checking published library data…"
+        ? tSettings("checking")
         : resolved
-          ? `${resolved.diagnostics.selected} published libraries resolved`
-          : "Library data is unavailable",
+          ? tSettings("resolved", { count: resolved.diagnostics.selected })
+          : tSettings("unavailable"),
       tone: resolved && !resolving ? "ok" : "warn",
       blocks: !resolved || resolving,
     },
     {
       label: resolved?.diagnostics.selected
-        ? "The selection contains public records"
-        : "Choose at least one published library",
+        ? tSettings("publicRecords")
+        : tSettings("chooseLibrary"),
       tone: resolved?.diagnostics.selected ? "ok" : "warn",
       blocks: !resolved?.diagnostics.selected,
     },
     {
       label: resolved?.diagnostics.licenceIssues.length
-        ? "Some source redistribution permissions need review"
-        : "Data attribution and source credits are included",
+        ? tSettings("licenceReview")
+        : tSettings("creditsIncluded"),
       tone: resolved?.diagnostics.licenceIssues.length ? "warn" : "ok",
       blocks: Boolean(resolved?.diagnostics.licenceIssues.length),
     },
-    ...recordChecks(widget, resolved),
+    ...recordChecks(widget, resolved, tSettings),
     {
       label:
         widget.selection?.spec.membership === "follow_sources"
-          ? "Follows source membership. Public libraries can appear without republishing; staff authority remains separately reviewed."
-          : "Fixed library identities, with current published facts.",
+          ? tSettings("followsSources")
+          : tSettings("fixedLibraries"),
       tone: "info",
       blocks: false,
     },
     {
       label: active
-        ? "Your workspace is open"
-        : "Publishing is paused while your workspace is closed",
+        ? tSettings("workspaceOpen")
+        : tSettings("publishingPaused"),
       tone: active ? "ok" : "warn",
       blocks: !active,
     },
@@ -273,9 +291,13 @@ function publicationChecks(
   return checks
 }
 
-function formatSetting(value: unknown) {
-  if (typeof value === "boolean") return value ? "On" : "Off"
-  if (value === "") return "Not set"
+function formatSetting(
+  value: unknown,
+  tSettings: ReturnType<typeof useTranslations<"widgetSettings">>
+) {
+  if (typeof value === "boolean")
+    return value ? tSettings("on") : tSettings("off")
+  if (value === "") return tSettings("notSet")
 
   return String(value).replace(/^./, (letter) => letter.toUpperCase())
 }
@@ -300,9 +322,20 @@ export function WidgetPublish({
   readonly busy: boolean
   readonly siteUrl: string
 }) {
+  const tSettings = useTranslations("widgetSettings")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [origins, setOrigins] = useState(widget.origins),
     team = workspace.team
-  const checks = publicationChecks(widget, resolved, resolving, team.active)
+  const checks = publicationChecks(
+    widget,
+    resolved,
+    resolving,
+    team.active,
+    tSettings
+  )
   const live = widget.release
   const differences = live
     ? [
@@ -321,7 +354,7 @@ export function WidgetPublish({
                   showAccess: "Accessibility information",
                   showLinks: "Links to library records",
                   showPublisher: "Publishing organisation",
-                  description: "Accessible description",
+                  description: tStatic("widget.accessible_description"),
                   mapMode: "Map presentation",
                   chartMode: "Chart values",
                   locale: "Content language",
@@ -336,24 +369,28 @@ export function WidgetPublish({
               k
                 .replaceAll(/([A-Z])/g, " $1")
                 .replace(/^./, (letter) => letter.toUpperCase()),
-            now: formatSetting(live.config[k as keyof typeof live.config]),
+            now: formatSetting(
+              live.config[k as keyof typeof live.config],
+              tSettings
+            ),
             suggested: formatSetting(
-              widget.config[k as keyof typeof widget.config]
+              widget.config[k as keyof typeof widget.config],
+              tSettings
             ),
           })),
         ...(live.type !== widget.type
           ? [
               {
-                label: "Widget type",
-                now: widgetTypeLabels[live.type],
-                suggested: widgetTypeLabels[widget.type],
+                label: tStatic("widget.widget_type"),
+                now: tSettings(live.type),
+                suggested: tSettings(widget.type),
               },
             ]
           : []),
         ...(JSON.stringify(live.spec) !== JSON.stringify(widget.selection?.spec)
           ? [
               {
-                label: "Library selection",
+                label: tStatic("common.librarySelection"),
                 now: `${live.selectionName} · v${live.selectionVersion}`,
                 suggested: `${widget.selection?.name} · v${widget.selection?.version}`,
               },
@@ -366,7 +403,7 @@ export function WidgetPublish({
   return (
     <div className="space-y-6">
       <div className="grid items-start gap-6 lg:grid-cols-2">
-        <StaffPanel title="Publication checks">
+        <StaffPanel title={tStatic("widget.publication_checks")}>
           <ul className="m-0 list-none space-y-3 p-0">
             {checks.map((c) => (
               <li key={c.label} className="flex items-start gap-3 text-sm">
@@ -380,12 +417,12 @@ export function WidgetPublish({
                   }
                   label={
                     c.blocks
-                      ? "Blocking"
+                      ? tSettings("blocking")
                       : c.tone === "ok"
-                        ? "Pass"
+                        ? tSettings("pass")
                         : c.tone === "info"
-                          ? "Info"
-                          : "Warning"
+                          ? tSettings("info")
+                          : tSettings("warning")
                   }
                   size="xs"
                 />
@@ -394,39 +431,43 @@ export function WidgetPublish({
             ))}
           </ul>
         </StaffPanel>
-        <StaffPanel title="What changes">
+        <StaffPanel title={tStatic("widget.what_changes")}>
           {!live ? (
             <p>
-              This is the first publication. It will create a stable public
-              embed address.
+              {tStatic(
+                "widget.this_is_the_first_publication_it_will_create_a_stable_public_embed_address"
+              )}
             </p>
           ) : differences.length ? (
             <DiffCard
-              title={`Live v${live.version} → next publication`}
+              title={tSettings("compareTitle", { version: live.version })}
               rows={differences}
-              byline="Compare the current publication with the saved draft"
+              byline={tSettings("compareByline")}
               actions={null}
             />
           ) : (
             <p>
-              No configuration changes. Publishing refreshes the release and
-              resumes a paused widget.
+              {tStatic(
+                "widget.no_configuration_changes_publishing_refreshes_the_release_and_resumes_a_paused_widget"
+              )}
             </p>
           )}
         </StaffPanel>
       </div>
-      <StaffPanel title="Allowed websites">
+      <StaffPanel title={tStatic("widget.allowed_websites")}>
         <p className="mb-4 text-sm text-(--t-ink-dim)">
-          The hosted view can be opened directly. Framing is limited to these
-          exact origins; removing an origin takes effect on the next load.
+          {tStatic(
+            "widget.the_hosted_view_can_be_opened_directly_framing_is_limited_to_these_exact_origins_removing_an_origin_takes_effe"
+          )}
         </p>
         {!origins.length ? (
           <p
             role="status"
             className="mb-4 rounded-xl bg-(--t-bg-surface) p-3 text-sm"
           >
-            Add the website where this widget will be embedded to enable
-            publication.
+            {tStatic(
+              "widget.add_the_website_where_this_widget_will_be_embedded_to_enable_publication"
+            )}
           </p>
         ) : null}
         <OriginEditor
@@ -437,13 +478,14 @@ export function WidgetPublish({
       </StaffPanel>
       {!team.organiser ? (
         <Notice
-          title="Ready for organiser review"
+          title={tStatic("widget.ready_for_organiser_review")}
           tone="info"
           icon="mdi:account-check-outline"
         >
           <p>
-            Members can edit drafts. An organiser publishes and controls allowed
-            websites.
+            {tStatic(
+              "widget.members_can_edit_drafts_an_organiser_publishes_and_controls_allowed_websites"
+            )}
           </p>
           <Button
             variant="primary"
@@ -453,14 +495,15 @@ export function WidgetPublish({
           >
             {widget.reviewRequested
               ? "Review requested"
-              : "Ready for organiser review"}
+              : tStatic("widget.ready_for_organiser_review")}
           </Button>
         </Notice>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm">
-            Publishing creates v{widget.publishedVersion + 1} at the same
-            address. Earlier configurations remain in history.
+            {tStatic("widget.publicationNote", {
+              version: widget.publishedVersion + 1,
+            })}
           </p>
           <Button
             variant="primary"
@@ -469,8 +512,10 @@ export function WidgetPublish({
             onClick={() => onAction("publish", { origins })}
           >
             {busy
-              ? "Publishing…"
-              : `Publish version ${widget.publishedVersion + 1}`}
+              ? tExisting("sharedControls.publish.busy")
+              : tStatic("widget.publishVersion", {
+                  version: widget.publishedVersion + 1,
+                })}
           </Button>
         </div>
       )}

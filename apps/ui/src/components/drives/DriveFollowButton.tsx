@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { useFollowTarget } from "@/hooks/useFollowTarget"
 import { authClient } from "@/lib/auth-client"
@@ -28,11 +27,13 @@ export function DriveFollowButton({
   /** The plain title, for the button's description. */
   readonly driveTitle: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { data: session, isPending } = authClient.useSession()
   const signedIn = !!session?.user
-  const tFollow = useUiTranslations("publishingFollow")
+  const tFollow = useTranslations("publishingFollow")
   const { following, saving, error, retry, toggle } = useFollowTarget(
     session?.user?.id,
     "driveDocumentId",
@@ -53,7 +54,7 @@ export function DriveFollowButton({
           icon="mdi:bell-outline"
           width={17}
         />
-        Follow drive
+        {tStatic("drive.follow_drive")}
       </Link>
     )
   }
@@ -70,7 +71,7 @@ export function DriveFollowButton({
       }
     : {
         title: `Follow “${driveTitle}” from your profile`,
-        label: "Follow drive",
+        label: tStatic("drive.follow_drive"),
         icon: "mdi:bell-outline",
         className:
           "border-(--t-border-hi) bg-(--t-bg-deep) hover:border-(--t-accent-primary)",

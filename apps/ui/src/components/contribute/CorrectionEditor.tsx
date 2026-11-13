@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { checkText } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useMemo, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -76,7 +76,9 @@ function SuggestOption({
   readonly onSuggest: (names: string[]) => void
   readonly onNames: (names: Record<string, string>) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const [options, setOptions] = useState<OptionRef[]>([])
@@ -142,7 +144,7 @@ function SuggestOption({
         htmlFor={id}
         style={{ color: T.ink.base }}
       >
-        Not in the list?{" "}
+        {tStatic("contribute.not_in_the_list")}{" "}
         <span className="font-normal" style={{ color: T.ink.dim }}>
           Suggest a new {noun}. Our editorial board considers new additions
           monthly.
@@ -238,6 +240,8 @@ export function CorrectionEditor({
   /** Record fields that differ from the library, marked "Changed". */
   readonly changedKeys: readonly string[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const kind = editorFor(category, current.libraryType)
   const [stopId, setStopId] = useState("")
   const changed = useMemo(
@@ -301,22 +305,21 @@ export function CorrectionEditor({
       body = (
         <div className="space-y-4">
           <p>
-            Choose a stop to change its visits, remove every visit if the
-            vehicle no longer stops there, or move its pin. This suggestion
-            includes the full timetable and will be checked against the version
-            you loaded.
+            {tStatic(
+              "contribute.choose_a_stop_to_change_its_visits_remove_every_visit_if_the_vehicle_no_longer_stops_there_or_move_i"
+            )}
           </p>
           {timetable && (
             <div className="space-y-3">
               <label className="block">
-                Which stop?
+                {tStatic("contribute.which_stop")}
                 <SelectField
                   className="mt-1 min-h-11 w-full rounded-md border px-3"
                   style={{ borderColor: T.border.hi, background: T.bg.deep }}
                   value={String(stopId ?? "")}
                   onValueChange={(selectedValue) => setStopId(selectedValue)}
                   options={[
-                    { value: "", label: "Choose a stop" },
+                    { value: "", label: tStatic("contribute.choose_a_stop") },
                     ...timetable.stops.map((stop) => ({
                       value: String(stop.id),
                       label: String(stop.name),
@@ -349,7 +352,7 @@ export function CorrectionEditor({
                       })
                   }}
                 >
-                  No longer stops here
+                  {tStatic("contribute.no_longer_stops_here")}
                 </button>
               )}
             </div>
@@ -407,11 +410,13 @@ export function CorrectionEditor({
           />
           {text("operationalStatus") && text("operationalStatus") !== "open" ? (
             <TextareaField
-              hint="Optional. Shown on the library page."
+              hint={tStatic("contribute.optional_shown_on_the_library_page")}
               id="closureReason"
               label={TEXT_LABELS.closureReason}
               onChange={setText}
-              placeholder="e.g. Closed for refurbishment until spring 2027"
+              placeholder={tStatic(
+                "contribute.e_g_closed_for_refurbishment_until_spring_2027"
+              )}
               value={text("closureReason")}
             />
           ) : null}

@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -16,6 +16,8 @@ type Side = {
 }
 
 function Column({ side }: { side: Side }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <section
       aria-label={side.heading}
@@ -55,7 +57,7 @@ function Column({ side }: { side: Side }) {
         </div>
       ) : (
         <p className="m-0 text-sm" style={{ color: T.ink.faint }}>
-          No body text.
+          {tStatic("moderation.no_body_text")}
         </p>
       )}
     </section>
@@ -84,7 +86,11 @@ export function ArticleReviewPanel({
     | "targetSlug"
   >
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const draft = detail.draftData ?? {}
   const fields = detail.fields ?? {}
@@ -99,7 +105,11 @@ export function ArticleReviewPanel({
   const editSummary = str(draft.editSummary) ?? detail.editSummary
 
   const proposed: Side = {
-    heading: isTranslation ? "Translation" : isNew ? "New article" : "Proposed",
+    heading: isTranslation
+      ? tExisting("sponsorPage.programmes.items.translation.title")
+      : isNew
+        ? "New article"
+        : "Proposed",
     locale: detail.locale,
     title: str(draft.title) ?? str(draft.proposedTitle) ?? str(fields.title),
     summary:
@@ -172,13 +182,15 @@ export function ArticleReviewPanel({
             color: T.ink.dim,
           }}
         >
-          <strong style={{ color: T.ink.base }}>On approval: </strong>
+          <strong style={{ color: T.ink.base }}>
+            {tStatic("moderation.on_approval")}{" "}
+          </strong>
           {outcome}
         </p>
       ) : null}
       {editSummary ? (
         <p className="m-0 text-base" style={{ color: T.ink.base }}>
-          <strong>Edit summary: </strong>
+          <strong>{tStatic("moderation.edit_summary")} </strong>
           {editSummary}
         </p>
       ) : null}

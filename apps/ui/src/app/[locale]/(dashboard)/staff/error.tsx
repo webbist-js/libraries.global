@@ -1,8 +1,9 @@
 "use client"
-
 // Error boundaries must be Client Components:
 // https://nextjs.org/docs/app/api-reference/file-conventions/error
+
 import * as Sentry from "@sentry/nextjs"
+import { useTranslations } from "next-intl"
 import { useEffect } from "react"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
@@ -22,6 +23,8 @@ export default function StaffErrorPage({
   readonly error: Error & { digest?: string }
   readonly reset: () => void
 }) {
+  const tExisting = useTranslations()
+
   useEffect(() => {
     Sentry.captureException(error)
   }, [error])
@@ -29,7 +32,7 @@ export default function StaffErrorPage({
   return (
     <>
       <WorkspacePageHeader
-        title="Staff area"
+        title={tExisting("ui.staff_area")}
         tabs={<StaffAreaTabs active="overview" />}
       />
       <Container className="py-10">

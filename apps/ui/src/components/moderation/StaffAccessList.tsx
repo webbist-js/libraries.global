@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Avatar, Badge, NOTICE_TONES, Sheet } from "@/components/ds"
@@ -44,6 +43,10 @@ export function StaffAccessList({
   readonly libraryName: string
   readonly rows: StaffAccessRow[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const router = useRouter()
   const locale = useLocale()
   const [rows, setRows] = useState(initialRows)
@@ -105,8 +108,9 @@ export function StaffAccessList({
         Staff ({rows.length})
       </h2>
       <p className="m-0 mt-1 text-sm" style={{ color: T.ink.dim }}>
-        Everyone who can publish to this record. Removing someone ends their
-        access now and is recorded in the library’s staff audit.
+        {tStatic(
+          "moderation.everyone_who_can_publish_to_this_record_removing_someone_ends_their_access_now_and_is_recorded_in_th"
+        )}
       </p>
       <p role="status" aria-live="polite" className="sr-only">
         {announce}
@@ -167,14 +171,18 @@ export function StaffAccessList({
                         ? "Service mandate"
                         : row.source === "claim"
                           ? "Approved claim"
-                          : "Staff"}
+                          : tExisting("dashboard.staff")}
                     {row.approvedAt ? ` · since ${date(row.approvedAt)}` : ""}
                   </p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Badge
-                  label={row.staffRole === "owner" ? "Owner" : "Editor"}
+                  label={
+                    row.staffRole === "owner"
+                      ? tExisting("teamInvitation.owner")
+                      : tExisting("authorBadges.editor")
+                  }
                   color="dim"
                 />
                 {row.canRemove ? (
@@ -194,7 +202,7 @@ export function StaffAccessList({
                       width={16}
                       height={16}
                     />
-                    Remove from staff
+                    {tStatic("moderation.remove_from_staff")}
                   </button>
                 ) : null}
               </div>
@@ -203,7 +211,7 @@ export function StaffAccessList({
         </ul>
       ) : (
         <p className="m-0 mt-4 text-base" style={{ color: T.ink.dim }}>
-          Nobody has staff access to this library.
+          {tStatic("moderation.nobody_has_staff_access_to_this_library")}
         </p>
       )}
       <Sheet
@@ -213,13 +221,13 @@ export function StaffAccessList({
         title={
           removing
             ? `Remove ${removing.name} from ${libraryName}?`
-            : "Remove from staff"
+            : tStatic("moderation.remove_from_staff")
         }
       >
         <p className="m-0 mb-5 text-base" style={{ color: T.ink.dim }}>
-          Their staff access ends now, any live session they started stops, and
-          they’re emailed. They can claim the library again later, and a
-          moderator will check that claim.
+          {tStatic(
+            "moderation.their_staff_access_ends_now_any_live_session_they_started_stops_and_they_re_emailed_they_can_claim_t"
+          )}
         </p>
         {error ? (
           <p
@@ -238,7 +246,7 @@ export function StaffAccessList({
             disabled={busy}
             onClick={() => removing && void remove(removing)}
           >
-            {busy ? "Removing…" : "Remove from staff"}
+            {busy ? "Removing…" : tStatic("moderation.remove_from_staff")}
           </button>
           <button
             type="button"
@@ -247,7 +255,7 @@ export function StaffAccessList({
             disabled={busy}
             onClick={() => setRemoving(null)}
           >
-            Keep
+            {tStatic("moderation.keep")}
           </button>
         </div>
       </Sheet>

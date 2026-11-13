@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -72,7 +72,11 @@ function LiveValue({
   readonly section: VerifySection
   readonly current: Record<string, unknown>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   switch (section) {
     case "hours": {
@@ -81,14 +85,14 @@ function LiveValue({
       return lines?.length ? (
         <Lines lines={lines} />
       ) : (
-        <Missing>No hours recorded</Missing>
+        <Missing>{tStatic("moderation.no_hours_recorded")}</Missing>
       )
     }
     case "status":
       return statusLabel(current.operationalStatus) ? (
         <span>{statusLabel(current.operationalStatus)}</span>
       ) : (
-        <Missing>No status recorded</Missing>
+        <Missing>{tStatic("moderation.no_status_recorded")}</Missing>
       )
     case "address": {
       const lines = [
@@ -102,12 +106,15 @@ function LiveValue({
       return lines.length ? (
         <Lines lines={lines} />
       ) : (
-        <Missing>No address recorded</Missing>
+        <Missing>{tStatic("moderation.no_address_recorded")}</Missing>
       )
     }
     case "contact": {
       const rows = [
-        { label: "Website", value: text(current.website) },
+        {
+          label: tExisting("newsletterForm.website"),
+          value: text(current.website),
+        },
         { label: tUi("phone"), value: text(current.phone) },
         { label: tUi("email"), value: text(current.email) },
       ].filter((r) => r.value)
@@ -136,7 +143,7 @@ function LiveValue({
           ))}
         </dl>
       ) : (
-        <Missing>No contact details recorded</Missing>
+        <Missing>{tStatic("moderation.no_contact_details_recorded")}</Missing>
       )
     }
   }
@@ -163,7 +170,9 @@ export function VerificationPanel({
   readonly evidenceType?: string | null
   readonly evidenceUrl?: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const sections = toSections(
     (fields as { sections?: unknown } | null)?.sections
@@ -175,25 +184,31 @@ export function VerificationPanel({
   const evidence = [
     evidenceType === "on_site_visit"
       ? {
-          label: "How they checked",
+          label: tStatic("moderation.how_they_checked"),
           value: EVIDENCE_TYPE_LABELS.on_site_visit,
         }
       : null,
-    evidenceUrl ? { label: "The page they checked", value: evidenceUrl } : null,
+    evidenceUrl
+      ? {
+          label: tStatic("moderation.the_page_they_checked"),
+          value: evidenceUrl,
+        }
+      : null,
   ].filter((r): r is { label: string; value: string } => r !== null)
 
   if (sections.length === 0)
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        No sections to confirm in this submission.
+        {tStatic("moderation.no_sections_to_confirm_in_this_submission")}
       </p>
     )
 
   return (
     <div className="flex flex-col gap-4">
       <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
-        Approving marks each section below as checked today. Nothing in the
-        record changes, so check the live values against how they checked.
+        {tStatic(
+          "moderation.approving_marks_each_section_below_as_checked_today_nothing_in_the_record_changes_so_check_the_live_"
+        )}
       </p>
       {missing ? (
         <Notice
@@ -201,12 +216,14 @@ export function VerificationPanel({
           title={tUi("the_library_could_not_be_found")}
           tone="warn"
         >
-          It may have been deleted or renamed, so approving changes nothing.
+          {tStatic(
+            "moderation.it_may_have_been_deleted_or_renamed_so_approving_changes_nothing"
+          )}
         </Notice>
       ) : null}
       <KeyValueList rows={evidence} />
       <h3 className="type-small-heading m-0" style={{ color: T.ink.base }}>
-        Confirms these are still right
+        {tStatic("moderation.confirms_these_are_still_right")}
       </h3>
       <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
         {sections.map((s) => {

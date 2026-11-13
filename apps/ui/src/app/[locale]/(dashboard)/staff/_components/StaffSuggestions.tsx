@@ -8,7 +8,7 @@ import {
   type DeclineReason,
   type MobileTimetable,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { DiffCard, EmptyState, Sheet } from "@/components/ds"
@@ -64,7 +64,11 @@ export function StaffSuggestions({
   /** The library's public page, linked after a change is published. */
   publicPath?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const locale = useLocale()
   const [data, setData] = useState<Suggestion[]>([]),
@@ -139,7 +143,11 @@ export function StaffSuggestions({
             : "Suggestion accepted and published."
       )
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Please try again.")
+      setError(
+        e instanceof Error
+          ? e.message
+          : tExisting("apiIndividualCheckout.retry")
+      )
     } finally {
       setBusy(false)
     }
@@ -160,19 +168,24 @@ export function StaffSuggestions({
     >
       <div className="mb-5">
         <h2 id="staff-suggestions-heading" className="type-h2 m-0">
-          Suggested changes
+          {tStatic("staffRoute.suggested_changes")}
           {total > 0 ? (
             <span
               className="ml-2 inline-flex min-w-7 items-center justify-center rounded-full px-2 align-middle text-sm font-bold tabular-nums"
               style={{ background: T.accent.chip, color: T.accent.primary }}
             >
               {total}
-              <span className="sr-only"> waiting</span>
+              <span className="sr-only">
+                {" "}
+                {tExisting("contributeMenu.waiting")}
+              </span>
             </span>
           ) : null}
         </h2>
         <p className="m-0 mt-2 text-base" style={{ color: T.ink.dim }}>
-          From the community. As staff, your decision publishes straight away.
+          {tStatic(
+            "staffRoute.from_the_community_as_staff_your_decision_publishes_straight_away"
+          )}
         </p>
       </div>
       <p role="status" aria-live="polite" className="sr-only">
@@ -221,7 +234,7 @@ export function StaffSuggestions({
       <div className="flex flex-col gap-4">
         {data.map((s) => {
           const outcome = decided[s.documentId]
-          const who = s.byName ?? "A contributor"
+          const who = s.byName ?? tExisting("editorial.anonymousContributor")
 
           return (
             <div key={s.documentId} className="flex flex-col gap-4">
@@ -274,7 +287,7 @@ export function StaffSuggestions({
                               className="inline-flex items-center gap-0.5 font-semibold underline underline-offset-[3px]"
                               style={{ color: T.accent.primary }}
                             >
-                              View on the public page
+                              {tStatic("staffRoute.view_on_the_public_page")}
                               <Icon
                                 aria-hidden="true"
                                 icon="mdi:arrow-top-right"
@@ -306,10 +319,10 @@ export function StaffSuggestions({
                     }
                   >
                     {action === "approve"
-                      ? "Accept and publish"
+                      ? tExisting("discussions.acceptPublish")
                       : action === "done"
                         ? "Mark as done"
-                        : "Decline"}
+                        : tExisting("staticUi.moderation.decline")}
                   </Button>
                 ))}
               />
@@ -348,7 +361,7 @@ export function StaffSuggestions({
             className="m-0 text-base"
             style={{ color: T.ink.dim }}
           >
-            Loading suggestions…
+            {tStatic("staffRoute.loading_suggestions")}
           </p>
         )}
       </div>
@@ -368,7 +381,8 @@ export function StaffSuggestions({
             {tUi("previous")}{" "}
           </Button>
           <span className="text-sm" style={{ color: T.ink.dim }}>
-            Page {page} of {pages}
+            {tStatic("common.page")} {page} {tExisting("widgetPublic.of")}{" "}
+            {pages}
           </span>
           <Button
             type="button"
@@ -395,12 +409,12 @@ export function StaffSuggestions({
             disabled={busy || (reason === "other" && !note.trim())}
             onClick={() => declining && decide(declining, "reject")}
           >
-            Decline suggestion
+            {tStatic("staffRoute.decline_suggestion")}
           </Button>
         }
       >
         <label className="block text-base font-semibold">
-          Reason
+          {tStatic("common.reason")}
           <SelectField
             className="my-2 block min-h-11 w-full rounded-[14px] border px-3 py-2 font-normal"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}
@@ -415,7 +429,8 @@ export function StaffSuggestions({
           />
         </label>
         <label className="block text-base font-semibold">
-          Note {reason === "other" ? "(required)" : tUi("optional")}
+          {tStatic("staffRoute.note")}{" "}
+          {reason === "other" ? "(required)" : tUi("optional")}
           <textarea
             className="mt-2 w-full rounded-[14px] border p-3 font-normal"
             style={{ borderColor: T.border.hi, background: T.bg.deep }}

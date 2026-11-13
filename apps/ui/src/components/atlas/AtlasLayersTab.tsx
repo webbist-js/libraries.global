@@ -1,9 +1,6 @@
 "use client"
 
-import {
-  useTranslations,
-  useTranslations as useUiTranslations,
-} from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 
 import {
@@ -120,7 +117,9 @@ export function AtlasLayersTab({
   readonly onSettings?: (layer: LayerId | null) => void
   readonly onEventsFilter?: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   const tLock = useTranslations("accessLocks")
 
   const [upsell, setUpsell] = useState<LayerId | null>(null),
@@ -195,7 +194,7 @@ export function AtlasLayersTab({
             className="min-h-11 rounded-full px-4 text-sm font-semibold"
             style={{ background: T.action.primary, color: "#fff" }}
           >
-            Open analysis
+            {tStatic("common.openAnalysis")}
           </button>
         ) : (
           <h4 className="type-h4 m-0">{configured.name} settings</h4>
@@ -223,7 +222,7 @@ export function AtlasLayersTab({
             onClick={() => population.onAnalysis()}
             className="min-h-11 font-semibold underline"
           >
-            Analyse
+            {tStatic("atlas.analyse")}
           </button>
         </>
       ) : null}
@@ -256,7 +255,7 @@ export function AtlasLayersTab({
                 className="h-1 w-5 rounded"
                 style={{ background: T.map.route }}
               />
-              Today, live
+              {tStatic("atlas.today_live")}
             </span>
             <span className="flex items-center gap-2">
               <i
@@ -270,14 +269,14 @@ export function AtlasLayersTab({
                 className="size-3 rounded border-2"
                 style={{ borderColor: T.map.stopRing }}
               />
-              Stop
+              {tStatic("atlas.stop")}
             </span>
             <span className="flex items-center gap-2">
               <i
                 className="h-3 w-5 rounded-full border-2"
                 style={{ borderColor: T.map.stopRing }}
               />
-              Vehicle
+              {tStatic("atlas.vehicle")}
             </span>
           </div>
           <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -287,7 +286,7 @@ export function AtlasLayersTab({
               onChange={(event) => onMobileRouteLines?.(event.target.checked)}
               className="size-4 accent-(--t-accent-primary)"
             />
-            Show route lines
+            {tStatic("common.showRoutes")}
           </label>
           <label className="flex flex-col gap-2 text-sm">
             Opacity · {Math.round(mobileOpacity * 100)}%
@@ -313,7 +312,7 @@ export function AtlasLayersTab({
     <div className="flex flex-col gap-7">
       <div className="flex items-center justify-between gap-2">
         <h2 className="type-h2 m-0">
-          Layers{" "}
+          {tStatic("atlas.layers")}{" "}
           <span
             className="ml-1 text-sm font-normal"
             style={{ color: T.ink.dim }}
@@ -328,7 +327,7 @@ export function AtlasLayersTab({
             className="min-h-11 text-sm font-semibold underline"
             style={{ color: T.accent.primary }}
           >
-            Turn all off
+            {tStatic("atlas.turn_all_off")}
           </button>
         ) : null}
       </div>
@@ -427,12 +426,12 @@ export function AtlasLayersTab({
                 style={{ borderColor: T.border.divider }}
               >
                 <span className="text-sm font-semibold">
-                  Events and activities
+                  {tStatic("atlas.events_and_activities")}
                   <small
                     className="mt-1 block text-xs font-normal"
                     style={{ color: T.ink.dim }}
                   >
-                    Find libraries with upcoming events
+                    {tStatic("atlas.find_libraries_with_upcoming_events")}
                   </small>
                 </span>
                 <span
@@ -522,7 +521,7 @@ function LayerRow({
   readonly settingsOpen?: boolean
   readonly children?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
   const tLock = useTranslations("accessLocks")
 
   const [about, setAbout] = useState(false)

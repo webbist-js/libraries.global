@@ -1,7 +1,7 @@
 "use client"
 
 import { effectiveLibraryHours, noticeLocalDate } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useContext, type ReactNode } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -91,10 +91,14 @@ export function AtlasLibraryPanel({
   readonly onReach?: () => void
   readonly reachPrompt?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const inInspect = useContext(AtlasAnalysisPanelContext)
-  const tInspect = useUiTranslations("atlasInspect")
-  const tLibrary = useUiTranslations("atlasLibrary")
+  const tInspect = useTranslations("atlasInspect")
+  const tLibrary = useTranslations("atlasLibrary")
 
   const [detail, setDetail] = useState<LibraryDetail | null>(
     detailCache.get(library.id) ?? null
@@ -124,7 +128,7 @@ export function AtlasLibraryPanel({
     noticeLocalDate(new Date(), library.tz)
   )
   const status = effective.closed
-    ? { state: "closed", label: "Closed today" }
+    ? { state: "closed", label: tStatic("atlas.closed_today") }
     : getOpenStatus(effective.hours as OpeningTimesValue | null, library.tz)
   const operator = OPERATOR_GROUPS.find(
     (g) => library.operator && g.values.includes(library.operator)
@@ -167,7 +171,7 @@ export function AtlasLibraryPanel({
             bg: T.bg.muted,
             fg: T.ink.dim,
             icon: "info" as const,
-            text: "Hours",
+            text: tStatic("atlas.hours"),
           }
 
   return (
@@ -209,7 +213,9 @@ export function AtlasLibraryPanel({
                   .map((w) => w[0])
                   .join("") || library.name[0]}
               </span>
-              <span className="text-sm font-semibold">No photo yet</span>
+              <span className="text-sm font-semibold">
+                {tStatic("common.noPhoto")}
+              </span>
             </div>
           )}
           {!inInspect ? (
@@ -290,7 +296,8 @@ export function AtlasLibraryPanel({
             }}
           >
             <Icon name="x" size={17} stroke={2.4} />
-            Permanently closed{library.closed ? ` in ${library.closed}` : ""}
+            {tStatic("atlas.permanently_closed")}
+            {library.closed ? ` in ${library.closed}` : ""}
           </div>
         ) : pending ? (
           <div className="flex min-h-[43px] items-center justify-between gap-3 rounded-[14px] bg-(--t-bg-muted) px-3.5 py-2.5">
@@ -352,7 +359,9 @@ export function AtlasLibraryPanel({
 
         {!compact && facilities.length > 0 ? (
           <div className="flex flex-col gap-2">
-            <p className="m-0 text-sm font-bold">Services & facilities</p>
+            <p className="m-0 text-sm font-bold">
+              {tStatic("atlas.services_facilities")}
+            </p>
             <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
               {facilities.map((f) => (
                 <li
@@ -386,7 +395,7 @@ export function AtlasLibraryPanel({
               action="plan_visit"
               libraryId={library.id}
             >
-              Plan a visit
+              {tExisting("contactModal.feedback.tasks.plan_visit")}
             </SecondaryLink>
           </div>
         ) : null}
@@ -398,7 +407,8 @@ export function AtlasLibraryPanel({
               style={{ color: T.ink.dim }}
             >
               <span>
-                Community maintained{updated ? ` · updated ${updated}` : ""}
+                {tStatic("atlas.community_maintained")}
+                {updated ? ` · updated ${updated}` : ""}
               </span>
               <span>
                 {library.completenessKnown === false
@@ -462,7 +472,7 @@ function SecondaryLink({
   readonly icon: "ext" | "route"
   readonly children: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const cls =
     "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border bg-(--t-bg-deep) px-3.5 text-sm font-semibold whitespace-nowrap hover:border-(--t-accent-primary)"

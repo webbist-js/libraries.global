@@ -1,4 +1,5 @@
 import { libraryTypeName } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import {
   RecordMetrics,
@@ -19,6 +20,10 @@ export function LibraryOverviewMetrics({
 }: {
   readonly library: PopulatedLibraryData
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const rec = library as unknown as Record<string, unknown>
   const type = libraryTypeName(library.libraryType)
   const hours = library.openingTimes as OpeningTimesValue | null
@@ -34,10 +39,10 @@ export function LibraryOverviewMetrics({
     ...(type !== "Mobile" && type !== "Digital"
       ? [
           {
-            label: "Opening hours",
+            label: tExisting("ui.opening_hours"),
             value: hours?.days?.length
               ? `${hours.days.filter((day) => day.enabled && day.timeframes?.length).length} days`
-              : "Not recorded",
+              : tExisting("widgetPublic.not_recorded"),
             note: summariseWeek(hours) ?? "Help add the regular schedule",
             href: "#hours",
             segments: DAY_ORDER.map((key) =>
@@ -54,7 +59,7 @@ export function LibraryOverviewMetrics({
     ...(access.length
       ? [
           {
-            label: "Accessibility",
+            label: tExisting("ui.accessibility"),
             value: `${answered} of ${access.length}`,
             note: `${access.length - answered} questions open`,
             href: "#access",
@@ -63,7 +68,7 @@ export function LibraryOverviewMetrics({
         ]
       : []),
     {
-      label: "Core details",
+      label: tStatic("library.core_details"),
       value: `${checklist.done} of ${checklist.total}`,
       note: "Recorded details · see sources and checks",
       href: "#changes",
@@ -72,7 +77,7 @@ export function LibraryOverviewMetrics({
     ...(collections
       ? [
           {
-            label: "Collections",
+            label: tExisting("ui.collections"),
             value: String(collections.value),
             note:
               typeof collections.category === "string"
@@ -83,7 +88,7 @@ export function LibraryOverviewMetrics({
         ]
       : [
           {
-            label: "Help improve this record",
+            label: tExisting("libraryPage.helpEyebrow"),
             value: `${checklist.total - checklist.done} gaps`,
             note: "Add what you know, with a source",
             href: "#contribute",

@@ -10,10 +10,9 @@ import type * as NextIntl from "next-intl"
 import type { ComponentProps } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import messages from "../../../../locales/en"
 import { EventsAgenda } from "../EventsAgenda"
 import { EventsPageClient } from "../EventsPageClient"
-
-import messages from "../../../../locales/en.json"
 
 const search = vi.hoisted(() => vi.fn())
 vi.mock("@iconify/react", () => ({ Icon: () => null }))

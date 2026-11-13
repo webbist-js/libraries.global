@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
-import { cleanup, render, screen } from "@testing-library/react"
 import * as React from "react"
 import { createElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { cleanup, render, screen } from "@/test/render"
+
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
 
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/components/library/LibraryCorrection", async () => {
   const { createElement: h } = await import("react")

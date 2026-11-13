@@ -6,8 +6,8 @@ import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import {
-  ACTION_GROUPS,
-  ACTIONS,
+  createActionGroups,
+  createActions,
   actionFor,
 } from "@/components/contribute/actions"
 import { ContributionWizard } from "@/components/contribute/ContributionWizard"
@@ -29,6 +29,8 @@ export function HubActionChooser({
   readonly publishedCount: number
   readonly suggestions?: readonly LibrarySuggestion[]
 }) {
+  const tActions = useTranslations("contributeActions")
+
   const t = useTranslations("workspaceDashboard")
   const editor = useRef<HTMLElement>(null)
   const params = useSearchParams(),
@@ -55,7 +57,7 @@ export function HubActionChooser({
       className="hub-action-chooser scroll-mt-6 outline-none"
     >
       <div className="hub-action-groups">
-        {ACTION_GROUPS.map((group) => (
+        {createActionGroups(tActions).map((group) => (
           <section
             key={group.id}
             className="workspace-card"
@@ -70,9 +72,10 @@ export function HubActionChooser({
             </h3>
             <p className="mb-4 text-sm">{group.subtitle}</p>
             <div className="grid gap-2">
-              {ACTIONS.filter((action) => action.group === group.id).map(
-                (action) => {
-                  const meta = actionFor(action.id, has)
+              {createActions(tActions)
+                .filter((action) => action.group === group.id)
+                .map((action) => {
+                  const meta = actionFor(action.id, has, tActions)
                   const content = (
                     <>
                       <span
@@ -110,8 +113,7 @@ export function HubActionChooser({
                       {content}
                     </button>
                   )
-                }
-              )}
+                })}
             </div>
           </section>
         ))}

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type React from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -34,6 +35,8 @@ export function ProfileProgress({
   /** The actions, under a hairline rule. */
   readonly children: React.ReactNode
 }) {
+  const tExisting = useTranslations()
+
   const total = steps.length
   const doneCount = steps.filter((s) => s.done).length
   const requiredLeft = steps.filter((s) => s.required && !s.done).length
@@ -52,7 +55,7 @@ export function ProfileProgress({
       className="rounded-[24px] p-6 sm:p-7"
       style={{ background: T.bg.deep, border: `1px solid ${T.border.line}` }}
     >
-      <div className="mb-3.5 flex items-baseline justify-between gap-3">
+      <div className="mb-3.5 flex flex-wrap items-baseline justify-between gap-3">
         <h2
           id="profile-progress-title"
           className="type-panel-title m-0"
@@ -74,7 +77,7 @@ export function ProfileProgress({
           </span>
           <span className="text-base" style={{ color: T.ink.dim }}>
             {" "}
-            of {total}
+            {tExisting("widgetPublic.of")} {total}
           </span>
         </p>
       </div>
@@ -149,7 +152,7 @@ export function ProfileProgress({
                   ) : null}
                 </span>
                 <span
-                  className="mt-0.5 truncate text-sm"
+                  className="mt-0.5 text-sm leading-relaxed [overflow-wrap:anywhere]"
                   style={{ color: T.ink.dim }}
                 >
                   <span className="sr-only">

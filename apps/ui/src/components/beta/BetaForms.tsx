@@ -1,5 +1,4 @@
 "use client"
-
 import { Check } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
@@ -19,6 +18,8 @@ export function BetaForms({
   readonly locale: string
   readonly available: boolean
 }) {
+  const tExisting = useTranslations()
+
   const t = useTranslations("beta")
   const [visible, setVisible] = useState(false)
   const [password, setPassword] = useState("")
@@ -247,7 +248,9 @@ export function BetaForms({
                 disabled={waitlistStatus === "saving"}
               />
               <div className={styles.honeypot} aria-hidden="true">
-                <label htmlFor="beta-website">Website</label>
+                <label htmlFor="beta-website">
+                  {tExisting("newsletterForm.website")}
+                </label>
                 <input
                   id="beta-website"
                   name="website"

@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { DriveFocusFilter } from "@/components/drives/DriveFocusFilter"
 import { FeaturedDrive } from "@/components/drives/FeaturedDrive"
 import { FinishedDrives } from "@/components/drives/FinishedDrives"
@@ -36,6 +38,8 @@ export function NoticeboardDrives({
   readonly followed: string[] | null
   readonly now?: Date
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const shown = filterByFocus(open, focus)
   const { featured, others } = pickFeatured(shown)
 
@@ -72,7 +76,7 @@ export function NoticeboardDrives({
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Show all open drives
+              {tStatic("communityRoute.show_all_open_drives")}
             </GlobalLink>
           </p>
         )}
@@ -89,7 +93,7 @@ export function NoticeboardDrives({
                 color: T.ink.base,
               }}
             >
-              Other open drives
+              {tStatic("communityRoute.other_open_drives")}
             </h2>
             <OpenDrivesGrid views={others} followed={followed} now={now} />
           </section>

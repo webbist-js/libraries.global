@@ -1,3 +1,5 @@
+import { useLocale, useTranslations } from "next-intl"
+
 // "In the area": counted figures, the numbered nearby list and the Reach
 // teaser. Every figure here comes from the index (library-area.ts).
 
@@ -70,32 +72,43 @@ export function LibraryAreaSection({
   readonly area: LibraryAreaData
   readonly addHref?: string
 }) {
-  const place = regionName ?? "the region"
+  const locale = useLocale()
+  const tExtra = useTranslations("libraryExtra")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const place = regionName ?? tExtra("region")
   const nearest = area.neighbours[0]
   const stats: Stat[] = []
   if (area.regionTotal !== null)
     stats.push({
-      value: area.regionTotal.toLocaleString("en-GB"),
-      label: `${area.regionTotal === 1 ? "Library" : "Libraries"} in ${place}`,
-      note: "Documented in the index",
+      value: area.regionTotal.toLocaleString(locale),
+      label: tExtra("librariesIn", { count: area.regionTotal, place }),
+      note: tExtra("documented"),
     })
   if (area.withinRadius !== null)
     stats.push({
-      value: area.withinRadius.toLocaleString("en-GB"),
-      label: `Other ${area.withinRadius === 1 ? "library" : "libraries"} within ${WITHIN_KM} km`,
-      note: "Straight-line distance",
+      value: area.withinRadius.toLocaleString(locale),
+      label: tExtra("within", { count: area.withinRadius, km: WITHIN_KM }),
+      note: tExtra("straightLine"),
     })
   if (nearest?.km != null)
     stats.push({
       value: formatDistance(nearest.km),
-      label: "To the nearest library",
+      label: tStatic("library.to_the_nearest_library"),
       note: nearest.name,
     })
   if (area.sundays)
     stats.push({
-      value: `${area.sundays.open} of ${area.sundays.total}`,
-      label: "Opening this Sunday",
-      note: `Of usable recorded schedules${area.sundays.includesThis ? " · including this one" : ""}`,
+      value: tExtra("openOf", {
+        open: area.sundays.open,
+        total: area.sundays.total,
+      }),
+      label: tStatic("library.opening_this_sunday"),
+      note: tExtra(
+        area.sundays.includesThis ? "schedulesIncluding" : "schedules"
+      ),
     })
 
   const hasDistances = area.neighbours.some((n) => n.km !== null)
@@ -103,10 +116,10 @@ export function LibraryAreaSection({
   return (
     <LibrarySectionCard
       id="area"
-      title="Nearby in the index"
+      title={tStatic("library.nearby_in_the_index")}
       iconPath={LIB_ICONS.map}
       tone="public"
-      intro={`How ${libraryName} fits into ${place}, counted from the libraries in the index.`}
+      intro={tExtra("areaIntro", { library: libraryName, place })}
     >
       {stats.length > 0 && area.neighbours.length > 0 ? (
         <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
@@ -121,8 +134,8 @@ export function LibraryAreaSection({
         style={{ color: T.ink.base }}
       >
         {area.sameRegion
-          ? "Other libraries in this region"
-          : "Libraries within 5 km"}
+          ? tExtra("otherRegion")
+          : tExtra("withinHeading", { km: WITHIN_KM })}
       </h3>
       {area.neighbours.length > 0 ? (
         <>
@@ -177,23 +190,25 @@ export function LibraryAreaSection({
           </ol>
           {hasDistances ? (
             <p className="mt-1 mb-0 text-sm" style={{ color: T.ink.dim }}>
-              Straight-line distance from the coordinates in this record.
+              {tStatic(
+                "library.straight_line_distance_from_the_coordinates_in_this_record"
+              )}
             </p>
           ) : null}
         </>
       ) : (
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
           {area.neighboursUnavailable
-            ? "Nearby library results are temporarily unavailable."
+            ? tExtra("nearbyUnavailable")
             : area.sameRegion
-              ? "No other libraries in this region are documented yet."
-              : "No other libraries within 5 km are documented yet."}{" "}
+              ? tExtra("noRegion")
+              : tExtra("noWithin", { km: WITHIN_KM })}{" "}
           <Link
             href={addHref}
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Add a missing library
+            {tExisting("libraryPage.addLibrary")}
           </Link>
         </p>
       )}

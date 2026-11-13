@@ -1,0 +1,240 @@
+{
+  "contactModal": {
+    "close": "Fermer",
+    "choose": "Choisir une option",
+    "optional": "(facultatif)",
+    "continue": "Continuer",
+    "back": "Retour",
+    "done": "Terminé",
+    "sending": "Envoi…",
+    "invalid": "Vérifiez les champs obligatoires. Votre message doit contenir au moins 10 caractères.",
+    "error": "Votre message n’a pas pu être envoyé. Vos réponses sont conservées : veuillez réessayer.",
+    "rateLimited": "Vous avez envoyé plusieurs messages récemment. Réessayez dans une heure.",
+    "successTitle": "Merci de nous avoir contactés.",
+    "received": "Votre message a été envoyé à notre équipe.",
+    "reference": "Référence : {reference}",
+    "step": "Étape {current} sur 2",
+    "name": "Votre nom",
+    "email": "Adresse e-mail",
+    "steps": "Comment reproduire le problème ?",
+    "stepsPlaceholder": "1. J’ai ouvert…\n2. J’ai sélectionné…\n3. Puis…",
+    "private": "Uniquement partagé avec notre équipe",
+    "contextNote": "Des informations sur la page et votre appareil sont incluses pour nous aider à comprendre votre expérience.",
+    "privacy": "Confidentialité",
+    "feedback": {
+      "eyebrow": "Aidez à améliorer la bêta",
+      "title": "Comment cela s’est-il passé ?",
+      "description": "Quelques questions rapides nous aident à comprendre ce qui est utile et ce qui peut être amélioré.",
+      "stepOne": "Votre expérience",
+      "stepTwo": "Quelques précisions",
+      "short": "Environ une minute",
+      "send": "Envoyer mon avis",
+      "success": "Votre avis nous aide à choisir les prochaines améliorations.",
+      "emailHint": "Laissez votre adresse e-mail si vous souhaitez une réponse. Les avis anonymes sont les bienvenus.",
+      "topic": "Que souhaitez-vous partager ?",
+      "topics": {
+        "problem": "Un problème est survenu",
+        "idea": "J’ai une idée",
+        "experience": "Mon expérience",
+        "praise": "Quelque chose m’a plu"
+      },
+      "task": "Que souhaitiez-vous faire ?",
+      "tasks": {
+        "find_library": "Trouver une bibliothèque",
+        "plan_visit": "Préparer une visite",
+        "contribute": "Ajouter ou corriger des informations",
+        "manage_library": "Gérer ma bibliothèque",
+        "explore": "Explorer et apprendre",
+        "other": "Autre chose"
+      },
+      "outcome": "Avez-vous réussi ?",
+      "outcomes": {
+        "yes": "Oui",
+        "partly": "En partie",
+        "no": "Non, j’ai été bloqué",
+        "browsing": "Je ne faisais que parcourir le site"
+      },
+      "ease": "Était-ce facile ?",
+      "easeScore": "{value} sur 5",
+      "difficult": "Difficile",
+      "easy": "Facile",
+      "prompts": {
+        "problem": {
+          "label": "Que s’est-il passé et qu’attendiez-vous ?",
+          "hint": "Dites-nous où vous avez été bloqué. N’incluez pas de mot de passe ni d’informations privées.",
+          "placeholder": "J’essayais de… Je m’attendais à… À la place…"
+        },
+        "idea": {
+          "label": "Qu’est-ce qui rendrait ce site plus utile pour vous ?",
+          "hint": "Que changeriez-vous ou ajouteriez-vous, et dans quel but ?",
+          "placeholder": "Il serait utile de… parce que…"
+        },
+        "experience": {
+          "label": "Qu’avez-vous trouvé facile, déroutant ou manquant ?",
+          "hint": "Pensez à la recherche d’informations, à la navigation ou aux contributions. Un exemple précis nous aide.",
+          "placeholder": "Ce qui m’a marqué, c’est…"
+        },
+        "praise": {
+          "label": "Qu’est-ce qui a bien fonctionné pour vous ?",
+          "hint": "Qu’est-ce qui vous a aidé, et pourquoi ? Nous souhaitons conserver les points positifs.",
+          "placeholder": "J’ai trouvé… utile parce que…"
+        }
+      }
+    },
+    "atlas": {
+      "eyebrow": "Aidez à façonner Atlas",
+      "title": "Comment avez-vous trouvé Atlas ?",
+      "description": "Dites-nous quelles fonctions vous avez utilisées, comment elles ont fonctionné et ce que vous aimeriez voir ensuite.",
+      "stepOne": "Utilisation d’Atlas",
+      "stepTwo": "Votre avis et vos idées",
+      "short": "Environ deux minutes",
+      "success": "Votre avis nous aide à améliorer Atlas et à choisir les prochaines fonctionnalités.",
+      "task": "Que souhaitiez-vous faire avec Atlas ?",
+      "tasks": {
+        "find_library": "Trouver une bibliothèque",
+        "plan_visit": "Préparer une visite",
+        "compare_areas": "Comparer des zones ou leur couverture en bibliothèques",
+        "check_accessibility": "Vérifier l’accessibilité",
+        "export_data": "Exporter des données sur les bibliothèques",
+        "explore": "Explorer la carte",
+        "other": "Autre chose"
+      },
+      "features": {
+        "label": "Quelles fonctions d’Atlas avez-vous utilisées ?",
+        "hint": "Sélectionnez toutes les réponses qui conviennent. Choisissez Autre si aucune ne correspond.",
+        "required": "Choisissez au moins une fonction d’Atlas, ou Autre.",
+        "options": {
+          "search": "Recherche",
+          "filters": "Filtres",
+          "map_layers": "Couches et légendes de la carte",
+          "library_details": "Détails des bibliothèques",
+          "list_view": "Vue en liste",
+          "area_comparison": "Comparaison de zones",
+          "accessibility": "Informations sur l’accessibilité",
+          "exports": "Export de données",
+          "other": "Autre"
+        }
+      },
+      "clarity": "Les légendes de la carte et les résultats étaient-ils clairs ?",
+      "clarityScore": "Clarté : {value} sur 5",
+      "unclear": "Peu clairs",
+      "clear": "Clairs",
+      "wishlist": {
+        "label": "Ce que j’aimerais voir",
+        "hint": "Une fonctionnalité, une couche cartographique ou une information qui vous aiderait. Dans quel but l’utiliseriez-vous ?",
+        "placeholder": "J’aimerais pouvoir… parce que…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "Que s’est-il passé dans Atlas et qu’attendiez-vous ?",
+          "hint": "Précisez la fonction ou la couche cartographique et où vous avez été bloqué. N’incluez pas de mot de passe ni d’informations privées.",
+          "placeholder": "Dans Atlas, j’essayais de… Je m’attendais à… À la place…"
+        },
+        "idea": {
+          "label": "Ce que j’aimerais voir dans Atlas",
+          "hint": "Quelle fonctionnalité, couche cartographique ou information ajouteriez-vous ou changeriez-vous, et dans quel but ?",
+          "placeholder": "J’aimerais pouvoir… parce que…"
+        },
+        "experience": {
+          "label": "Qu’avez-vous trouvé facile, déroutant ou manquant dans Atlas ?",
+          "hint": "Pensez à la recherche, aux filtres, aux légendes de la carte ou aux détails des bibliothèques. Un exemple précis nous aide.",
+          "placeholder": "En utilisant… j’ai trouvé…"
+        },
+        "praise": {
+          "label": "Qu’est-ce qui a bien fonctionné pour vous dans Atlas ?",
+          "hint": "Quelle fonction vous a aidé, et pourquoi ? Nous souhaitons conserver les points positifs.",
+          "placeholder": "J’ai trouvé… utile parce que…"
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Parlez à l’équipe",
+      "title": "Comment pouvons-nous vous aider ?",
+      "description": "Choisissez le sujet de votre demande pour que votre message parvienne à la bonne personne.",
+      "reason": "Quel est le sujet de votre message ?",
+      "send": "Envoyer le message",
+      "success": "Nous répondrons à l’adresse e-mail indiquée si une réponse est nécessaire.",
+      "emailHint": "Cette adresse sera utilisée pour répondre à votre message. Elle ne vous inscrit à aucun abonnement.",
+      "inlineDescription": "Signalez un problème, posez une question ou proposez une collaboration. Quelques précisions nous aideront à vous orienter.",
+      "open": "Contacter l’équipe",
+      "types": {
+        "report_issue": "Signaler un problème",
+        "general_inquiry": "Question générale",
+        "account_support": "Aide concernant mon compte",
+        "membership_support": "Accès API et facturation",
+        "library_correction": "Corriger les informations d’une bibliothèque",
+        "plans": "Formules et accès API",
+        "partnership": "Partenariat ou collaboration",
+        "privacy": "Confidentialité ou demande concernant les données",
+        "sponsorship": "Mécénat"
+      },
+      "prompts": {
+        "report_issue": {
+          "label": "Qu’est-ce qui a mal fonctionné et que devait-il se passer ?",
+          "hint": "Décrivez le problème et les éventuelles erreurs affichées. N’incluez pas de mot de passe ni de code de sécurité.",
+          "placeholder": "J’essayais de… mais…"
+        },
+        "general_inquiry": {
+          "label": "Que souhaitez-vous savoir ?",
+          "hint": "Un peu de contexte nous aide à vous donner une réponse utile.",
+          "placeholder": "Je vous contacte au sujet de…"
+        },
+        "account_support": {
+          "label": "De quelle aide avez-vous besoin ?",
+          "hint": "Décrivez le problème de compte. Nous ne vous demanderons jamais votre mot de passe ni votre code de connexion.",
+          "placeholder": "Je rencontre des difficultés avec…"
+        },
+        "membership_support": {
+          "label": "De quelle aide avez-vous besoin ?",
+          "hint": "Parlez-nous de votre abonnement à l’accès API, d’une ancienne adhésion, ou de tout problème de facturation, d’accès ou de fonctionnalités. N’incluez pas de coordonnées bancaires, de mot de passe ni de code de sécurité.",
+          "placeholder": "J’ai besoin d’aide pour…"
+        },
+        "library_correction": {
+          "label": "Quelle bibliothèque et quelles informations faut-il corriger ?",
+          "hint": "Indiquez le nom de la bibliothèque ou le lien vers sa page, les informations correctes et une source si vous en avez une.",
+          "placeholder": "Les informations concernant… devraient indiquer…"
+        },
+        "plans": {
+          "label": "De quoi souhaitez-vous discuter ?",
+          "hint": "Présentez votre bibliothèque ou votre service, ce que vous souhaitez utiliser, ou votre question sur la vérification.",
+          "placeholder": "Nous sommes intéressés par… pour…"
+        },
+        "partnership": {
+          "label": "Que proposez-vous ?",
+          "hint": "Présentez votre organisation, votre idée et la façon dont nous pourrions travailler ensemble.",
+          "placeholder": "Nous sommes… et souhaiterions…"
+        },
+        "privacy": {
+          "label": "Quelle est votre question ou votre demande ?",
+          "hint": "Décrivez votre demande. N’envoyez pas de pièce d’identité ni d’informations personnelles sensibles ici.",
+          "placeholder": "Je souhaiterais me renseigner sur…"
+        },
+        "sponsorship": {
+          "label": "Quel travail souhaitez-vous soutenir ?",
+          "hint": "Présentez votre organisation, le programme qui vous intéresse et, si vous les connaissez, votre budget et votre calendrier. N’indiquez aucune coordonnée de paiement.",
+          "placeholder": "Nous sommes… et souhaitons soutenir…"
+        }
+      }
+    }
+  },
+  "contactForm": {
+    "name": "Prénom et nom",
+    "namePlaceholder": "Jean Dupont",
+    "email": "E-mail",
+    "emailPlaceholder": "jean.dupont@gmail.com",
+    "message": "Message",
+    "gdpr": "J’accepte le traitement de mes données personnelles",
+    "submit": "Envoyer",
+    "success": "Le formulaire a été envoyé.",
+    "error": "Le formulaire n’a pas pu être envoyé. Réessayez plus tard.",
+    "gdprLink": "En savoir plus sur le traitement des données personnelles"
+  },
+  "newsletterForm": {
+    "rateLimited": "Trop d’inscriptions depuis cet emplacement. Veuillez réessayer plus tard.",
+    "failed": "L’inscription a échoué. Veuillez réessayer.",
+    "sent": "Merci. Si une confirmation est nécessaire, consultez votre boîte de réception pour finaliser votre inscription.",
+    "website": "Site web",
+    "invalidEmail": "Saisissez une adresse e-mail valide.",
+    "accountEmail": "Utilisez l’adresse e-mail de votre compte pour vous inscrire à la newsletter."
+  }
+}

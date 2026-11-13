@@ -10,6 +10,7 @@ import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { MainContent } from "@/components/ds/MainContent"
 import { EventDetailPage } from "@/components/events/EventDetailPage"
 import GlobalLink from "@/components/global/GlobalLink"
+import { withMessages } from "@/i18n/scoped-messages"
 import { buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
 
 export const revalidate = 300
@@ -89,7 +90,7 @@ export async function generateMetadata({
   })
 }
 
-export default function EventPage(props: {
+function EventPage(props: {
   params: Promise<{ locale: string; documentId: string }>
 }) {
   const ui = useTranslations("ui"),
@@ -140,3 +141,8 @@ export default function EventPage(props: {
     </DashboardPage>
   )
 }
+
+export default withMessages(
+  EventPage,
+  "[locale]/(dashboard)/events/[documentId]/page"
+)

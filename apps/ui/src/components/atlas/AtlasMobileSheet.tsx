@@ -1,5 +1,4 @@
 "use client"
-
 import { useTranslations } from "next-intl"
 import {
   type PointerEvent,
@@ -37,6 +36,8 @@ export function AtlasMobileSheet({
   readonly onSizeChange: (size: AtlasSheetSize) => void
   readonly children: ReactNode
 }) {
+  const tExisting = useTranslations()
+
   const t = useTranslations("ui")
   const animate = useAtlasMotion()
   const panel = useRef<HTMLElement>(null)
@@ -134,7 +135,7 @@ export function AtlasMobileSheet({
     <>
       <section
         ref={panel}
-        aria-label="Explore panel"
+        aria-label={tExisting("ui.explore_panel")}
         aria-hidden={closed || undefined}
         inert={closed}
         className={`${panelStyles.stack} absolute inset-x-0 bottom-0 z-30 flex min-h-0 flex-col overflow-clip rounded-t-[24px] border-t border-(--t-border-hi) bg-(--t-bg-deep) pb-[env(safe-area-inset-bottom)]`}

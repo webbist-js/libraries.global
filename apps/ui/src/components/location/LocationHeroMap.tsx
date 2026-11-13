@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react"
 import { atlasPopulationBaseline, type AtlasScope } from "@repo/shared-data"
 import type { Map as MapLibreMap } from "maplibre-gl"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { parseBounds } from "@/components/map/map.helpers"
@@ -92,6 +93,8 @@ export function LocationHeroMap({
   /** Names a group circle, e.g. { singular: "country", plural: "countries" }. */
   readonly childNoun?: { singular: string; plural: string }
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const [ready, setReady] = useState(false)
@@ -339,8 +342,9 @@ export function LocationHeroMap({
           className="absolute inset-0 m-0 flex items-center justify-center px-8 text-center text-sm"
           style={{ color: T.ink.dim }}
         >
-          The map can&rsquo;t load in this browser. The list below has the same
-          places.
+          {tStatic(
+            "location.the_map_can_rsquo_t_load_in_this_browser_the_list_below_has_the_same_places"
+          )}
         </p>
       ) : null}
 
@@ -350,7 +354,7 @@ export function LocationHeroMap({
           className="absolute top-3 left-3 z-[2] inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-3 text-xs font-semibold"
           style={{ borderColor: T.border.line }}
         >
-          View places as a list →
+          {tStatic("location.view_places_as_a_list")}
         </a>
       ) : null}
 
@@ -489,8 +493,8 @@ export function LocationHeroMap({
         <span>
           {countryRecords.length ? (
             <span className="mb-1 flex flex-wrap gap-3">
-              <span>■ Place-based records</span>
-              <span>▱ None recorded yet</span>
+              <span>{tStatic("location.place_based_records")}</span>
+              <span>{tStatic("location.none_recorded_yet")}</span>
             </span>
           ) : null}
           {caption}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMemo } from "react"
 
 import { primaryCtaSm } from "@/components/ui/action-styles"
@@ -17,7 +17,7 @@ export function DraftResumeBanner({
   onResume: () => void
   onDiscard: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const relTime = useMemo(() => {
     // eslint-disable-next-line react-hooks/purity

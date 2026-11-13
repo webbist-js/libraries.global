@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -167,7 +166,7 @@ export function WizardStepNav({
   mobile = false,
   preview = false,
 }: WizardStepNavProps) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <nav
@@ -260,7 +259,9 @@ export function RecordProgress({
   improving: boolean
   changedCount: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const total = progress.length
   const doneCount = progress.filter((s) => s.done).length
@@ -319,7 +320,7 @@ export function RecordProgress({
           >
             {doneCount}
           </span>{" "}
-          of {total}
+          {tExisting("widgetPublic.of")} {total}
         </p>
       </div>
       <div

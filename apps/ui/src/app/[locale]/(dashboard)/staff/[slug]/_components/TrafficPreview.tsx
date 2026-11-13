@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { BarSeries, KpiTile } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -43,7 +43,9 @@ export function TrafficPreview({
   /** The route locale, for numbers and dates. */
   readonly locale?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const period = `${summary.range} days`
   const number = new Intl.NumberFormat(locale)
@@ -98,8 +100,9 @@ export function TrafficPreview({
             className="mt-0.5 shrink-0"
             style={{ color: T.accent.primary }}
           />
-          Google withheld or grouped some of this period’s data, usually because
-          the numbers are small. Treat these figures as a minimum.
+          {tStatic(
+            "staffRoute.google_withheld_or_grouped_some_of_this_period_s_data_usually_because_the_numbers_are_small_treat_th"
+          )}
         </p>
       ) : null}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -132,7 +135,7 @@ export function TrafficPreview({
         aria-labelledby="traffic-referrers-heading"
       >
         <h2 id="traffic-referrers-heading" className="type-panel-title m-0">
-          Where visitors came from
+          {tStatic("staffRoute.where_visitors_came_from")}
         </h2>
         {summary.referrers.length ? (
           <ul className="m-0 mt-4 flex list-none flex-col gap-3 p-0">

@@ -9,7 +9,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type FormEvent, useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -36,27 +36,27 @@ import {
   newPasswordRefusal,
   newPasswordSchema,
 } from "@/app/[locale]/auth/_components/password-rules"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import { useUserMutations } from "@/hooks/useUserMutations"
-import {
-  linkLifetime,
-  RESET_EMAIL_SUBJECT,
-  RESET_LINK_TTL_SECONDS,
-} from "@/lib/auth-links"
-import { T } from "@/lib/design-tokens"
+import { RESET_EMAIL_SUBJECT, RESET_LINK_TTL_SECONDS } from "@/lib/auth-links"
 
 const SETTINGS_HREF = "/map?account=settings"
-const TOO_MANY = "Too many attempts. Wait a minute, then try again."
 
-const ChangePasswordSchema = z
-  .object({
-    currentPassword: z.string().min(1, "Enter your current password"),
-    newPassword: newPasswordSchema,
-    signOutOthers: z.boolean(),
-  })
-  .refine((v) => v.newPassword !== v.currentPassword, {
-    path: ["newPassword"],
-    message: "Use a different password from your current one",
-  })
+const ChangePasswordSchema = (
+  tStatic: ReturnType<typeof useTranslations<"staticUi">>
+) =>
+  z
+    .object({
+      currentPassword: z
+        .string()
+        .min(1, tStatic("auth.enter_your_current_password")),
+      newPassword: newPasswordSchema(tStatic),
+      signOutOthers: z.boolean(),
+    })
+    .refine((v) => v.newPassword !== v.currentPassword, {
+      path: ["newPassword"],
+      message: tStatic("auth.use_a_different_password_from_your_current_one"),
+    })
 
 const LATER_ICONS = [
   "mdi:check-circle-outline",
@@ -78,7 +78,11 @@ export function ChangePasswordForm({
   hasPassword: boolean
   email: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const { heading } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   usePreloadedIcons(LATER_ICONS)
   const [stage, setStage] = useState<Stage>({
@@ -91,12 +95,15 @@ export function ChangePasswordForm({
         <AuthHeading
           icon="mdi:check-circle-outline"
           iconTone="ok"
-          title={tUi("password")}
-          italic="changed."
+          title={heading("changed")}
           subtitle={
             stage.signedOutOthers
-              ? "You're still signed in here. Every other device has been signed out."
-              : "You're still signed in here and on your other devices."
+              ? tStatic(
+                  "auth.you_re_still_signed_in_here_every_other_device_has_been_signed_out"
+                )
+              : tStatic(
+                  "auth.you_re_still_signed_in_here_and_on_your_other_devices"
+                )
           }
         />
         <AuthPrimaryLink href={SETTINGS_HREF}>
@@ -125,11 +132,17 @@ function ChangeForm({
   onChanged: (signedOutOthers: boolean) => void
   onNoPassword: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const { heading } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const { changePasswordMutation } = useUserMutations()
-  const form = useForm<z.infer<typeof ChangePasswordSchema>>({
-    resolver: zodResolver(ChangePasswordSchema),
+  const form = useForm<z.infer<ReturnType<typeof ChangePasswordSchema>>>({
+    resolver: zodResolver(ChangePasswordSchema(tStatic)),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
@@ -153,14 +166,14 @@ function ChangeForm({
           if (code === "INVALID_PASSWORD") {
             form.setError(
               "currentPassword",
-              { message: "That isn't your current password" },
+              { message: tStatic("auth.that_isn_t_your_current_password") },
               { shouldFocus: true }
             )
 
             return
           }
           if (code === "CREDENTIAL_ACCOUNT_NOT_FOUND") return onNoPassword()
-          const refusal = newPasswordRefusal(code)
+          const refusal = newPasswordRefusal(code, tStatic)
           if (refusal) {
             form.setError(
               "newPassword",
@@ -172,9 +185,11 @@ function ChangeForm({
           }
           toast.error(
             status === 429
-              ? TOO_MANY
+              ? tStatic("auth.too_many_attempts_wait_a_minute_then_try_again")
               : (message ??
-                  "We couldn’t change your password. Please try again.")
+                  tStatic(
+                    "auth.we_couldn_t_change_your_password_please_try_again"
+                  ))
           )
         },
       }
@@ -191,9 +206,10 @@ function ChangeForm({
   return (
     <>
       <AuthHeading
-        title={tUi("change_your")}
-        italic="password."
-        subtitle="You'll use the new one the next time you sign in."
+        title={heading("change")}
+        subtitle={tStatic(
+          "auth.you_ll_use_the_new_one_the_next_time_you_sign_in"
+        )}
       />
 
       {/* A native submit (before hydration) POSTs to this page instead of
@@ -211,7 +227,7 @@ function ChangeForm({
           error={errors.currentPassword?.message}
           aside={
             <AuthInlineLink href="/auth/forgot-password">
-              Forgot it?
+              {tStatic("auth.forgot_it")}
             </AuthInlineLink>
           }
         >
@@ -243,7 +259,9 @@ function ChangeForm({
 
         <AuthCheckbox
           label={tUi("sign_out_on_my_other_devices")}
-          hint="Do this if you think someone else knows your old password."
+          hint={tStatic(
+            "auth.do_this_if_you_think_someone_else_knows_your_old_password"
+          )}
           {...form.register("signOutOthers")}
         />
 
@@ -251,8 +269,8 @@ function ChangeForm({
           disabled={changePasswordMutation.isPending || isSubmitting}
         >
           {changePasswordMutation.isPending
-            ? "Changing password…"
-            : "Change password"}
+            ? tStatic("auth.changing_password")
+            : tExisting("navbar.actions.changePassword")}
         </AuthPrimaryButton>
       </form>
     </>
@@ -260,12 +278,15 @@ function ChangeForm({
 }
 
 function AddPassword({ email }: { email: string }) {
-  const tUi = useUiTranslations("ui")
+  const { heading, flowRich, tFlow, lifetime } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { forgotPasswordMutation } = useUserMutations()
   const [sent, setSent] = useState(false)
   const [status, setStatus] = useState<AuthStatus>(null)
-  const to = <strong style={{ color: T.ink.base }}>{email}</strong>
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -280,8 +301,8 @@ function AddPassword({ email }: { email: string }) {
             tone: "error",
             text:
               httpStatus === 429
-                ? TOO_MANY
-                : "We couldn’t send the email. Please try again.",
+                ? tStatic("auth.too_many_attempts_wait_a_minute_then_try_again")
+                : tStatic("auth.we_couldn_t_send_the_email_please_try_again"),
           })
         },
       }
@@ -293,21 +314,20 @@ function AddPassword({ email }: { email: string }) {
       <>
         <AuthHeading
           icon="mdi:email-fast-outline"
-          title="Check your"
-          italic="inbox."
-          subtitle={
-            <>We sent a link to {to}. Open it to choose your password.</>
-          }
+          title={heading("inbox")}
+          subtitle={flowRich("sentPassword", email)}
         />
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
           <AuthInboxHint
             subject={RESET_EMAIL_SUBJECT}
-            detail={`The link works once, for ${linkLifetime(RESET_LINK_TTL_SECONDS)}.`}
+            detail={tFlow("linkOnce", {
+              duration: lifetime(RESET_LINK_TTL_SECONDS),
+            })}
           />
           <AuthNote>
-            Setting a password signs you out on every device, so you&rsquo;ll
-            sign in again afterwards, with your social account or the new
-            password.
+            {tStatic(
+              "auth.setting_a_password_signs_you_out_on_every_device_so_you_rsquo_ll_sign_in_again_afterwards_with_your_"
+            )}
           </AuthNote>
           <AuthPrimaryLink href={SETTINGS_HREF}>
             {tUi("back_to_settings")}{" "}
@@ -321,15 +341,8 @@ function AddPassword({ email }: { email: string }) {
     <>
       <AuthHeading
         icon="mdi:key-plus"
-        title="Add a"
-        italic="password."
-        subtitle={
-          <>
-            You use a social sign-in, so there&rsquo;s no password to change.
-            We&rsquo;ll email {to} a link to set one, and you can then sign in
-            either way.
-          </>
-        }
+        title={heading("add")}
+        subtitle={flowRich("socialPassword", email)}
       />
 
       <form
@@ -342,7 +355,7 @@ function AddPassword({ email }: { email: string }) {
           <Icon icon="mdi:email-outline" width={20} aria-hidden="true" />
           {forgotPasswordMutation.isPending
             ? tUi("sending")
-            : "Email me a link"}
+            : tStatic("auth.email_me_a_link")}
         </AuthPrimaryButton>
         <AuthStatusMessage status={status} />
       </form>
