@@ -21,7 +21,7 @@ export default (config: UserConfig) => {
     // Workspace packages resolve outside node_modules. shared-data builds as
     // CommonJS for Strapi's server, so Vite must convert it for the admin too.
     optimizeDeps: {
-      include: ["@repo/shared-data"],
+      include: ["@repo/shared-data", "@repo/shared-data/locales"],
       // Linked workspace builds can change without a lockfile change. Vite's
       // cached bundle would otherwise keep old exports across Strapi restarts.
       force: true,
