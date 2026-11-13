@@ -20,7 +20,7 @@ ingests/
     imls-pls/
 ```
 
-The LibraryOn ingest is still at `scripts/libraryon-ingest.ts` and has yet to move to `uk/libraryon/`.
+The LibraryOn ingest is at `england/libraryon/`; the older `scripts/libraryon-ingest.ts` runs only through `pnpm ingest --dataset=libraryon --legacy`.
 
 ## One entry point
 

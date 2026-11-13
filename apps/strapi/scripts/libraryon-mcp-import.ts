@@ -17,8 +17,9 @@
  *   --start-page=N   First libraryOn page to read, 100 per page, sorted by id (default 1)
  *   --dry-run        Map and place, but write nothing
  *   --no-publish     Leave libraries (and new taxonomy) as drafts
- *   --log=path       Import log (default ../../.scratch/libraryon-import/log.json);
- *                    postcodes.io answers are cached beside it in districts.json
+ *   --log=path       Required import log, kept in operator-private storage
+ *                    outside the repository; postcodes.io answers are cached
+ *                    beside it in districts.json. There is no default.
  *
  * Env: STRAPI_URL, STRAPI_MCP_TOKEN, LIBRARYON_API
  */
@@ -66,9 +67,13 @@ const LIMIT = Number.parseInt(args.limit ?? "100", 10)
 const START_PAGE = Number.parseInt(args["start-page"] ?? "1", 10)
 const DRY_RUN = args["dry-run"] === "true"
 const PUBLISH = args["no-publish"] !== "true"
-const LOG_PATH = path.resolve(
-  args.log ?? `${__dirname}/../../../.scratch/libraryon-import/log.json`
-)
+if (!args.log || args.log === "true") {
+  console.error(
+    "--log=<path> is required: pass the LibraryOn import log in operator-private storage outside the repository"
+  )
+  process.exit(1)
+}
+const LOG_PATH = path.resolve(args.log)
 const DISTRICTS_PATH = path.join(path.dirname(LOG_PATH), "districts.json")
 const MAX_FAILED_IN_A_ROW = 25
 
