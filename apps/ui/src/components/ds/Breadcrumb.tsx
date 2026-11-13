@@ -40,8 +40,6 @@ interface BreadcrumbProps {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-const DEFAULT_ROOT = { label: "Home", href: "/" }
-
 function slugToLabel(slug: string): string {
   return slug
     .split("-")
@@ -65,7 +63,7 @@ function itemsFromPath(
         : undefined,
   }))
 
-  const rootItem = root === false ? null : (root ?? DEFAULT_ROOT)
+  const rootItem = root === false ? null : root
 
   return rootItem ? [rootItem, ...built] : built
 }
@@ -87,7 +85,9 @@ export function Breadcrumb({
 
   const pathname = usePathname()
 
-  const items = explicitItems ?? itemsFromPath(pathname, labels, root)
+  const items =
+    explicitItems ??
+    itemsFromPath(pathname, labels, root ?? { label: tUi("home"), href: "/" })
 
   if (items.length === 0) return null
 

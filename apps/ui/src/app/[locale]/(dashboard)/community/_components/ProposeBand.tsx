@@ -1,29 +1,11 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { parseHeroText } from "@/components/ds"
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 
 import { proposeActionHref } from "./NoticeboardHeroActions"
-
-const RULES = [
-  {
-    icon: "mdi:target",
-    title: "One Focus per drive",
-    text: "One kind of gap, such as opening hours, filled from one small panel.",
-  },
-  {
-    icon: "mdi:flag-checkered",
-    title: "A finish line and an end date",
-    text: "At most 2,000 libraries to do, and no more than 90 days.",
-  },
-  {
-    icon: "mdi:book-open-variant-outline",
-    title: "Openly licensed sources",
-    text: "Facts from a library’s own website are fine. Data copied from map services isn’t.",
-  },
-] as const
 
 const PILL =
   "inline-flex min-h-11 items-center gap-1.5 rounded-full px-[22px] py-3 text-base font-semibold no-underline transition-colors"
@@ -43,7 +25,35 @@ export function ProposeBand({
   readonly signedIn: boolean
   readonly howHref: string | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const RULES = [
+    {
+      icon: "mdi:target",
+      title: tStatic("communityRoute.one_focus_per_drive"),
+      text: tStatic(
+        "communityRoute.one_kind_of_gap_such_as_opening_hours_filled_from_one_small_panel"
+      ),
+    },
+    {
+      icon: "mdi:flag-checkered",
+      title: tStatic("communityRoute.a_finish_line_and_an_end_date"),
+      text: tStatic(
+        "communityRoute.at_most_2_000_libraries_to_do_and_no_more_than_90_days"
+      ),
+    },
+    {
+      icon: "mdi:book-open-variant-outline",
+      title: tStatic("communityRoute.openly_licensed_sources"),
+      text: tStatic(
+        "communityRoute.facts_from_a_library_s_own_website_are_fine_data_copied_from_map_services_isn_t"
+      ),
+    },
+  ] as const
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -117,7 +127,7 @@ export function ProposeBand({
             icon={board ? "mdi:plus" : "mdi:pin-outline"}
             width={18}
           />
-          {board ? tUi("new_drive") : "Propose a drive"}
+          {board ? tUi("new_drive") : tExisting("dashboard.proposeDrive")}
         </GlobalLink>
         {howHref ? (
           <GlobalLink
@@ -125,7 +135,7 @@ export function ProposeBand({
             className={`${PILL} border border-(--t-border-hi) bg-(--t-bg-deep) hover:border-(--t-accent-primary)`}
             style={{ color: T.ink.base }}
           >
-            How drives work
+            {tExisting("homepageContribute.howDrivesWork")}
           </GlobalLink>
         ) : null}
       </div>

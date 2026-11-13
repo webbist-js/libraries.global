@@ -4,6 +4,7 @@ import {
   networkHref,
 } from "@repo/shared-data"
 import Form from "next/form"
+import { useTranslations } from "next-intl"
 
 import { EmptyState } from "@/components/ds/EmptyState"
 import { SelectField } from "@/components/ds/SelectField"
@@ -25,6 +26,10 @@ export function NetworkDirectory({
   readonly query: URLSearchParams
   readonly basePath?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const hasFilters = ["q", "kind", "country", "region"].some((key) =>
     Boolean(query.get(key))
   )
@@ -41,17 +46,17 @@ export function NetworkDirectory({
         key={query.toString()}
         action=""
         className="network-filter-card grid items-end gap-4 sm:grid-cols-2 @min-[900px]:grid-cols-4"
-        aria-label="Filter services and networks"
+        aria-label={tStatic("network.filter_services_and_networks")}
         {...analyticsAttributes("search", {
           interaction_source: "network_directory",
           search_type: "networks",
         })}
       >
         <label className="grid gap-2">
-          Name
+          {tExisting("ui.name")}
           <input
             type="search"
-            placeholder="Service or university name"
+            placeholder={tStatic("network.service_or_university_name")}
             name="q"
             defaultValue={query.get("q") ?? ""}
             className={`${STAFF_FIELD} h-12`}
@@ -59,13 +64,13 @@ export function NetworkDirectory({
           />
         </label>
         <label className="grid gap-2">
-          Kind
+          {tStatic("common.kind")}
           <SelectField
             name="kind"
             defaultValue={query.get("kind") ?? ""}
             className={`${STAFF_FIELD} h-12`}
             options={[
-              { value: "", label: "All networks" },
+              { value: "", label: tExisting("atlasNetwork.allNetworks") },
               ...NETWORK_KINDS.map((kind) => ({
                 value: String(kind),
                 label: String(NETWORK_KIND_LABELS[kind]),
@@ -81,13 +86,13 @@ export function NetworkDirectory({
         />
         {data.regions?.length ? (
           <label className="grid gap-2">
-            Region
+            {tExisting("discovery.regions")}
             <SelectField
               name="region"
               defaultValue={query.get("region") ?? ""}
               className={`${STAFF_FIELD} h-12`}
               options={[
-                { value: "", label: "All regions" },
+                { value: "", label: tExisting("atlasNetwork.allRegions") },
                 ...data.regions.map((row) => ({
                   value: String(row.slug),
                   label: String(row.name),
@@ -102,50 +107,56 @@ export function NetworkDirectory({
           size="pill"
           className="h-12 min-h-12 py-2.5"
         >
-          Find services
+          {tStatic("network.find_services")}
         </Button>
         <Link className="network-page-link" href={basePath}>
-          Clear filters
+          {tExisting("ui.clear_filters")}
         </Link>
       </Form>
       <details className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-5 text-sm">
         <summary className="cursor-pointer font-semibold">
-          How to use this directory
+          {tStatic("network.how_to_use_this_directory")}
         </summary>
         <p className="mt-3 mb-0 max-w-[72ch] text-(--t-ink-dim)">
-          Explore library services, university systems and consortia. Each page
-          lists its published member libraries and available source information.
+          {tStatic(
+            "network.explore_library_services_university_systems_and_consortia_each_page_lists_its_published_member_libra"
+          )}
         </p>
         <dl className="mt-5 mb-0 grid gap-x-10 gap-y-5 border-t border-(--t-border-line) pt-5 sm:grid-cols-2">
           <div>
-            <dt className="mb-1 font-semibold">Name</dt>
+            <dt className="mb-1 font-semibold">{tExisting("ui.name")}</dt>
             <dd className="m-0 text-(--t-ink-dim)">
-              Search for all or part of a service, university system or
-              consortium name.
+              {tStatic(
+                "network.search_for_all_or_part_of_a_service_university_system_or_consortium_name"
+              )}
             </dd>
           </div>
           <div>
-            <dt className="mb-1 font-semibold">Kind</dt>
+            <dt className="mb-1 font-semibold">{tStatic("common.kind")}</dt>
             <dd className="m-0 text-(--t-ink-dim)">
-              Choose a public library service, a university system or a
-              consortium connecting institutions.
-            </dd>
-          </div>
-          <div>
-            <dt className="mb-1 font-semibold">Country and region</dt>
-            <dd className="m-0 text-(--t-ink-dim)">
-              Narrow the directory geographically. Country pages keep their
-              country selected; regions appear where available.
+              {tStatic(
+                "network.choose_a_public_library_service_a_university_system_or_a_consortium_connecting_institutions"
+              )}
             </dd>
           </div>
           <div>
             <dt className="mb-1 font-semibold">
-              Find services and clear filters
+              {tStatic("network.country_and_region")}
             </dt>
             <dd className="m-0 text-(--t-ink-dim)">
-              Apply your chosen filters, or reset them to browse again. Results
-              link to member libraries, maps and source information; pagination
-              shows more matches.
+              {tStatic(
+                "network.narrow_the_directory_geographically_country_pages_keep_their_country_selected_regions_appear_where_a"
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt className="mb-1 font-semibold">
+              {tStatic("network.find_services_and_clear_filters")}
+            </dt>
+            <dd className="m-0 text-(--t-ink-dim)">
+              {tStatic(
+                "network.apply_your_chosen_filters_or_reset_them_to_browse_again_results_link_to_member_libraries_maps_and_so"
+              )}
             </dd>
           </div>
         </dl>
@@ -165,7 +176,7 @@ export function NetworkDirectory({
           }
           action={
             <Link href="/map" className="network-page-link">
-              Explore the Atlas
+              {tStatic("network.explore_the_atlas")}
             </Link>
           }
         />
@@ -204,7 +215,7 @@ export function NetworkDirectory({
                 content_id: row.documentId,
               })}
             >
-              Explore the network
+              {tStatic("network.explore_the_network")}
             </Link>
           </li>
         ))}
@@ -215,7 +226,7 @@ export function NetworkDirectory({
         page={data.page}
         pageSize={data.pageSize}
         total={data.total}
-        label="Directory pages"
+        label={tStatic("network.directory_pages")}
       />
     </div>
   )

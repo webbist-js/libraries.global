@@ -1,6 +1,8 @@
 import { hasLocale } from "next-intl"
 import { getRequestConfig } from "next-intl/server"
 
+import { loadCatalogue } from "@/i18n/catalogues"
+
 import { routing } from "./routing"
 
 export default getRequestConfig(async ({ requestLocale }) => {
@@ -12,12 +14,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
 
   return {
     locale,
-    messages: (
-      await (locale === "en"
-        ? // When using Turbopack, this will enable HMR for `en`
-          import("../../locales/en.json")
-        : import(`../../locales/${locale}.json`))
-    ).default,
+    // The server has every message; client components get scoped subsets
+    // (see src/i18n/scoped-messages.tsx).
+    messages: await loadCatalogue(locale),
     timeZone: "Europe/Prague",
   }
 })

@@ -2,15 +2,12 @@ import { notFound } from "next/navigation"
 
 import { DiscussionThread } from "@/components/discussions/DiscussionThread"
 import { Container } from "@/components/elementary/Container"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 export const metadata = privateMetadata("Discussion")
-export default async function DiscussionPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+async function DiscussionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (
     !/^(?:[a-z0-9]{20,32}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/.test(
@@ -26,3 +23,8 @@ export default async function DiscussionPage({
     </Container>
   )
 }
+
+export default withMessages(
+  DiscussionPage,
+  "[locale]/(dashboard)/community/discussions/[id]/page"
+)

@@ -3,6 +3,7 @@ import type { Core } from "@strapi/strapi"
 import { EUROPE_LIBRARY_DATASETS } from "./europe-library-datasets"
 
 import canadaOdcaf from "./canada-odcaf-dataset.json"
+import expansionLibraries from "./expansion-library-datasets.json"
 import mexicoSic from "./mexico-sic-dataset.json"
 import openStreetMap from "./openstreetmap-dataset.json"
 
@@ -37,6 +38,7 @@ export type DatasetSeed = {
 
 export const DATASET_SEED: DatasetSeed[] = [
   ...EUROPE_LIBRARY_DATASETS,
+  ...(expansionLibraries as DatasetSeed[]),
   openStreetMap as DatasetSeed,
   mexicoSic as DatasetSeed,
   canadaOdcaf as DatasetSeed,

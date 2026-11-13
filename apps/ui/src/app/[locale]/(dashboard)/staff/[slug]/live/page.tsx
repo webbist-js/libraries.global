@@ -11,6 +11,7 @@ import {
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
+import { withMessages } from "@/i18n/scoped-messages"
 import { canStaffTool } from "@/lib/access-server"
 import { mobileConsoleHref } from "@/lib/mobile-app"
 import type { LiveSettingsResponse } from "@/lib/mobile-live/types"
@@ -18,7 +19,7 @@ import { loadStaffPage } from "@/lib/staff/server"
 import type { StaffTeam } from "@/lib/staff/types"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-export default async function LiveSettingsPage({
+async function LiveSettingsPage({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>
@@ -71,3 +72,8 @@ export default async function LiveSettingsPage({
     />
   )
 }
+
+export default withMessages(
+  LiveSettingsPage,
+  "[locale]/(dashboard)/staff/[slug]/live/page"
+)

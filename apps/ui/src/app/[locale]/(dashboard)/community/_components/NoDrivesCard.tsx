@@ -1,25 +1,10 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { buttonVariants } from "@/components/ui/button"
 import { T } from "@/lib/design-tokens"
 import { proposeHref } from "@/lib/drives/propose-link"
-
-const DRIVE_STEPS = [
-  {
-    title: "Someone proposes a gap",
-    text: "A place plus one missing detail, with a public source.",
-  },
-  {
-    title: "A Moderator reviews it",
-    text: "It opens on its start date, with a goal and an end date.",
-  },
-  {
-    title: "Everyone chips in",
-    text: "Small tasks, each checked by a reviewer.",
-  },
-]
 
 /**
  * The Noticeboard's first card until drives exist (D1 replaces it with the
@@ -27,7 +12,29 @@ const DRIVE_STEPS = [
  * propose a drive), and how drives work.
  */
 export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+  const DRIVE_STEPS = [
+    {
+      title: tStatic("communityRoute.someone_proposes_a_gap"),
+      text: tStatic(
+        "communityRoute.a_place_plus_one_missing_detail_with_a_public_source"
+      ),
+    },
+    {
+      title: tStatic("communityRoute.a_moderator_reviews_it"),
+      text: tStatic(
+        "communityRoute.it_opens_on_its_start_date_with_a_goal_and_an_end_date"
+      ),
+    },
+    {
+      title: tStatic("communityRoute.everyone_chips_in"),
+      text: tStatic("communityRoute.small_tasks_each_checked_by_a_reviewer"),
+    },
+  ]
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -60,7 +67,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
             color: T.ink.base,
           }}
         >
-          No drives are open yet
+          {tStatic("communityRoute.no_drives_are_open_yet")}
         </h2>
         <p
           className="m-0 max-w-[56ch] text-base leading-[1.6]"
@@ -75,7 +82,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
             href="/contribute/index"
             className={buttonVariants({ variant: "primary", size: "pill" })}
           >
-            Improve a record
+            {tStatic("common.improveRecord")}
           </GlobalLink>
           <GlobalLink
             href={proposeHref()}
@@ -87,7 +94,7 @@ export function NoDrivesCard({ hasGaps }: { readonly hasGaps: boolean }) {
             })}
             style={{ color: T.ink.base }}
           >
-            Propose a drive
+            {tExisting("dashboard.proposeDrive")}
           </GlobalLink>
         </div>
       </div>

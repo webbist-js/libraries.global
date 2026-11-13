@@ -2,6 +2,7 @@ import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 
 import { FollowingSection } from "@/app/[locale]/profile/[username]/_components/sections/FollowingSection"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { loadFollowedDriveViews } from "@/lib/drives/followed-drives-server"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
@@ -10,7 +11,7 @@ import {
   profileForViewer,
 } from "@/lib/public-profile-server"
 
-export default async function FollowingPage({
+async function FollowingPage({
   params,
 }: {
   params: Promise<{ locale: string; username: string }>
@@ -53,3 +54,8 @@ export default async function FollowingPage({
     />
   )
 }
+
+export default withMessages(
+  FollowingPage,
+  "[locale]/(dashboard)/profile/[username]/following/page"
+)

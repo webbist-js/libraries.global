@@ -5,6 +5,7 @@ import { AccountGuard } from "@/components/auth/AccountGuard"
 import { ModerationWorkspace } from "@/components/moderation/ModerationWorkspace"
 import { MODERATION_PATH } from "@/components/moderation/queue-navigation"
 import type { WorkspaceView } from "@/components/moderation/workspace"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities } from "@/lib/access-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
@@ -13,7 +14,7 @@ import { privateMetadata } from "@/lib/seo/metadata"
 export const metadata = privateMetadata("Moderation")
 
 /** Page-level guards and backend authorization remain authoritative. */
-export default async function ModerationLayout({
+async function ModerationLayout({
   children,
 }: {
   readonly children: ReactNode
@@ -48,3 +49,8 @@ export default async function ModerationLayout({
     </AccountGuard>
   )
 }
+
+export default withMessages(
+  ModerationLayout,
+  "[locale]/(dashboard)/moderation/layout"
+)

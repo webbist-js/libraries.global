@@ -1,5 +1,4 @@
 "use client"
-
 import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
 
@@ -17,6 +16,10 @@ import type { TeamSummary } from "@/lib/staff/types"
  * /developers and is bought separately; neither grants library editing.
  */
 export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("staffWorkspace")
   const { teams: sessionTeams, libraries, ready } = useStaff()
   const rows: TeamSummary[] = preferredTeams(
@@ -31,16 +34,17 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
   if ((!teams && !ready) || rows.length === 0) return null
   if (rows.length > 1)
     return (
-      <StaffPanel title="Your Team" compact>
+      <StaffPanel title={tExisting("staffWorkspace.teamLinks")} compact>
         <p className="text-base leading-relaxed text-(--t-ink-dim)">
-          Your account has older memberships to reconcile before opening its
-          Team workspace.
+          {tStatic(
+            "staff.your_account_has_older_memberships_to_reconcile_before_opening_its_team_workspace"
+          )}
         </p>
         <Link
           href="/staff/teams"
           className="inline-flex min-h-11 items-center font-semibold text-(--t-accent-primary) underline underline-offset-4"
         >
-          Check Team membership
+          {tStatic("staff.check_team_membership")}
         </Link>
       </StaffPanel>
     )
@@ -71,7 +75,7 @@ export function YourTeamCard({ teams }: { readonly teams?: TeamSummary[] }) {
                   ? "You organise it"
                   : team.organiserName
                     ? "Organised by " + team.organiserName
-                    : "Member"}
+                    : tExisting("teamInvitation.member")}
                 {" · "}
                 {t("coverageCount", { count: team.libraryCount })}
               </p>

@@ -1,17 +1,19 @@
 // apps/ui/src/app/[locale]/libraries/page.tsx
 import type { Metadata } from "next"
 import { cookies, headers } from "next/headers"
+import { getTranslations } from "next-intl/server"
 import { Suspense } from "react"
 
 import { DismissiblePrompt } from "@/components/ds/DismissiblePrompt"
 import { MainContent } from "@/components/ds/MainContent"
-import { FIND_CONTRIBUTE_PROMPT } from "@/components/home/homepage.content"
+import { createFindContributePrompt } from "@/components/home/homepage.content"
 import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
 import {
   findQueryOf,
   findStateFromParams,
 } from "@/components/index-page/find-helpers"
 import { FindLibraryPage } from "@/components/index-page/FindLibraryPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { isPromptHidden } from "@/lib/dismissed-prompts"
@@ -53,11 +55,13 @@ async function strapiLibraryTotal(): Promise<number> {
   return stats?.meta?.pagination?.total ?? 0
 }
 
-export default async function FindLibraryRoute(props: {
+async function FindLibraryRoute(props: {
   params: Promise<{ locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await props.params
+  const t = await getTranslations("homepageFallback")
+  const prompt = createFindContributePrompt(t)
   const raw = await props.searchParams
   // The page's own state, so the first render already shows this URL's
   // results: one page of hits, never the whole index.
@@ -118,8 +122,8 @@ export default async function FindLibraryRoute(props: {
                     <FinalCtaSection
                       compact
                       contained
-                      band={FIND_CONTRIBUTE_PROMPT.band}
-                      benefits={FIND_CONTRIBUTE_PROMPT.benefits}
+                      band={prompt.band}
+                      benefits={prompt.benefits}
                       signedIn={signedIn}
                       dismissLabel="Hide this"
                     />
@@ -133,3 +137,8 @@ export default async function FindLibraryRoute(props: {
     </div>
   )
 }
+
+export default withMessages(
+  FindLibraryRoute,
+  "[locale]/(dashboard)/libraries/page"
+)

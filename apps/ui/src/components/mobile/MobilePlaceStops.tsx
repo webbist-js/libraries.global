@@ -1,5 +1,5 @@
 "use client"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { Card } from "@/components/ds"
@@ -64,7 +64,9 @@ export function MobilePlaceStops({
   slug: string
   name: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   // Keyset paging: `cursors[n]` is the cursor that opens page n (null for
   // the first); the total comes with the first page. The paging state is
@@ -145,11 +147,12 @@ export function MobilePlaceStops({
   return (
     <section aria-labelledby={`mobile-stops-${slug}`}>
       <h2 id={`mobile-stops-${slug}`} className="type-h2">
-        Mobile libraries that visit {name}
+        {tStatic("mobile.mobile_libraries_that_visit")} {name}
       </h2>
       <p>
-        These libraries come to you. Visit times use each service’s local
-        timezone.
+        {tStatic(
+          "mobile.these_libraries_come_to_you_visit_times_use_each_service_s_local_timezone"
+        )}
       </p>
       {error && <p role="status">{error}</p>}
       {visible && (

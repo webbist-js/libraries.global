@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -15,12 +16,14 @@ export function DriveQueueStrip({
 }: {
   readonly rows: { drive: DriveTag; waiting: number }[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (rows.length === 0) return null
 
   return (
     <div className="flex flex-col gap-3 rounded-[24px] border border-(--t-palette-mint-bg) bg-(--t-palette-mint-soft) p-5">
       <h2 className="type-h2 m-0" style={{ color: T.ink.base }}>
-        Drives with work waiting
+        {tStatic("moderation.drives_with_work_waiting")}
       </h2>
       <ul className="m-0 flex list-none flex-wrap gap-2 p-0">
         {rows.map(({ drive, waiting }) => (

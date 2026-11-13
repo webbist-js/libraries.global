@@ -1,11 +1,12 @@
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { Container } from "@/components/elementary/Container"
+import { withMessages } from "@/i18n/scoped-messages"
 import { canStaffTool } from "@/lib/access-server"
 import { fetchStaffLibraryMeta, loadStaffPage } from "@/lib/staff/server"
 
 import { StaffShell } from "./_components/StaffShell"
 
-export default async function StaffLibraryLayout({
+async function StaffLibraryLayout({
   children,
   params,
 }: {
@@ -33,3 +34,8 @@ export default async function StaffLibraryLayout({
     </>
   )
 }
+
+export default withMessages(
+  StaffLibraryLayout,
+  "[locale]/(dashboard)/staff/[slug]/layout"
+)

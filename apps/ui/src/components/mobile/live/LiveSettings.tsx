@@ -1,6 +1,8 @@
 "use client"
+
 import { Icon } from "@iconify/react"
 import type { PublicLiveState } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -47,6 +49,8 @@ export function LiveSettings({
   /** "Going live from your phone" in Knowledge, when the page resolves it. */
   readonly learnMoreHref?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const id = initial.library.id,
     [live, setLive] = useState<PublicLiveState | null>(null),
     [note, setNote] = useState<{ tone: "ok" | "danger"; text: string } | null>(
@@ -89,7 +93,7 @@ export function LiveSettings({
       />
       <section aria-labelledby="live-sharing-heading">
         <h2 id="live-sharing-heading" className="type-h2 m-0">
-          Live sharing settings
+          {tStatic("common.liveSharingSettings")}
         </h2>
         <p className="m-0 mt-1 mb-5 text-base" style={{ color: T.ink.dim }}>
           For claimants of {initial.library.name}.

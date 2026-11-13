@@ -1,9 +1,10 @@
 import type { Locale } from "next-intl"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { redirect } from "@/lib/navigation"
 
 /** Short URL for /legal/privacy. */
-export default async function PrivacyRedirect({
+async function PrivacyRedirect({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -12,3 +13,5 @@ export default async function PrivacyRedirect({
 
   redirect({ locale: locale as Locale, href: "/legal/privacy" })
 }
+
+export default withMessages(PrivacyRedirect, "[locale]/privacy/page")

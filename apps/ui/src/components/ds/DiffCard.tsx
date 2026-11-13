@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -24,6 +25,8 @@ export function DiffCard({
   /** A line after a decision ("Published … Credited to …"). */
   footer?: ReactNode
 }) {
+  const t = useTranslations("sharedControls.diff")
+
   return (
     <article
       className="flex flex-col gap-3 rounded-[22px] border p-4 sm:p-5"
@@ -57,9 +60,9 @@ export function DiffCard({
                   color: TYPE_TINT.special.fg,
                 }}
               >
-                <span className="text-sm font-semibold">Now</span>
+                <span className="text-sm font-semibold">{t("now")}</span>
                 <del className="wrap-break-word" style={{ color: T.ink.base }}>
-                  {row.now || "Empty"}
+                  {row.now || t("empty")}
                 </del>
               </span>
               <span
@@ -69,9 +72,9 @@ export function DiffCard({
                   color: TYPE_TINT.public.fg,
                 }}
               >
-                <span className="text-sm font-semibold">Suggested</span>
+                <span className="text-sm font-semibold">{t("suggested")}</span>
                 <span className="wrap-break-word" style={{ color: T.ink.base }}>
-                  {row.suggested || "Empty"}
+                  {row.suggested || t("empty")}
                 </span>
               </span>
             </dd>
@@ -81,7 +84,7 @@ export function DiffCard({
       {evidence ? (
         <p className="m-0 text-sm wrap-break-word" style={{ color: T.ink.dim }}>
           <span className="font-semibold" style={{ color: T.ink.base }}>
-            Source:
+            {t("source")}
           </span>{" "}
           {evidence}
         </p>

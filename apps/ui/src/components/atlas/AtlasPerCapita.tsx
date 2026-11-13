@@ -5,7 +5,7 @@ import type {
   AtlasAccessMetric,
   AtlasPerCapitaResponse,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -96,7 +96,11 @@ export function AtlasPerCapitaControls({
   showAnalysisLink = true,
   showOpacity = true,
 }: LibraryAccessControlsProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const counted = types.length ? types : TYPE_GROUPS.map((group) => group.key)
 
@@ -106,21 +110,25 @@ export function AtlasPerCapitaControls({
       className="flex flex-col gap-4 text-sm"
     >
       <div className="flex items-center justify-between">
-        <strong>Show as</strong>
+        <strong>{tStatic("atlas.show_as")}</strong>
       </div>
       <Segmented
         label={tUi("library_access_measure")}
         value={metric}
         onChange={onMetric}
         options={[
-          { value: "per100k", label: "Per 100k people" },
-          { value: "peoplePerLibrary", label: "People per library" },
+          { value: "per100k", label: tStatic("atlas.per_100k_people") },
+          {
+            value: "peoplePerLibrary",
+            label: tStatic("atlas.people_per_library"),
+          },
         ]}
       />
       <div className="flex items-center justify-between">
-        <strong>Areas</strong>
+        <strong>{tExisting("articleContext.areas")}</strong>
         <span style={{ color: T.ink.dim }}>
-          Now: {resolvedLevel === "local" ? "local areas" : "countries"}
+          {tStatic("atlas.now_label")}{" "}
+          {resolvedLevel === "local" ? "local areas" : "countries"}
         </span>
       </div>
       <Segmented
@@ -128,21 +136,23 @@ export function AtlasPerCapitaControls({
         value={level}
         onChange={onLevel}
         options={[
-          { value: "auto", label: "Auto" },
+          { value: "auto", label: tStatic("atlas.auto") },
           { value: "countries", label: tUi("countries") },
-          { value: "local", label: "Local areas" },
+          { value: "local", label: tStatic("atlas.local_areas") },
         ]}
       />
       <p className="m-0 text-xs leading-relaxed" style={{ color: T.ink.dim }}>
-        Auto uses local areas when you zoom into the UK. Local comparisons
-        currently cover UK districts; countries cover the world.
+        {tStatic(
+          "atlas.auto_uses_local_areas_when_you_zoom_into_the_uk_local_comparisons_currently_cover_uk_districts_count"
+        )}
       </p>
       <fieldset className="m-0 border-0 p-0">
         <legend className="mb-2 w-full">
           <span className="flex justify-between">
-            <strong>Libraries counted</strong>
+            <strong>{tStatic("atlas.libraries_counted")}</strong>
             <span style={{ color: T.ink.dim }}>
-              {counted.length} of {TYPE_GROUPS.length} types
+              {counted.length} {tExisting("widgetPublic.of")}{" "}
+              {TYPE_GROUPS.length} types
             </span>
           </span>
         </legend>
@@ -178,14 +188,14 @@ export function AtlasPerCapitaControls({
         </div>
       </fieldset>
       <p className="m-0 text-xs leading-relaxed" style={{ color: T.ink.dim }}>
-        Counts use published records with usable map pins. Each mobile service
-        counts once at its depot, never once per stop. Also follows your
-        Filters. Planned libraries and permanent closures are excluded.
+        {tStatic(
+          "atlas.counts_use_published_records_with_usable_map_pins_each_mobile_service_counts_once_at_its_depot_never"
+        )}
       </p>
       {showOpacity ? (
         <label className="flex flex-col gap-2 font-semibold">
           <span className="flex justify-between">
-            Opacity <span>{Math.round(opacity * 100)}%</span>
+            {tStatic("atlas.opacity")} <span>{Math.round(opacity * 100)}%</span>
           </span>
           <input
             className="w-full accent-(--t-accent-primary)"
@@ -207,7 +217,7 @@ export function AtlasPerCapitaControls({
           style={{ color: T.accent.primary, borderColor: T.border.hi }}
         >
           <Icon name="layers" size={18} />
-          Open analysis
+          {tStatic("common.openAnalysis")}
         </button>
       ) : null}
     </section>

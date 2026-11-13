@@ -1,17 +1,11 @@
 "use client"
 
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import { type ReactNode, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
 import { type PublicPrefs, resolvePublicPrefs } from "@/lib/types/profile"
-
-const PREF_ITEMS: { key: keyof PublicPrefs; label: string }[] = [
-  { key: "showLocation", label: "Location" },
-  { key: "showAffiliation", label: "Verified affiliation" },
-  { key: "showActivity", label: "Activity graph" },
-  { key: "showFollows", label: "Libraries and drives I follow" },
-]
 
 /** Owner-only banner: visibility message, "Manage what's public" toggle panel, and trailing actions. */
 export function ProfilePrivacyControls({
@@ -23,6 +17,20 @@ export function ProfilePrivacyControls({
   message: ReactNode
   actions?: ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+  const PREF_ITEMS: { key: keyof PublicPrefs; label: string }[] = [
+    { key: "showLocation", label: tStatic("profileRoute.location") },
+    {
+      key: "showAffiliation",
+      label: tStatic("profileRoute.verified_affiliation"),
+    },
+    { key: "showActivity", label: tStatic("profileRoute.activity_graph") },
+    {
+      key: "showFollows",
+      label: tStatic("profileRoute.libraries_and_drives_i_follow"),
+    },
+  ]
+
   const [open, setOpen] = useState(false)
   const [prefs, setPrefs] = useState<PublicPrefs>(() =>
     resolvePublicPrefs(initialPrefs)
@@ -78,7 +86,7 @@ export function ProfilePrivacyControls({
             className="rounded-full px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base, background: T.bg.deep }}
           >
-            Manage what&rsquo;s public
+            {tStatic("profileRoute.manage_what_rsquo_s_public")}
           </button>
           {actions}
         </div>
@@ -90,7 +98,7 @@ export function ProfilePrivacyControls({
           style={{ borderColor: T.border.line, background: T.bg.deep }}
         >
           <legend className="px-1 text-sm font-semibold">
-            Shown on your public profile
+            {tStatic("profileRoute.shown_on_your_public_profile")}
           </legend>
           <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
             {PREF_ITEMS.map(({ key, label }) => (
@@ -117,7 +125,7 @@ export function ProfilePrivacyControls({
               className="m-0 mt-2 text-sm font-semibold"
               style={{ color: T.accent.danger }}
             >
-              Couldn&rsquo;t save — please try again.
+              {tStatic("profileRoute.couldn_rsquo_t_save_please_try_again")}
             </p>
           ) : null}
         </fieldset>

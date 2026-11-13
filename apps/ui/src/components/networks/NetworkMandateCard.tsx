@@ -1,5 +1,7 @@
 "use client"
+
 import type { NetworkMandate } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState, useTransition } from "react"
 
 import {
@@ -20,6 +22,10 @@ export function NetworkMandateCard({
   readonly onChanged: () => void
   readonly onAdditions: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [reason, setReason] = useState(""),
     [error, setError] = useState(""),
     [pending, startTransition] = useTransition()
@@ -37,7 +43,9 @@ export function NetworkMandateCard({
         onChanged()
       } catch (failure) {
         setError(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
@@ -46,9 +54,10 @@ export function NetworkMandateCard({
   return (
     <StaffPanel title={mandate.network.name}>
       <p>
-        Management {mandate.status} · {mandate.approvedLibraryIds.length}{" "}
-        approved libraries · {mandate.ownerLibraryIds.length} with owner
-        responsibility · revision {mandate.version}
+        {tStatic("network.management")} {mandate.status} ·{" "}
+        {mandate.approvedLibraryIds.length} approved libraries ·{" "}
+        {mandate.ownerLibraryIds.length} with owner responsibility · revision{" "}
+        {mandate.version}
       </p>
       <p role="status">
         {mandate.fulfilment.complete
@@ -57,7 +66,9 @@ export function NetworkMandateCard({
       </p>
       {Object.keys(mandate.fulfilment.failures).length ? (
         <p role="alert">
-          Some updates need retrying. Completed updates will be preserved.
+          {tStatic(
+            "network.some_updates_need_retrying_completed_updates_will_be_preserved"
+          )}
         </p>
       ) : null}
       <div className="flex flex-wrap gap-4">
@@ -65,7 +76,7 @@ export function NetworkMandateCard({
           className={STAFF_LINK}
           href={`/staff/networks/libraries?networkId=${mandate.network.documentId}`}
         >
-          Open service libraries
+          {tStatic("network.open_service_libraries")}
         </Link>
         {!mandate.fulfilment.complete ? (
           <Button
@@ -73,13 +84,14 @@ export function NetworkMandateCard({
             disabled={pending}
             onClick={() => act("retry")}
           >
-            Retry access updates
+            {tStatic("network.retry_access_updates")}
           </Button>
         ) : null}
         {mandate.additionsAwaitingReview.length &&
         mandate.status === "approved" ? (
           <Button variant="surface" disabled={pending} onClick={onAdditions}>
-            Review {mandate.additionsAwaitingReview.length} new source libraries
+            {tExisting("homepageFallback.review")}{" "}
+            {mandate.additionsAwaitingReview.length} new source libraries
           </Button>
         ) : null}
       </div>
@@ -93,10 +105,10 @@ export function NetworkMandateCard({
       {mandate.status === "approved" ? (
         <details className="mt-4">
           <summary className="min-h-11 cursor-pointer py-2">
-            End this management authority
+            {tStatic("network.end_this_management_authority")}
           </summary>
           <label className="grid gap-2">
-            Reason
+            {tStatic("common.reason")}
             <input
               className={STAFF_FIELD}
               value={reason}
@@ -105,15 +117,16 @@ export function NetworkMandateCard({
             />
           </label>
           <p className="text-sm">
-            This removes access derived from the service mandate, including Team
-            assignments based on it. Independent claims remain.
+            {tStatic(
+              "network.this_removes_access_derived_from_the_service_mandate_including_team_assignments_based_on_it_independ"
+            )}
           </p>
           <Button
             variant="surface"
             disabled={pending || !reason.trim()}
             onClick={() => act("reconcile")}
           >
-            Revoke service authority
+            {tStatic("network.revoke_service_authority")}
           </Button>
         </details>
       ) : null}

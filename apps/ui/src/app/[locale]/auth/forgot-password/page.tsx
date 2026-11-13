@@ -2,13 +2,14 @@ import type { Locale } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
 
 import { UtilityPage } from "@/components/utility/UtilityPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import { privateMetadata } from "@/lib/seo/metadata"
 
 import { ForgotPasswordForm } from "./_components/ForgotPasswordForm"
 
 export const metadata = privateMetadata("Forgot password")
 
-export default async function ForgotPasswordPage({
+async function ForgotPasswordPage({
   params,
 }: PageProps<"/[locale]/auth/forgot-password">) {
   const { locale } = (await params) as { locale: Locale }
@@ -20,3 +21,8 @@ export default async function ForgotPasswordPage({
     </UtilityPage>
   )
 }
+
+export default withMessages(
+  ForgotPasswordPage,
+  "[locale]/auth/forgot-password/page"
+)

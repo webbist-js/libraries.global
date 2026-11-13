@@ -1,4 +1,5 @@
 import { type NetworkAffiliation, networkHref } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import { Link } from "@/lib/navigation"
 
@@ -11,11 +12,13 @@ export function NetworkAffiliations({
 }: {
   readonly affiliations: readonly ProfileNetworkAffiliation[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!affiliations.length) return null
 
   return (
     <section className="my-6 rounded-2xl border border-(--t-border-line) bg-(--t-bg-deep) p-6">
-      <h2 className="type-h2">Services and networks</h2>
+      <h2 className="type-h2">{tStatic("common.servicesNetworks")}</h2>
       <ul className="m-0 list-none space-y-3 p-0">
         {affiliations.map((row) => (
           <li key={row.network.documentId}>

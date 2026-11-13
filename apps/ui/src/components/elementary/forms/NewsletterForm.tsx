@@ -20,10 +20,13 @@ type Status =
 
 export function NewsletterForm() {
   const tUi = useUiTranslations("ui")
+  const t = useUiTranslations("newsletterForm")
 
   const [status, setStatus] = useState<Status>({ kind: "idle" })
   const form = useForm<z.infer<FormSchemaType>>({
-    resolver: zodResolver(NewsletterFormSchema),
+    resolver: zodResolver(
+      NewsletterFormSchema.extend({ email: z.email(t("invalidEmail")) })
+    ),
     mode: "onBlur",
     reValidateMode: "onSubmit",
     defaultValues: { email: "", website: "" },
@@ -55,11 +58,14 @@ export function NewsletterForm() {
         kind: "error",
         message:
           res.status === 429
-            ? "Too many sign-ups from here for now. Please try again later."
-            : (json?.error ?? "Sign-up failed. Please try again."),
+            ? t("rateLimited")
+            : json?.error ===
+                "Use your account email for a newsletter subscription"
+              ? t("accountEmail")
+              : t("failed"),
       })
     } catch {
-      setStatus({ kind: "error", message: "Sign-up failed. Please try again." })
+      setStatus({ kind: "error", message: t("failed") })
     }
   }
 
@@ -78,14 +84,14 @@ export function NewsletterForm() {
             autoComplete="email"
             required
             fieldClassName="h-14 bg-(--t-bg-deep)"
-            aria-label="email"
+            aria-label={tUi("email_address")}
           />
           {/* Honeypot: hidden from people, filled by bots, rejected server-side. */}
           <div
             aria-hidden="true"
             className="absolute -left-[9999px] h-0 w-0 overflow-hidden"
           >
-            <label htmlFor={`${newsletterForm}-website`}>Website</label>
+            <label htmlFor={`${newsletterForm}-website`}>{t("website")}</label>
             <input
               id={`${newsletterForm}-website`}
               type="text"
@@ -114,8 +120,7 @@ export function NewsletterForm() {
           color: status.kind === "error" ? T.accent.danger : T.accent.ok,
         }}
       >
-        {status.kind === "sent" &&
-          "Thanks. If confirmation is needed, check your inbox to finish subscribing."}
+        {status.kind === "sent" && t("sent")}
         {status.kind === "error" && status.message}
       </p>
     </div>

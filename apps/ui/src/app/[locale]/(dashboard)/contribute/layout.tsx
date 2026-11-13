@@ -7,6 +7,7 @@ import {
   KNOWLEDGE_SLUGS,
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities, staffLibrariesOf } from "@/lib/access-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
@@ -14,7 +15,7 @@ import { getContributionSession } from "@/lib/contribution-session-server"
 // Only the public hub overrides noindex; editors and private work stay private.
 export const metadata: Metadata = { robots: { index: false, follow: false } }
 
-export default async function ContributeLayout({
+async function ContributeLayout({
   children,
   params,
 }: {
@@ -52,3 +53,8 @@ export default async function ContributeLayout({
     </ContributionAccountGuard>
   )
 }
+
+export default withMessages(
+  ContributeLayout,
+  "[locale]/(dashboard)/contribute/layout"
+)

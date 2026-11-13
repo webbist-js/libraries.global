@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 import { hubHref } from "@/components/contribute/wizard.logic"
 import type { ChecklistKey } from "@/components/library/library-page.helpers"
@@ -39,69 +38,72 @@ function tasksFor(
   gaps: readonly ChecklistKey[],
   library: { slug: string; name: string },
   questions: number,
-  mobile = false
+  mobile: boolean,
+  tStatic: ReturnType<typeof useTranslations<"staticUi">>,
+  t: ReturnType<typeof useTranslations<"libraryPage">>,
+  tExtra: ReturnType<typeof useTranslations<"libraryExtra">>
 ): Task[] {
   const all: Task[] = [
     {
       key: "facilities",
-      title: "Add accessibility details",
-      meta: `${questions} ${questions === 1 ? "question" : "questions"}`,
+      title: tStatic("library.add_accessibility_details"),
+      meta: tExtra("questions", { count: questions }),
       icon: "mdi:human",
       tint: ACADEMIC,
       href: "#access",
     },
     {
       key: "about",
-      title: "Describe the collections",
-      meta: "Add a source with what you know",
+      title: tStatic("library.describe_the_collections"),
+      meta: tExtra("source"),
       icon: "mdi:bookshelf",
       tint: SPECIAL,
       category: "Collections",
     },
     {
       key: "photo",
-      title: "Share a photo",
-      meta: "Your own, or one you may share",
+      title: tStatic("library.share_a_photo"),
+      meta: tExtra("photo"),
       icon: "mdi:camera-outline",
       tint: PUBLIC,
       href: hubHref("photo", library),
     },
     {
       key: "hours",
-      title: mobile ? "Add stops and times" : "Add the opening hours",
-      meta: "Add a source with what you know",
+      title: mobile ? t("tasks.addStops") : t("tasks.addHours"),
+      meta: tExtra("source"),
       icon: "mdi:clock-outline",
       tint: INDIGO,
       category: mobile ? "Stops & times" : "Opening hours",
     },
     {
       key: "address",
-      title: "Add the address",
-      meta: "Add a source with what you know",
+      title: tStatic("library.add_the_address"),
+      meta: tExtra("source"),
       icon: "mdi:map-marker-outline",
       tint: INDIGO,
       category: "Address or location",
     },
     {
       key: "location",
-      title: "Put it on the map",
-      meta: "Add a source with what you know",
+      title: tStatic("library.put_it_on_the_map"),
+      meta: tExtra("source"),
       icon: "mdi:map-marker-radius-outline",
       tint: INDIGO,
       category: "Address or location",
     },
     {
       key: "history",
-      title: "Add a date from its history",
-      meta: "Add a source with what you know",
+      title: tStatic("library.add_a_date_from_its_history"),
+      meta: tExtra("source"),
       icon: "mdi:history",
       tint: SPECIAL,
       category: "Something else",
     },
     {
       key: "contact",
-      title: "Add the official website",
-      meta: "Add a source with what you know",
+      title: tStatic("library.add_the_official_website"),
+      meta: tExtra("source"),
       icon: "mdi:web",
       tint: INDIGO,
       category: "Something else",
@@ -170,7 +172,8 @@ function TranslateRecord({
   /** Rule it off from tasks above it. */
   readonly divided: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExtra = useTranslations("libraryExtra")
+  const tUi = useTranslations("ui")
 
   const [first, ...rest] = locales
   if (!first) return null
@@ -192,7 +195,10 @@ function TranslateRecord({
         <TaskBody
           task={{
             title: tUi("translate_this_record"),
-            meta: rest.length > 0 ? `Into ${first.name}` : first.name,
+            meta:
+              rest.length > 0
+                ? tExtra("into", { language: first.name })
+                : first.name,
             icon: "mdi:translate",
             tint: INDIGO,
           }}
@@ -257,6 +263,10 @@ export function LibraryHelpPanel({
   readonly libraryType?: string | null
   readonly libraryWebsite?: string | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const t = useTranslations("libraryPage")
+  const tExtra = useTranslations("libraryExtra")
   const routeLocale = useLocale()
   const pathname = usePathname()
   const { open } = useCorrectionDrawer()
@@ -264,7 +274,10 @@ export function LibraryHelpPanel({
     gaps,
     { slug: librarySlug, name: libraryName },
     facilityQuestions,
-    libraryType === "Mobile"
+    libraryType === "Mobile",
+    tStatic,
+    t,
+    tExtra
   )
 
   const targets = translateTargets(translateLocales, routeLocale)
@@ -297,7 +310,7 @@ export function LibraryHelpPanel({
         className="type-panel-title m-0 mb-3"
         style={{ color: T.ink.base }}
       >
-        Help finish this record
+        {tStatic("library.help_finish_this_record")}
       </h2>
       {tasks.length > 0 ? (
         <ul className="m-0 flex list-none flex-col gap-2 p-0">

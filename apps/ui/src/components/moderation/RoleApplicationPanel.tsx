@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -41,6 +42,10 @@ export function RoleApplicationPanel({
   /** Locale code → name, for the languages asked for. */
   readonly localeNames: Record<string, string>
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const f = (raw && typeof raw === "object" ? raw : {}) as Record<
     string,
     unknown
@@ -59,22 +64,25 @@ export function RoleApplicationPanel({
     <div className="flex flex-col gap-5">
       <KeyValueList
         rows={[
-          { label: "Role", value: ROLE_NAMES[role] ?? role },
+          { label: tStatic("common.role"), value: ROLE_NAMES[role] ?? role },
           {
-            label: "Queue",
+            label: tStatic("moderation.queue"),
             value:
               role === "moderator" && typeof f.queue === "string"
                 ? (QUEUE_NAMES[f.queue] ?? f.queue)
                 : "",
           },
-          { label: "Languages", value: languages },
-          { label: "Sections", value: sections.join(", ") },
+          { label: tStatic("moderation.languages"), value: languages },
+          {
+            label: tExisting("articleConflict.sections"),
+            value: sections.join(", "),
+          },
         ].filter((r) => r.value)}
       />
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          Why they’re applying
+          {tStatic("moderation.why_they_re_applying")}
         </h3>
         {statement ? (
           <p
@@ -85,7 +93,7 @@ export function RoleApplicationPanel({
           </p>
         ) : (
           <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-            No statement.
+            {tStatic("moderation.no_statement")}
           </p>
         )}
       </div>
@@ -93,7 +101,7 @@ export function RoleApplicationPanel({
       {samples.length > 0 ? (
         <div className="flex flex-col gap-2">
           <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-            Samples of their work
+            {tStatic("moderation.samples_of_their_work")}
           </h3>
           <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
             {samples.map((url) => (
@@ -123,7 +131,7 @@ export function RoleApplicationPanel({
 
       <div className="flex flex-col gap-2">
         <h3 className={`type-h3 ${heading}`} style={{ color: T.ink.base }}>
-          The applicant
+          {tStatic("moderation.the_applicant")}
         </h3>
         <ApplicantSummary
           applicant={applicant}

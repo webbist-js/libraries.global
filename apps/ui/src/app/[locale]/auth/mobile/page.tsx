@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { mobileAppConfig, mobilePageTarget } from "@/lib/mobile-app"
 import { safeRedirectPath } from "@/lib/safe-redirect"
@@ -8,7 +9,7 @@ import { safeRedirectPath } from "@/lib/safe-redirect"
 export const dynamic = "force-dynamic"
 
 /** Account providers and onboarding stay on the main origin. */
-export default async function MobileSignIn({
+async function MobileSignIn({
   searchParams,
 }: {
   searchParams: Promise<{ next?: string }>
@@ -25,3 +26,5 @@ export default async function MobileSignIn({
     )
   redirect(new URL(path, config.mobile).href)
 }
+
+export default withMessages(MobileSignIn, "[locale]/auth/mobile/page")

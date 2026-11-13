@@ -1,10 +1,11 @@
-import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { type Locale, useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { FeatureGatePanel } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
+import { withMessages } from "@/i18n/scoped-messages"
 import { canStaffTool } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -60,21 +61,23 @@ function TrafficNotice({
 }: {
   readonly report: Exclude<TrafficReport, { status: "ready" }>
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const copy = {
     unconfigured: {
-      title: "Traffic reports aren’t connected yet",
+      title: tStatic("staffRoute.traffic_reports_aren_t_connected_yet"),
       body: "Traffic reports are free for your library’s staff. Reporting is not connected yet, so there are no figures to show.",
     },
     "no-page": {
-      title: "No public page to report on",
+      title: tStatic("staffRoute.no_public_page_to_report_on"),
       body: "Your library’s public page isn’t published yet, so there are no visits to count.",
     },
     quota: {
-      title: "Traffic figures are paused for now",
+      title: tStatic("staffRoute.traffic_figures_are_paused_for_now"),
       body: "We’ve reached Google Analytics’ reporting limit for the moment. Try again in an hour.",
     },
     error: {
-      title: "Traffic figures couldn’t be loaded",
+      title: tStatic("staffRoute.traffic_figures_couldn_t_be_loaded"),
       body: "Google Analytics didn’t answer just now. Try again shortly.",
     },
   }[report.status === "unavailable" ? report.reason : report.status]
@@ -96,14 +99,16 @@ function TrafficNotice({
   )
 }
 
-export default async function TrafficPage({
+async function TrafficPage({
   params,
   searchParams,
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
   readonly searchParams?: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
 
   const { locale, slug } = await params
   const { user, documentId } = await loadStaffPage(slug, await staffPathname())
@@ -121,10 +126,12 @@ export default async function TrafficPage({
           aria-labelledby="traffic-heading"
         >
           <h2 id="traffic-heading" className="type-h2 m-0">
-            Page traffic
+            {tStatic("staffRoute.page_traffic")}
           </h2>
           <p className="mt-3 mb-0 text-base" style={{ color: T.ink.dim }}>
-            Visits to your library’s page on Libraries Global.
+            {tStatic(
+              "staffRoute.visits_to_your_library_s_page_on_libraries_global"
+            )}
           </p>
           {report?.status === "ready" ? (
             <>
@@ -141,9 +148,9 @@ export default async function TrafficPage({
                 className="mt-6 mb-0 max-w-[75ch] text-sm leading-relaxed"
                 style={{ color: T.ink.dim }}
               >
-                Counted by Google Analytics for visitors who accept analytics
-                cookies, so refused consent and ad blockers make real visits
-                higher than shown. Figures can take up to a day to appear.
+                {tStatic(
+                  "staffRoute.counted_by_google_analytics_for_visitors_who_accept_analytics_cookies_so_refused_consent_and_ad_bloc"
+                )}
               </p>
             </>
           ) : report ? (
@@ -154,13 +161,18 @@ export default async function TrafficPage({
         <FeatureGatePanel
           badge="For verified staff"
           title={tUi("see_how_people_find_your_library")}
-          lead="Traffic reports are free for verified staff of this library. If your access changed recently, reload the page."
+          lead={tStatic(
+            "staffRoute.traffic_reports_are_free_for_verified_staff_of_this_library_if_your_access_changed_recently_reload_t"
+          )}
           points={[
             "Page views and visitors",
             "Daily views for 7, 30 or 90 days",
             "Where visitors came from",
           ]}
-          action={{ href: "/staff", label: "Check your staff access" }}
+          action={{
+            href: "/staff",
+            label: tStatic("staffRoute.check_your_staff_access"),
+          }}
           preview={<TrafficIllustration />}
           previewCaption="Illustration of a traffic report"
         />
@@ -172,3 +184,8 @@ export default async function TrafficPage({
     </div>
   )
 }
+
+export default withMessages(
+  TrafficPage,
+  "[locale]/(dashboard)/staff/[slug]/traffic/page"
+)

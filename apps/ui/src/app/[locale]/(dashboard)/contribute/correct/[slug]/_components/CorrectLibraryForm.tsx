@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useState } from "react"
 
@@ -56,6 +55,10 @@ const REVIEW_STEPS = [
 ] as const
 
 function ReviewSidebar() {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <aside
       aria-labelledby="correct-review-heading"
@@ -69,7 +72,7 @@ function ReviewSidebar() {
           color: T.ink.base,
         }}
       >
-        How review works
+        {tExisting("homepageContribute.howReviewWorks")}
       </h2>
       <ol className="mt-4 mb-0 flex list-none flex-col gap-4 p-0">
         {REVIEW_STEPS.map((step) => (
@@ -98,8 +101,9 @@ function ReviewSidebar() {
         className="mt-5 mb-0 pt-5 text-base leading-[1.6]"
         style={{ color: T.ink.dim, borderTop: `1px solid ${T.border.divider}` }}
       >
-        The more specific you are — the right hours, the new address, a link to
-        the source — the faster it goes through.
+        {tStatic(
+          "contributeRoute.the_more_specific_you_are_the_right_hours_the_new_address_a_link_to_the_source_the_faster_it_goes_th"
+        )}
       </p>
     </aside>
   )
@@ -109,7 +113,9 @@ export function CorrectLibraryForm({
   slug,
   libraryName,
 }: CorrectLibraryFormProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [category, setCategory] = useState<CorrectionCategory | "">("")
   const [note, setNote] = useState("")
@@ -155,7 +161,9 @@ export function CorrectLibraryForm({
         compact
         section={tUi("suggest_a_correction")}
         title={`Correct *${libraryName}.*`}
-        lead="Spotted something wrong on this library's page? Tell us what needs fixing and an editor will review it."
+        lead={tStatic(
+          "contributeRoute.spotted_something_wrong_on_this_library_s_page_tell_us_what_needs_fixing_and_an_editor_will_review_i"
+        )}
       />
 
       <div className="mx-auto w-full max-w-[1360px] px-4 py-8 sm:px-8 lg:py-12">
@@ -180,7 +188,7 @@ export function CorrectLibraryForm({
                   height={16}
                   aria-hidden="true"
                 />
-                Submitted
+                {tStatic("contributeRoute.submitted")}
               </span>
               <h2
                 id="correct-success-heading"
@@ -189,7 +197,7 @@ export function CorrectLibraryForm({
                   color: T.ink.base,
                 }}
               >
-                Correction submitted
+                {tStatic("contributeRoute.correction_submitted")}
               </h2>
               <p
                 className="mt-2 mb-6 max-w-[56ch] text-base leading-[1.6]"
@@ -202,7 +210,7 @@ export function CorrectLibraryForm({
                 href="/contribute/submissions"
                 className={primaryCtaSm}
               >
-                View my submissions
+                {tStatic("contributeRoute.view_my_submissions")}
                 <Icon
                   icon="mdi:arrow-right"
                   width={16}
@@ -224,7 +232,7 @@ export function CorrectLibraryForm({
                   color: T.ink.base,
                 }}
               >
-                What needs fixing?
+                {tStatic("contributeRoute.what_needs_fixing")}
               </h2>
               <p
                 className="mt-2 mb-6 max-w-[62ch] text-base leading-[1.6]"
@@ -240,7 +248,7 @@ export function CorrectLibraryForm({
               <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
                   <label style={fieldLabelStyle} htmlFor="category">
-                    What needs correcting?
+                    {tStatic("contributeRoute.what_needs_correcting")}
                     <RequiredTag />
                   </label>
                   <SelectField
@@ -256,7 +264,7 @@ export function CorrectLibraryForm({
                     options={[
                       {
                         value: "",
-                        label: "Select a category…",
+                        label: tStatic("contributeRoute.select_a_category"),
                       },
                       ...CORRECTION_CATEGORIES.map((c) => ({
                         value: String(c.value),
@@ -268,7 +276,7 @@ export function CorrectLibraryForm({
 
                 <div className="flex flex-col gap-2">
                   <label style={fieldLabelStyle} htmlFor="note">
-                    What&apos;s wrong?
+                    {tStatic("contributeRoute.what_apos_s_wrong")}
                     <RequiredTag />
                   </label>
                   <textarea
@@ -277,7 +285,9 @@ export function CorrectLibraryForm({
                     rows={5}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    placeholder="Describe the issue. Include the correct information if you know it."
+                    placeholder={tStatic(
+                      "contributeRoute.describe_the_issue_include_the_correct_information_if_you_know_it"
+                    )}
                     aria-describedby="note-hint"
                     style={{
                       ...fieldInputStyle,
@@ -287,8 +297,9 @@ export function CorrectLibraryForm({
                     }}
                   />
                   <p id="note-hint" style={fieldHintStyle}>
-                    If you have a source (the library&apos;s website, a notice,
-                    a photo), mention it here.
+                    {tStatic(
+                      "contributeRoute.if_you_have_a_source_the_library_apos_s_website_a_notice_a_photo_mention_it_here"
+                    )}
                   </p>
                 </div>
 

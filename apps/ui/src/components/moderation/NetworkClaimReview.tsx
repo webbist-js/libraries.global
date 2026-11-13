@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 import { useEffect, useState, useTransition } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -16,6 +17,8 @@ export function NetworkClaimReview({
   readonly documentId: string
   readonly status: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [staffRole, setStaffRole] = useState<"editor" | "owner">("editor")
   const [review, setReview] = useState<NetworkReview | null>(null),
     [selected, setSelected] = useState<string[]>([]),
@@ -82,7 +85,7 @@ export function NetworkClaimReview({
           href={review.snapshot.evidenceUrl}
           rel="noopener noreferrer"
         >
-          Private evidence
+          {tStatic("moderation.private_evidence")}
         </a>
       ) : null}
       {review.snapshot.intent === "management" ? (
@@ -121,7 +124,7 @@ export function NetworkClaimReview({
       ) : null}
       {review.snapshot.intent === "management" ? (
         <label className="grid gap-2">
-          Approved responsibility
+          {tStatic("moderation.approved_responsibility")}
           <SelectField
             className={STAFF_FIELD}
             value={String(staffRole ?? "")}
@@ -129,12 +132,14 @@ export function NetworkClaimReview({
               setStaffRole(selectedValue as "editor" | "owner")
             }
             options={[
-              { value: "editor", label: "Editor access" },
+              { value: "editor", label: tStatic("moderation.editor_access") },
               ...(review.snapshot.staffRole === "owner"
                 ? [
                     {
                       value: "owner",
-                      label: "Owner responsibility and delegation",
+                      label: tStatic(
+                        "moderation.owner_responsibility_and_delegation"
+                      ),
                     },
                   ]
                 : []),
@@ -160,7 +165,7 @@ export function NetworkClaimReview({
       />
       <details>
         <summary className="min-h-11 cursor-pointer py-2">
-          Service authority history
+          {tStatic("moderation.service_authority_history")}
         </summary>
         <ul className="m-0 list-none space-y-3 p-0">
           {review.audit.map((event) => (
@@ -203,6 +208,8 @@ function NetworkRemovalConfirmation({
   readonly libraryIds: string[]
   readonly onChanged: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const [reason, setReason] = useState(""),
     [error, setError] = useState(""),
     [pending, startTransition] = useTransition()
@@ -228,7 +235,7 @@ function NetworkRemovalConfirmation({
         service source. Independent claims remain.
       </p>
       <label className="grid gap-2">
-        Review reason
+        {tStatic("moderation.review_reason")}
         <input
           value={reason}
           onChange={(event) => setReason(event.target.value)}
@@ -242,7 +249,7 @@ function NetworkRemovalConfirmation({
         disabled={pending || !reason.trim()}
         onClick={remove}
       >
-        Confirm service access removals
+        {tStatic("moderation.confirm_service_access_removals")}
       </Button>
       {error ? <p role="alert">{error}</p> : null}
     </div>

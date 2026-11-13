@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { SuggestionReviewCard } from "@/components/community/SuggestionReviewCard"
 import { SuggestionsWorkspace } from "@/components/community/SuggestionsWorkspace"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { isDocumentIdParam } from "@/lib/bridge-params"
 import { isVotable } from "@/lib/community/suggestions"
@@ -33,14 +34,14 @@ export async function generateMetadata({
   })
 }
 
-export default async function SuggestionsPage({
+async function SuggestionsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
   searchParams: Promise<{ suggestion?: string | string[] }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tUi = await getTranslations("ui")
 
   const { locale } = await params
   const requested = (await searchParams).suggestion
@@ -55,7 +56,7 @@ export default async function SuggestionsPage({
     openDriveCount(locale),
   ])
   const suggestions = board.data
-  const t = await getUiTranslations("optionSuggestions")
+  const t = await getTranslations("optionSuggestions")
   const optionNames = {
     accessibility: optionCatalogue.accessibility.map((item) => item.name),
     amenities: optionCatalogue.amenities.map((item) => item.name),
@@ -92,3 +93,8 @@ export default async function SuggestionsPage({
     </div>
   )
 }
+
+export default withMessages(
+  SuggestionsPage,
+  "[locale]/(dashboard)/community/suggestions/page"
+)

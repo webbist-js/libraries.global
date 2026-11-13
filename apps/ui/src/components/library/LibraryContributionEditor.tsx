@@ -1,5 +1,4 @@
 "use client"
-
 import { useQuery } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -41,6 +40,8 @@ function ContributionStatusPanel({
   onBack: () => void
   onRefresh: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="space-y-5 p-6" aria-live="polite">
       <Notice
@@ -61,18 +62,18 @@ function ContributionStatusPanel({
       ) : null}
       {current.status === "needs_info" || current.status === "draft" ? (
         <button className={primaryCtaSm} onClick={onContinue}>
-          Continue your changes
+          {tStatic("library.continue_your_changes")}
         </button>
       ) : null}
       <div className="flex flex-wrap gap-3">
         <button className={primaryCtaSm} onClick={onBack}>
-          Back to library
+          {tStatic("common.backLibrary")}
         </button>
         <button className="min-h-11 underline" onClick={onRefresh}>
-          Refresh status
+          {tStatic("library.refresh_status")}
         </button>
         <Link className="min-h-11 underline" href="/contribute/submissions">
-          View submissions
+          {tStatic("library.view_submissions")}
         </Link>
       </div>
     </div>
@@ -115,15 +116,19 @@ function ContributionLoadError({
   signInHref: string
   onRetry: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div role="alert" className="space-y-3 p-6">
       <p>{message ?? "Your saved contributions could not load."}</p>
       <button className={primaryCtaSm} onClick={onRetry}>
-        Retry
+        {tExisting("ui.retry")}
       </button>
       {message?.includes("session ended") ? (
         <Link className="min-h-11 underline" href={signInHref}>
-          Sign in again
+          {tStatic("library.sign_in_again")}
         </Link>
       ) : null}
     </div>
@@ -139,9 +144,13 @@ function ContributionChoices({
   onSelect: (submission: Submission) => void
   onNew: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="space-y-4 p-6">
-      <h3 className="type-panel-title">Your contributions to this library</h3>
+      <h3 className="type-panel-title">
+        {tStatic("library.your_contributions_to_this_library")}
+      </h3>
       {matching.slice(0, 5).map((submission) => (
         <button
           key={submission.documentId}
@@ -158,7 +167,7 @@ function ContributionChoices({
         (row) => row.status === "draft" || row.status === "needs_info"
       ) ? (
         <button className={primaryCtaSm} onClick={onNew}>
-          Suggest another change
+          {tStatic("library.suggest_another_change")}
         </button>
       ) : null}
     </div>
@@ -180,6 +189,10 @@ function ContributionEditorSession({
   readonly onState: (state: WizardDraftState) => void
   readonly onClose: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const { data: session, isPending: sessionPending } = useHydratedSession()
   const userId = session?.user?.id
   const [screen, setScreen] = useState<"choose" | "edit" | "status">("choose")
@@ -286,16 +299,18 @@ function ContributionEditorSession({
   if (sessionPending)
     return (
       <p role="status" className="p-6">
-        Loading your session…
+        {tStatic("common.loadingSession")}
       </p>
     )
   if (!userId) {
     return (
       <div className="space-y-4 p-6">
-        <h3 className="type-panel-title">Sign in to improve this library</h3>
-        <p>The record will be prefilled when you return.</p>
+        <h3 className="type-panel-title">
+          {tStatic("library.sign_in_to_improve_this_library")}
+        </h3>
+        <p>{tStatic("library.the_record_will_be_prefilled_when_you_return")}</p>
         <Link className={primaryCtaSm} href={signInHref}>
-          Sign in to contribute
+          {tExisting("ui.sign_in_to_contribute")}
         </Link>
       </div>
     )
@@ -303,7 +318,7 @@ function ContributionEditorSession({
   if (bootstrap.isPending || mine.isLoading)
     return (
       <p role="status" className="p-6">
-        Loading the library and your contributions…
+        {tStatic("library.loading_the_library_and_your_contributions")}
       </p>
     )
   if (bootstrap.error || mine.error)
@@ -321,13 +336,16 @@ function ContributionEditorSession({
   if (data.staffHref)
     return (
       <div className="space-y-4 p-6">
-        <h3 className="type-panel-title">You manage this record</h3>
+        <h3 className="type-panel-title">
+          {tStatic("library.you_manage_this_record")}
+        </h3>
         <p>
-          Use the staff editor to publish ordinary updates and send sensitive
-          changes for review.
+          {tStatic(
+            "library.use_the_staff_editor_to_publish_ordinary_updates_and_send_sensitive_changes_for_review"
+          )}
         </p>
         <Link className={primaryCtaSm} href={data.staffHref}>
-          Manage record
+          {tStatic("common.manageRecord")}
         </Link>
       </div>
     )
@@ -382,7 +400,8 @@ function ContributionEditorSession({
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-3 text-sm">
         <span>
-          {data.locale?.languageName} · Changes are reviewed before publication
+          {data.locale?.languageName}{" "}
+          {tStatic("library.changes_are_reviewed_before_publication")}
         </span>
         <button
           type="button"
@@ -404,7 +423,7 @@ function ContributionEditorSession({
           <Notice
             icon="mdi:clipboard-text-outline"
             tone="warn"
-            title="Reviewer’s feedback"
+            title={tExisting("optionSuggestions.reviewFeedback")}
           >
             {selected.reviewNote}
           </Notice>
@@ -430,6 +449,8 @@ function ContributionEditorSession({
 export function LibraryContributionEditor(
   props: Parameters<typeof ContributionEditorSession>[0]
 ) {
+  const tStatic = useTranslations("staticUi")
+
   const { data: session, isPending } = useHydratedSession()
   const { onState, slug, locale } = props
   useEffect(() => {
@@ -438,7 +459,7 @@ export function LibraryContributionEditor(
   if (isPending)
     return (
       <p role="status" className="p-6">
-        Loading your session…
+        {tStatic("common.loadingSession")}
       </p>
     )
 

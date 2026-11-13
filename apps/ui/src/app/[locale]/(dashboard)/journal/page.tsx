@@ -9,6 +9,7 @@ import {
   JOURNAL_PAGE_SIZE,
   parseJournalQuery,
 } from "@/components/blog/journalLanding.helpers"
+import { withMessages } from "@/i18n/scoped-messages"
 import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { getPreferredContentLanguage } from "@/lib/content-language-server"
 import { loadJournalLanding } from "@/lib/journal-landing"
@@ -89,7 +90,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function BlogPage(props: {
+async function BlogPage(props: {
   params: Promise<{ locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
@@ -111,3 +112,5 @@ export default async function BlogPage(props: {
 
   return <BlogLandingPage data={data} locale={locale as Locale} />
 }
+
+export default withMessages(BlogPage, "[locale]/(dashboard)/journal/page")

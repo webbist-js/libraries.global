@@ -67,3 +67,29 @@ it("keeps missing/unpublished selections 404 and rejects invalid locale before t
   ).toBe(400)
   expect(bridge).not.toHaveBeenCalled()
 })
+
+it.each(["ja", "en"])(
+  "renders resolved %s content on a Japanese request",
+  async (locale) => {
+    bridge.mockResolvedValue({
+      source: {
+        ...fixture.defaults,
+        documentId: "one",
+        slug: "one",
+        locale,
+        name: locale === "ja" ? "図書館" : "Library",
+        city: locale === "ja" ? "東京" : "Tokyo",
+        location: null,
+      },
+    })
+    const result = await GET(
+      new Request("https://ui.test/api/atlas/library?key=one&locale=ja")
+    )
+    expect(result.status).toBe(200)
+    expect((await result.json()).library).toMatchObject({
+      id: "one",
+      name: locale === "ja" ? "図書館" : "Library",
+      city: locale === "ja" ? "東京" : "Tokyo",
+    })
+  }
+)

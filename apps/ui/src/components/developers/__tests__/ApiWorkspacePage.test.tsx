@@ -16,7 +16,22 @@ const state = vi.hoisted(() => ({
     unavailable: false,
   },
 }))
-vi.mock("next-intl/server", () => ({ getLocale: async () => "fr" }))
+vi.mock("next-intl/server", async () => {
+  const { createTranslator } = await import("next-intl")
+  const { default: messages } = await import("../../../../locales/en")
+
+  return {
+    getLocale: async () => "fr",
+    getTranslations: async (config?: string | { namespace?: string }) =>
+      createTranslator({
+        locale: "en",
+        messages,
+        namespace: (typeof config === "string" ? config : config?.namespace) as
+          | keyof typeof messages
+          | undefined,
+      }),
+  }
+})
 vi.mock("@/lib/team-api/workspace", () => ({
   apiWorkspaceAccess: async () => state.access,
 }))
@@ -91,17 +106,15 @@ beforeEach(() => {
 })
 afterEach(cleanup)
 
-it("shows reference docs and a login CTA to guests, without key or usage navigation", async () => {
+it("shows reference docs to guests without key or usage navigation or a sign-in CTA", async () => {
   render(await ApiWorkspacePage({ section: "reference" }))
   expect(screen.getByText("Public API reference")).toBeTruthy()
   expect(screen.queryByTestId("private-controls")).toBeNull()
   expect(screen.queryByRole("link", { name: "API keys" })).toBeNull()
   expect(screen.queryByRole("link", { name: "Usage" })).toBeNull()
   expect(
-    screen
-      .getByRole("link", { name: "Log in to buy API access" })
-      .getAttribute("href")
-  ).toContain("%2Ffr%2Fdevelopers%2Freference")
+    screen.queryByRole("link", { name: "Sign in to get API access" })
+  ).toBeNull()
 })
 it("offers individual API checkout to an account with no organisation", async () => {
   state.access.signedIn = true
@@ -110,7 +123,7 @@ it("offers individual API checkout to an account with no organisation", async ()
   expect(screen.queryByTestId("private-controls")).toBeNull()
   expect(screen.getByTestId("individual-checkout")).toBeTruthy()
   expect(
-    screen.queryByRole("link", { name: "Log in to buy API access" })
+    screen.queryByRole("link", { name: "Sign in to get API access" })
   ).toBeNull()
 })
 it("splits authorised Team controls into their requested view", async () => {
@@ -136,8 +149,10 @@ it("keeps runnable playground controls away from guests and personal accounts", 
   const view = render(await ApiWorkspacePage({ section: "playground" }))
   expect(screen.queryByText("Metered API playground")).toBeNull()
   expect(
-    screen.getByRole("link", { name: "Log in to buy API access" })
-  ).toBeTruthy()
+    screen
+      .getByRole("link", { name: "Sign in to get API access" })
+      .getAttribute("href")
+  ).toContain("%2Ffr%2Fdevelopers%2Fplayground")
   view.unmount()
   state.access.signedIn = true
   state.access.prospect = { purchasing: true }
@@ -145,6 +160,6 @@ it("keeps runnable playground controls away from guests and personal accounts", 
   expect(screen.queryByText("Metered API playground")).toBeNull()
   expect(screen.queryByTestId("individual-checkout")).toBeNull()
   expect(
-    screen.getByRole("heading", { name: /connect your application/ })
+    screen.getByRole("heading", { name: "Unlock live API requests" })
   ).toBeTruthy()
 })

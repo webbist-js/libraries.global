@@ -1,10 +1,9 @@
 "use client"
-
 import type {
   AtlasAccessMetric,
   AtlasLibraryAccessArea,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import {
   accessValue,
@@ -51,7 +50,13 @@ export function AccessCompare({
   readonly rows: readonly AtlasLibraryAccessArea[]
   readonly currentPage: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const start = showAllAreas ? currentPage * ACCESS_COMPARE_PAGE_SIZE : 0
   const visibleRows = rows.slice(
@@ -94,17 +99,20 @@ export function AccessCompare({
                 label:
                   metric === "per100k"
                     ? "Libraries per 100k"
-                    : "People per library",
+                    : tStatic("atlas.people_per_library"),
               },
-              { value: "name", label: "Area name" },
-              { value: "libraries", label: "Matching libraries" },
+              { value: "name", label: tStatic("atlas.area_name") },
+              {
+                value: "libraries",
+                label: tStatic("atlas.matching_libraries"),
+              },
             ]}
           />
         </label>
         <label className="flex min-w-0 flex-col gap-2 text-sm font-bold">
-          Order
+          {tStatic("common.order")}
           <SelectField
-            label="Order"
+            label={tStatic("common.order")}
             value={resolvedDirection}
             onValueChange={(value) => {
               setDirection(value as SortDirection)
@@ -121,7 +129,7 @@ export function AccessCompare({
         </label>
       </div>
       <label className="flex flex-col gap-2 text-sm font-bold">
-        Search areas
+        {tStatic("atlas.search_areas")}
         <input
           type="search"
           value={query}
@@ -134,9 +142,10 @@ export function AccessCompare({
         />
       </label>
       <p className="m-0 text-sm leading-relaxed" style={{ color: T.ink.dim }}>
-        {rows.length.toLocaleString()} {rows.length === 1 ? "area" : "areas"}
-        {query.trim() ? " match your search" : ""}. Unknown values stay last. “5
-        / 8” means 5 match your filters out of 8 indexed.
+        {tCopy(query.trim() ? "matchingAreas" : "areas", {
+          count: rows.length,
+        })}
+        . {tCopy("unknownLast")}
       </p>
       {rows.length ? (
         <div
@@ -149,10 +158,14 @@ export function AccessCompare({
             <caption className="sr-only">
               {areaKind} ·{" "}
               {metric === "per100k"
-                ? "libraries per 100k people"
-                : "people per library"}
-              . {scopeDescription} Showing {start + 1}–
-              {start + visibleRows.length} of {rows.length} areas.
+                ? tStatic("atlas.per_100k_people")
+                : tStatic("atlas.people_per_library")}
+              . {scopeDescription}{" "}
+              {tCopy("showingAreas", {
+                start: start + 1,
+                end: start + visibleRows.length,
+                total: rows.length,
+              })}
             </caption>
             <thead>
               <tr
@@ -160,13 +173,13 @@ export function AccessCompare({
                 style={{ borderColor: T.border.hi, color: T.ink.dim }}
               >
                 <th scope="col" className="min-w-20 pr-2 pb-2 font-semibold">
-                  Area
+                  {tStatic("common.area")}
                 </th>
                 <th scope="col" className="px-1 pb-2 text-right font-semibold">
                   {tUi("libraries")}{" "}
                 </th>
                 <th scope="col" className="px-1 pb-2 text-right font-semibold">
-                  Residents
+                  {tExisting("atlasNetwork.columnResidents")}
                 </th>
                 <th
                   scope="col"
@@ -194,7 +207,7 @@ export function AccessCompare({
           style={{ borderColor: T.border.hi, background: T.bg.surface }}
         >
           {query.trim()
-            ? "No areas match your search in this scope."
+            ? tStatic("atlas.no_areas_match_your_search_in_this_scope")
             : "No reporting areas are available in this scope."}
         </p>
       )}
@@ -299,7 +312,11 @@ export function AccessCompareFooter({
   readonly currentPage: number
   readonly setPage: (page: number) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (total <= ACCESS_COMPARE_PREVIEW_SIZE) return null
 
@@ -331,7 +348,7 @@ export function AccessCompareFooter({
               total,
               (currentPage + 1) * ACCESS_COMPARE_PAGE_SIZE
             ).toLocaleString()}{" "}
-            of {total.toLocaleString()}
+            {tExisting("widgetPublic.of")} {total.toLocaleString()}
           </span>
           <button
             type="button"
@@ -354,7 +371,7 @@ export function AccessCompareFooter({
         className="min-h-9 self-center font-semibold underline underline-offset-2"
         style={{ color: T.accent.primary }}
       >
-        Show fewer areas
+        {tStatic("atlas.show_fewer_areas")}
       </button>
     </div>
   ) : (
@@ -368,7 +385,7 @@ export function AccessCompareFooter({
       className="min-h-[48px] w-full rounded-full border bg-(--t-bg-deep) px-4 text-sm font-semibold"
       style={{ borderColor: T.border.hi }}
     >
-      Show all {total.toLocaleString()}
+      {tStatic("common.showAll")} {total.toLocaleString()}
     </button>
   )
 }

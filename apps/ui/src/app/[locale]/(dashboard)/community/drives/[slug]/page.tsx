@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Locale } from "next-intl"
 
 import { DriveBoardActions } from "@/components/drives/DriveBoardActions"
+import { withMessages } from "@/i18n/scoped-messages"
 import { isVotable } from "@/lib/community/suggestions"
 import { fetchPublicSuggestions } from "@/lib/community/suggestions-server"
 import { contributionPlaceParams } from "@/lib/contribution-place"
@@ -44,7 +45,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function DrivePage({
+async function DrivePage({
   params,
   searchParams,
 }: {
@@ -88,3 +89,8 @@ export default async function DrivePage({
     />
   )
 }
+
+export default withMessages(
+  DrivePage,
+  "[locale]/(dashboard)/community/drives/[slug]/page"
+)

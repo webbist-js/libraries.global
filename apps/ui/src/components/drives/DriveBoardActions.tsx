@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import {
@@ -84,7 +83,11 @@ function JournalStoryForm({
 }: {
   readonly drive: Pick<Drive, "documentId" | "storySlug">
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const [value, setValue] = useState(drive.storySlug ?? "")
@@ -111,12 +114,12 @@ function JournalStoryForm({
 
         return
       }
-      setMessage({ tone: "ok", text: "Saved." })
+      setMessage({ tone: "ok", text: tExisting("discussions.saved") })
       router.refresh()
     } catch {
       setMessage({
         tone: "error",
-        text: "That didn’t work. Try again in a moment.",
+        text: tStatic("drive.that_didn_t_work_try_again_in_a_moment"),
       })
     } finally {
       setBusy(false)
@@ -133,7 +136,7 @@ function JournalStoryForm({
         className="text-sm font-semibold"
         style={{ color: T.ink.base }}
       >
-        Journal story
+        {tExisting("publishing.journalStory")}
       </label>
       <input
         id="drive-story-slug"
@@ -145,8 +148,9 @@ function JournalStoryForm({
         style={{ borderColor: T.border.hi, color: T.ink.base }}
       />
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        The slug of a published Journal article, for example
-        ohio-hours-thank-you.
+        {tStatic(
+          "drive.the_slug_of_a_published_journal_article_for_example_ohio_hours_thank_you"
+        )}
       </p>
       <div>
         <button type="button" className={PILL} disabled={busy} onClick={save}>
@@ -192,7 +196,9 @@ export function DriveBoardActions({
     "documentId" | "slug" | "status" | "pinned" | "featured" | "storySlug"
   >
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { has, ready } = useCapabilities()
   const router = useRouter()
@@ -230,7 +236,7 @@ export function DriveBoardActions({
     } catch {
       setMessage({
         tone: "error",
-        text: "That didn’t work. Try again in a moment.",
+        text: tStatic("drive.that_didn_t_work_try_again_in_a_moment"),
       })
     } finally {
       setBusy(null)
@@ -258,9 +264,9 @@ export function DriveBoardActions({
         variant="subtle"
         showIcon={false}
         className="rounded-[18px] py-2.5"
-        label="Run this drive"
+        label={tStatic("drive.run_this_drive")}
         headingId="drive-board-heading"
-        description="Only the editorial board sees this."
+        description={tStatic("drive.only_the_editorial_board_sees_this")}
         actions={
           <>
             <div className="flex flex-wrap items-center gap-2">

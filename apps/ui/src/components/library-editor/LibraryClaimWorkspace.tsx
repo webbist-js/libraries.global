@@ -1,5 +1,4 @@
 "use client"
-
 import { Icon } from "@iconify/react"
 import { useTranslations } from "next-intl"
 import { useRef, useState } from "react"
@@ -23,6 +22,8 @@ export function LibraryClaimWorkspace({
   readonly context?: "staff" | "contribute"
   readonly guide?: { href: string; title: string } | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("libraryClaim")
   const [library, setLibrary] = useState(initialLibrary)
   const [submitted, setSubmitted] = useState(false)
@@ -123,12 +124,12 @@ export function LibraryClaimWorkspace({
         </StaffPanel>
         {!submitted ? (
           <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
-            Manage a wider service?{" "}
+            {tStatic("libraryEditor.manage_a_wider_service")}{" "}
             <Link
               className="font-semibold underline underline-offset-4"
               href="/staff/networks"
             >
-              Find your service or network
+              {tStatic("libraryEditor.find_your_service_or_network")}
             </Link>
           </p>
         ) : null}

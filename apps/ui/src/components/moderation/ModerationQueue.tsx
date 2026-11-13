@@ -1,7 +1,6 @@
 "use client"
-
 import { ArrowRight, ClipboardList, RefreshCw } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { EmptyState, Pager } from "@/components/ds"
@@ -71,8 +70,12 @@ export function ModerationQueue({
   readonly locales: readonly { code: string; name: string }[]
   readonly localeNames: Record<string, string>
 }) {
-  const tUi = useUiTranslations("ui")
-  const workspace = useUiTranslations("moderationWorkspace")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const workspace = useTranslations("moderationWorkspace")
 
   const router = useRouter()
   const [result, setResult] = useState<ModerationListResponse | null>(null)
@@ -163,25 +166,25 @@ export function ModerationQueue({
   const empty = filtered
     ? {
         icon: "mdi:filter-variant-remove",
-        lead: "No submissions match these filters",
+        lead: tStatic("moderation.no_submissions_match_these_filters"),
         detail:
           "Clear the queue, language, search or drive filter to see more.",
       }
     : state.segment === "pending"
       ? {
           icon: "mdi:check-decagram-outline",
-          lead: "Nothing waiting",
+          lead: tStatic("moderation.nothing_waiting"),
           detail: "New submissions in your scope appear here. Thank you.",
         }
       : state.segment === "needs_info"
         ? {
             icon: "mdi:message-reply-text-outline",
-            lead: "Nothing is waiting on a contributor",
+            lead: tStatic("moderation.nothing_is_waiting_on_a_contributor"),
             detail: "Submissions sent back for changes appear here.",
           }
         : {
             icon: "mdi:archive-outline",
-            lead: "Nothing decided yet",
+            lead: tStatic("moderation.nothing_decided_yet"),
             detail: "Approved and rejected submissions appear here.",
           }
   const emptyList = !loading && !error && rows.length === 0
@@ -233,7 +236,7 @@ export function ModerationQueue({
               }}
               className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-(--t-action-primary) px-4 text-sm font-semibold text-white disabled:opacity-50"
             >
-              Review next
+              {tStatic("moderation.review_next")}
               <ArrowRight size={15} aria-hidden />
             </button>
           ) : null}
@@ -275,7 +278,7 @@ export function ModerationQueue({
             className="font-semibold underline-offset-2 hover:underline"
             style={{ color: T.accent.primary }}
           >
-            Clear
+            {tExisting("atlasNetwork.clearService")}
           </Link>
         </p>
       ) : null}

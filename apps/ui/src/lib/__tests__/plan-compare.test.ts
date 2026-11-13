@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
 
+import cs from "../../../locales/cs"
+import en from "../../../locales/en"
+import es from "../../../locales/es"
+import fr from "../../../locales/fr"
 import {
   ATLAS_SHEET_ROW_IDS,
   availableNow,
@@ -10,11 +14,6 @@ import {
   compareRowsById,
   rowMessageKey,
 } from "../plan-compare"
-
-import cs from "../../../locales/cs.json"
-import en from "../../../locales/en.json"
-import es from "../../../locales/es.json"
-import fr from "../../../locales/fr.json"
 
 const row = (id: string) => compareRowsById([id])[0]!
 

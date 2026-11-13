@@ -7,7 +7,7 @@ import {
   validateFeedValues,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef, useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -39,7 +39,11 @@ export function ReplaceFeedForm({
   readonly libraryDocumentId: string
   readonly librarySlug: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -129,8 +133,9 @@ export function ReplaceFeedForm({
           title={tUi("new_details_sent_for_review")}
         >
           <p className="m-0">
-            Your current details keep working until a moderator approves the new
-            ones.
+            {tStatic(
+              "frontendExtra.your_current_details_keep_working_until_a_moderator_approves_the_new_ones"
+            )}
           </p>
           <p className="m-0 mt-2">
             <GlobalLink
@@ -138,7 +143,7 @@ export function ReplaceFeedForm({
               className={SECONDARY_PILL}
               style={secondaryPillStyle}
             >
-              Back to event feeds
+              {tStatic("frontendExtra.back_to_event_feeds")}
             </GlobalLink>
           </p>
         </Notice>
@@ -208,7 +213,7 @@ export function ReplaceFeedForm({
           disabled={!canSend || sending}
           onClick={send}
         >
-          {sending ? tUi("sending") : "Send for review"}
+          {sending ? tUi("sending") : tExisting("discussions.submit")}
         </button>
         {!canSend ? (
           <span
@@ -216,7 +221,7 @@ export function ReplaceFeedForm({
             className="text-sm"
             style={{ color: T.ink.dim }}
           >
-            Test the connection first.
+            {tStatic("common.testConnectionFirst")}
           </span>
         ) : null}
       </div>

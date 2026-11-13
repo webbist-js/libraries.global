@@ -27,7 +27,9 @@ export async function GET(req: Request) {
     )
     const options = {
       atlasId: 1,
-      canonicalLocale: state.canonicalLocale,
+      // This is a display-only projection of the resolved translation.
+      // The shared map/index projection remains in its canonical locale.
+      canonicalLocale: body.source.locale ?? state.canonicalLocale,
       now: new Date(),
     }
     const mapped = projectAtlasLibrary(body.source, options)

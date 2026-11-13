@@ -1,5 +1,8 @@
+import { getTranslations } from "next-intl/server"
+
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { ConnectFeedForm } from "@/components/event-feeds/ConnectFeedForm"
+import { withMessages } from "@/i18n/scoped-messages"
 import { T } from "@/lib/design-tokens"
 import { fetchEventFeedProviders } from "@/lib/event-feed-proxy"
 import { privateMetadata } from "@/lib/seo/metadata"
@@ -14,11 +17,13 @@ export const metadata = privateMetadata("Connect a feed")
  * Same two-column layout as the Event feeds tab, with the explainer aside;
  * the active tab above is the way back, so there is no back link.
  */
-export default async function ConnectEventFeedPage({
+async function ConnectEventFeedPage({
   params,
 }: {
   params: Promise<{ slug: string }>
 }) {
+  const tExisting = await getTranslations()
+
   const { slug } = await params
   const { user, overview, documentId } = await loadStaffPage(
     slug,
@@ -36,7 +41,7 @@ export default async function ConnectEventFeedPage({
             color: T.ink.base,
           }}
         >
-          Connect an event feed
+          {tExisting("libraryPage.connectEvents")}
         </h2>
         <ConnectFeedForm
           libraries={[
@@ -54,3 +59,8 @@ export default async function ConnectEventFeedPage({
     </div>
   )
 }
+
+export default withMessages(
+  ConnectEventFeedPage,
+  "[locale]/(dashboard)/staff/[slug]/events/connect/page"
+)

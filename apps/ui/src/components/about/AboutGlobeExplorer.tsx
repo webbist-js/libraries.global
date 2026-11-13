@@ -2,7 +2,7 @@
 
 import { atlasLocalGeography, atlasPopulationBaseline } from "@repo/shared-data"
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pin, X } from "lucide-react"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import {
   lazy,
   Suspense,
@@ -62,6 +62,11 @@ export function AboutGlobeExplorer({
     view?: GlobeView
   }) => ReactNode
 }) {
+  const tStatic = useTranslations("staticUi")
+  const tDetail = useTranslations("aboutDetail")
+
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const [boundaries, setBoundaries] = useState<CountryBoundaries | null>(null)
   const [hover, setHover] = useState<GlobeHover>(null)
@@ -302,7 +307,7 @@ export function AboutGlobeExplorer({
               id="about-country-picker-label"
               htmlFor="about-country-picker"
             >
-              Explore a country
+              {tStatic("about.explore_a_country")}
             </label>
             <CountryCombobox
               id="about-country-picker"
@@ -346,10 +351,10 @@ export function AboutGlobeExplorer({
                 <h3 className="type-h3">{preview.name}</h3>
                 <p>
                   {preview.libraryCount === null
-                    ? "Explore the country's record"
-                    : `${preview.libraryCount.toLocaleString(locale)} libraries recorded`}
+                    ? tDetail("country")
+                    : tDetail("recorded", { count: preview.libraryCount })}
                 </p>
-                <small>Click to pin this country</small>
+                <small>{tStatic("about.click_to_pin_this_country")}</small>
               </div>
             ) : null}
             {hover?.kind === "connection"
@@ -367,7 +372,7 @@ export function AboutGlobeExplorer({
           {country ? (
             <aside
               className="about-country-panel"
-              aria-label={`${country.name} library record`}
+              aria-label={tDetail("countryRecord", { country: country.name })}
               aria-hidden={!shown}
               inert={!shown ? true : undefined}
               data-open={Boolean(shown)}
@@ -388,26 +393,27 @@ export function AboutGlobeExplorer({
               <div className="about-country-card-heading">
                 <div className="about-country-heading">
                   <p className="about-eyebrow">
-                    Country{country.iso2 ? ` · ${country.iso2}` : ""}
+                    {tExisting("ui.country")}
+                    {country.iso2 ? ` · ${country.iso2}` : ""}
                   </p>
                   <div className="about-country-actions">
                     <button
                       type="button"
-                      aria-label="Previous country"
+                      aria-label={tStatic("about.previous_country")}
                       onClick={() => step(-1)}
                     >
                       <ChevronLeft size={16} aria-hidden="true" />
                     </button>
                     <button
                       type="button"
-                      aria-label="Next country"
+                      aria-label={tStatic("about.next_country")}
                       onClick={() => step(1)}
                     >
                       <ChevronRight size={16} aria-hidden="true" />
                     </button>
                     <button
                       type="button"
-                      aria-label="Close country details"
+                      aria-label={tStatic("about.close_country_details")}
                       onClick={() => {
                         close()
                         countryTrigger.current?.focus({ preventScroll: true })
@@ -421,7 +427,8 @@ export function AboutGlobeExplorer({
                 <div className="about-country-status">
                   {pinned ? (
                     <>
-                      <Pin size={12} aria-hidden="true" /> Pinned to the globe
+                      <Pin size={12} aria-hidden="true" />{" "}
+                      {tStatic("about.pinned_to_the_globe")}
                     </>
                   ) : (
                     <button
@@ -430,7 +437,8 @@ export function AboutGlobeExplorer({
                         if (shown) setPinned(shown)
                       }}
                     >
-                      <Pin size={12} aria-hidden="true" /> Pin this country
+                      <Pin size={12} aria-hidden="true" />{" "}
+                      {tStatic("about.pin_this_country")}
                     </button>
                   )}
                 </div>
@@ -438,7 +446,8 @@ export function AboutGlobeExplorer({
               <div className="about-country-body">
                 {updated && data?.updatedAt ? (
                   <p className="about-country-updated">
-                    Updated <time dateTime={data.updatedAt}>{updated}</time>
+                    {tExisting("editorial.updated")}{" "}
+                    <time dateTime={data.updatedAt}>{updated}</time>
                   </p>
                 ) : null}
                 <p className="about-country-count">
@@ -450,9 +459,9 @@ export function AboutGlobeExplorer({
                   <small>
                     {count === null || count === undefined
                       ? !result
-                        ? "Loading library count…"
-                        : "Library count unavailable"
-                      : "libraries recorded"}
+                        ? tDetail("loadingCount")
+                        : tDetail("unavailableCount")
+                      : tDetail("recordedLabel")}
                   </small>
                 </p>
                 {hasRecords && coverage && coverage.total > 0 ? (
@@ -460,11 +469,17 @@ export function AboutGlobeExplorer({
                     <div
                       className="about-country-coverage-track"
                       role="progressbar"
-                      aria-label={`${coverage.label} in the index with library records`}
+                      aria-label={tDetail("coverageLabel", {
+                        regions: coverage.label.toLocaleLowerCase(locale),
+                      })}
                       aria-valuemin={0}
                       aria-valuemax={coverage.total}
                       aria-valuenow={coverage.recorded}
-                      aria-valuetext={`${coverage.recorded} of ${coverage.total} listed ${coverage.label.toLowerCase()} have records`}
+                      aria-valuetext={tDetail("coverage", {
+                        recorded: coverage.recorded,
+                        total: coverage.total,
+                        regions: coverage.label.toLocaleLowerCase(locale),
+                      })}
                     >
                       <span
                         style={{
@@ -473,27 +488,34 @@ export function AboutGlobeExplorer({
                       />
                     </div>
                     <p>
-                      <strong>
-                        {coverage.recorded.toLocaleString(locale)} of{" "}
-                        {coverage.total.toLocaleString(locale)}
-                      </strong>{" "}
-                      listed {coverage.label.toLowerCase()} have records
+                      {tDetail.rich("coverageRich", {
+                        recorded: coverage.recorded,
+                        total: coverage.total,
+                        regions: coverage.label.toLocaleLowerCase(locale),
+                        strong: (chunks) => <strong>{chunks}</strong>,
+                      })}
                     </p>
                   </div>
                 ) : null}
                 {empty ? (
                   <div className="about-country-empty">
-                    <h3 className="type-h3">Help start the record.</h3>
-                    <p>Local knowledge can help fill this gap in the index.</p>
+                    <h3 className="type-h3">
+                      {tStatic("about.help_start_the_record")}
+                    </h3>
+                    <p>
+                      {tStatic(
+                        "about.local_knowledge_can_help_fill_this_gap_in_the_index"
+                      )}
+                    </p>
                   </div>
                 ) : null}
                 {!result ? (
                   <p className="about-country-message" role="status">
-                    Loading the country’s record…
+                    {tStatic("about.loading_the_country_s_record")}
                   </p>
                 ) : "error" in result ? (
                   <div className="about-country-message" role="status">
-                    Details are temporarily unavailable.{" "}
+                    {tStatic("about.details_are_temporarily_unavailable")}{" "}
                     <button
                       type="button"
                       onClick={() => {
@@ -506,13 +528,13 @@ export function AboutGlobeExplorer({
                         setRetry((value) => value + 1)
                       }}
                     >
-                      Try again
+                      {tExisting("ui.try_again")}
                     </button>
                   </div>
                 ) : null}
                 {hasRecords && types?.length ? (
                   <div className="about-country-types">
-                    <h3 className="type-h3">By type</h3>
+                    <h3 className="type-h3">{tStatic("about.by_type")}</h3>
                     <div className="about-country-type-bar" aria-hidden="true">
                       {types.map((entry) => (
                         <span
@@ -540,14 +562,18 @@ export function AboutGlobeExplorer({
                     </ul>
                     {typeTotal && count !== null && typeTotal !== count ? (
                       <p className="about-country-message">
-                        Type totals cover records with a recorded library type.
+                        {tStatic(
+                          "about.type_totals_cover_records_with_a_recorded_library_type"
+                        )}
                       </p>
                     ) : null}
                   </div>
                 ) : null}
                 {hasRecords && data?.featuredLibraries.length ? (
                   <div className="about-country-featured">
-                    <h3 className="type-h3">Featured libraries</h3>
+                    <h3 className="type-h3">
+                      {tStatic("about.featured_libraries")}
+                    </h3>
                     <ul>
                       {data.featuredLibraries.map((library) => (
                         <li key={library.href ?? library.name}>
@@ -580,7 +606,7 @@ export function AboutGlobeExplorer({
                   data.systemDescription ||
                   data.facts?.length) ? (
                   <details className="about-country-context">
-                    <summary>Country context</summary>
+                    <summary>{tStatic("about.country_context")}</summary>
                     {hasRecords && data?.summary ? (
                       <p className="about-country-summary">{data.summary}</p>
                     ) : null}
@@ -588,13 +614,17 @@ export function AboutGlobeExplorer({
                       <dl className="about-country-stats">
                         {types?.length ? (
                           <div>
-                            <dt>Library types</dt>
+                            <dt>
+                              {tExisting(
+                                "optionSuggestions.lists.library_types"
+                              )}
+                            </dt>
                             <dd>{types.length.toLocaleString(locale)}</dd>
                           </div>
                         ) : null}
                         {coverage?.leading ? (
                           <div>
-                            <dt>Most records</dt>
+                            <dt>{tStatic("about.most_records")}</dt>
                             <dd>
                               {coverage.leading.count.toLocaleString(locale)}
                               <small>{coverage.leading.name}</small>
@@ -610,20 +640,20 @@ export function AboutGlobeExplorer({
                     <dl>
                       {data.capitalCity ? (
                         <div>
-                          <dt>Capital</dt>
+                          <dt>{tStatic("about.capital")}</dt>
                           <dd>{data.capitalCity}</dd>
                         </div>
                       ) : null}
                       {data.languages ? (
                         <div>
-                          <dt>Languages</dt>
+                          <dt>{tStatic("about.languages")}</dt>
                           <dd>{data.languages}</dd>
                         </div>
                       ) : null}
                       {data.population ? (
                         <div>
                           <dt>
-                            Population
+                            {tExisting("atlasDrawers.population")}
                             {data.population.year
                               ? ` · ${data.population.year}`
                               : ""}
@@ -652,7 +682,7 @@ export function AboutGlobeExplorer({
                     href={addHref}
                     className="about-button about-country-first-library"
                   >
-                    Add the first library{" "}
+                    {tStatic("about.add_the_first_library")}{" "}
                     <ArrowUpRight size={14} aria-hidden="true" />
                   </GlobalLink>
                 ) : null}
@@ -671,13 +701,15 @@ export function AboutGlobeExplorer({
                         : "about-button"
                     }
                   >
-                    {empty ? "Propose a drive" : "Open in the atlas"}
+                    {empty
+                      ? tExisting("dashboard.proposeDrive")
+                      : tStatic("common.openAtlas")}
                   </GlobalLink>
                   <GlobalLink
                     href={`/${country.continent}/${country.slug}`}
                     className="about-button about-button-secondary"
                   >
-                    Country page
+                    {tStatic("common.countryPage")}
                   </GlobalLink>
                 </div>
                 <p className="about-country-footer" data-empty={empty}>
@@ -690,16 +722,18 @@ export function AboutGlobeExplorer({
                             : `/map?q=${encodeURIComponent(country.name)}`
                         }
                       >
-                        Open in the atlas
+                        {tStatic("common.openAtlas")}
                       </GlobalLink>
                       <GlobalLink href="/contribute">
-                        See ways to contribute
+                        {tStatic("about.see_ways_to_contribute")}
                       </GlobalLink>
                     </>
                   ) : (
                     <>
-                      Help complete the record.{" "}
-                      <GlobalLink href={addHref}>Add a library</GlobalLink>
+                      {tStatic("about.help_complete_the_record")}{" "}
+                      <GlobalLink href={addHref}>
+                        {tExisting("ui.add_a_library")}
+                      </GlobalLink>
                     </>
                   )}
                 </p>

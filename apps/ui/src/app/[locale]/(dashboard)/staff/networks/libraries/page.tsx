@@ -1,15 +1,17 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Container } from "@/components/elementary/Container"
 import { STAFF_FIELD, STAFF_LINK } from "@/components/staff/StaffPanel"
 import { Button } from "@/components/ui/button"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { Link } from "@/lib/navigation"
 import { fetchStaff } from "@/lib/staff-proxy"
 
-export default async function ServiceStaffLibraries({
+async function ServiceStaffLibraries({
   searchParams,
 }: {
   readonly searchParams: Promise<{
@@ -18,6 +20,10 @@ export default async function ServiceStaffLibraries({
     q?: string
   }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
   const session = await getSessionSSR(await headers()),
     query = await searchParams
   if (!session?.user) redirect("/auth/signin?callbackUrl=%2Fstaff%2Fnetworks")
@@ -42,23 +48,23 @@ export default async function ServiceStaffLibraries({
   return (
     <>
       <WorkspacePageHeader
-        title="Your libraries"
+        title={tExisting("staffWorkspace.yourLibraries")}
         lead={`${data.total} libraries with approved staff access.`}
       />
       <Container className="space-y-6 py-10">
         <Link className={STAFF_LINK} href="/staff/networks">
-          Service management
+          {tStatic("staffRoute.service_management")}
         </Link>
         <form
           method="get"
           className="flex flex-wrap items-end gap-3"
-          aria-label="Find a staff library"
+          aria-label={tStatic("staffRoute.find_a_staff_library")}
         >
           {query.networkId ? (
             <input type="hidden" name="networkId" value={query.networkId} />
           ) : null}
           <label className="grid gap-2">
-            Library name
+            {tExisting("ui.library_name")}
             <input
               name="q"
               defaultValue={query.q ?? ""}
@@ -67,11 +73,11 @@ export default async function ServiceStaffLibraries({
             />
           </label>
           <Button type="submit" variant="surface">
-            Find libraries
+            {tExisting("ui.find_libraries")}
           </Button>
         </form>
         {data.libraries.length === 0 ? (
-          <p>No staff libraries match this selection.</p>
+          <p>{tStatic("staffRoute.no_staff_libraries_match_this_selection")}</p>
         ) : null}
         <ul className="m-0 grid list-none gap-4 p-0 md:grid-cols-2">
           {data.libraries.map((row) => (
@@ -81,22 +87,34 @@ export default async function ServiceStaffLibraries({
             >
               <h2 className="type-h2">{row.name}</h2>
               <Link className={STAFF_LINK} href={`/staff/${row.slug}`}>
-                Open Staff area
+                {tStatic("common.openStaffArea")}
               </Link>
             </li>
           ))}
         </ul>
-        <nav aria-label="Staff library pages" className="flex justify-between">
+        <nav
+          aria-label={tStatic("staffRoute.staff_library_pages")}
+          className="flex justify-between"
+        >
           {data.page > 1 ? (
-            <Link href={`/staff/networks/libraries?${previous}`}>Previous</Link>
+            <Link href={`/staff/networks/libraries?${previous}`}>
+              {tExisting("ui.previous")}
+            </Link>
           ) : (
             <span />
           )}
           {data.page * 48 < data.total ? (
-            <Link href={`/staff/networks/libraries?${next}`}>Next</Link>
+            <Link href={`/staff/networks/libraries?${next}`}>
+              {tExisting("ui.next")}
+            </Link>
           ) : null}
         </nav>
       </Container>
     </>
   )
 }
+
+export default withMessages(
+  ServiceStaffLibraries,
+  "[locale]/(dashboard)/staff/networks/libraries/page"
+)

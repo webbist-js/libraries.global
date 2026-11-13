@@ -1,12 +1,13 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { ToggleSwitch } from "@/components/settings/ToggleSwitch"
 
 export function NewsletterPreference() {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [subscribed, setSubscribed] = useState(false)
   const [busy, setBusy] = useState(true)
@@ -64,8 +65,9 @@ export function NewsletterPreference() {
             {tUi("newsletter_and_journal_dispatch")}
           </p>
           <p className="mt-1 text-sm text-(--t-ink-dim)">
-            Project news and Journal articles, at most monthly, sent to your
-            verified account email.
+            {tStatic(
+              "profileIndex.project_news_and_journal_articles_at_most_monthly_sent_to_your_verified_account_email"
+            )}
           </p>
         </div>
         <ToggleSwitch
@@ -77,8 +79,9 @@ export function NewsletterPreference() {
       </div>
       {suppressed && (
         <p className="mt-2 text-sm">
-          Delivery to this address is blocked. Contact info@libraries.global
-          before subscribing again.
+          {tStatic(
+            "profileIndex.delivery_to_this_address_is_blocked_contact_info_libraries_global_before_subscribing_again"
+          )}
         </p>
       )}
       {error && (

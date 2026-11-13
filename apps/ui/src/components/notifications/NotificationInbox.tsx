@@ -19,7 +19,7 @@ import {
   UserPlus,
   type LucideIcon,
 } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState, type ReactNode } from "react"
 
 import {
@@ -31,104 +31,105 @@ import { Link } from "@/lib/navigation"
 
 const categories = {
   contributions: {
-    label: "Contributions",
+    label: "contributions",
     tint: "bg-(--tint-public-bg) text-(--tint-public-fg)",
   },
   libraries: {
-    label: "Libraries",
+    label: "libraries",
     tint: "bg-(--tint-academic-bg) text-(--tint-academic-fg)",
   },
   community: {
-    label: "Community",
+    label: "community",
     tint: "bg-(--tint-special-bg) text-(--tint-special-fg)",
   },
   news: {
-    label: "News & digests",
+    label: "news_digests",
     tint: "bg-(--t-accent-chip) text-(--t-accent-primary)",
   },
 } as const
 const kinds = {
   submission_review: {
     category: "contributions",
-    label: "Contribution reviews",
+    label: "contribution_reviews",
     icon: CircleCheck,
-    action: "See review",
+    action: "see_review",
   },
   recognition: {
     category: "contributions",
-    label: "Recognition",
+    label: "recognition",
     icon: Award,
-    action: "See recognition",
+    action: "see_recognition",
   },
   library_update: {
     category: "libraries",
-    label: "Library updates",
+    label: "library_updates",
     icon: Building2,
-    action: "View libraries",
+    action: "view_libraries",
   },
   staff_update: {
     category: "libraries",
-    label: "Staff updates",
+    label: "staff_updates",
     icon: ShieldCheck,
-    action: "View details",
+    action: "view_details",
   },
   feed_update: {
     category: "libraries",
-    label: "Feed updates",
+    label: "feed_updates",
     icon: Rss,
-    action: "View details",
+    action: "view_details",
   },
   billing_update: {
     category: "community",
-    label: "Membership",
+    label: "membership",
     icon: ShieldCheck,
-    action: "Manage membership",
+    action: "manage_membership",
   },
   new_follower: {
     category: "community",
-    label: "New followers",
+    label: "new_followers",
     icon: UserPlus,
-    action: "View profile",
+    action: "view_profile",
   },
   drive_closed: {
     category: "community",
-    label: "Drive closed",
+    label: "drive_closed",
     icon: Package,
-    action: "See drive",
+    action: "see_drive",
   },
   weekly_digest: {
     category: "news",
-    label: "Weekly digest",
+    label: "weekly_digest",
     icon: BookOpen,
-    action: "View following list",
+    action: "view_following_list",
   },
   weekly_report: {
     category: "news",
-    label: "Community report",
+    label: "community_report",
     icon: BookOpen,
-    action: "See your submissions",
+    action: "see_your_submissions",
   },
   announcement: {
     category: "news",
-    label: "Announcements",
+    label: "announcements",
     icon: Megaphone,
-    action: "Read more",
+    action: "read_more",
   },
   newsletter_confirmation: {
     category: "news",
-    label: "Newsletter",
+    label: "newsletter",
     icon: BookOpen,
-    action: "View details",
+    action: "view_details",
   },
 } as const
 function presentation(kind: string) {
   return (
-    kinds[kind as keyof typeof kinds] ?? {
+    kinds[kind as keyof typeof kinds] ??
+    ({
       category: "news",
-      label: "Update",
+      label: "update",
       icon: Bell,
-      action: "View update",
-    }
+      action: "view_update",
+    } as const)
   )
 }
 type Filter = "all" | "unread" | keyof typeof categories
@@ -205,7 +206,12 @@ function InboxEmptyState({
 }
 
 export function NotificationInbox() {
-  const tUi = useUiTranslations("ui")
+  const tNotice = useTranslations("notificationCopy")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const {
     items,
@@ -259,7 +265,7 @@ export function NotificationInbox() {
                   ) : (
                     <>
                       <CheckCheck aria-hidden className="size-3.5" />
-                      All read
+                      {tStatic("profileIndex.all_read")}
                     </>
                   )}
                 </span>
@@ -267,7 +273,7 @@ export function NotificationInbox() {
             </div>
             <p className="mt-2 mb-0 flex items-center gap-2 text-sm text-(--t-ink-dim)">
               <LockKeyhole aria-hidden="true" className="size-4 shrink-0" />
-              Only you can see this tab
+              {tStatic("profileIndex.only_you_can_see_this_tab")}
             </p>
           </div>
           <div
@@ -281,7 +287,7 @@ export function NotificationInbox() {
                 onClick={() => void read("all")}
               >
                 <CheckCheck aria-hidden="true" />
-                Mark all as read
+                {tStatic("profileIndex.mark_all_as_read")}
               </Button>
             )}
             <Button
@@ -315,10 +321,10 @@ export function NotificationInbox() {
                   className={`inline-flex min-h-[44px] shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition-colors focus-visible:-outline-offset-4! motion-reduce:transition-none ${filter === key ? "border-(--t-ink-base) bg-(--t-bg-inverse) text-(--t-ink-inverse)" : "border-(--t-border-line) bg-(--t-bg-deep) text-(--t-ink-dim) hover:border-(--t-border-hi) hover:bg-(--t-bg-surface) hover:text-(--t-ink-base)"}`}
                 >
                   {key === "all"
-                    ? "All"
+                    ? tStatic("common.all")
                     : key === "unread"
-                      ? "Unread"
-                      : categories[key].label}
+                      ? tStatic("profileIndex.unread")
+                      : tNotice(categories[key].label)}
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-xs leading-none tabular-nums ${filter === key ? "bg-white/15 text-white" : "bg-(--t-bg-muted) text-(--t-ink-dim)"}`}
                   >
@@ -353,7 +359,7 @@ export function NotificationInbox() {
       {loading ? (
         <div role="status" className="px-5 pb-5 sm:px-7 sm:pb-7">
           <p className="mt-0 mb-4 text-sm text-(--t-ink-dim)">
-            Loading your updates…
+            {tStatic("profileIndex.loading_your_updates")}
           </p>
           <div
             aria-hidden="true"
@@ -373,19 +379,19 @@ export function NotificationInbox() {
       ) : !items.length && !loadError ? (
         <InboxEmptyState
           icon={Bell}
-          title="No notifications yet"
+          title={tStatic("profileIndex.no_notifications_yet")}
           detail="Updates about the libraries you follow, your contributions and the community will appear here."
         >
           <Button asChild variant="primary" size="pill">
             <Link href="/libraries">
               <Building2 aria-hidden="true" />
-              Follow libraries
+              {tStatic("common.followLibraries")}
             </Link>
           </Button>
           <Button asChild variant="surface" size="pill">
             <Link href="/contribute">
               <Pencil aria-hidden="true" />
-              Make a contribution
+              {tExisting("betaWelcome.contributeTitle")}
             </Link>
           </Button>
         </InboxEmptyState>
@@ -409,15 +415,15 @@ export function NotificationInbox() {
               size="pill"
               onClick={() => setFilter("all")}
             >
-              Show all notifications
+              {tStatic("profileIndex.show_all_notifications")}
             </Button>
           </InboxEmptyState>
         </div>
       ) : (
         [
-          { id: "today", label: "Today" },
+          { id: "today", label: tExisting("discussions.today") },
           { id: "week", label: tUi("this_week") },
-          { id: "earlier", label: "Earlier" },
+          { id: "earlier", label: tStatic("profileIndex.earlier") },
         ].map((group) => {
           const rows = filtered.filter(
             (item) => period(item.createdAt, now) === group.id
@@ -465,7 +471,7 @@ export function NotificationInbox() {
                           <span
                             className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tint}`}
                           >
-                            {meta.label}
+                            {tNotice(meta.label)}
                           </span>
                           {item.href?.startsWith("/") &&
                             !item.href.startsWith("//") && (
@@ -476,7 +482,7 @@ export function NotificationInbox() {
                                   if (!item.readAt) void read(item.documentId)
                                 }}
                               >
-                                {meta.action}
+                                {tNotice(meta.action)}
                                 <ArrowRight aria-hidden className="size-3.5" />
                               </Link>
                             )}
@@ -490,14 +496,16 @@ export function NotificationInbox() {
                               className="min-h-[44px] rounded-full px-3 text-sm text-(--t-ink-dim)"
                             >
                               <CheckCheck aria-hidden className="size-4" />
-                              Mark as read
+                              {tStatic("profileIndex.mark_as_read")}
                             </Button>
                           )}
                         </div>
                       </div>
                       {!item.readAt && (
                         <span className="absolute top-6 right-5 size-2.5 rounded-full bg-(--t-action-primary) sm:right-7">
-                          <span className="sr-only">Unread</span>
+                          <span className="sr-only">
+                            {tStatic("profileIndex.unread")}
+                          </span>
                         </span>
                       )}
                     </li>

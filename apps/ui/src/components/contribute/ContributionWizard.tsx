@@ -8,7 +8,7 @@ import {
   validateMobileTimetable,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -36,19 +36,14 @@ import { PhotoUpload } from "./PhotoUpload"
 import { FIELD, Label, PRIMARY, SECONDARY } from "./wizard-ui"
 import {
   type ActionId,
-  blockerFor,
+  createBlockerFor,
+  createWizardCopy,
   buildSubmission,
   CATEGORIES,
-  categoryOption,
-  categoriesFor,
-  DRAWER_STEPS,
   draftKey,
   EMPTY_DRAFT,
   isHandoff,
   PHOTO_LICENCE,
-  STEP_HINTS,
-  STEP_LABELS,
-  STEP_TITLES,
   type Step,
   type WizardDraft,
   type WizardLibrary,
@@ -87,7 +82,7 @@ function Progress({
   readonly labels: readonly string[]
   readonly step: Step
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   return (
     <ol
@@ -152,10 +147,12 @@ function StepRail({
   readonly hints: readonly string[]
   readonly drawer?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tActions = useTranslations("contributeActions")
+
+  const tUi = useTranslations("ui")
 
   const { has } = useCapabilities()
-  const meta = actionFor(action, has)
+  const meta = actionFor(action, has, tActions)
   // The panel collapses below lg, so it shows hints and lines only there;
   // the drawer's rail is hidden on phones and always shows them.
   const wide = drawer ? "block" : "hidden lg:block"
@@ -311,6 +308,8 @@ function CategoryCards({
   readonly labelledBy: string
   readonly libraryType?: string
 }) {
+  const { categoriesFor } = createWizardCopy(useTranslations("wizardCopy"))
+
   return (
     <fieldset
       aria-labelledby={labelledBy}
@@ -323,7 +322,7 @@ function CategoryCards({
 
         return (
           <label
-            key={c.value}
+            key={c.label}
             className={`flex min-h-[64px] cursor-pointer items-center gap-3 rounded-[16px] px-4 py-3 outline-offset-2 outline-(--t-accent-primary) transition-colors has-[:focus-visible]:outline-[3px] ${
               checked ? "" : "hover:border-(--t-border-hi)"
             } ${wide ? "min-[420px]:col-span-2" : ""}`}
@@ -339,7 +338,7 @@ function CategoryCards({
               name={name}
               onChange={() => onChange(c.value)}
               type="radio"
-              value={c.value}
+              value={c.label}
             />
             <span
               aria-hidden="true"
@@ -352,7 +351,7 @@ function CategoryCards({
               <Icon height={18} icon={c.icon} width={18} />
             </span>
             <span className="text-base leading-[1.25] font-semibold">
-              {c.value}
+              {c.label}
             </span>
           </label>
         )
@@ -362,7 +361,11 @@ function CategoryCards({
 }
 
 function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const callback = encodeURIComponent(returnTo)
 
@@ -372,8 +375,10 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
       style={{ background: T.accent.chip }}
     >
       <p className="m-0 text-base" style={{ color: T.ink.base }}>
-        <strong>Sign in to send it for review.</strong> Your draft is saved on
-        this device, so it’ll be here when you come back.
+        <strong>{tStatic("contribute.sign_in_to_send_it_for_review")}</strong>{" "}
+        {tStatic(
+          "contribute.your_draft_is_saved_on_this_device_so_it_ll_be_here_when_you_come_back"
+        )}
       </p>
       <div className="flex flex-wrap gap-2">
         <Link
@@ -387,7 +392,7 @@ function SignInPrompt({ returnTo }: { readonly returnTo: string }) {
           href={`/auth/register?callbackUrl=${callback}`}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Create an account
+          {tExisting("auth.signIn.createAccount")}
         </Link>
       </div>
     </div>
@@ -445,7 +450,23 @@ export function ContributionWizard({
    */
   readonly layout?: "stacked" | "panel" | "drawer"
 }) {
-  const tUi = useUiTranslations("ui")
+  const tWizard = useTranslations("wizardCopy")
+  const blockerFor = createBlockerFor(tWizard)
+  const {
+    categoryOption,
+    categoriesFor,
+    DRAWER_STEPS,
+    STEP_LABELS,
+    STEP_HINTS,
+    STEP_TITLES,
+  } = createWizardCopy(useTranslations("wizardCopy"))
+  const tActions = useTranslations("contributeActions")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const panel = layout === "panel"
   const drawer = layout === "drawer"
@@ -454,7 +475,7 @@ export function ContributionWizard({
   const { data: session, isPending } = authClient.useSession()
   const signedIn = Boolean(session?.user)
   const { has } = useCapabilities()
-  const meta = actionFor(action, has)
+  const meta = actionFor(action, has, tActions)
   const fallbackId = useId()
   const titleId = headingId ?? `${fallbackId}-title`
   const stepHeading = useRef<HTMLHeadingElement>(null)
@@ -558,7 +579,7 @@ export function ContributionWizard({
   )
   const blocker =
     (step === 2 && structured && recordLoading
-      ? "Loading the record…"
+      ? tStatic("common.loadingRecord")
       : blockerFor(
           action,
           step,
@@ -578,7 +599,7 @@ export function ContributionWizard({
                         )!
                       )
                     ))
-                    ? "Resolve the timetable errors to continue."
+                    ? tWizard("timetableErrors")
                     : null,
               }
             : undefined
@@ -663,7 +684,7 @@ export function ContributionWizard({
         className="type-h3 m-0"
         style={{ color: T.ink.base }}
       >
-        Thanks, it’s in review
+        {tStatic("contribute.thanks_it_s_in_review")}
       </h3>
       <p
         className="m-0 max-w-[56ch] text-base leading-normal"
@@ -678,7 +699,7 @@ export function ContributionWizard({
           className={`${PRIMARY} bg-(--t-action-primary) text-white no-underline hover:bg-(--t-action-primary-hover)`}
           href="/contribute/submissions"
         >
-          See my submissions
+          {tStatic("common.mySubmissions")}
         </Link>
         <button
           type="button"
@@ -690,7 +711,7 @@ export function ContributionWizard({
           }}
           style={{ borderColor: T.border.hi, color: T.ink.base }}
         >
-          Suggest something else
+          {tStatic("contribute.suggest_something_else")}
         </button>
       </div>
     </div>
@@ -745,7 +766,7 @@ export function ContributionWizard({
             : step === 3
               ? sending
                 ? tUi("sending")
-                : "Send for review"
+                : tExisting("discussions.submit")
               : tUi("continue")}
         </button>
       )}
@@ -777,14 +798,14 @@ export function ContributionWizard({
         icon="mdi:content-save-outline"
         width={16}
       />
-      We restored your draft from this device.
+      {tStatic("contribute.we_restored_your_draft_from_this_device")}
       <button
         type="button"
         className="font-semibold underline underline-offset-[3px]"
         onClick={startOver}
         style={{ color: T.accent.primary }}
       >
-        Start over
+        {tStatic("contribute.start_over")}
       </button>
     </p>
   ) : null
@@ -797,7 +818,7 @@ export function ContributionWizard({
     changes && record ? (
       <>
         <CorrectionEditor
-          category={draft.category}
+          category={chosen?.label ?? draft.category}
           changedKeys={Object.keys(changes.changes)}
           current={record}
           edit={draft.record ?? {}}
@@ -806,13 +827,15 @@ export function ContributionWizard({
         />
         <div>
           <Label htmlFor={`${titleId}-text`} hint={tUi("optional_59be71")}>
-            Anything a reviewer should know?
+            {tStatic("contribute.anything_a_reviewer_should_know")}
           </Label>
           <textarea
             className={`${FIELD} min-h-[88px] resize-y`}
             id={`${titleId}-text`}
             onChange={(e) => patch({ text: e.target.value })}
-            placeholder="e.g. The council changed the Thursday hours in September"
+            placeholder={tStatic(
+              "contribute.e_g_the_council_changed_the_thursday_hours_in_september"
+            )}
             style={{ color: T.ink.base }}
             value={draft.text}
           />
@@ -820,7 +843,7 @@ export function ContributionWizard({
       </>
     ) : structured && recordLoading ? (
       <p className="m-0 text-base" role="status" style={{ color: T.ink.dim }}>
-        Loading the record…
+        {tStatic("common.loadingRecord")}
       </p>
     ) : null
 
@@ -841,7 +864,9 @@ export function ContributionWizard({
                 color: T.ink.base,
               }}
             >
-              <span className="sr-only">Step {step}: </span>
+              <span className="sr-only">
+                {tStatic("common.step")} {step}:{" "}
+              </span>
               {DRAWER_STEPS.titles[step - 1]}
             </h3>
             <p
@@ -865,12 +890,14 @@ export function ContributionWizard({
               color: T.ink.base,
             }}
           >
-            <span className="sr-only">Step {step}: </span>
+            <span className="sr-only">
+              {tStatic("common.step")} {step}:{" "}
+            </span>
             {meta.handoff?.heading ?? STEP_TITLES[action][step - 1]}
           </h3>
         ) : (
           <h3 ref={stepHeading} className="type-h3 sr-only" tabIndex={-1}>
-            Step {step}: {STEP_LABELS[action][step - 1]}
+            {tStatic("common.step")} {step}: {STEP_LABELS[action][step - 1]}
           </h3>
         )}
 
@@ -889,7 +916,7 @@ export function ContributionWizard({
               labelledBy={stepTitleId}
               name={`${titleId}-category`}
               onChange={(category) => patch({ category })}
-              value={draft.category}
+              value={chosen?.label ?? draft.category}
             />
           </div>
         ) : step === 1 ? (
@@ -927,7 +954,7 @@ export function ContributionWizard({
                     onClick={() => setStep(1)}
                     style={{ color: T.accent.primary }}
                   >
-                    Change
+                    {tExisting("atlasNetwork.changeService")}
                   </button>
                 ) : null}
               </p>
@@ -949,13 +976,13 @@ export function ContributionWizard({
                       htmlFor={`${titleId}-caption`}
                       hint={tUi("optional_59be71")}
                     >
-                      What does it show?
+                      {tStatic("common.photoDescription")}
                     </Label>
                     <input
                       className={FIELD}
                       id={`${titleId}-caption`}
                       onChange={(e) => patch({ text: e.target.value })}
-                      placeholder="e.g. The main entrance from the high street"
+                      placeholder={tStatic("common.photoDescriptionExample")}
                       style={{ color: T.ink.base }}
                       value={draft.text}
                     />
@@ -985,7 +1012,7 @@ export function ContributionWizard({
                     />
                   </span>
                   <span className="font-semibold" style={{ color: T.ink.base }}>
-                    {draft.category}
+                    {chosen?.label ?? draft.category}
                   </span>
                   <button
                     type="button"
@@ -993,7 +1020,11 @@ export function ContributionWizard({
                     onClick={() => setStep(1)}
                     style={{ color: T.accent.primary }}
                   >
-                    Change<span className="sr-only"> what needs changing</span>
+                    {tExisting("atlasNetwork.changeService")}
+                    <span className="sr-only">
+                      {" "}
+                      {tStatic("contribute.what_needs_changing")}
+                    </span>
                   </button>
                 </p>
                 {editorView ?? (
@@ -1017,7 +1048,7 @@ export function ContributionWizard({
                   <Label htmlFor={`${titleId}-category`}>
                     {action === "source"
                       ? "Which detail does it back up?"
-                      : "What needs changing?"}
+                      : tExisting("wizardCopy.what_needs_changing_question")}
                   </Label>
                   <SelectField
                     className={FIELD}
@@ -1029,7 +1060,7 @@ export function ContributionWizard({
                     value={String(draft.category ?? "")}
                     options={categoriesFor(record?.libraryType).map((c) => ({
                       value: String(c.value),
-                      label: String(c.value),
+                      label: c.label,
                     }))}
                   />
                 </div>
@@ -1045,7 +1076,7 @@ export function ContributionWizard({
                     >
                       {action === "correction"
                         ? "What’s correct?"
-                        : "What does the source confirm?"}
+                        : tExisting("wizardCopy.what_does_the_source_confirm")}
                     </Label>
                     <textarea
                       className={`${FIELD} min-h-[112px] resize-y`}
@@ -1054,7 +1085,9 @@ export function ContributionWizard({
                       placeholder={
                         action === "correction"
                           ? (chosen?.placeholder ??
-                            "e.g. Open until 8pm on Thursdays since September")
+                            tExisting(
+                              "wizardCopy.e_g_open_until_8pm_on_thursdays_since_september"
+                            ))
                           : "e.g. The opening hours on the council website"
                       }
                       style={{ color: T.ink.base }}
@@ -1072,9 +1105,9 @@ export function ContributionWizard({
                     <div>
                       <Label
                         htmlFor={`${titleId}-credit`}
-                        hint="Optional, as you’d like to be credited"
+                        hint={tStatic("common.photoCreditOptional")}
                       >
-                        Photo credit
+                        {tStatic("common.photoCredit")}
                       </Label>
                       <input
                         className={FIELD}
@@ -1119,7 +1152,9 @@ export function ContributionWizard({
                       className={FIELD}
                       id={`${titleId}-source`}
                       onChange={(e) => patch({ source: e.target.value })}
-                      placeholder="A link, or where you saw it"
+                      placeholder={tStatic(
+                        "contribute.a_link_or_where_you_saw_it"
+                      )}
                       style={{ color: T.ink.base }}
                       value={draft.source}
                     />
@@ -1144,11 +1179,15 @@ export function ContributionWizard({
                     </>
                   ) : (
                     <>
-                      <dt style={{ color: T.ink.dim }}>Detail</dt>
+                      <dt style={{ color: T.ink.dim }}>
+                        {tStatic("contribute.detail")}
+                      </dt>
                       <dd className="m-0">{draft.category}</dd>
                       {changes ? (
                         <>
-                          <dt style={{ color: T.ink.dim }}>Changes</dt>
+                          <dt style={{ color: T.ink.dim }}>
+                            {tStatic("common.changes")}
+                          </dt>
                           <dd className="m-0">
                             <ul className="m-0 list-none p-0">
                               {describeChanges(changes, names).map((line) => (
@@ -1164,7 +1203,7 @@ export function ContributionWizard({
                         <>
                           <dt style={{ color: T.ink.dim }}>
                             {changes
-                              ? "Note"
+                              ? tExisting("staticUi.staffRoute.note")
                               : action === "correction"
                                 ? "Correct"
                                 : "Confirms"}
@@ -1290,7 +1329,7 @@ export function ContributionWizard({
           className="m-0 shrink-0 text-base font-semibold"
           style={{ color: T.ink.dim }}
         >
-          Step {step} of 3
+          {tStatic("common.step")} {step} of 3
         </p>
       </div>
 

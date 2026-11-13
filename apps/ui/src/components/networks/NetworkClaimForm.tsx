@@ -1,6 +1,6 @@
 "use client"
 import type { NetworkClaimSnapshot } from "@repo/shared-data"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState, useTransition } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
@@ -26,6 +26,10 @@ export function NetworkClaimForm({
   readonly initialRequest?: Partial<NetworkClaimSnapshot> | null
   readonly onSaved: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const [intent, setIntent] = useState(initialRequest?.intent ?? "employment"),
     [selected, setSelected] = useState(
@@ -64,7 +68,9 @@ export function NetworkClaimForm({
         onSaved()
       } catch (failure) {
         setError(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
@@ -75,10 +81,11 @@ export function NetworkClaimForm({
         <Notice
           tone="info"
           icon="mdi:check-circle-outline"
-          title="Request sent for review"
+          title={tStatic("network.request_sent_for_review")}
         >
-          Follow its progress in Grouped requests or Your submissions. We’ll let
-          you know if more information is needed.
+          {tStatic(
+            "network.follow_its_progress_in_grouped_requests_or_your_submissions_we_ll_let_you_know_if_more_information_i"
+          )}
         </Notice>
       </div>
     )
@@ -87,7 +94,7 @@ export function NetworkClaimForm({
     <form onSubmit={submit} className="space-y-5" aria-busy={pending}>
       <fieldset disabled={pending}>
         <legend className="mb-3 text-sm font-semibold">
-          What would you like reviewed?
+          {tStatic("network.what_would_you_like_reviewed")}
         </legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <ChoiceCard
@@ -97,8 +104,10 @@ export function NetworkClaimForm({
             onChange={() => setIntent("employment")}
             icon="mdi:account-check-outline"
             tint={{ bg: "var(--t-accent-chip)", fg: "var(--t-accent-primary)" }}
-            title="Verify my affiliation"
-            hint="Confirm that you work for this service or network."
+            title={tStatic("network.verify_my_affiliation")}
+            hint={tStatic(
+              "network.confirm_that_you_work_for_this_service_or_network"
+            )}
           />
           {detail.network.kind !== "consortium" ? (
             <ChoiceCard
@@ -111,20 +120,22 @@ export function NetworkClaimForm({
                 bg: "var(--t-accent-chip)",
                 fg: "var(--t-accent-primary)",
               }}
-              title="Manage library records"
-              hint="Request staff access to a reviewed set of libraries."
+              title={tStatic("network.manage_library_records")}
+              hint={tStatic(
+                "network.request_staff_access_to_a_reviewed_set_of_libraries"
+              )}
             />
           ) : null}
         </div>
       </fieldset>
       <p className="text-sm text-(--t-ink-dim)">
-        Employment verification confirms your affiliation. Management approval
-        grants access only to the libraries a moderator approves. Evidence is
-        private.
+        {tStatic(
+          "network.employment_verification_confirms_your_affiliation_management_approval_grants_access_only_to_the_libr"
+        )}
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-2">
-          Your role
+          {tExisting("teamInvitation.yourRole")}
           <input
             name="role"
             defaultValue={initialRequest?.role}
@@ -135,7 +146,7 @@ export function NetworkClaimForm({
           />
         </label>
         <label className="grid gap-2">
-          Department (optional)
+          {tExisting("libraryClaim.department")}
           <input
             name="department"
             defaultValue={initialRequest?.department}
@@ -147,26 +158,32 @@ export function NetworkClaimForm({
       </div>
       {management ? (
         <div className="grid gap-2">
-          <span>Requested responsibility</span>
+          <span>{tStatic("network.requested_responsibility")}</span>
           <SelectField
-            label="Requested responsibility"
+            label={tStatic("network.requested_responsibility")}
             name="staffRole"
             value={staffRole}
             onValueChange={(value) =>
               setStaffRole(value === "owner" ? "owner" : "editor")
             }
             options={[
-              { value: "editor", label: "Edit these library records" },
+              {
+                value: "editor",
+                label: tStatic("network.edit_these_library_records"),
+              },
               {
                 value: "owner",
-                label: "Manage staff and delegate access as an owner",
+                label: tStatic(
+                  "network.manage_staff_and_delegate_access_as_an_owner"
+                ),
               },
             ]}
             disabled={pending}
           />
           <span className="text-sm text-(--t-ink-dim)">
-            Editor access is the default. Owner responsibility requires an
-            explicit moderator decision and reason.
+            {tStatic(
+              "network.editor_access_is_the_default_owner_responsibility_requires_an_explicit_moderator_decision_and_reason"
+            )}
           </span>
         </div>
       ) : null}
@@ -180,7 +197,7 @@ export function NetworkClaimForm({
         />
       ) : null}
       <label className="grid gap-2">
-        Evidence URL (optional)
+        {tStatic("network.evidence_url_optional")}
         <input
           name="evidenceUrl"
           defaultValue={initialRequest?.evidenceUrl}
@@ -192,7 +209,7 @@ export function NetworkClaimForm({
         />
       </label>
       <label className="grid gap-2">
-        Explain your relationship and requested authority
+        {tStatic("network.explain_your_relationship_and_requested_authority")}
         <textarea
           name="note"
           defaultValue={initialRequest?.note}
@@ -213,11 +230,14 @@ export function NetworkClaimForm({
               onChange={(event) => setAttachTeam(event.target.checked)}
               disabled={pending || Boolean(mandateId)}
             />
-            Connect the approved delegation scope to my Team
+            {tStatic(
+              "network.connect_the_approved_delegation_scope_to_my_team"
+            )}
           </label>
           <p>
-            Approved management can support assignments from your Team within
-            the reviewed scope. Payment does not verify service authority.
+            {tStatic(
+              "network.approved_management_can_support_assignments_from_your_team_within_the_reviewed_scope_payment_does_no"
+            )}
           </p>
         </div>
       ) : null}
@@ -232,7 +252,7 @@ export function NetworkClaimForm({
         size="pill"
         disabled={pending || (management && !selected.length)}
       >
-        {pending ? "Sending…" : "Send one request for review"}
+        {pending ? tExisting("ui.sending") : "Send one request for review"}
       </Button>
     </form>
   )
@@ -250,6 +270,10 @@ function NetworkScope({
   readonly setSelected: (ids: string[]) => void
   readonly disabled: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [page, setPage] = useState(detail),
     [loading, setLoading] = useState(false),
     [error, setError] = useState("")
@@ -281,10 +305,11 @@ function NetworkScope({
       className="space-y-3 rounded-xl border border-(--t-border-line) p-4"
       disabled={disabled || loading}
     >
-      <legend>Reviewed library scope</legend>
+      <legend>{tStatic("network.reviewed_library_scope")}</legend>
       <p>
-        {selected.length} of {libraryIds.length} published libraries selected.
-        Later additions require a new batch review.
+        {selected.length} {tExisting("widgetPublic.of")} {libraryIds.length}{" "}
+        published libraries selected. Later additions require a new batch
+        review.
       </p>
       <div className="flex gap-3">
         <Button
@@ -292,10 +317,10 @@ function NetworkScope({
           type="button"
           onClick={() => setSelected(libraryIds)}
         >
-          Select all
+          {tStatic("network.select_all")}
         </Button>
         <Button variant="surface" type="button" onClick={() => setSelected([])}>
-          Clear
+          {tExisting("atlasNetwork.clearService")}
         </Button>
       </div>
       <ul className="m-0 max-h-80 list-none overflow-auto p-0">
@@ -323,7 +348,7 @@ function NetworkScope({
           disabled={page.page === 1}
           onClick={() => changePage(page.page - 1)}
         >
-          Previous libraries
+          {tStatic("network.previous_libraries")}
         </Button>
         <Button
           variant="surface"
@@ -331,7 +356,7 @@ function NetworkScope({
           disabled={page.page * page.pageSize >= detail.network.libraryCount}
           onClick={() => changePage(page.page + 1)}
         >
-          More libraries
+          {tExisting("ui.more_libraries")}
         </Button>
       </div>
     </fieldset>

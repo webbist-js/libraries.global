@@ -1,4 +1,5 @@
-import { getLocale } from "next-intl/server"
+import { useTranslations } from "next-intl"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { ApiIndividualCheckout } from "@/components/developers/ApiIndividualCheckout"
@@ -29,33 +30,41 @@ function ApiAccessCta({
   readonly signedIn: boolean
   readonly signInHref: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <section
       className="rounded-3xl border border-(--t-border-line) bg-(--t-accent-chip) p-5 sm:p-7"
       aria-labelledby="api-access-title"
     >
-      <p className="hero-eyebrow">API access</p>
+      <p className="hero-eyebrow">{tExisting("staffWorkspace.apiAccess")}</p>
       <h2 id="api-access-title" className="type-h2 m-0">
-        Ready to connect your application?
+        {tStatic("frontendExtra.unlock_live_api_requests")}
       </h2>
       <p className="mt-3 max-w-[75ch] text-base leading-relaxed text-(--t-ink-dim)">
-        Documentation is open to everyone. Running requests in the playground or
-        your applications needs an API subscription, bought by an individual or
-        an organisation’s Organisers. Organisers manage billing and keys;
-        members can view usage.
+        {tStatic(
+          "frontendExtra.explore_the_request_reference_for_free_to_use_the_playground_or_connect_an_application_subscribe_to_"
+        )}
       </p>
-      {!signedIn ? (
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Button asChild variant="primary" size="pill">
-            <Link href={signInHref}>Log in to buy API access</Link>
-          </Button>
-        </div>
-      ) : null}
+      <div className="mt-5 flex flex-wrap gap-3">
+        <Button asChild variant="primary" size="pill">
+          <Link href={signedIn ? "/developers" : signInHref}>
+            {signedIn ? "Review API access" : "Sign in to get API access"}
+          </Link>
+        </Button>
+        <Button asChild variant="surface" size="pill">
+          <Link href="/developers/reference">
+            {tStatic("frontendExtra.explore_the_reference")}
+          </Link>
+        </Button>
+      </div>
     </section>
   )
 }
 
-function overviewLinks(team: boolean) {
+function overviewLinks(team: boolean, active: boolean) {
   return [
     {
       section: team ? "keys" : "reference",
@@ -66,8 +75,10 @@ function overviewLinks(team: boolean) {
     },
     {
       section: "playground",
-      title: "Try the API playground",
-      body: "Make real requests and inspect the responses. They count towards your API allowance.",
+      title: active ? "Open the API playground" : "Explore the playground",
+      body: active
+        ? "Make a request with your key and inspect the response. Usage counts towards your allowance."
+        : "Live requests need an active API subscription. See how to get access and connect your application.",
     },
   ] as const
 }
@@ -110,11 +121,12 @@ function workspaceView(
     checkout: controls && prospect ? prospect : null,
     accessCta:
       section !== "overview" &&
+      section !== "reference" &&
       !data &&
       !(prospect && controls) &&
       !unavailable &&
       !conflict,
-    inactiveNotice: Boolean(data && !data.active && !controls),
+    inactiveNotice: Boolean(data && !data.active && section === "playground"),
   }
 }
 
@@ -125,6 +137,8 @@ export async function ApiWorkspacePage({
   readonly section: ApiSection
   readonly query?: ApiWorkspaceQuery
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const [access, locale] = await Promise.all([
     apiWorkspaceAccess(),
     getLocale(),
@@ -148,6 +162,7 @@ export async function ApiWorkspacePage({
         section={section}
         team={Boolean(data)}
         teamName={data?.teamName}
+        playgroundAvailable={Boolean(view.playground)}
       >
         {view.dashboard ? (
           <TeamApiDashboard
@@ -160,27 +175,36 @@ export async function ApiWorkspacePage({
         ) : null}
         {view.offer ? (
           <ApiOfferOverview
+            showPricing={!view.checkout?.verified}
             limits={API_OFFER_LIMITS}
             overageAvailable={apiConfig().overage}
             buy={offerBuy(signedIn, Boolean(prospect), locale)}
           />
         ) : null}
+        {view.checkout ? (
+          <ApiIndividualCheckout
+            prospect={view.checkout}
+            accountName={accountName}
+          />
+        ) : null}
         {section === "overview" ? (
           <div className="grid gap-4 md:grid-cols-2">
-            {overviewLinks(Boolean(data)).map((item) => (
-              <Link
-                key={item.section}
-                href={apiSectionHref(item.section)}
-                className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-(--t-ink-base) no-underline hover:border-(--t-accent-primary) sm:p-7"
-              >
-                <h2 className="type-h3 m-0">
-                  {item.title} <span aria-hidden>→</span>
-                </h2>
-                <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
-                  {item.body}
-                </p>
-              </Link>
-            ))}
+            {overviewLinks(Boolean(data?.organiser), Boolean(data?.active)).map(
+              (item) => (
+                <Link
+                  key={item.section}
+                  href={apiSectionHref(item.section)}
+                  className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 text-(--t-ink-base) no-underline transition-colors hover:border-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--t-accent-primary) sm:p-7"
+                >
+                  <h2 className="type-h3 m-0">
+                    {item.title} <span aria-hidden>→</span>
+                  </h2>
+                  <p className="mt-3 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
+                    {item.body}
+                  </p>
+                </Link>
+              )
+            )}
           </div>
         ) : null}
         {view.conflict ? <TeamMembershipConflict /> : null}
@@ -193,12 +217,6 @@ export async function ApiWorkspacePage({
             key={view.playground.teamId}
             teamName={view.playground.teamName}
             showUsageWarning={showUsageWarning}
-          />
-        ) : null}
-        {view.checkout ? (
-          <ApiIndividualCheckout
-            prospect={view.checkout}
-            accountName={accountName}
           />
         ) : null}
         {view.accessCta ? (
@@ -214,12 +232,16 @@ export async function ApiWorkspacePage({
         {view.inactiveNotice ? (
           <Notice
             tone="info"
-            title="Active API access is required"
+            title={tStatic("frontendExtra.active_api_access_is_required")}
             icon="mdi:code-tags"
           >
-            Playground requests use your organisation’s shared API allowance.{" "}
-            <Link href="/developers">Review your API subscription</Link> to
-            activate access and manage your API keys.
+            {tStatic(
+              "frontendExtra.playground_requests_use_your_organisation_s_shared_api_allowance"
+            )}{" "}
+            <Link href="/developers">
+              {tStatic("frontendExtra.review_your_api_subscription")}
+            </Link>{" "}
+            to activate access and manage your API keys.
           </Notice>
         ) : null}
       </ApiWorkspace>

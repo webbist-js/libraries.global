@@ -1,5 +1,6 @@
 "use client"
 
+import { useLocale, useTranslations } from "next-intl"
 import { useId, useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -12,8 +13,8 @@ export function BarSeries({
   heading: Heading = "h2",
   ghost = false,
   highlightLast = false,
-  valueLabel = "Views",
-  locale = "en",
+  valueLabel: suppliedValueLabel,
+  locale: suppliedLocale,
   dataTable,
   emptyMessage,
   endLabel,
@@ -31,6 +32,10 @@ export function BarSeries({
   readonly endLabel?: string
   readonly compact?: boolean
 }) {
+  const t = useTranslations("sharedControls.chart")
+  const activeLocale = useLocale()
+  const locale = suppliedLocale ?? activeLocale
+  const valueLabel = suppliedValueLabel ?? t("views")
   const [table, setTable] = useState(false)
   const id = useId()
   const max = Math.max(1, ...points.map((p) => p.value))
@@ -65,7 +70,7 @@ export function BarSeries({
             aria-expanded={table}
             aria-controls={id}
           >
-            {table ? "Show chart" : "Show daily table"}
+            {table ? t("showChart") : t("showTable")}
           </Button>
         ) : null}
       </div>
@@ -75,7 +80,7 @@ export function BarSeries({
             <div
               tabIndex={0}
               role="region"
-              aria-label={title + " data"}
+              aria-label={t("data", { title })}
               className="mt-3 overflow-x-auto rounded-2xl border border-(--t-border-line)"
             >
               <table className="w-full text-left text-sm tabular-nums">
@@ -83,7 +88,7 @@ export function BarSeries({
                 <thead className="bg-(--t-bg-surface)">
                   <tr>
                     <th scope="col" className="px-4 py-3">
-                      Date
+                      {t("date")}
                     </th>
                     <th scope="col" className="px-4 py-3 text-right">
                       {valueLabel}
@@ -121,24 +126,19 @@ export function BarSeries({
                 role="img"
                 aria-label={
                   empty
-                    ? title + ": no activity"
-                    : title +
-                      ". " +
-                      valueLabel +
-                      " per day; use the daily table for all values."
+                    ? t("empty", { title })
+                    : t("description", { title, valueLabel })
                 }
               >
                 {points.map((p, index) => (
                   <span
                     key={p.date}
                     aria-hidden="true"
-                    title={
-                      date(p.date) +
-                      ": " +
-                      number.format(p.value) +
-                      " " +
-                      valueLabel.toLowerCase()
-                    }
+                    title={t("point", {
+                      date: date(p.date),
+                      value: number.format(p.value),
+                      valueLabel,
+                    })}
                     className={cn(
                       "min-w-0 flex-1 rounded-t-[4px]",
                       empty

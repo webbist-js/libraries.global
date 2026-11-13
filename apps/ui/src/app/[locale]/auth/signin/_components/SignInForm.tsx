@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Icon } from "@iconify/react"
 import { useSearchParams } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -25,6 +25,7 @@ import {
 } from "@/app/[locale]/auth/_components/AuthFormParts"
 import { AuthOAuthButtons } from "@/app/[locale]/auth/_components/AuthOAuthButtons"
 import { rememberPendingEmail } from "@/app/[locale]/auth/_components/pending-email"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import { UseSearchParamsWrapper } from "@/components/helpers/UseSearchParamsWrapper"
 import { useUserMutations } from "@/hooks/useUserMutations"
 import { authClient } from "@/lib/auth-client"
@@ -36,13 +37,16 @@ import {
 import { T } from "@/lib/design-tokens"
 import { safeRedirectPath } from "@/lib/safe-redirect"
 
-const PasswordFormSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Enter your email address")
-    .email("Enter a valid email address"),
-  password: z.string().min(1, "Enter your password"),
-})
+const PasswordFormSchema = (
+  tStatic: ReturnType<typeof useTranslations<"staticUi">>
+) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, tStatic("auth.enter_your_email_address"))
+      .email(tStatic("auth.enter_a_valid_email_address")),
+    password: z.string().min(1, tStatic("auth.enter_your_password")),
+  })
 
 export function SignInForm({ returnTo }: { readonly returnTo?: string } = {}) {
   return (
@@ -53,7 +57,13 @@ export function SignInForm({ returnTo }: { readonly returnTo?: string } = {}) {
 }
 
 function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
-  const tUi = useUiTranslations("ui")
+  const { heading } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const searchParams = useSearchParams()
   const callbackUrl = safeRedirectPath(
@@ -62,8 +72,8 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
   const { signInMutation } = useUserMutations()
   const [magicPending, setMagicPending] = useState(false)
 
-  const form = useForm<z.infer<typeof PasswordFormSchema>>({
-    resolver: zodResolver(PasswordFormSchema),
+  const form = useForm<z.infer<ReturnType<typeof PasswordFormSchema>>>({
+    resolver: zodResolver(PasswordFormSchema(tStatic)),
     defaultValues: { email: "", password: "" },
   })
   const { errors, isSubmitting } = form.formState
@@ -85,8 +95,8 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
           }
           toast.error(
             code === "INVALID_EMAIL_OR_PASSWORD"
-              ? "Incorrect email or password."
-              : (message ?? "Sign in failed")
+              ? tStatic("auth.incorrect_email_or_password")
+              : (message ?? tExisting("auth.signIn.status.fail"))
           )
         },
       }
@@ -112,7 +122,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
         globalThis.location.href = "/auth/magic-link-sent"
       }
     } catch {
-      toast.error("Failed to send magic link. Please try again.")
+      toast.error(tStatic("auth.failed_to_send_magic_link_please_try_again"))
     } finally {
       setMagicPending(false)
     }
@@ -123,9 +133,10 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
   return (
     <>
       <AuthHeading
-        title={tUi("welcome")}
-        italic="back."
-        subtitle="Sign in to suggest edits, add and follow libraries."
+        title={heading("welcome")}
+        subtitle={tStatic(
+          "auth.sign_in_to_suggest_edits_add_and_follow_libraries"
+        )}
       />
 
       {/* A native submit (before hydration) POSTs to this page instead of
@@ -160,7 +171,7 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
           error={errors.password?.message}
           aside={
             <AuthInlineLink href="/auth/forgot-password">
-              Forgot password?
+              {tStatic("auth.forgot_password")}
             </AuthInlineLink>
           }
         >
@@ -173,13 +184,15 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
         </AuthField>
 
         <AuthPrimaryButton disabled={submitting}>
-          {signInMutation.isPending ? "Signing in…" : tUi("sign_in")}
+          {signInMutation.isPending
+            ? tStatic("auth.signing_in")
+            : tUi("sign_in")}
         </AuthPrimaryButton>
       </form>
 
       <AuthSwitchPrompt
-        prompt="New here?"
-        linkLabel="Create an account"
+        prompt={tStatic("auth.new_here")}
+        linkLabel={tExisting("auth.signIn.createAccount")}
         href="/auth/register"
       />
 
@@ -194,7 +207,9 @@ function SuspensedSignInForm({ returnTo }: { readonly returnTo?: string }) {
             aria-hidden="true"
             style={{ color: T.accent.primary }}
           />
-          {magicPending ? tUi("sending") : "Email me a sign-in link"}
+          {magicPending
+            ? tUi("sending")
+            : tStatic("auth.email_me_a_sign_in_link")}
         </AuthSecondaryButton>
       </div>
     </>

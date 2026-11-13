@@ -292,7 +292,8 @@ describe("public article context", () => {
   ] as const)(
     "localizes reader labels in %s",
     async (locale, title, source) => {
-      const messages = (await import(`../../../locales/${locale}.json`)).default
+      const messages = (await import(`../../../locales/${locale}/index.ts`))
+        .default
       render(
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ArticleContext article={context} kind="journal" locale={locale} />

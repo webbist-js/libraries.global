@@ -11,7 +11,7 @@ import {
   type LibraryNotice,
   type TimetableNotice,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds"
@@ -91,7 +91,9 @@ export function StopsTimesSection({
   /** The library's slug, for "Suggest a correction for this stop". */
   readonly slug?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const tt = normalizeMobileTimetable(value)
   const [view, setView] = useState<"day" | "place">("day")
@@ -154,7 +156,7 @@ export function StopsTimesSection({
       style={{ borderColor: T.border.line, background: T.bg.deep }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="type-h2 m-0">Stops and times</h2>
+        <h2 className="type-h2 m-0">{tStatic("common.stopsTimes")}</h2>
         {timetableUrl ? (
           <a
             href={timetableUrl}
@@ -168,16 +170,16 @@ export function StopsTimesSection({
             className="inline-flex min-h-11 items-center font-semibold underline"
             style={{ color: T.accent.primary }}
           >
-            Official timetable ↗
+            {tStatic("mobile.official_timetable")}
           </a>
         ) : null}
       </div>
       <LibraryNoticeBanners notices={notices} timezone={timezone} />
       {presentation?.expired ? (
         <p role="status">
-          All recorded visits have ended.{" "}
+          {tStatic("mobile.all_recorded_visits_have_ended")}{" "}
           <OpenCorrectionLink category="Stops & times">
-            Suggest an updated timetable
+            {tStatic("mobile.suggest_an_updated_timetable")}
           </OpenCorrectionLink>
         </p>
       ) : null}
@@ -194,7 +196,7 @@ export function StopsTimesSection({
             <SegmentedControl
               label={tUi("show_timetable")}
               options={[
-                { value: "day", label: "By day" },
+                { value: "day", label: tStatic("mobile.by_day") },
                 { value: "place", label: tUi("by_place") },
               ]}
               value={view}
@@ -236,11 +238,19 @@ export function StopsTimesSection({
               <thead>
                 <tr>
                   <th scope="col" className="py-3">
-                    {view === "day" ? "Day" : "Stop"}
+                    {view === "day"
+                      ? tStatic("common.day")
+                      : tStatic("mobile.stop")}
                   </th>
-                  <th scope="col">{view === "day" ? "Stop" : "Day"}</th>
-                  <th scope="col">Time</th>
-                  {sharedRepeat ? null : <th scope="col">Repeats</th>}
+                  <th scope="col">
+                    {view === "day"
+                      ? tStatic("mobile.stop")
+                      : tStatic("common.day")}
+                  </th>
+                  <th scope="col">{tStatic("common.time")}</th>
+                  {sharedRepeat ? null : (
+                    <th scope="col">{tStatic("common.repeats")}</th>
+                  )}
                   <th scope="col">
                     {view === "day" ? "Visit date" : "Next visit"}
                   </th>
@@ -277,7 +287,7 @@ export function StopsTimesSection({
                           setStopId(visit.stopId)
                         }}
                       >
-                        {stop?.name ?? "Stop"}
+                        {stop?.name ?? tStatic("mobile.stop")}
                       </button>
                     )
 
@@ -358,7 +368,9 @@ export function StopsTimesSection({
         </>
       ) : (
         <div>
-          <p className="m-0 mb-2 font-semibold">Stops not added yet</p>
+          <p className="m-0 mb-2 font-semibold">
+            {tStatic("mobile.stops_not_added_yet")}
+          </p>
           <Link
             className="inline-flex min-h-11 items-center font-semibold underline"
             style={{ color: T.accent.primary }}
@@ -368,7 +380,7 @@ export function StopsTimesSection({
                 : `/contribute?${new URLSearchParams({ action: "correction", library: slug ?? "", name, category: "Stops & times" })}#start`
             }
           >
-            Add the stops and timetable →
+            {tStatic("mobile.add_the_stops_and_timetable")}
           </Link>
         </div>
       )}

@@ -14,14 +14,13 @@ import {
   waitFor,
 } from "@/test/render"
 
+import messages from "../../../../locales/en"
 import { atlasAnalysisDrawers } from "../atlas-analysis-panels"
 import { AtlasInspect, AtlasInspectTools } from "../AtlasInspect"
 import {
   useAtlasDrawerSummaries,
   type AtlasDrawerSummaryInput,
 } from "../useAtlasDrawerSummaries"
-
-import messages from "../../../../locales/en.json"
 
 afterEach(cleanup)
 const wrapper = ({ children }: { children: ReactNode }) => (

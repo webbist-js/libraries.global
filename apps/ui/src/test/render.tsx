@@ -5,7 +5,7 @@ import {
 import { NextIntlClientProvider } from "next-intl"
 import type { ReactElement, ReactNode } from "react"
 
-import messages from "../../locales/en.json"
+import messages from "../../locales/en"
 
 export * from "@testing-library/react"
 

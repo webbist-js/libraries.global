@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { T } from "@/lib/design-tokens"
 import type { DriveView } from "@/lib/drives/drive-view"
@@ -21,6 +23,10 @@ export function DrivesHere({
   readonly placeName: string
   readonly items: readonly { view: DriveView; here: number }[] | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (!items?.length)
     return (
       <section
@@ -46,13 +52,13 @@ export function DrivesHere({
             className="inline-flex min-h-11 items-center text-sm font-semibold underline"
             href={addHref}
           >
-            Add a library
+            {tExisting("ui.add_a_library")}
           </GlobalLink>
           <GlobalLink
             className="inline-flex min-h-11 items-center text-sm underline"
             href={proposeHref}
           >
-            Propose a drive
+            {tExisting("dashboard.proposeDrive")}
           </GlobalLink>
         </div>
       </section>
@@ -65,9 +71,9 @@ export function DrivesHere({
         className="mt-3 mb-6 max-w-[80ch] text-base leading-relaxed"
         style={{ color: T.ink.dim }}
       >
-        A drive is a shared effort to improve a set of library records — for
-        example, adding a photo to every library in a city. Anyone can help with
-        a single library.
+        {tStatic(
+          "drive.a_drive_is_a_shared_effort_to_improve_a_set_of_library_records_for_example_adding_a_photo_to_every_l"
+        )}
       </p>
       <ul className="m-0 grid list-none gap-3 p-0">
         {items.slice(0, 3).map(({ view, here }) => (
@@ -96,10 +102,14 @@ export function DrivesHere({
                 <>
                   <div className="flex flex-wrap justify-between gap-2 text-sm">
                     <strong>
-                      {fmt(view.progress.done)} of {fmt(view.progress.total)}{" "}
-                      {unitNoun(view.drive.unit, view.progress.total)} done
+                      {fmt(view.progress.done)} {tExisting("widgetPublic.of")}{" "}
+                      {fmt(view.progress.total)}{" "}
+                      {unitNoun(view.drive.unit, view.progress.total)}{" "}
+                      {tExisting("drivePage.done")}
                     </strong>
-                    <span style={{ color: T.ink.dim }}>Whole drive</span>
+                    <span style={{ color: T.ink.dim }}>
+                      {tStatic("drive.whole_drive")}
+                    </span>
                   </div>
                   <span
                     aria-hidden="true"
@@ -117,7 +127,7 @@ export function DrivesHere({
                 </>
               ) : (
                 <p className="m-0 text-sm">
-                  Progress is temporarily unavailable.
+                  {tStatic("drive.progress_is_temporarily_unavailable")}
                 </p>
               )}
               <p
@@ -127,7 +137,7 @@ export function DrivesHere({
                 {fmt(here)} still need this drive’s details in {placeName}.
               </p>
               <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-                Counts accepted changes only.
+                {tStatic("drive.counts_accepted_changes_only")}
               </p>
             </div>
             <GlobalLink
@@ -135,7 +145,7 @@ export function DrivesHere({
               className="inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white"
               style={{ background: T.action.primary }}
             >
-              Help with this drive
+              {tStatic("drive.help_with_this_drive")}
             </GlobalLink>
           </li>
         ))}
@@ -145,7 +155,7 @@ export function DrivesHere({
         style={{ color: T.ink.dim }}
       >
         <p className="m-0">
-          Have an idea for a drive?{" "}
+          {tStatic("drive.have_an_idea_for_a_drive")}{" "}
           <GlobalLink
             href={proposeHref}
             className="inline-flex min-h-11 items-center font-semibold underline"
@@ -161,7 +171,7 @@ export function DrivesHere({
             href="/community/drives"
             className="inline-flex min-h-11 items-center underline"
           >
-            All drives
+            {tExisting("ui.all_drives")}
           </GlobalLink>
         ) : null}
       </div>

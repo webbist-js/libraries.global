@@ -29,7 +29,7 @@ import {
   type Weekday,
   type TimetableImportColumn,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import {
   type ReactNode,
   useEffect,
@@ -187,7 +187,11 @@ export function TimetableEditor({
   /** The staff Timetable tab's "Service notices" list and form. */
   readonly noticesBlock?: ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   // "Today" follows the library's clock, never the browser's UTC date, and
   // only once the clock has ticked: the first render (and the server's)
@@ -391,7 +395,7 @@ export function TimetableEditor({
         style={{ background: T.bg.deep, borderColor: T.border.line }}
       >
         <label className="flex flex-col gap-1.5" style={labelStyle}>
-          Timetable repeats every
+          {tStatic("mobile.timetable_repeats_every")}
           <SelectField
             label={tUi("cycle_length")}
             disabled={disabled}
@@ -420,7 +424,7 @@ export function TimetableEditor({
             }}
             options={[1, 2, 3, 4].map((w) => ({
               value: String(w),
-              label: String(w === 1 ? "Week" : `${w} weeks`),
+              label: String(w === 1 ? tStatic("common.week") : `${w} weeks`),
             }))}
           />
         </label>
@@ -478,7 +482,7 @@ export function TimetableEditor({
                 icon="mdi:map-marker-plus-outline"
                 width={16}
               />
-              Find pins
+              {tStatic("mobile.find_pins")}
             </button>
           )}
           <button
@@ -519,7 +523,7 @@ export function TimetableEditor({
                 setAllStops(false)
               }}
             >
-              Week {w}
+              {tStatic("common.week")} {w}
             </button>
           )
         })}
@@ -534,7 +538,7 @@ export function TimetableEditor({
           aria-pressed={allStops}
           onClick={() => setAllStops(true)}
         >
-          All stops
+          {tStatic("mobile.all_stops")}
         </button>
       </div>
 
@@ -545,7 +549,7 @@ export function TimetableEditor({
             className="m-0 min-w-0 rounded-[12px] border-0 p-1"
             style={{ background: T.bg.muted2 }}
           >
-            <legend className="sr-only">Weekday</legend>
+            <legend className="sr-only">{tStatic("mobile.weekday")}</legend>
             <div className="flex">
               {shownDays.map((d) => {
                 const count = tt.visits.filter(
@@ -642,7 +646,7 @@ export function TimetableEditor({
                 <strong className="grow text-base">{s.name}</strong>
                 {count === 0 ? (
                   <Chip tone="warn" icon="mdi:alert-outline">
-                    No visits
+                    {tStatic("mobile.no_visits")}
                   </Chip>
                 ) : (
                   <Chip>
@@ -651,7 +655,7 @@ export function TimetableEditor({
                 )}
                 {!s.location && (
                   <Chip tone="warn" icon="mdi:map-marker-off-outline">
-                    No pin yet
+                    {tStatic("mobile.no_pin_yet")}
                   </Chip>
                 )}
                 <button
@@ -669,7 +673,7 @@ export function TimetableEditor({
                     setEditingStop(s.id)
                   }}
                 >
-                  Edit stop
+                  {tStatic("mobile.edit_stop")}
                 </button>
                 <button
                   type="button"
@@ -678,14 +682,16 @@ export function TimetableEditor({
                   disabled={disabled}
                   onClick={() => removeStop(s)}
                 >
-                  Delete everywhere
+                  {tStatic("mobile.delete_everywhere")}
                 </button>
               </li>
             )
           })}
           {!tt.stops.length && (
             <li className="text-base" style={{ color: T.ink.dim }}>
-              No stops yet. Choose a week and a day to add the first one.
+              {tStatic(
+                "mobile.no_stops_yet_choose_a_week_and_a_day_to_add_the_first_one"
+              )}
             </li>
           )}
         </ul>
@@ -695,7 +701,7 @@ export function TimetableEditor({
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="type-small-heading m-0">{dayLabel}</h2>
               <span className="text-xs" style={{ color: T.ink.dim }}>
-                In route order
+                {tStatic("mobile.in_route_order")}
               </span>
             </div>
 
@@ -820,7 +826,7 @@ export function TimetableEditor({
                                 tone="danger"
                                 icon="mdi:alert-circle-outline"
                               >
-                                Overlaps
+                                {tStatic("mobile.overlaps")}
                               </Chip>
                             )}
                             {!stop?.location && (
@@ -828,7 +834,7 @@ export function TimetableEditor({
                                 tone="warn"
                                 icon="mdi:map-marker-off-outline"
                               >
-                                No pin yet
+                                {tStatic("mobile.no_pin_yet")}
                               </Chip>
                             )}
                           </span>
@@ -886,7 +892,7 @@ export function TimetableEditor({
                               className="flex flex-col gap-1.5"
                               style={labelStyle}
                             >
-                              Stop name
+                              {tStatic("mobile.stop_name")}
                               <input
                                 style={{ ...field, fontWeight: 400 }}
                                 maxLength={80}
@@ -900,11 +906,13 @@ export function TimetableEditor({
                               className="flex flex-col gap-1.5"
                               style={labelStyle}
                             >
-                              Where exactly
+                              {tStatic("mobile.where_exactly")}
                               <input
                                 style={{ ...field, fontWeight: 400 }}
                                 maxLength={140}
-                                placeholder="Outside the village hall"
+                                placeholder={tStatic(
+                                  "mobile.outside_the_village_hall"
+                                )}
                                 value={stop.where}
                                 onChange={(e) =>
                                   updateStop(stop.id, { where: e.target.value })
@@ -1037,7 +1045,7 @@ export function TimetableEditor({
                                     })
                                   }
                                 >
-                                  Remove pin
+                                  {tStatic("mobile.remove_pin")}
                                 </button>
                               ) : null}
                             </div>
@@ -1045,7 +1053,7 @@ export function TimetableEditor({
 
                           <div>
                             <p className="m-0 mb-2" style={labelStyle}>
-                              Visits to this stop
+                              {tStatic("common.visitsStop")}
                             </p>
                             <ul
                               className="m-0 flex list-none flex-col gap-2 p-0"
@@ -1084,7 +1092,7 @@ export function TimetableEditor({
                                   >
                                     <div className="grid grid-cols-3 gap-2">
                                       <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
-                                        Day
+                                        {tStatic("common.day")}
                                         <SelectField
                                           label={`Day of the ${visitName} visit`}
                                           style={{
@@ -1107,7 +1115,7 @@ export function TimetableEditor({
                                         />
                                       </label>
                                       <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
-                                        Arrives
+                                        {tStatic("mobile.arrives")}
                                         <input
                                           aria-label={`Arrives, ${visitName} visit`}
                                           type="time"
@@ -1126,7 +1134,7 @@ export function TimetableEditor({
                                         />
                                       </label>
                                       <label className="flex min-w-0 flex-col gap-1 text-xs font-semibold">
-                                        Leaves
+                                        {tStatic("mobile.leaves")}
                                         <input
                                           aria-label={`Leaves, ${visitName} visit`}
                                           type="time"
@@ -1145,7 +1153,7 @@ export function TimetableEditor({
                                         />
                                       </label>
                                       <label className="col-span-3 flex min-w-0 flex-col gap-1 text-xs font-semibold sm:col-span-2">
-                                        Repeats
+                                        {tStatic("common.repeats")}
                                         <SelectField
                                           label={`Repeats, ${visitName} visit`}
                                           value={String(svSelected ?? "")}
@@ -1221,7 +1229,7 @@ export function TimetableEditor({
                                         style={{ color: T.ink.dim }}
                                       >
                                         <label className="inline-flex items-center gap-2">
-                                          Runs from
+                                          {tStatic("mobile.runs_from")}
                                           <input
                                             aria-label={`Runs from, ${visitName} visit`}
                                             type="date"
@@ -1258,7 +1266,9 @@ export function TimetableEditor({
                                           />
                                         </label>
                                         <span>
-                                          Leave blank for the whole year.
+                                          {tStatic(
+                                            "mobile.leave_blank_for_the_whole_year"
+                                          )}
                                         </span>
                                       </div>
                                     ) : null}
@@ -1347,7 +1357,7 @@ export function TimetableEditor({
                                 icon="mdi:plus"
                                 width={16}
                               />
-                              Add another visit
+                              {tStatic("mobile.add_another_visit")}
                             </button>
                             <button
                               type="button"
@@ -1357,7 +1367,7 @@ export function TimetableEditor({
                               }}
                               onClick={() => removeStop(stop)}
                             >
-                              Remove this stop
+                              {tStatic("mobile.remove_this_stop")}
                             </button>
                           </div>
                         </fieldset>
@@ -1383,7 +1393,7 @@ export function TimetableEditor({
                   className="flex min-w-60 grow flex-col gap-1.5"
                   style={labelStyle}
                 >
-                  Stop name
+                  {tStatic("mobile.stop_name")}
                   <input
                     list={listId}
                     style={{ ...field, fontWeight: 400 }}
@@ -1391,7 +1401,7 @@ export function TimetableEditor({
                     maxLength={80}
                     disabled={disabled}
                     autoFocus
-                    placeholder="Village hall, Ford Cross"
+                    placeholder={tStatic("mobile.village_hall_ford_cross")}
                     onChange={(e) => setStopName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -1487,7 +1497,7 @@ export function TimetableEditor({
                         background: T.bg.deep,
                       }}
                     />
-                    Stop
+                    {tStatic("mobile.stop")}
                   </li>
                   <li className="flex items-center gap-1.5">
                     <span
@@ -1495,7 +1505,7 @@ export function TimetableEditor({
                       className="inline-block size-3 rounded-full"
                       style={{ background: T.action.primary }}
                     />
-                    Selected stop
+                    {tStatic("mobile.selected_stop")}
                   </li>
                   <li className="flex items-center gap-1.5">
                     <span
@@ -1503,7 +1513,7 @@ export function TimetableEditor({
                       className="inline-block h-0.5 w-5"
                       style={{ background: T.map.route }}
                     />
-                    Route, in stop order
+                    {tStatic("mobile.route_in_stop_order")}
                   </li>
                 </ul>
               </>
@@ -1532,10 +1542,10 @@ export function TimetableEditor({
       >
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 id="timetable-weeks-heading" className="type-small-heading m-0">
-            The next four weeks
+            {tStatic("mobile.the_next_four_weeks")}
           </h2>
           <span className="text-xs" style={{ color: T.ink.dim }}>
-            Select a day to edit it
+            {tStatic("mobile.select_a_day_to_edit_it")}
           </span>
         </div>
         <div className="mt-3 overflow-x-auto">
@@ -1580,7 +1590,7 @@ export function TimetableEditor({
                       className="block text-xs font-normal"
                       style={{ color: T.ink.dim }}
                     >
-                      Week {row[0]?.week ?? 1}
+                      {tStatic("common.week")} {row[0]?.week ?? 1}
                     </span>
                   </th>
                   {row.map((cell) => {
@@ -1651,7 +1661,7 @@ export function TimetableEditor({
                 background: "var(--t-palette-amber-bg)",
               }}
             />
-            Not running (notice)
+            {tStatic("mobile.not_running_notice")}
           </li>
           <li className="flex items-center gap-1.5">
             <span
@@ -1662,7 +1672,7 @@ export function TimetableEditor({
                 background: T.accent.chip,
               }}
             />
-            Selected day
+            {tStatic("mobile.selected_day")}
           </li>
         </ul>
       </section>
@@ -1682,7 +1692,7 @@ export function TimetableEditor({
               style={{ borderColor: T.border.hi, color: T.ink.base }}
               onClick={() => setRemoving(null)}
             >
-              Keep the stop
+              {tStatic("mobile.keep_the_stop")}
             </button>
             <button
               type="button"
@@ -1730,13 +1740,14 @@ export function TimetableEditor({
               }
             }}
           >
-            Import {imported?.imported ?? 0} visits
+            {tStatic("mobile.import")} {imported?.imported ?? 0} visits
           </button>
         }
       >
         <p>
-          Include Stop, Day, Arrival and Departure headings. Optional columns:
-          Where, Weeks, Dates, Latitude and Longitude.
+          {tStatic(
+            "mobile.include_stop_day_arrival_and_departure_headings_optional_columns_where_weeks_dates_latitude_and_long"
+          )}
         </p>
         <textarea
           aria-label={tUi("spreadsheet_rows")}
@@ -1780,7 +1791,10 @@ export function TimetableEditor({
                     }))
                   }
                   options={[
-                    { value: String(-1), label: "Not included" },
+                    {
+                      value: String(-1),
+                      label: tExisting("membershipContent.copy.notIncluded"),
+                    },
                     ...importHeaders.map((header, i) => ({
                       value: String(i),
                       label: String(header || `Column ${i + 1}`),
@@ -1801,14 +1815,14 @@ export function TimetableEditor({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <caption className="text-left">
-                  Import preview · first 12 visits
+                  {tStatic("mobile.import_preview_first_12_visits")}
                 </caption>
                 <thead>
                   <tr>
-                    <th scope="col">Stop</th>
-                    <th scope="col">Day</th>
-                    <th scope="col">Time</th>
-                    <th scope="col">Repeats</th>
+                    <th scope="col">{tStatic("mobile.stop")}</th>
+                    <th scope="col">{tStatic("common.day")}</th>
+                    <th scope="col">{tStatic("common.time")}</th>
+                    <th scope="col">{tStatic("common.repeats")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1854,8 +1868,9 @@ export function TimetableEditor({
         size="md"
       >
         <p>
-          Choose a stop and search for its village or landmark. Check the result
-          before placing its pin.
+          {tStatic(
+            "mobile.choose_a_stop_and_search_for_its_village_or_landmark_check_the_result_before_placing_its_pin"
+          )}
         </p>
         <div className="mt-3 space-y-2">
           {tt.stops
@@ -1899,7 +1914,9 @@ export function TimetableEditor({
                 />
               </button>
             ))}
-          {tt.stops.every((s) => s.location) && <p>Every stop has a pin.</p>}
+          {tt.stops.every((s) => s.location) && (
+            <p>{tStatic("mobile.every_stop_has_a_pin")}</p>
+          )}
         </div>
       </Sheet>
     </div>

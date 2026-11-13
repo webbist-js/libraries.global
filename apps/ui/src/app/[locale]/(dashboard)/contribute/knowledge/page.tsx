@@ -7,6 +7,7 @@ import {
   type ArticleKind,
   isArticleKind,
 } from "@/components/contribute/article-editor/article.types"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities } from "@/lib/access-server"
 import { fetchArticleBrowse } from "@/lib/article-discovery"
 import { fetchArticleLocales } from "@/lib/article-editor-server"
@@ -89,7 +90,7 @@ async function fetchArticleDrafts(user: {
   }
 }
 
-export default async function KnowledgeEditorPage({
+async function KnowledgeEditorPage({
   params,
   searchParams,
 }: {
@@ -205,3 +206,8 @@ export default async function KnowledgeEditorPage({
     </div>
   )
 }
+
+export default withMessages(
+  KnowledgeEditorPage,
+  "[locale]/(dashboard)/contribute/knowledge/page"
+)

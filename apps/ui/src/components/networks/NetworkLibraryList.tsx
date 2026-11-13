@@ -6,7 +6,7 @@ import {
   FACILITY_CHECKLIST,
 } from "@repo/shared-data"
 import dynamic from "next/dynamic"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 
 import { EmptyState } from "@/components/ds/EmptyState"
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
@@ -34,6 +34,10 @@ const MemberMap = dynamic(() => import("@/components/widgets/WidgetMap"), {
 
 /** Full-network filtering happens on the server; this view only sorts and maps the current result page. */
 export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const config = {
     ...defaultWidgetConfig(),
@@ -84,17 +88,17 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
     <div className="network-library-results">
       <div className="network-results-toolbar">
         <SegmentedControl
-          label="Member library view"
+          label={tStatic("network.member_library_view")}
           value={model.view}
           onChange={handleViewChange}
           options={[
-            { value: "list", label: "List" },
-            { value: "map", label: "Map" },
+            { value: "list", label: tExisting("roadmap.list") },
+            { value: "map", label: tExisting("staticUi.atlas.map") },
           ]}
         />
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="surface" size="pill" onClick={handleLocationRequest}>
-            Use my location
+            {tExisting("widgetPublic.use_my_location")}
           </Button>
           {model.location ? (
             <Button
@@ -105,7 +109,7 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                 model.setLocationState("")
               }}
             >
-              Clear distance sort
+              {tStatic("network.clear_distance_sort")}
             </Button>
           ) : null}
         </div>
@@ -118,13 +122,14 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
       {model.view === "map" ? (
         <>
           <p className="text-sm text-(--t-ink-dim)">
-            {model.rows.filter((row) => row.location).length} of{" "}
-            {model.rows.length} results on this page have map coordinates.{" "}
+            {model.rows.filter((row) => row.location).length}{" "}
+            {tExisting("widgetPublic.of")} {model.rows.length} results on this
+            page have map coordinates.{" "}
             <Link
               href={`/map?network=${data.network.documentId}`}
               {...navigationAttributes("/map", "network_members")}
             >
-              Open the whole network in Atlas →
+              {tStatic("network.open_the_whole_network_in_atlas")}
             </Link>
           </p>
           <MemberMap
@@ -147,7 +152,7 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                   href={model.picked.href}
                   {...selection(model.picked.documentId)}
                 >
-                  View library →
+                  {tStatic("network.view_library")}
                 </Link>
               ) : null}
               <Button
@@ -155,7 +160,7 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                 size="sm"
                 onClick={() => model.setSelected(null)}
               >
-                Close selection
+                {tExisting("widgetPublic.close_selection")}
               </Button>
             </div>
           ) : null}
@@ -180,12 +185,12 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                 )}
               </h3>
               <p className="network-library-address">
-                {row.address || "Address not recorded"}
+                {row.address || tExisting("widgetPublic.address_not_recorded")}
               </p>
               {row.hours.length ? (
                 <details className="text-sm">
                   <summary className="min-h-11 cursor-pointer py-3 font-semibold">
-                    Recorded opening hours
+                    {tStatic("network.recorded_opening_hours")}
                   </summary>
                   <ul className="space-y-1 pl-4">
                     {row.hours.map((time) => (
@@ -195,17 +200,17 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                 </details>
               ) : (
                 <p className="text-sm text-(--t-ink-dim)">
-                  Opening hours not recorded
+                  {tExisting("widgetPublic.opening_hours_not_recorded")}
                 </p>
               )}
               {!row.facilities.includes("yes") ? (
                 <p className="m-0 text-xs text-(--t-ink-low)">
-                  Facilities not recorded
+                  {tStatic("network.facilities_not_recorded")}
                 </p>
               ) : null}
               <ul
                 className="m-0 flex list-none flex-wrap gap-2 p-0"
-                aria-label="Recorded facilities"
+                aria-label={tStatic("network.recorded_facilities")}
               >
                 {row.facilities.flatMap((value, index) =>
                   value === "yes" && FACILITY_CHECKLIST[index]
@@ -227,7 +232,7 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                     href={row.href}
                     {...selection(row.documentId)}
                   >
-                    View library →
+                    {tStatic("network.view_library")}
                   </Link>
                 ) : null}
                 {row.location ? (
@@ -237,7 +242,7 @@ export function NetworkLibraryList({ data }: { readonly data: NetworkDetail }) {
                     className="px-0"
                     onClick={() => model.selectLibrary(row.documentId)}
                   >
-                    Show on map
+                    {tStatic("network.show_on_map")}
                   </Button>
                 ) : null}
               </div>

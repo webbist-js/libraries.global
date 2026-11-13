@@ -1,6 +1,6 @@
 "use client"
 
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -44,7 +44,11 @@ export function PrivacySection({
   visibility: Visibility
   onVisibilityChange: (v: Visibility) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [prefs, setPrefs] = useState<PublicPrefs>(() =>
     resolvePublicPrefs(profile?.publicPrefs)
@@ -56,7 +60,7 @@ export function PrivacySection({
     const ok = await patchProfile({ profileVisibility: v })
     if (!ok) {
       onVisibilityChange(prev)
-      toast.error("Couldn't save — please try again")
+      toast.error(tStatic("common.saveFailed"))
     }
   }
 
@@ -67,7 +71,7 @@ export function PrivacySection({
     const ok = await patchProfile({ publicPrefs: next })
     if (!ok) {
       setPrefs(prev)
-      toast.error("Couldn't save — please try again")
+      toast.error(tStatic("common.saveFailed"))
     }
   }
 
@@ -84,21 +88,21 @@ export function PrivacySection({
     {
       key: "showLocation",
       label: tUi("location"),
-      desc: location || "Not set",
+      desc: location || tExisting("widgetSettings.notSet"),
     },
     {
       key: "showAffiliation",
-      label: "Verified affiliation",
+      label: tStatic("profileRoute.verified_affiliation"),
       desc: affiliationName ?? "No affiliation yet",
     },
     {
       key: "showActivity",
-      label: "Activity graph",
+      label: tStatic("profileRoute.activity_graph"),
       desc: "Days you contributed",
     },
     {
       key: "showFollows",
-      label: "Libraries and drives you follow",
+      label: tStatic("profileRoute.libraries_and_drives_you_follow"),
       desc: firstFollow ?? "Libraries and drives you keep an eye on",
     },
   ]
@@ -107,7 +111,9 @@ export function PrivacySection({
     <SectionCard
       id="privacy"
       title={tUi("privacy")}
-      lead="Your contributions stay attributed to your username either way. Changes here save straight away."
+      lead={tStatic(
+        "profileRoute.your_contributions_stay_attributed_to_your_username_either_way_changes_here_save_straight_away"
+      )}
     >
       <div>
         <p
@@ -115,7 +121,7 @@ export function PrivacySection({
           className="m-0 mb-3 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          Who can see your profile
+          {tStatic("profileRoute.who_can_see_your_profile")}
         </p>
         <VisibilityChoice
           value={visibility}
@@ -129,7 +135,7 @@ export function PrivacySection({
           className="m-0 mb-1 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          Show on your public profile
+          {tStatic("profileRoute.show_on_your_public_profile")}
         </p>
         {prefRows.map((row, index) => (
           <div
@@ -171,7 +177,7 @@ export function PrivacySection({
             className="m-0 mb-2 text-base font-semibold"
             style={{ color: T.ink.base }}
           >
-            Supporter recognition
+            {tStatic("profileRoute.supporter_recognition")}
           </p>
           <SupporterPreferences
             key={`${profile.supporterListed}-${profile.supporterBadgeVisible}-${visibility}`}

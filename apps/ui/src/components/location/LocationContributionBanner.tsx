@@ -1,8 +1,9 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useSyncExternalStore } from "react"
 
-import { FIND_CONTRIBUTE_PROMPT } from "@/components/home/homepage.content"
+import { createFindContributePrompt } from "@/components/home/homepage.content"
 import FinalCtaSection from "@/components/home/sections/FinalCtaSection"
 import { authClient } from "@/lib/auth-client"
 
@@ -18,6 +19,8 @@ export function LocationContributionBanner({
   readonly name: string
   readonly addHref?: string
 }) {
+  const t = useTranslations("homepageFallback")
+  const prompt = createFindContributePrompt(t)
   const { data: session } = authClient.useSession()
   const hydrated = useSyncExternalStore(
     subscribe,
@@ -31,11 +34,11 @@ export function LocationContributionBanner({
       contained
       signedIn={hydrated && Boolean(session?.user)}
       band={{
-        ...FIND_CONTRIBUTE_PROMPT.band,
-        title: `Know a library in ${name}? *Put it on the map.*`,
+        ...prompt.band,
+        title: t("placeTitle", { name }),
         secondaryHref: addHref,
       }}
-      benefits={FIND_CONTRIBUTE_PROMPT.benefits}
+      benefits={prompt.benefits}
     />
   )
 }

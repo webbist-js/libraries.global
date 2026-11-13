@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import GlobalLink from "@/components/global/GlobalLink"
 import { SECTION_RULE } from "@/components/home/homepage.constants"
 import type {
@@ -29,6 +31,8 @@ export function CoverageSection({
   readonly continents: HomepageContinentSummary[]
   readonly countryBreakdown?: CountryBreakdown
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (continents.length === 0) return null
 
   const withRecords = continents
@@ -154,7 +158,7 @@ export function CoverageSection({
         {empty.length > 0 ? (
           <div className={row} style={{ borderColor: T.border.line }}>
             <p className="m-0" style={{ ...NAME_STYLE, color: T.ink.dim }}>
-              Waiting
+              {tStatic("home.waiting")}
             </p>
             <ul className="col-span-2 row-start-2 m-0 flex list-none flex-wrap gap-2 p-0 md:col-span-1 md:col-start-2 md:row-start-1">
               {empty.map((continent) => (
@@ -180,7 +184,7 @@ export function CoverageSection({
               className="text-right text-base font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Add the first library in your country
+              {tStatic("home.firstLibrary")}
             </GlobalLink>
           </div>
         ) : null}

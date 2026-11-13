@@ -1,11 +1,12 @@
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { staffPathname } from "@/app/[locale]/(dashboard)/staff/_lib/staff-pathname"
 import { FeatureGatePanel, Notice } from "@/components/ds"
 import { KNOWLEDGE_SLUGS } from "@/components/staff/knowledge-links"
 import { LearnMoreLink } from "@/components/staff/LearnMoreLink"
 import { StaffLoadError } from "@/components/staff/StaffLoadError"
+import { withMessages } from "@/i18n/scoped-messages"
 import { canStaffTool, sessionTeamsOf } from "@/lib/access-server"
 import { T } from "@/lib/design-tokens"
 import { loadStaffPage } from "@/lib/staff/server"
@@ -66,12 +67,16 @@ function TeamPreview() {
  * A Team that covers the library without the viewer in it: a line naming
  * its organiser instead of the gate.
  */
-export default async function TeamPage({
+async function TeamPage({
   params,
 }: {
   readonly params: Promise<{ locale: string; slug: string }>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const { locale, slug } = await params
   const { user, overview, documentId } = await loadStaffPage(
@@ -119,7 +124,9 @@ export default async function TeamPage({
           <FeatureGatePanel
             badge="Free staff workspace"
             title={tUi("manage_your_librarys_staff")}
-            lead="Set up a free staff workspace to invite colleagues, give them roles and choose who can edit or go live. Without one, each colleague claims access on their own."
+            lead={tStatic(
+              "staffRoute.set_up_a_free_staff_workspace_to_invite_colleagues_give_them_roles_and_choose_who_can_edit_or_go_liv"
+            )}
             points={[
               "Invite colleagues by email",
               "Owner and Editor levels per library",
@@ -128,8 +135,14 @@ export default async function TeamPage({
             note="Workspaces are free. Adding a library to one still needs your verified owner access, and each colleague’s assignment is checked."
             action={
               hasWorkspace
-                ? { href: "/staff/teams", label: "Open your workspace" }
-                : { href: "/staff/teams/new", label: "Create a free workspace" }
+                ? {
+                    href: "/staff/teams",
+                    label: tStatic("staffRoute.open_your_workspace"),
+                  }
+                : {
+                    href: "/staff/teams/new",
+                    label: tExisting("featureAccess.setUpTeam"),
+                  }
             }
             preview={<TeamPreview />}
             previewCaption="Illustration of a staff list"
@@ -154,3 +167,8 @@ export default async function TeamPage({
     </div>
   )
 }
+
+export default withMessages(
+  TeamPage,
+  "[locale]/(dashboard)/staff/[slug]/team/page"
+)

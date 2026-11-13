@@ -27,7 +27,7 @@ export function WidgetChart({
       {c.metric === "facility" ? (
         <ul
           className="mb-4 flex list-none flex-wrap gap-4 p-0 text-sm"
-          aria-label="Chart legend"
+          aria-label={t("Chart legend")}
         >
           <li className="flex items-center gap-2">
             <span className="size-4 rounded" style={{ background: accent }} />

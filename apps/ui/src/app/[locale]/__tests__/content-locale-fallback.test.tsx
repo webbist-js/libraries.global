@@ -21,7 +21,7 @@ vi.mock("next/headers", () => ({
 vi.mock("next/navigation", () => ({ notFound, permanentRedirect }))
 vi.mock("next-intl/server", async () => {
   const { createTranslator } = await import("next-intl")
-  const messages = (await import("../../../../locales/en.json")).default
+  const messages = (await import("../../../../locales/en")).default
 
   return {
     setRequestLocale: vi.fn(),

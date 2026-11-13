@@ -1,4 +1,5 @@
 "use client"
+
 import type { widgetMetric, WidgetConfig } from "@repo/shared-data"
 
 import { widgetCopy } from "@/lib/widgets/copy"

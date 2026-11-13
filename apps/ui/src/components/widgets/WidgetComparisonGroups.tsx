@@ -2,6 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { WidgetResolved, WidgetSelectionSpec } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { EmptyState } from "@/components/ds/EmptyState"
@@ -19,11 +20,13 @@ type GroupEditorProps = {
 }
 
 export function WidgetComparisonGroups(props: GroupEditorProps) {
+  const tStatic = useTranslations("staticUi")
+
   if (props.loading)
     return (
-      <StaffPanel title="Comparison groups" compact>
+      <StaffPanel title={tStatic("widget.comparison_groups")} compact>
         <p role="status" className="py-8 text-sm text-(--t-ink-dim)">
-          Loading selected libraries…
+          {tStatic("widget.loading_selected_libraries")}
         </p>
       </StaffPanel>
     )
@@ -37,6 +40,10 @@ function ComparisonGroupEditor({
   disabled,
   update,
 }: GroupEditorProps) {
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
   const id = useId()
   const [activeId, setActiveId] = useState(spec.groups[0]?.id ?? "")
   const [query, setQuery] = useState("")
@@ -73,25 +80,24 @@ function ComparisonGroupEditor({
 
   return (
     <StaffPanel
-      title="Comparison groups"
+      title={tStatic("widget.comparison_groups")}
       compact
       aside={
         <span className="text-xs text-(--t-ink-dim)">
-          {spec.groups.length} of 12 groups
+          {tStatic("widget.groupCount", { count: spec.groups.length })}
         </span>
       }
     >
       <p className="mb-5 text-sm text-(--t-ink-dim)">
-        Each group becomes a bar in your chart. Name a group, then choose the
-        libraries it contains. For example, compare city branches with rural
-        branches. A library can appear in more than one group. Assign new source
-        libraries here when you want them included in a group.
+        {tStatic(
+          "widget.each_group_becomes_a_bar_in_your_chart_name_a_group_then_choose_the_libraries_it_contains_for_example_compare_"
+        )}
       </p>
       {!spec.groups.length ? (
         <EmptyState
           compact
           icon="mdi:chart-bar"
-          lead="What would you like to compare?"
+          lead={tStatic("widget.what_would_you_like_to_compare")}
           detail="Create at least two groups for a useful comparison. Without groups, the chart shows the whole selection as one bar."
           action={
             <Button
@@ -100,7 +106,7 @@ function ComparisonGroupEditor({
               disabled={disabled}
               onClick={add}
             >
-              Create first group
+              {tStatic("widget.create_first_group")}
             </Button>
           }
         />
@@ -109,7 +115,7 @@ function ComparisonGroupEditor({
           <div
             className="mb-5 flex flex-wrap gap-2"
             role="group"
-            aria-label="Choose comparison group"
+            aria-label={tStatic("widget.choose_comparison_group")}
           >
             {spec.groups.map((g, index) => (
               <Button
@@ -142,14 +148,14 @@ function ComparisonGroupEditor({
               onClick={add}
             >
               <Icon aria-hidden icon="mdi:plus" width={17} />
-              Add group
+              {tStatic("widget.add_group")}
             </Button>
           </div>
           {active ? (
             <div className="space-y-4 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
               <div className="flex flex-wrap items-end gap-3">
                 <div className="min-w-44 flex-1">
-                  <WidgetField label="Group name">
+                  <WidgetField label={tStatic("widget.group_name")}>
                     <input
                       className={STAFF_FIELD}
                       value={active.name}
@@ -163,7 +169,7 @@ function ComparisonGroupEditor({
                   variant="surface"
                   size="icon-lg"
                   className="size-11 rounded-full"
-                  aria-label="Move group earlier"
+                  aria-label={tStatic("widget.move_group_earlier")}
                   disabled={disabled || active.id === spec.groups[0]?.id}
                   onClick={() => move(-1)}
                 >
@@ -173,7 +179,7 @@ function ComparisonGroupEditor({
                   variant="surface"
                   size="icon-lg"
                   className="size-11 rounded-full"
-                  aria-label="Move group later"
+                  aria-label={tStatic("widget.move_group_later")}
                   disabled={disabled || active.id === spec.groups.at(-1)?.id}
                   onClick={() => move(1)}
                 >
@@ -189,12 +195,14 @@ function ComparisonGroupEditor({
                     })
                   }
                 >
-                  Remove group
+                  {tStatic("widget.remove_group")}
                 </Button>
               </div>
               <SearchField
                 id={`${id}-search`}
-                placeholder="Find libraries to add to this group"
+                placeholder={tStatic(
+                  "widget.find_libraries_to_add_to_this_group"
+                )}
                 size="sm"
                 onClear={() => setQuery("")}
                 inputProps={{
@@ -204,12 +212,12 @@ function ComparisonGroupEditor({
               />
               <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                 <span role="status">
-                  {
-                    active.libraryIds.filter((value) =>
+                  {tStatic("widget.assignedCount", {
+                    count: active.libraryIds.filter((value) =>
                       rows.some((row) => row.documentId === value)
-                    ).length
-                  }{" "}
-                  of {rows.length} libraries assigned
+                    ).length,
+                    total: rows.length,
+                  })}
                 </span>
                 <div className="flex gap-3">
                   <Button
@@ -226,14 +234,16 @@ function ComparisonGroupEditor({
                       })
                     }
                   >
-                    {query ? "Select matches" : "Select all"}
+                    {query
+                      ? "Select matches"
+                      : tExisting("staticUi.network.select_all")}
                   </Button>
                   <Button
                     variant="link"
                     disabled={disabled || !active.libraryIds.length}
                     onClick={() => patch({ libraryIds: [] })}
                   >
-                    Clear group
+                    {tStatic("widget.clear_group")}
                   </Button>
                 </div>
               </div>
@@ -241,7 +251,9 @@ function ComparisonGroupEditor({
                 disabled={disabled}
                 className="max-h-80 overflow-y-auto rounded-xl border border-(--t-border-line) bg-(--t-bg-deep)"
               >
-                <legend className="sr-only">Libraries in {active.name}</legend>
+                <legend className="sr-only">
+                  {tStatic("widget.librariesIn", { name: active.name })}
+                </legend>
                 {visible.map((row) => (
                   <label
                     key={row.documentId}
@@ -301,13 +313,16 @@ function UnresolvedGroupMembers({
   readonly libraryIds: string[]
   readonly rows: WidgetResolved["rows"]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!libraryIds.some((id) => !rows.some((row) => row.documentId === id)))
     return null
 
   return (
     <p className="text-xs text-(--t-ink-dim)">
-      Some assigned libraries are outside the current selection. They are
-      retained in this group but excluded from the chart.
+      {tStatic(
+        "widget.some_assigned_libraries_are_outside_the_current_selection_they_are_retained_in_this_group_but_excluded_from_th"
+      )}
     </p>
   )
 }

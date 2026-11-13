@@ -1,5 +1,5 @@
 import { ArrowRight, MapPin, ShieldCheck, UsersRound } from "lucide-react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { DriveDates } from "@/components/drives/DriveDates"
 import { DriveFocusChip } from "@/components/drives/DriveFocusChip"
@@ -13,7 +13,11 @@ const fmt = (value: number) => value.toLocaleString("en-GB")
 
 /** Compact opportunities keep the task, place and real progress together. */
 function HubDriveRow({ view }: { readonly view: DriveView }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   const { drive, progress, helpers, href, place, source } = view
   const { tint } = focusChipOf(drive.focus)
   const titleId = "hub-drive-" + drive.documentId
@@ -62,7 +66,8 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
               <strong className="font-bold text-(--t-ink-base)">
                 {fmt(progress.done)}
               </strong>{" "}
-              of {fmt(progress.total)} {unitNoun(drive.unit, progress.total)}
+              {tExisting("widgetPublic.of")} {fmt(progress.total)}{" "}
+              {unitNoun(drive.unit, progress.total)}
             </p>
             <span
               aria-hidden
@@ -80,7 +85,9 @@ function HubDriveRow({ view }: { readonly view: DriveView }) {
             </span>
           </>
         ) : (
-          <p className="m-0 text-sm text-(--t-ink-dim)">Not counted yet</p>
+          <p className="m-0 text-sm text-(--t-ink-dim)">
+            {tStatic("common.notCounted")}
+          </p>
         )}
         {helpers != null ? (
           <p className="m-0 flex items-center gap-1.5 text-xs text-(--t-ink-dim)">
@@ -102,7 +109,9 @@ export function DrivesYouCanHelpWith({
 }: {
   readonly views: readonly DriveView[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
   if (views.length === 0) return null
 
   return (
@@ -115,15 +124,16 @@ export function DrivesYouCanHelpWith({
           <div className="min-w-0">
             <div className="flex items-center gap-3">
               <h2 id="hub-drives" className="type-h2 m-0 text-(--t-ink-base)">
-                Drives you can help with
+                {tStatic("contributeRoute.drives_you_can_help_with")}
               </h2>
               <span className="rounded-full bg-(--t-bg-muted) px-2.5 py-0.5 text-sm font-bold text-(--t-ink-dim)">
                 {views.length}
               </span>
             </div>
             <p className="mt-2 mb-0 text-base leading-relaxed text-(--t-ink-dim)">
-              Choose a place and a task. Start with a few changes you can
-              source.
+              {tStatic(
+                "contributeRoute.choose_a_place_and_a_task_start_with_a_few_changes_you_can_source"
+              )}
             </p>
           </div>
           <GlobalLink
@@ -148,7 +158,9 @@ export function DrivesYouCanHelpWith({
             className="shrink-0 text-(--t-accent-primary)"
             aria-hidden
           />
-          Every change is reviewed before it reaches a library’s record.
+          {tStatic(
+            "contributeRoute.every_change_is_reviewed_before_it_reaches_a_library_s_record"
+          )}
         </p>
       </div>
     </section>

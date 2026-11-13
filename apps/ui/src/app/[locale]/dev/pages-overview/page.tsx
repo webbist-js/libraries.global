@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server"
 
 import PageList from "@/app/[locale]/dev/pages-overview/components/PageList"
 import Typography from "@/components/typography"
+import { withMessages } from "@/i18n/scoped-messages"
 import { logNonBlockingError } from "@/lib/logging"
 import { PublicStrapiClient } from "@/lib/strapi-api"
 
@@ -28,7 +29,7 @@ async function fetchAllPages(locale: Locale) {
   }
 }
 
-export default async function PagesOverviewPage({
+async function PagesOverviewPage({
   params,
 }: PageProps<"/[locale]/dev/pages-overview">) {
   const { locale } = (await params) as { locale: Locale }
@@ -45,3 +46,8 @@ export default async function PagesOverviewPage({
     </>
   )
 }
+
+export default withMessages(
+  PagesOverviewPage,
+  "[locale]/dev/pages-overview/page"
+)

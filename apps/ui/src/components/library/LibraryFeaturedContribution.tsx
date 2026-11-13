@@ -55,6 +55,8 @@ export function LibraryFeaturedContribution({
   readonly gaps?: readonly ChecklistKey[]
   readonly translateLocales?: readonly TranslateLocale[]
 }) {
+  const tExisting = useTranslations()
+
   const t = useTranslations("libraryPage")
   const locale = useLocale()
   const { data: session } = authClient.useSession()
@@ -89,7 +91,9 @@ export function LibraryFeaturedContribution({
           : "tasks.addHours"
     ),
     description: t("tasks.scheduleNote"),
-    category: mobile ? "Stops & times" : "Opening hours",
+    category: mobile
+      ? tExisting("ui.stops_times")
+      : tExisting("ui.opening_hours"),
     verify: hasHours,
   }
   const access: Task = {
@@ -133,10 +137,10 @@ export function LibraryFeaturedContribution({
         description: t("tasks.sourceNote"),
         category:
           key === "about"
-            ? "Collections"
+            ? tExisting("ui.collections")
             : key === "address" || key === "location"
               ? "Address or location"
-              : "Something else",
+              : tExisting("contactModal.feedback.tasks.other"),
       })),
     ...translateTargets(translateLocales, locale).map((target) => ({
       key: `translate-${target.code}`,

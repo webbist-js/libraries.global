@@ -4,17 +4,16 @@ import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import cs from "../../../../locales/cs"
+import en from "../../../../locales/en"
+import es from "../../../../locales/es"
+import fr from "../../../../locales/fr"
 import {
   SponsorAcknowledgementList,
   SponsorEnquiry,
   SponsorProgrammes,
   SponsorRecognition,
 } from "../SponsorSections"
-
-import cs from "../../../../locales/cs.json"
-import en from "../../../../locales/en.json"
-import es from "../../../../locales/es.json"
-import fr from "../../../../locales/fr.json"
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("next/image", () => ({

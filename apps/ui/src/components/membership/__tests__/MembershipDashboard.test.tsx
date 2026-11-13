@@ -4,13 +4,12 @@ import { NextIntlClientProvider } from "next-intl"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
+import messages from "../../../../locales/en"
 import { membershipPropsOf } from "../membership-props"
 import {
   MembershipDashboard,
   type MembershipDashboardProps,
 } from "../MembershipDashboard"
-
-import messages from "../../../../locales/en.json"
 
 const { preferences } = vi.hoisted(() => ({ preferences: vi.fn() }))
 vi.mock("@iconify/react", () => ({ Icon: () => null }))

@@ -7,7 +7,9 @@ import type {
   PopulatedFeaturedLibraryData,
 } from "@/lib/strapi-api/content/server"
 import type { Data } from "@repo/strapi-types"
+import { createTranslator } from "next-intl"
 
+import messages from "../../../../ui/locales/en"
 import { libraryFixture } from "../library"
 import { journalLanding } from "./articles"
 import { driveView } from "./drives"
@@ -23,7 +25,10 @@ export const homepageData: Data.ContentType<"api::homepage.homepage"> = {
   documentId: "example-homepage",
   ...dates,
 }
-export const homepageContent = resolveHomepageContent(homepageData)
+export const homepageContent = resolveHomepageContent(
+  homepageData,
+  createTranslator({ locale: "en", messages, namespace: "homepageFallback" })
+)
 export const homepageStats: HomepageStats = {
   libraries: 1240,
   countries: 48,

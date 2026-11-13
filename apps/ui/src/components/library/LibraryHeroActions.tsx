@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { announceFollow } from "@/components/library/follow-events"
 import { LibraryContributeCta } from "@/components/library/LibraryContributeCta"
@@ -45,7 +44,9 @@ export function LibraryHeroActions({
   readonly libraryName: string
   readonly libraryDocumentId: string
 }) {
-  const t = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const t = useTranslations("libraryPage")
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -78,7 +79,10 @@ export function LibraryHeroActions({
             }}
           >
             {item.title}
-            <span className="sr-only"> (opens in a new tab)</span>
+            <span className="sr-only">
+              {" "}
+              {tStatic("library.opens_in_a_new_tab")}
+            </span>
           </a>
         ))}
       <div className="lg:hidden">
@@ -103,10 +107,10 @@ function FollowPill({
   readonly libraryDocumentId: string
   readonly libraryName: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const { data: session, isPending } = authClient.useSession()
-  const tFollow = useUiTranslations("publishingFollow")
+  const tFollow = useTranslations("publishingFollow")
   const {
     following,
     saving: loading,

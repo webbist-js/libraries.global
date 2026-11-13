@@ -4,15 +4,23 @@ import { createContext, useContext, type ReactNode } from "react"
 
 export type FixtureSession = ReturnType<typeof authClient.useSession>["data"]
 const SessionContext = createContext<FixtureSession>(null)
+type FixtureSessionError = ReturnType<typeof authClient.useSession>["error"]
+const SessionErrorContext = createContext<FixtureSessionError>(null)
 
 export function FixtureSessionProvider({
   children,
   session = null,
+  error = null,
 }: {
   children: ReactNode
   session?: FixtureSession
+  error?: FixtureSessionError
 }) {
-  return <SessionContext value={session}>{children}</SessionContext>
+  return (
+    <SessionContext value={session}>
+      <SessionErrorContext value={error}>{children}</SessionErrorContext>
+    </SessionContext>
+  )
 }
 const refetch = async () => {}
 
@@ -21,7 +29,7 @@ export function useFixtureSession() {
     data: useContext(SessionContext),
     isPending: false,
     isRefetching: false,
-    error: null,
+    error: useContext(SessionErrorContext),
     refetch,
   }
 }

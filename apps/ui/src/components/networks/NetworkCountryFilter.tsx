@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { SelectField } from "@/components/ds/SelectField"
 import { STAFF_FIELD } from "@/components/staff/StaffPanel"
 
@@ -10,9 +12,11 @@ export function NetworkCountryFilter({
   readonly countries: readonly { slug: string; name: string }[]
   readonly locked?: boolean
 }) {
+  const tExisting = useTranslations()
+
   return (
     <label className="grid gap-2">
-      Country
+      {tExisting("ui.country")}
       {locked ? (
         <>
           <input type="hidden" name="country" value={initial} />
@@ -26,7 +30,7 @@ export function NetworkCountryFilter({
           defaultValue={initial}
           className={`${STAFF_FIELD} h-12`}
           options={[
-            { value: "", label: "All countries" },
+            { value: "", label: tExisting("atlasNetwork.allCountries") },
             ...countries.map((row) => ({
               value: String(row.slug),
               label: String(row.name),

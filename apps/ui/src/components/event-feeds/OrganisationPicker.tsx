@@ -2,7 +2,7 @@
 
 import { FEED_TEST_COPY } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { ChoiceCard } from "@/components/ds/ChoiceCard"
@@ -29,7 +29,11 @@ export function OrganisationPicker({
   readonly librarySlug: string
   readonly organizations: { id: string; name: string }[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const [organizationId, setOrganizationId] = useState(
@@ -87,7 +91,7 @@ export function OrganisationPicker({
             padding: 0,
           }}
         >
-          Organisation
+          {tStatic("frontendExtra.organisation")}
         </legend>
         <div className="grid grid-cols-1 gap-3">
           {organizations.map((org) => (
@@ -123,7 +127,7 @@ export function OrganisationPicker({
           disabled={!organizationId || sending}
           onClick={send}
         >
-          {sending ? tUi("sending") : "Send for review"}
+          {sending ? tUi("sending") : tExisting("discussions.submit")}
         </button>
       </div>
     </div>

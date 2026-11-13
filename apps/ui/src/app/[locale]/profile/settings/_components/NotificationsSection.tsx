@@ -1,7 +1,7 @@
 "use client"
 
 import { type DismissiblePrompt, DISMISSIBLE_PROMPTS } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -35,81 +35,10 @@ type ToggleItem<K extends string> = {
 
 type NotificationItem = ToggleItem<NotifKey>
 
-const EMAIL_NOTIFS: NotificationItem[] = [
-  {
-    key: "weeklyReport",
-    label: "Weekly community report",
-    desc: "A Monday summary of new libraries, public articles and your contributions. No email in quiet weeks.",
-  },
-  {
-    key: "weeklyDigest",
-    label: "Weekly digest",
-    desc: "A Monday email when libraries you follow have public updates. No email in quiet weeks.",
-  },
-  {
-    key: "editsReviewed",
-    label: "Your edits are reviewed",
-    desc: "When a change is accepted, returned for more information or rejected.",
-  },
-  {
-    key: "drives",
-    label: "Drives you helped",
-    desc: "A thank-you with the final numbers when a drive closes.",
-  },
-  {
-    key: "newFollowers",
-    label: "New followers",
-    desc: "When another contributor follows you.",
-  },
-  {
-    key: "editorialMessages",
-    label: "Project notices",
-    desc: "Operational updates from project stewards. Essential account and security emails are always sent.",
-  },
-  {
-    key: "recognition",
-    label: "Badges earned",
-    desc: "An email when you earn a new badge. Your badges also appear in the notification inbox.",
-  },
-  {
-    key: "marketing",
-    label: "Product updates",
-    desc: "Occasional emails about new features. Separate from the newsletter and weekly reports.",
-  },
-]
-
-const SITE_NOTIFS: NotificationItem[] = [
-  {
-    key: "soundOn",
-    label: "Play a sound for new notifications",
-    desc: "A quiet, short chime while the site is open, after you interact with it. No sound for existing unread updates.",
-  },
-]
-
 /**
  * Every prompt a reader can hide (`DismissiblePrompt`); on means shown.
  * `atlas-data-gap` is translated, so the section builds it.
  */
-const PROMPTS: Record<
-  Exclude<DismissiblePrompt, "atlas-data-gap">,
-  ToggleItem<DismissiblePrompt>
-> = {
-  "find-contribute": {
-    key: "find-contribute",
-    label: "Invitation to contribute on Find libraries",
-    desc: "The banner above the results.",
-  },
-  "atlas-contribute": {
-    key: "atlas-contribute",
-    label: "Invitation to contribute on the Atlas",
-    desc: "The card under the Atlas search.",
-  },
-  "api-playground-usage": {
-    key: "api-playground-usage",
-    label: "API playground usage warning",
-    desc: "Show a reminder each time you open the playground that successful requests use your API account’s shared allowance. The usage notice on the page always stays visible.",
-  },
-}
 
 type NotificationPrefs = Record<NotifKey, boolean>
 
@@ -175,8 +104,97 @@ export function NotificationsSection({
   profile: UserProfile | null
   hasTeam?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const tGaps = useUiTranslations("atlasDataGaps")
+  const tStatic = useTranslations("staticUi")
+  const EMAIL_NOTIFS: NotificationItem[] = [
+    {
+      key: "weeklyReport",
+      label: tStatic("profileRoute.weekly_community_report"),
+      desc: tStatic(
+        "notificationSetting.a_monday_summary_of_new_libraries_public_articles_and_your_contributions_no_email_in_quiet_week"
+      ),
+    },
+    {
+      key: "weeklyDigest",
+      label: tStatic("profileRoute.weekly_digest"),
+      desc: tStatic(
+        "notificationSetting.a_monday_email_when_libraries_you_follow_have_public_updates_no_email_in_quiet_weeks"
+      ),
+    },
+    {
+      key: "editsReviewed",
+      label: tStatic("profileRoute.your_edits_are_reviewed"),
+      desc: tStatic(
+        "notificationSetting.when_a_change_is_accepted_returned_for_more_information_or_rejected"
+      ),
+    },
+    {
+      key: "drives",
+      label: tStatic("profileRoute.drives_you_helped"),
+      desc: tStatic(
+        "notificationSetting.a_thank_you_with_the_final_numbers_when_a_drive_closes"
+      ),
+    },
+    {
+      key: "newFollowers",
+      label: tStatic("profileRoute.new_followers"),
+      desc: tStatic("notificationSetting.when_another_contributor_follows_you"),
+    },
+    {
+      key: "editorialMessages",
+      label: tStatic("profileRoute.project_notices"),
+      desc: tStatic(
+        "notificationSetting.operational_updates_from_project_stewards_essential_account_and_security_emails_are_always_sent"
+      ),
+    },
+    {
+      key: "recognition",
+      label: tStatic("profileRoute.badges_earned"),
+      desc: tStatic(
+        "notificationSetting.an_email_when_you_earn_a_new_badge_your_badges_also_appear_in_the_notification_inbox"
+      ),
+    },
+    {
+      key: "marketing",
+      label: tStatic("profileRoute.product_updates"),
+      desc: tStatic(
+        "notificationSetting.occasional_emails_about_new_features_separate_from_the_newsletter_and_weekly_reports"
+      ),
+    },
+  ]
+  const SITE_NOTIFS: NotificationItem[] = [
+    {
+      key: "soundOn",
+      label: tStatic("profileRoute.play_a_sound_for_new_notifications"),
+      desc: tStatic(
+        "notificationSetting.a_quiet_short_chime_while_the_site_is_open_after_you_interact_with_it_no_sound_for_existing_unr"
+      ),
+    },
+  ]
+  const PROMPTS: Record<
+    Exclude<DismissiblePrompt, "atlas-data-gap">,
+    ToggleItem<DismissiblePrompt>
+  > = {
+    "find-contribute": {
+      key: "find-contribute",
+      label: tStatic("profileRoute.invitation_to_contribute_on_find_libraries"),
+      desc: tStatic("notificationSetting.the_banner_above_the_results"),
+    },
+    "atlas-contribute": {
+      key: "atlas-contribute",
+      label: tStatic("profileRoute.invitation_to_contribute_on_the_atlas"),
+      desc: tStatic("notificationSetting.the_card_under_the_atlas_search"),
+    },
+    "api-playground-usage": {
+      key: "api-playground-usage",
+      label: tStatic("profileRoute.api_playground_usage_warning"),
+      desc: tStatic(
+        "notificationSetting.show_a_reminder_each_time_you_open_the_playground_that_successful_requests_use_your_api_account"
+      ),
+    },
+  }
+
+  const tUi = useTranslations("ui")
+  const tGaps = useTranslations("atlasDataGaps")
 
   const { updateNotifications, saving } = useProfile()
   const { refresh, previewSound } = useNotifications()
@@ -229,7 +247,7 @@ export function NotificationsSection({
     setSavingPrompt(false)
     if (!saved) {
       setShownPrompts((s) => ({ ...s, [key]: !show }))
-      toast.error("Couldn't save that setting")
+      toast.error(tStatic("profileRoute.couldn_t_save_that_setting"))
     }
   }
 
@@ -247,7 +265,9 @@ export function NotificationsSection({
     <SectionCard
       id="notifications"
       title={tUi("notifications")}
-      lead="Choose what you hear about libraries, your contributions and the people you follow."
+      lead={tStatic(
+        "profileRoute.choose_what_you_hear_about_libraries_your_contributions_and_the_people_you_follow"
+      )}
     >
       <NotifGroup
         title={tUi("by_email")}
@@ -267,7 +287,9 @@ export function NotificationsSection({
       />
       <div className="flex flex-wrap gap-3">
         <Button asChild variant="outline" className="rounded-full">
-          <Link href="/profile/notifications">Open notification inbox</Link>
+          <Link href="/profile/notifications">
+            {tStatic("profileRoute.open_notification_inbox")}
+          </Link>
         </Button>
         {prefs.soundOn && (
           <Button
@@ -276,13 +298,14 @@ export function NotificationsSection({
             className="rounded-full"
             onClick={previewSound}
           >
-            Preview notification sound
+            {tStatic("profileRoute.preview_notification_sound")}
           </Button>
         )}
       </div>
       <p className="text-sm" style={{ color: T.ink.dim }}>
-        Email preferences do not hide updates on the site. Newsletter emails
-        have their own confirmation and unsubscribe links.
+        {tStatic(
+          "profileRoute.email_preferences_do_not_hide_updates_on_the_site_newsletter_emails_have_their_own_confirmation_and_"
+        )}
       </p>
 
       <NotifGroup

@@ -1,6 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 
@@ -9,6 +9,8 @@ export function LegalPrintButton({
 }: {
   readonly compact?: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <Button
       variant="surface"
@@ -22,7 +24,7 @@ export function LegalPrintButton({
         icon="mdi:printer-outline"
         width={18}
       />
-      Print or save PDF
+      {tStatic("frontendExtra.print_or_save_pdf")}
     </Button>
   )
 }

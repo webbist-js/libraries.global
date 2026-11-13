@@ -1,7 +1,6 @@
 "use client"
-
 import { PANEL_GAPS } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds/Notice"
 import type { FindState } from "@/components/index-page/find-helpers"
@@ -26,7 +25,9 @@ export function FindDriveBanner({
   readonly drives?: readonly FindDrive[]
   readonly state: FindState
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { has, ready } = useCapabilities()
   const match = matchDriveForFind(drives ?? [], state)
@@ -48,7 +49,7 @@ export function FindDriveBanner({
             className="mt-1 inline-flex self-start font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Open the drive
+            {tStatic("profileIndex.open_the_drive")}
           </Link>
         </Notice>
       </div>
@@ -68,7 +69,7 @@ export function FindDriveBanner({
       className="inline-flex w-fit items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
       style={{ borderColor: T.border.hi, color: T.accent.primary }}
     >
-      Propose a drive from these results
+      {tStatic("profileIndex.propose_a_drive_from_these_results")}
     </Link>
   )
 }
