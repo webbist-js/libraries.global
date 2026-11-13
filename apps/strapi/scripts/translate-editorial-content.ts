@@ -3,6 +3,21 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { StrapiMcpClient } from "./mcp-client"
+import {
+  dictionaryLocales,
+  resolveTargetLocales,
+  skippedLocalesMessage,
+  TRANSLATION_LOCALES,
+} from "./translation-locales"
+
+const USAGE = `Usage: npx tsx scripts/translate-editorial-content.ts [--locale <code>[,<code>]] [--taxonomy-only] [--apply]
+
+Translates English editorial documents in the local CMS from scripts/i18n/editorial-translations.json
+and editorial-overrides.json. Previews by default; --apply writes. --locale limits the run
+(${TRANSLATION_LOCALES.join(", ")}); without it, locales with no dictionary entries are skipped.
+--taxonomy-only limits the run to sections, topics and categories. Run from apps/strapi.`
+const DICTIONARY =
+  "i18n/editorial-translations.json and editorial-overrides.json"
 
 const TYPES = [
   "wiki-section",
@@ -110,6 +125,35 @@ function relation(value: any, attribute: any, locale: string) {
 }
 
 async function main() {
+  const argv = process.argv.slice(2)
+  if (argv.includes("--help")) {
+    console.log(USAGE)
+
+    return
+  }
+  // Choose locales before connecting, so a missing dictionary stops early.
+  const dictionary: Dictionary = {}
+  for (const file of [
+    "editorial-translations.json",
+    "editorial-overrides.json",
+  ]) {
+    try {
+      const values: Dictionary = JSON.parse(
+        await readFile(path.join(__dirname, "i18n", file), "utf8")
+      )
+      for (const [source, translations] of Object.entries(values))
+        dictionary[source] = { ...dictionary[source], ...translations }
+    } catch (error: any) {
+      if (error.code !== "ENOENT") throw error
+    }
+  }
+  const { locales, skipped } = resolveTargetLocales(
+    argv,
+    dictionaryLocales(dictionary),
+    DICTIONARY
+  )
+  const skipNotice = skippedLocalesMessage(skipped, DICTIONARY)
+  if (skipNotice) console.warn(skipNotice)
   try {
     process.loadEnvFile(".env")
   } catch {
@@ -118,8 +162,8 @@ async function main() {
   const base = process.env.STRAPI_URL || "http://127.0.0.1:1337"
   if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(base))
     throw new Error("Only the local CMS is supported")
-  const apply = process.argv.includes("--apply")
-  const taxonomyOnly = process.argv.includes("--taxonomy-only")
+  const apply = argv.includes("--apply")
+  const taxonomyOnly = argv.includes("--taxonomy-only")
   let client = new StrapiMcpClient(process.env.STRAPI_MCP_TOKEN, `${base}/mcp`)
   await client.initialize()
   const tools = await client.listTools()
@@ -163,21 +207,6 @@ async function main() {
   }
   const output = path.resolve(__dirname, "../../../.scratch/i18n-editorial")
   await mkdir(output, { recursive: true })
-  const dictionary: Dictionary = {}
-  for (const file of [
-    "editorial-translations.json",
-    "editorial-overrides.json",
-  ]) {
-    try {
-      const values: Dictionary = JSON.parse(
-        await readFile(path.join(__dirname, "i18n", file), "utf8")
-      )
-      for (const [source, translations] of Object.entries(values))
-        dictionary[source] = { ...dictionary[source], ...translations }
-    } catch (error: any) {
-      if (error.code !== "ENOENT") throw error
-    }
-  }
   const reviewedSeo: Record<
     string,
     Record<string, Record<string, Record<string, string>>>
@@ -224,7 +253,7 @@ async function main() {
           ...(schema.options.draftAndPublish ? { status: "published" } : {}),
         })
     before.push({ type, locale: "en", data: source })
-    for (const locale of ["cs", "fr"]) {
+    for (const locale of locales) {
       const tool = `${single ? "write" : "update"}_${type}`
       const permitted = tools
         .find((t) => t.name === tool)
@@ -302,6 +331,8 @@ async function main() {
   console.log(
     JSON.stringify({
       apply,
+      locales,
+      skippedLocales: skipped,
       planned: plan.length,
       incomplete: incomplete.length,
       missingSegments: new Set(incomplete.flatMap((item) => item.missing)).size,

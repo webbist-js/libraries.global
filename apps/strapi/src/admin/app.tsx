@@ -1,4 +1,5 @@
 import { setPluginConfig } from "@_sh/strapi-plugin-ckeditor"
+import { SUPPORTED_LOCALES } from "@repo/shared-data/locales"
 import type { StrapiApp } from "@strapi/strapi/admin"
 import type { ComponentType } from "react"
 
@@ -14,7 +15,9 @@ import { OPENING_TIMES_FIELD_NAME } from "../customFields/openingTimes/shared"
 
 export default {
   config: {
-    locales: ["cs", "en", "es", "fr"],
+    // The admin interface languages follow the site's supported locales. The
+    // locales subpath keeps the rest of shared-data out of the entry chunk.
+    locales: [...SUPPORTED_LOCALES],
     translations: {
       cs,
     },

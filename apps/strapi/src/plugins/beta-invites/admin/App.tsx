@@ -329,6 +329,7 @@ function Dashboard() {
                   <SingleSelectOption value="cs">Czech</SingleSelectOption>
                   <SingleSelectOption value="es">Spanish</SingleSelectOption>
                   <SingleSelectOption value="fr">French</SingleSelectOption>
+                  <SingleSelectOption value="ja">Japanese</SingleSelectOption>
                 </SingleSelect>
               </Field.Root>
               <Field.Root>

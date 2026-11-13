@@ -50,6 +50,11 @@
     "./mobile-auth": {
       "types": "./dist/mobile-auth.d.ts",
       "default": "./dist/mobile-auth.js"
+    },
+    "./locales": {
+      "types": "./dist/locales.d.ts",
+      "import": "./dist/locales.js",
+      "require": "./dist/locales.js"
     }
   },
   "main": "dist/index.js",
@@ -82,6 +87,9 @@
       ],
       "mobile-auth": [
         "dist/mobile-auth.d.ts"
+      ],
+      "locales": [
+        "dist/locales.d.ts"
       ]
     }
   },
