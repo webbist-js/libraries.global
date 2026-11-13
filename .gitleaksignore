@@ -40,3 +40,4 @@ f8641adf3913e3ab9ca89254d2452234a1f29d96:docs/superpowers/specs/2026-04-25-bette
 f8d930bc548f3e2984c7bb4f4837dfeb171625de:apps/ui/src/lib/google-analytics.ts:generic-api-key:5
 # Placeholder key in the API offer's example curl command.
 81e6b85f3d014eead397c8ae924fcf62d7d6646c:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
+99b2ddb57c46d664c029b150fbb7eace06e6f518:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
