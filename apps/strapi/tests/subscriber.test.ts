@@ -166,32 +166,16 @@ describe("POST /subscribers (E6)", () => {
     expect(sixth.status).toBe(429)
   })
 
-  it.each(["en", "cs", "fr"])(
-    "keeps beta and newsletter consent separate for the same address in %s",
-    async (locale) => {
-      await controller.subscribe(
-        ctx({
-          email: "existing@example.org",
-          type: "beta_waitlist",
-          locale,
-        })
-      )
-      await controller.subscribe(
-        ctx({ email: "EXISTING@example.org", type: "beta_waitlist" })
-      )
-      const rows = fake.store[SUBSCRIBER]
-      expect(rows).toHaveLength(2)
-      expect(rows[1]).toMatchObject({
-        type: "beta_waitlist",
-        source: "beta_landing",
-        state: "active",
-        communicationLocale: locale,
-        baUserId: null,
-      })
-      expect(rows[1].consentedAt).toBeTruthy()
-      expect(rows[1].message).toContain("No newsletter")
-    }
-  )
+  it("refuses new beta requests without altering existing newsletter consent", async () => {
+    const before = JSON.stringify(fake.store[SUBSCRIBER])
+    const request = ctx({
+      email: "existing@example.org",
+      type: "beta_waitlist",
+    })
+    await controller.subscribe(request)
+    expect(request.status).toBe(410)
+    expect(JSON.stringify(fake.store[SUBSCRIBER])).toBe(before)
+  })
 
   it("attributes only matching newsletters to the authenticated bridge user", async () => {
     for (const [type, email] of [
@@ -206,7 +190,7 @@ describe("POST /subscribers (E6)", () => {
     }
     expect(
       fake.store[SUBSCRIBER].slice(1).map((row: any) => row.baUserId)
-    ).toEqual([null, "account-id", null])
+    ).toEqual(["account-id", null])
   })
 
   it.each(["suppressed"])(

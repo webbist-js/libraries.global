@@ -152,7 +152,7 @@ export function internalNotifications(strapi: Core.Strapi) {
     await enqueue({
       eventKey: `summary:${now.toISOString().slice(0, 10)}`,
       kind: "daily_summary",
-      title: "Beta activity in the last 24 hours",
+      title: "Activity in the last 24 hours",
       detail: counts.length
         ? counts
             .map(
@@ -170,7 +170,7 @@ export function internalNotifications(strapi: Core.Strapi) {
     await enqueue({
       eventKey: `source-health:${now.toISOString().slice(0, 10)}`,
       kind: "service_alert",
-      title: "Beta activity monitoring needs attention",
+      title: "Activity monitoring needs attention",
       detail: `${count} source checks failed. Other activity notifications continue. Check the internal notification job logs; missed records will be reconciled after recovery.`,
       eventAt: now.toISOString(),
     })
@@ -244,8 +244,8 @@ export function internalNotifications(strapi: Core.Strapi) {
       const now = new Date()
       await enqueue({
         eventKey: `active:${createHash("sha256").update(baUserId).digest("hex")}:${now.toISOString().slice(0, 10)}`,
-        kind: "active_beta",
-        title: "Active in beta",
+        kind: "active_user",
+        title: "Active on Libraries Global",
         detail:
           "Authenticated use of the platform (one activity alert per person per UTC day).",
         actorId: baUserId,

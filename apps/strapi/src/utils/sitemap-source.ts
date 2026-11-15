@@ -122,6 +122,8 @@ export function sitemapQuery(source: SitemapSource, locale: string) {
       }
     )
   }
+  // The archived beta notice is always noindex in the public route.
+  if (source === "legal") filters.push({ slug: { $ne: "beta" } })
   if (source === "networks")
     filters.push({
       publicPageEnabled: true,

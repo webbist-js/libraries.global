@@ -38,10 +38,10 @@ beforeEach(() => {
     unavailable: [],
   })
 })
-it("keeps search behind beta access", async () => {
+it("allows search without beta access", async () => {
   mocks.beta.mockResolvedValue(false)
-  expect((await request("q=Paris")).status).toBe(401)
-  expect(mocks.search).not.toHaveBeenCalled()
+  expect((await request("q=Paris")).status).toBe(200)
+  expect(mocks.search).toHaveBeenCalled()
 })
 it("validates query and interface locale before contacting search", async () => {
   expect((await request(`q=${"x".repeat(121)}`)).status).toBe(400)

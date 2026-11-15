@@ -2,7 +2,7 @@ import { createHash } from "node:crypto"
 
 import type { Core } from "@strapi/strapi"
 
-import { type InternalEvent, maskEmail } from "./slack"
+import type { InternalEvent } from "./slack"
 
 const TABLE = "internal_notifications"
 type Row = Record<string, string>
@@ -34,18 +34,6 @@ const TYPES: Record<string, string> = {
 }
 
 const sources: Source[] = [
-  {
-    name: "beta",
-    table: "subscribers",
-    at: "consented_at",
-    filter: (q) =>
-      q.where("source.type", "beta_waitlist").where("source.state", "active"),
-    event: (r) => ({
-      kind: "beta_signup",
-      title: "Beta access requested",
-      detail: `${maskEmail(r.email)} · ${r.communication_locale || "en"}`,
-    }),
-  },
   {
     name: "submission",
     table: "cm_submissions",
@@ -215,31 +203,10 @@ const sources: Source[] = [
     filter: (q) => q.where("source.kind", "billing_update"),
     event: (r) => ({
       kind: "billing_update",
-      title: "Membership / billing update",
+      title: "API billing update",
       actorId: r.ba_user_id,
       detail: `${r.title} · ${process.env.BILLING_ENV === "live" ? "live" : "sandbox"}`,
       href: r.href,
-    }),
-  },
-  {
-    name: "beta-invite-sent",
-    table: "beta_invitations",
-    at: "sent_at",
-    event: () => ({
-      kind: "beta_invitation",
-      title: "Beta invitation sent",
-      detail: "A requested beta invitation was accepted by the email provider.",
-    }),
-  },
-  {
-    name: "beta-invite-accepted",
-    table: "beta_invitations",
-    at: "accepted_at",
-    event: () => ({
-      kind: "beta_invitation",
-      title: "Beta invitation redeemed",
-      detail:
-        "A beta visitor redeemed their invitation. Account creation is reported separately.",
     }),
   },
 ]
@@ -248,15 +215,6 @@ const sources: Source[] = [
  * avoids cursors that can skip a slow transaction with a smaller sequence id. */
 async function contentEvent(strapi: Core.Strapi, source: Source, row: Row) {
   const event = source.event(row)
-  if (source.name.startsWith("beta-invite-")) {
-    const subscriber = await strapi.db
-      .query("api::subscriber.subscriber")
-      .findOne({
-        where: { documentId: row.subscriber_document_id },
-        select: ["email"],
-      })
-    event.detail = `${maskEmail(subscriber?.email)} · ${event.detail}`
-  }
   if (source.name === "review") {
     const submission = await strapi.db
       .query("plugin::content-moderation.submission")
@@ -349,7 +307,7 @@ function authEvent(kind: "users" | "sessions", row: AuthRow): InternalEvent {
   return {
     eventKey: `login:${identity}:${eventAt.slice(0, 13)}`,
     kind: "login",
-    title: "Signed in to beta",
+    title: "Signed in to Libraries Global",
     detail:
       "A successful session started (at most one alert per person per hour).",
     actorId,
