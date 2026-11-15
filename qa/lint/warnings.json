@@ -297,7 +297,7 @@
     "apps/strapi/src/lifeCycles/roleGrant.ts": {
       "@typescript-eslint/no-explicit-any": 4
     },
-    "apps/strapi/src/middlewares/beta-gate.ts": {
+    "apps/strapi/src/middlewares/content-origin.ts": {
       "@typescript-eslint/no-explicit-any": 2
     },
     "apps/strapi/src/middlewares/strip-draft-status.ts": {

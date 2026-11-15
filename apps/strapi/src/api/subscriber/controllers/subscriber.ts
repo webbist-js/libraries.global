@@ -119,6 +119,12 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
       return ctx.badRequest("Body must be { email } with a valid address")
 
     const type = ctx.request.body.type ?? "newsletter"
+    if (type === "beta_waitlist") {
+      ctx.status = 410
+      ctx.body = { error: "Beta access requests are retired" }
+
+      return
+    }
     if (!["beta_waitlist", "newsletter"].includes(type))
       return ctx.badRequest("Invalid subscriber type")
     const source =

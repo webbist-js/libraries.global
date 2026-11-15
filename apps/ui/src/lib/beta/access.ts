@@ -4,7 +4,8 @@ import { betaPath } from "@/lib/beta/scope"
 
 export const BETA_COOKIE = "lg-beta-access"
 export const BETA_MAX_AGE = 30 * 24 * 60 * 60
-export const betaEnabled = () => process.env.BETA_GATE_ENABLED === "true"
+/** Closed beta is retired. Stale runtime flags cannot close public access. */
+export const betaEnabled = () => false
 export const betaConfigured = () =>
   (process.env.BETA_ACCESS_SECRET?.length ?? 0) >= 32
 export type BetaPass = { invitationId: string; expiresAt: number }

@@ -65,7 +65,7 @@ beforeEach(() => {
 })
 
 describe("notification preference trigger matrix", () => {
-  it("limits the beta-only worker to invitations and leaves other queued mail pending", async () => {
+  it("skips retired invitations and leaves other queued mail pending", async () => {
     const { service, services, store, send } = setup()
     const deliver = vi.fn().mockResolvedValue("sent")
     services["beta-invites.invites"] = { deliver }
@@ -83,12 +83,12 @@ describe("notification preference trigger matrix", () => {
       new Date(Date.now() + 1000),
       "beta_invitation"
     )
-    expect(result.sent).toBe(1)
-    expect(deliver).toHaveBeenCalledOnce()
+    expect(result.skipped).toBe(1)
+    expect(deliver).not.toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
     expect(store[UID]![0]!.emailState).toBe("pending")
   })
-  it("runs invitation delivery and cleanup through the authenticated operator action", async () => {
+  it("retires the authenticated invitation operator action", async () => {
     const { strapi, services, service } = setup()
     const prune = vi.fn().mockResolvedValue(undefined)
     services["beta-invites.invites"] = { prune }
@@ -106,13 +106,14 @@ describe("notification preference trigger matrix", () => {
         send: vi.fn(),
       }
       await inbox.operations(ctx)
-      expect(prune).toHaveBeenCalledOnce()
-      expect(deliver).toHaveBeenCalledWith(expect.any(Date), "beta_invitation")
+      expect(ctx.status).toBe(410)
+      expect(prune).not.toHaveBeenCalled()
+      expect(deliver).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()
     }
   })
-  it("routes anonymous beta invitations through their service and retries failed delivery", async () => {
+  it("never sends or retries queued beta invitations", async () => {
     const { service, services, store, send } = setup()
     const deliver = vi
       .fn()
@@ -129,15 +130,14 @@ describe("notification preference trigger matrix", () => {
       emailPayload: { invitationId: "invite1" },
     })
     const failed = await service.deliver(new Date(Date.now() + 1000))
-    expect(failed.failed).toBe(1)
+    expect(failed.skipped).toBe(1)
     expect(store[UID]![0]!).toMatchObject({
-      attempts: 1,
-      emailState: "pending",
+      emailState: "skipped",
       inApp: false,
     })
     const retried = await service.deliver(new Date(Date.now() + 600000))
-    expect(retried.sent).toBe(1)
-    expect(deliver).toHaveBeenCalledTimes(2)
+    expect(retried.sent).toBe(0)
+    expect(deliver).not.toHaveBeenCalled()
     expect(send).not.toHaveBeenCalled()
   })
   it("refuses operator actions without the private service secret", async () => {

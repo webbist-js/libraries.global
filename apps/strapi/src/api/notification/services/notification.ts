@@ -125,19 +125,9 @@ export default ({ strapi }: { strapi: any }) => ({
           strapi.db.query(UID).update({ where: { id: row.id }, data })
         try {
           if (row.kind === "beta_invitation") {
-            const state = await strapi
-              .plugin("beta-invites")
-              .service("invites")
-              .deliver(row, now)
-            report[state]++
-            const interval = Math.max(
-              0,
-              Math.min(
-                Number(process.env.EMAIL_SEND_INTERVAL_MS ?? "1000"),
-                30000
-              )
-            )
-            if (state === "sent" && interval > 0) await setTimeout(interval)
+            // Do not send invitations left in the queue before public launch.
+            await save({ emailState: "skipped" })
+            report.skipped++
             continue
           }
           const profile = row.baUserId

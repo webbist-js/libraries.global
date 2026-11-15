@@ -807,9 +807,6 @@
       "authFlow",
       "staticUi.auth"
     ],
-    "[locale]/beta/page": [
-      "appearance"
-    ],
     "[locale]/dev/components-overview/page": [],
     "[locale]/dev/layout": [],
     "[locale]/dev/pages-overview/page": [],
@@ -820,7 +817,6 @@
       "authInterface",
       "authorBadges",
       "beta",
-      "betaWelcome",
       "contactModal",
       "dashboard",
       "errors",
@@ -865,6 +861,7 @@
       "appearance",
       "atlasDataGaps",
       "atlasNetwork",
+      "betaWelcome",
       "catalogueSearch",
       "contributionDrawer",
       "discussions",
