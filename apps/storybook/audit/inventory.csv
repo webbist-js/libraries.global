@@ -543,7 +543,7 @@ path,layer,role,coverage,exported_symbols,story_modules,composition_modules,boun
 "apps/ui/src/app/embed/layout.tsx","app","route","needs-story","EmbedLayout; metadata","","","","4f964650885b"
 "apps/ui/src/app/embed/w/[publicId]/page.tsx","app","route","needs-fixtures-or-extraction","WidgetPage; dynamic","","","server; network/session","df6eb224e5e0"
 "apps/ui/src/app/llms.txt/route.ts","app","support","support","GET; revalidate","","","server; network/session","4b86e0bae5f7"
-"apps/ui/src/app/robots.ts","app","support","support","robots","","","","e903a0c9d203"
+"apps/ui/src/app/robots.ts","app","support","support","dynamic; robots","","","","a85b0742b82d"
 "apps/ui/src/app/sitemap.xml/route.ts","app","support","support","GET; dynamic","","","server; network/session","20cd0b9618c5"
 "apps/ui/src/app/sitemaps/[file]/route.ts","app","support","support","GET; dynamic","","","server; network/session","2036f02ee294"
 "apps/ui/src/components/about/AboutChapterControls.tsx","feature/about","component","story-import","AboutNarrativeProvider; ContributionNetwork; CoverageExplorer; LibraryContexts; LibraryTypes; OpenPrinciples; RecordSteps","apps/storybook/stories/features/ContributionNetwork.stories.tsx; apps/storybook/stories/features/LibraryContexts.stories.tsx; apps/storybook/stories/features/LibraryTypes.stories.tsx; apps/storybook/stories/features/OpenPrinciples.stories.tsx; apps/storybook/stories/features/RecordSteps.stories.tsx; apps/storybook/stories/features/about/AboutNarrativeProvider.stories.tsx; apps/storybook/stories/features/about/CoverageExplorer.stories.tsx","","","2c9bd6e4211e"

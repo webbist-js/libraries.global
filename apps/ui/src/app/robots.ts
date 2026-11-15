@@ -5,6 +5,9 @@ import { isProduction } from "@/lib/general-helpers"
 import { routing } from "@/lib/navigation"
 import { getSiteUrl } from "@/lib/seo/metadata"
 
+// APP_ENV is supplied at deployment, after the immutable image is built.
+export const dynamic = "force-dynamic"
+
 /**
  * Private / transactional paths. Pages here also emit `noindex`, but blocking
  * crawl saves budget on auth-gated redirects and form flows. `/contribute/`
