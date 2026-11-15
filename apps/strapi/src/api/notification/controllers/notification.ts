@@ -39,6 +39,7 @@ export default {
     const service = strapi.service(UID)
     if (action === "betaInvites") {
       ctx.status = 410
+
       return ctx.send({ error: "Beta invitations are retired" })
     }
     if (action === "status") {

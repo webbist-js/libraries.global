@@ -210,18 +210,22 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     const baUserId = await requireBoardMember(ctx, strapi)
     if (!baUserId) return
 
+    const body = ctx.request.body as Record<string, unknown>
+    if (!body || typeof body !== "object" || Array.isArray(body))
+      return ctx.badRequest("Expected a drive object")
+
     const result = await discussionWrite(ctx, () =>
       strapi.db.transaction(async () => {
         const created = await strapi
           .service(UID)
-          .createDrive(driveInputFromBody(ctx.request.body), baUserId)
+          .createDrive(driveInputFromBody(body), baUserId)
         if (!("errors" in created))
           await configureDriveDiscussions(
             strapi,
             baUserId,
             created.data.documentId,
-            String(ctx.request.body.locale ?? created.data.locale ?? "en"),
-            ctx.request.body.discussions
+            String(body.locale ?? created.data.locale ?? "en"),
+            body.discussions
           )
 
         return created
@@ -237,8 +241,12 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
     const baUserId = await requireBoardMember(ctx, strapi)
     if (!baUserId) return
 
+    const body = ctx.request.body as Record<string, unknown>
+    if (!body || typeof body !== "object" || Array.isArray(body))
+      return ctx.badRequest("Expected a drive object")
+
     const { documentId } = ctx.params as { documentId: string }
-    const { pinned: _pinned, ...input } = driveInputFromBody(ctx.request.body)
+    const { pinned: _pinned, ...input } = driveInputFromBody(body)
     const result = await discussionWrite(ctx, () =>
       strapi.db.transaction(async () => {
         const saved = await strapi.service(UID).updateDrive(documentId, input)
@@ -247,8 +255,8 @@ export default factories.createCoreController(UID, ({ strapi }) => ({
             strapi,
             baUserId,
             documentId,
-            String(ctx.request.body.locale ?? saved.data.locale ?? "en"),
-            ctx.request.body.discussions
+            String(body.locale ?? saved.data.locale ?? "en"),
+            body.discussions
           )
 
         return saved
