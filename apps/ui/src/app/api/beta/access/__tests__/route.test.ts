@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest"
 
-import { POST } from "../route"
 import { POST as waitlist } from "../../waitlist/route"
+import { POST } from "../route"
 
 afterEach(() => vi.unstubAllEnvs())
 
