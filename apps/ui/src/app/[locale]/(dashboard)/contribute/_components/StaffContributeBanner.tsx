@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useId, useState } from "react"
 
 import { Badge } from "@/components/ds/Badge"
@@ -113,7 +112,9 @@ export function StaffContributeBanner({
   readonly userId: string
   readonly initialMetrics: StaffBannerMetrics | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [selectedId, setSelectedId] = useState(libraries[0]?.id ?? "")
   const titleId = useId()
@@ -184,8 +185,9 @@ export function StaffContributeBanner({
           className="mt-4 mb-0 max-w-[58ch] text-base leading-[1.65]"
           style={{ color: T.ink.dim }}
         >
-          Your changes to this record publish straight away. For other
-          libraries, you contribute like everyone else, below.
+          {tStatic(
+            "contributeRoute.your_changes_to_this_record_publish_straight_away_for_other_libraries_you_contribute_like_everyone_e"
+          )}
         </p>
 
         <div
@@ -216,7 +218,9 @@ export function StaffContributeBanner({
             color={TYPE_TINT.public.fg}
           />
           {isPending ? (
-            <span className="sr-only">Loading library summary.</span>
+            <span className="sr-only">
+              {tStatic("contributeRoute.loading_library_summary")}
+            </span>
           ) : null}
         </div>
         {isError ? (
@@ -296,13 +300,13 @@ export function StaffContributeBanner({
         />
         <ActionCard
           title={tUi("post_a_notice")}
-          description="Closures, changes and news."
+          description={tStatic("contributeRoute.closures_changes_and_news")}
           href={`${base}/notices#post-notice`}
           icon="mdi:bell-outline"
         />
         <ActionCard
           title={tUi("open_the_staff_area")}
-          description="Everything for this library."
+          description={tStatic("contributeRoute.everything_for_this_library")}
           href={base}
           icon="mdi:arrow-right"
         />

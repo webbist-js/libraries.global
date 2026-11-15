@@ -29,7 +29,7 @@ vi.mock("@/lib/navigation", () => ({
 vi.mock("next/navigation", () => ({ useSearchParams: () => mocks.params }))
 vi.mock("next-intl", async (original) => {
   const actual = await original<typeof NextIntl>()
-  const messages = (await import("../../../locales/en.json")).default
+  const messages = (await import("../../../locales/en")).default
 
   return {
     ...actual,

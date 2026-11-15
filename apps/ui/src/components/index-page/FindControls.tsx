@@ -1,7 +1,6 @@
 // apps/ui/src/components/index-page/FindControls.tsx
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import {
   FilterShowButton,
@@ -33,7 +32,9 @@ export function FindFilterChips({
   onChange: (patch: Partial<FindState>) => void
   onClearAll: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const chips: { label: string; onRemove: () => void }[] = []
 
@@ -85,12 +86,12 @@ export function FindFilterChips({
   }
   if (state.includeInactive)
     chips.push({
-      label: "Closed and planned included",
+      label: tStatic("profileIndex.closed_and_planned_included"),
       onRemove: () => onChange({ includeInactive: false, page: 0 }),
     })
   if (state.staffNow)
     chips.push({
-      label: "Staff on hand now",
+      label: tStatic("profileIndex.staff_on_hand_now"),
       onRemove: () => onChange({ staffNow: false, page: 0 }),
     })
   if (state.openNow) {
@@ -101,7 +102,7 @@ export function FindFilterChips({
   }
   if (state.digital) {
     chips.push({
-      label: "Digital collections",
+      label: tStatic("profileIndex.digital_collections"),
       onRemove: () => onChange({ digital: false, page: 0 }),
     })
   }
@@ -166,7 +167,7 @@ export function FindFilterChips({
         className="cursor-pointer border-0 bg-transparent px-1 text-sm font-semibold underline"
         style={{ color: T.ink.dim, textUnderlineOffset: 3 }}
       >
-        Clear all
+        {tStatic("profileIndex.clear_all")}
       </button>
     </div>
   )
@@ -223,7 +224,11 @@ export function FindResultsControls({
   sidebar: FilterSidebarState
   availableViews?: readonly ViewMode[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <div className="flex min-h-11 flex-wrap items-center gap-3">
@@ -239,23 +244,23 @@ export function FindResultsControls({
         style={{ color: T.ink.dim }}
       >
         {loading
-          ? "Searching…"
+          ? tExisting("siteSearch.loading")
           : total === null
             ? "Library results"
             : `${total.toLocaleString("en-GB")} ${total === 1 ? "library" : "libraries"}`}
       </p>
 
       <SelectField
-        label="Sort results"
+        label={tStatic("profileIndex.sort_results")}
         appearance="pill"
         value={state.sort}
         onValueChange={(value) => onChange({ sort: value as SortKey, page: 0 })}
         options={[
-          { value: "complete", label: "Most complete first" },
-          { value: "gaps", label: "Most gaps first" },
-          { value: "name", label: "Name A–Z" },
+          { value: "complete", label: tExisting("atlasList.record_desc") },
+          { value: "gaps", label: tStatic("profileIndex.most_gaps_first") },
+          { value: "name", label: tStatic("profileIndex.name_a_z") },
           ...(state.nearLat != null
-            ? [{ value: "near", label: "Nearest" }]
+            ? [{ value: "near", label: tStatic("profileIndex.nearest") }]
             : []),
         ]}
       />

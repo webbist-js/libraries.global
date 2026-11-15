@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { DriveCard } from "@/components/drives/DriveCard"
 import { T } from "@/lib/design-tokens"
@@ -48,17 +48,20 @@ function plural(n: number, one: string, many: string) {
 
 /** The drives a profile follows, as Noticeboard cards, or an empty state. */
 function FollowedDrivesGrid({ drives }: { drives: readonly DriveView[] }) {
+  const tStatic = useTranslations("staticUi")
+
   if (drives.length === 0) {
     return (
       <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-        Not following any drives yet. Follow one from its page to keep an eye on
-        it.{" "}
+        {tStatic(
+          "profileRoute.not_following_any_drives_yet_follow_one_from_its_page_to_keep_an_eye_on_it"
+        )}{" "}
         <Link
           href="/community"
           className="font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
           style={{ color: T.accent.primary }}
         >
-          See the drives
+          {tStatic("profileRoute.see_the_drives")}
         </Link>
       </p>
     )
@@ -97,8 +100,8 @@ export function FollowingSection({
   /** Libraries this user stewards (profile.claimedLibraries). */
   claimedLibraries?: ClaimedLibrary[]
 }) {
-  const tUi = useUiTranslations("ui")
-  const tDashboard = useUiTranslations("dashboard")
+  const tUi = useTranslations("ui")
+  const tDashboard = useTranslations("dashboard")
 
   const cardStyle = { ...CARD, padding: "20px 24px 24px" }
 

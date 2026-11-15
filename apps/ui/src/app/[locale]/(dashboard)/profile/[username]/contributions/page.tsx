@@ -1,10 +1,11 @@
 import { headers } from "next/headers"
 
 import { ContributionsSection } from "@/app/[locale]/profile/[username]/_components/sections/ContributionsSection"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
 
-export default async function ContributionsPage({
+async function ContributionsPage({
   params,
 }: {
   params: Promise<{ username: string }>
@@ -23,3 +24,8 @@ export default async function ContributionsPage({
     />
   )
 }
+
+export default withMessages(
+  ContributionsPage,
+  "[locale]/(dashboard)/profile/[username]/contributions/page"
+)

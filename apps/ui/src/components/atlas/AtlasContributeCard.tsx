@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { PromptDismissButton } from "@/components/ds/DismissiblePrompt"
 import GlobalLink from "@/components/global/GlobalLink"
@@ -21,7 +21,11 @@ export function AtlasContributeCard({
 }: {
   readonly signedIn: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   return (
     <section
@@ -43,11 +47,12 @@ export function AtlasContributeCard({
             id="atlas-contribute-title"
             className="type-small-heading m-0 pr-7"
           >
-            See a gap on the map?
+            {tStatic("atlas.see_a_gap_on_the_map")}
           </h2>
           <p className="m-0" style={{ color: T.ink.dim }}>
-            Add a missing library or fix one that’s out of date. Accepted
-            changes are credited to you, and your first one unlocks Reach.
+            {tStatic(
+              "atlas.add_a_missing_library_or_fix_one_that_s_out_of_date_accepted_changes_are_credited_to_you_and_your_fi"
+            )}
           </p>
         </div>
       </div>
@@ -62,12 +67,12 @@ export function AtlasContributeCard({
               className={SECONDARY}
               style={{ borderColor: T.border.hi, color: T.ink.base }}
             >
-              Fix a record
+              {tStatic("atlas.fix_a_record")}
             </GlobalLink>
           </>
         ) : (
           <GlobalLink href="/auth/register" className={PRIMARY}>
-            Create a free account
+            {tExisting("featureAccess.createAccount")}
           </GlobalLink>
         )}
       </div>

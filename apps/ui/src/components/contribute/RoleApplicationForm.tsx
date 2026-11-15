@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { findUnsafeContent } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { Badge, ChoiceCard, Notice } from "@/components/ds"
@@ -42,67 +42,9 @@ export type HeldRoles = {
   moderator: Record<ApplicationQueue, Held>
 }
 
-const ROLE_CARD: Record<
-  ApplicationRole,
-  { hint: string; icon: string; bg: string; fg: string }
-> = {
-  wiki_editor: {
-    hint: "Your approved Knowledge edits and translations publish.",
-    icon: "mdi:book-open-page-variant-outline",
-    bg: "var(--tint-academic-bg)",
-    fg: "var(--tint-academic-fg)",
-  },
-  journal_editor: {
-    hint: "Your approved Journal articles and edits publish.",
-    icon: "mdi:newspaper-variant-outline",
-    bg: "var(--tint-special-bg)",
-    fg: "var(--tint-special-fg)",
-  },
-  moderator: {
-    hint: "Review submissions in a queue and language you choose.",
-    icon: "mdi:shield-check-outline",
-    bg: "var(--tint-national-bg)",
-    fg: "var(--tint-national-fg)",
-  },
-}
-
 /** Where someone who already holds the role goes instead. */
-const ROLE_HOME: Record<ApplicationRole, { href: string; label: string }> = {
-  wiki_editor: {
-    href: "/contribute/knowledge",
-    label: "Open the Knowledge editor",
-  },
-  journal_editor: {
-    href: "/contribute/knowledge?type=journal",
-    label: "Open the Journal editor",
-  },
-  moderator: { href: "/moderation", label: "Go to Moderation" },
-}
 
 type StatusMeta = { label: string; icon: string; fg: string; bg: string }
-
-const PENDING_META: StatusMeta = {
-  label: "Waiting for review",
-  icon: "mdi:clock-outline",
-  fg: "var(--t-accent-primary-hover)",
-  bg: "var(--t-accent-chip)",
-}
-
-const STATUS_META: Record<string, StatusMeta> = {
-  draft: {
-    label: "Not sent yet",
-    icon: "mdi:file-document-edit-outline",
-    fg: T.ink.dim,
-    bg: T.bg.muted,
-  },
-  pending: PENDING_META,
-  needs_info: {
-    label: "Needs more information",
-    icon: "mdi:help-circle-outline",
-    fg: "var(--t-palette-amber-fg)",
-    bg: "var(--t-palette-amber-bg)",
-  },
-}
 
 const input: React.CSSProperties = {
   padding: "12px 16px",
@@ -214,7 +156,9 @@ function EligibilityCard({
 }: {
   readonly acceptedCount: number
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const eligible = acceptedCount >= ROLE_APPLICATION_MIN_ACCEPTED
   const shown = Math.min(acceptedCount, ROLE_APPLICATION_MIN_ACCEPTED)
@@ -228,10 +172,14 @@ function EligibilityCard({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h2 id="apply-eligibility" className="type-h2 m-0" style={cardTitle}>
-          Who can apply
+          {tStatic("contribute.who_can_apply")}
         </h2>
         {eligible ? (
-          <Badge label="You can apply" color="ok" icon="mdi:check" />
+          <Badge
+            label={tStatic("contribute.you_can_apply")}
+            color="ok"
+            icon="mdi:check"
+          />
         ) : (
           <Badge label={tUi("not_yet")} color="dim" icon="mdi:progress-clock" />
         )}
@@ -240,9 +188,9 @@ function EligibilityCard({
         className="mt-3 mb-5 text-base leading-[1.6]"
         style={{ color: T.ink.dim }}
       >
-        Editor and moderator roles go to people whose changes have already been
-        accepted by a reviewer. Any kind of change counts: records, photos,
-        sources or articles.
+        {tStatic(
+          "contribute.editor_and_moderator_roles_go_to_people_whose_changes_have_already_been_accepted_by_a_reviewer_any_k"
+        )}
       </p>
       <div className="mb-2 flex items-baseline justify-between gap-3 text-base">
         <span className="font-semibold" style={{ color: T.ink.base }}>
@@ -272,13 +220,15 @@ function EligibilityCard({
       </div>
       {eligible ? null : (
         <p className="mt-4 mb-0 text-base" style={{ color: T.ink.dim }}>
-          Keep contributing: corrections, new libraries and photos all count.{" "}
+          {tStatic(
+            "contribute.keep_contributing_corrections_new_libraries_and_photos_all_count"
+          )}{" "}
           <Link
             href="/contribute"
             className="font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            Go to Contribute
+            {tStatic("contribute.go_to_contribute")}
           </Link>
         </p>
       )}
@@ -296,7 +246,31 @@ function OpenApplication({
   readonly app: RoleApplicationSummary
   readonly locales: readonly LocaleOption[]
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const PENDING_META: StatusMeta = {
+    label: tStatic("contribute.waiting_for_review"),
+    icon: "mdi:clock-outline",
+    fg: "var(--t-accent-primary-hover)",
+    bg: "var(--t-accent-chip)",
+  }
+  const STATUS_META: Record<string, StatusMeta> = {
+    draft: {
+      label: tStatic("contribute.not_sent_yet"),
+      icon: "mdi:file-document-edit-outline",
+      fg: T.ink.dim,
+      bg: T.bg.muted,
+    },
+    pending: PENDING_META,
+    needs_info: {
+      label: tStatic("contribute.needs_more_information"),
+      icon: "mdi:help-circle-outline",
+      fg: "var(--t-palette-amber-fg)",
+      bg: "var(--t-palette-amber-bg)",
+    },
+  }
+
+  const tUi = useTranslations("ui")
 
   const status = STATUS_META[app.status] ?? PENDING_META
 
@@ -306,7 +280,7 @@ function OpenApplication({
       style={{ border: `1px solid ${T.border.line}`, background: T.bg.surface }}
     >
       <p className="m-0 text-base font-semibold" style={{ color: T.ink.base }}>
-        You already have an application for this role.
+        {tStatic("contribute.you_already_have_an_application_for_this_role")}
       </p>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span style={{ color: T.ink.base }}>
@@ -334,7 +308,9 @@ function OpenApplication({
           className="m-0 text-base leading-[1.55]"
           style={{ color: T.ink.base }}
         >
-          <span style={{ color: T.ink.dim }}>Moderator’s question: </span>
+          <span style={{ color: T.ink.dim }}>
+            {tStatic("contribute.moderator_s_question")}{" "}
+          </span>
           {app.reviewNote}
         </p>
       ) : null}
@@ -362,14 +338,21 @@ function AcceptedList({
   readonly total: number
   readonly username: string | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   return (
     <div className="flex flex-col gap-2">
       <p className={legendClass} style={{ color: T.ink.base }}>
-        Your accepted changes<Tag>Attached automatically</Tag>
+        {tStatic("contribute.your_accepted_changes")}
+        <Tag>{tStatic("contribute.attached_automatically")}</Tag>
       </p>
       {accepted.length === 0 ? (
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          None yet. Your accepted changes will be attached here.
+          {tStatic(
+            "contribute.none_yet_your_accepted_changes_will_be_attached_here"
+          )}
         </p>
       ) : (
         <ul
@@ -419,7 +402,8 @@ function AcceptedList({
           className="self-start text-sm underline underline-offset-[3px]"
           style={linkStyle}
         >
-          See all {total} on your profile
+          {tExisting("contributionDrawer.seeAll")} {total}{" "}
+          {tStatic("contribute.on_your_profile")}
         </Link>
       ) : null}
     </div>
@@ -461,7 +445,54 @@ export function RoleApplicationForm({
   readonly held: HeldRoles
   readonly guidelines: { editor: string; moderator: string }
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+  const ROLE_CARD: Record<
+    ApplicationRole,
+    { hint: string; icon: string; bg: string; fg: string }
+  > = {
+    wiki_editor: {
+      hint: tStatic(
+        "contribute.your_approved_knowledge_edits_and_translations_publish"
+      ),
+      icon: "mdi:book-open-page-variant-outline",
+      bg: "var(--tint-academic-bg)",
+      fg: "var(--tint-academic-fg)",
+    },
+    journal_editor: {
+      hint: tStatic(
+        "contribute.your_approved_journal_articles_and_edits_publish"
+      ),
+      icon: "mdi:newspaper-variant-outline",
+      bg: "var(--tint-special-bg)",
+      fg: "var(--tint-special-fg)",
+    },
+    moderator: {
+      hint: tStatic(
+        "contribute.review_submissions_in_a_queue_and_language_you_choose"
+      ),
+      icon: "mdi:shield-check-outline",
+      bg: "var(--tint-national-bg)",
+      fg: "var(--tint-national-fg)",
+    },
+  }
+  const ROLE_HOME: Record<ApplicationRole, { href: string; label: string }> = {
+    wiki_editor: {
+      href: "/contribute/knowledge",
+      label: tStatic("contribute.open_the_knowledge_editor"),
+    },
+    journal_editor: {
+      href: "/contribute/knowledge?type=journal",
+      label: tStatic("contribute.open_the_journal_editor"),
+    },
+    moderator: {
+      href: "/moderation",
+      label: tStatic("contribute.go_to_moderation"),
+    },
+  }
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const ids = useId()
   const [role, setRole] = useState<ApplicationRole>(initialRole)
@@ -606,7 +637,9 @@ export function RoleApplicationForm({
   }
 
   const statementLength = statement.trim().length
-  const reviewer = isModerator ? "The editorial board" : "A moderator"
+  const reviewer = isModerator
+    ? tExisting("moderationWorkspace.guides.board")
+    : "A moderator"
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:gap-6">
@@ -631,7 +664,7 @@ export function RoleApplicationForm({
               className="type-h2 m-0 outline-none"
               style={cardTitle}
             >
-              Thanks. We’ve got your application.
+              {tStatic("contribute.thanks_we_ve_got_your_application")}
             </h2>
             <p
               className="m-0 text-base leading-[1.6]"
@@ -659,7 +692,7 @@ export function RoleApplicationForm({
                 cursor: "pointer",
               }}
             >
-              Back to the form
+              {tStatic("contribute.back_to_the_form")}
             </button>
           </section>
         ) : (
@@ -675,7 +708,7 @@ export function RoleApplicationForm({
               className="type-h2 m-0 mb-6"
               style={cardTitle}
             >
-              Your application
+              {tStatic("contribute.your_application")}
             </h2>
 
             <fieldset
@@ -687,7 +720,8 @@ export function RoleApplicationForm({
                   className={`${legendClass} mb-3`}
                   style={{ color: T.ink.base }}
                 >
-                  Role<Tag>{tUi("required")}</Tag>
+                  {tStatic("common.role")}
+                  <Tag>{tUi("required")}</Tag>
                 </legend>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {APPLICATION_ROLES.map((r) => {
@@ -713,10 +747,11 @@ export function RoleApplicationForm({
               {isModerator ? (
                 <fieldset className="m-0 min-w-0 border-0 p-0">
                   <legend className={legendClass} style={{ color: T.ink.base }}>
-                    Queue you’d review<Tag>{tUi("required")}</Tag>
+                    {tStatic("contribute.queue_you_d_review")}
+                    <Tag>{tUi("required")}</Tag>
                   </legend>
                   <p className={hintClass} style={{ color: T.ink.dim }}>
-                    You can ask for another queue later.
+                    {tStatic("contribute.you_can_ask_for_another_queue_later")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {APPLICATION_QUEUES.map((q) => (
@@ -779,7 +814,7 @@ export function RoleApplicationForm({
                       title={`You already ${isModerator ? "review" : "edit"} in ${languagesLabel(heldSome, locales)}.`}
                     >
                       <p className="m-0" style={{ color: T.ink.base }}>
-                        Apply to add another language.
+                        {tStatic("contribute.apply_to_add_another_language")}
                       </p>
                     </Notice>
                   ) : null}
@@ -829,7 +864,9 @@ export function RoleApplicationForm({
                       {initialLocales.length > 0
                         ? "Taken from your profile. "
                         : ""}
-                      Choose “Any language” if you’re not sure.
+                      {tStatic(
+                        "contribute.choose_any_language_if_you_re_not_sure"
+                      )}
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <Chip
@@ -838,7 +875,7 @@ export function RoleApplicationForm({
                         checked={chosenLocales.length === 0}
                         onChange={() => setChosenLocales([])}
                       >
-                        Any language
+                        {tStatic("contribute.any_language")}
                       </Chip>
                       {locales.map((l) => (
                         <Chip
@@ -861,7 +898,7 @@ export function RoleApplicationForm({
                         className={legendClass}
                         style={{ color: T.ink.base }}
                       >
-                        Why you’re applying
+                        {tStatic("contribute.why_you_re_applying")}
                         <Tag>{tUi("required")}</Tag>
                       </label>
                       <span
@@ -874,7 +911,8 @@ export function RoleApplicationForm({
                               : T.ink.dim,
                         }}
                       >
-                        {statementLength.toLocaleString("en-GB")} of{" "}
+                        {statementLength.toLocaleString("en-GB")}{" "}
+                        {tExisting("widgetPublic.of")}{" "}
                         {APPLICATION_STATEMENT_MAX.toLocaleString("en-GB")}
                       </span>
                     </div>
@@ -914,7 +952,7 @@ export function RoleApplicationForm({
                       className={`${legendClass} mb-2`}
                       style={{ color: T.ink.base }}
                     >
-                      Other samples of your work
+                      {tStatic("contribute.other_samples_of_your_work")}
                       <Tag>Optional, up to {APPLICATION_SAMPLES_MAX}</Tag>
                     </legend>
                     <div className="flex flex-col gap-2">
@@ -948,7 +986,7 @@ export function RoleApplicationForm({
                         }}
                       >
                         <Icon aria-hidden="true" icon="mdi:plus" width={16} />
-                        Add another link
+                        {tStatic("contribute.add_another_link")}
                       </button>
                     ) : null}
                   </fieldset>

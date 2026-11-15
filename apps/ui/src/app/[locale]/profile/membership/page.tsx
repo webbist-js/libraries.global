@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { createProfileDrawerRoute } from "@/lib/profile-route-redirect"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -9,4 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title"), robots: { index: false, follow: false } }
 }
 
-export default createProfileDrawerRoute("membership")
+export default withMessages(
+  createProfileDrawerRoute("membership"),
+  "[locale]/profile/membership/page"
+)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
+import { BETA_COOKIE } from "@/lib/beta/access"
 import { MOBILE_BETA_COOKIE } from "@/lib/mobile-app"
 import proxy from "@/proxy"
 
@@ -59,53 +59,19 @@ describe("mobile proxy integration", () => {
     expect(response.headers.get("cache-control")).toBe("no-store")
     expect(response.headers.get("x-robots-tag")).toBe("noindex, nofollow")
   })
-  it("sends beta-locked mobile navigation to the main-site entrance with a bounded continuation", async () => {
+  it("ignores old beta flags and cookies without granting account access", async () => {
     vi.stubEnv("BETA_GATE_ENABLED", "true")
     const response = await proxy(req(`/fr/${ID}`))
-    const url = new URL(response.headers.get("location")!)
-    expect(url.origin).toBe("https://libraries.global")
-    expect(url.pathname).toBe("/fr/auth/mobile")
-    expect(url.searchParams.get("next")).toBe(`/fr/${ID}`)
-    expect((await proxy(req("/api/mobile/live/start"))).status).toBe(401)
-  })
-  it("shares only verified, unexpired beta grants and checks revocation again on the mobile host", async () => {
-    vi.stubEnv("BETA_GATE_ENABLED", "true")
-    access.mockResolvedValue(true)
-    const pass = createBetaPass({
-      invitationId: ID,
-      expiresAt: Date.now() + 3600000,
-    })
-    const response = await proxy(
+    expect(response.headers.get("x-middleware-rewrite")).toContain(
+      `/fr/live/${ID}`
+    )
+    const main = await proxy(
       req("/auth/mobile", "libraries.global", {
-        cookie: `${BETA_COOKIE}=${pass}`,
+        cookie: `${BETA_COOKIE}=retired`,
       })
     )
-    const cookie = response.cookies.get(MOBILE_BETA_COOKIE)!
-    expect(cookie).toMatchObject({
-      value: pass,
-      domain: "libraries.global",
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-    })
-    expect(cookie.maxAge).toBeLessThanOrEqual(3600)
-    const mobile = await proxy(
-      req("/", "mobile.libraries.global", {
-        cookie: `${MOBILE_BETA_COOKIE}=${pass}`,
-      })
-    )
-    expect(access).toHaveBeenLastCalledWith(pass)
-    expect(mobile.headers.get("x-middleware-rewrite")).toContain("/en/live")
-    access.mockResolvedValue(false)
-    expect(
-      (
-        await proxy(
-          req("/", "mobile.libraries.global", {
-            cookie: `${MOBILE_BETA_COOKIE}=${pass}`,
-          })
-        )
-      ).headers.get("location")
-    ).toContain("libraries.global/auth/mobile")
+    expect(main.cookies.get(MOBILE_BETA_COOKIE)).toBeUndefined()
+    expect(access).not.toHaveBeenCalled()
   })
   it("never rewrites live API requests into pages or serves main-site pages on mobile", async () => {
     const response = await proxy(req("/api/mobile/live/start"))
@@ -134,14 +100,7 @@ describe("Knowledge Markdown routing", () => {
     }
   )
 
-  it("runs beta and staging access checks before Markdown rewrites", async () => {
-    vi.stubEnv("BETA_GATE_ENABLED", "true")
-    const locked = await proxy(
-      req("/knowledge/data-api/guide.md", "libraries.global")
-    )
-    expect(locked.status).toBe(401)
-    expect(locked.headers.has("x-middleware-rewrite")).toBe(false)
-    vi.stubEnv("BETA_GATE_ENABLED", "false")
+  it("runs staging access checks before Markdown rewrites", async () => {
     vi.stubEnv("BASIC_AUTH_ENABLED", "true")
     stagingAuth.mockReturnValue(
       new NextResponse("Authentication required", { status: 401 })

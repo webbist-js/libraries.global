@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { GAPS, type GapKey } from "@repo/shared-data"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -107,6 +107,8 @@ function CountryChoices({
   readonly choices: AtlasCountryOption[]
   readonly onPick: (slug: string) => void
 }) {
+  const tExisting = useTranslations()
+
   return (
     <div className="grid gap-4 p-[18px] text-sm">
       <p className="m-0 text-base leading-relaxed">
@@ -123,7 +125,8 @@ function CountryChoices({
             >
               {choice.name}
               <span className="text-sm font-normal text-(--t-ink-dim)">
-                {number(choice.libraries)} libraries
+                {number(choice.libraries)}{" "}
+                {tExisting("widgetPublic.libraries_lower")}
               </span>
             </button>
           </li>
@@ -176,10 +179,15 @@ function PopulationNote({
   readonly stored: Population | null | undefined
   readonly population: number | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (stored?.source)
     return (
       <p className="m-0 text-xs text-(--t-ink-dim)">
-        Population {stored.year ? `${stored.year}, ` : ""}
+        {tExisting("atlasDrawers.population")}{" "}
+        {stored.year ? `${stored.year}, ` : ""}
         <SourceName name={stored.source} url={stored.sourceUrl} />
         {stored.licence ? ` · ${stored.licence}` : ""}
       </p>
@@ -188,7 +196,7 @@ function PopulationNote({
 
   return (
     <p className="m-0 text-xs text-(--t-ink-dim)">
-      Population: World Bank, CC BY 4.0
+      {tStatic("atlas.population_world_bank_cc_by_4_0")}
     </p>
   )
 }
@@ -235,6 +243,8 @@ function CountryActions({
   readonly onShow: () => void
   readonly onClearFilter: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <div className="flex flex-wrap gap-2">
       {filtered ? (
@@ -244,7 +254,7 @@ function CountryActions({
           className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 font-semibold"
         >
           <Icon aria-hidden icon="mdi:close" width={16} />
-          Show every country
+          {tStatic("atlas.show_every_country")}
         </button>
       ) : (
         <button
@@ -253,7 +263,7 @@ function CountryActions({
           className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-(--t-action-primary) px-4 font-semibold text-white"
         >
           <Icon aria-hidden icon="mdi:filter-variant" width={16} />
-          Show only these libraries
+          {tStatic("atlas.show_only_these_libraries")}
         </button>
       )}
       {placeHref ? (
@@ -261,7 +271,7 @@ function CountryActions({
           href={placeHref}
           className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-(--t-border-line) px-4 font-semibold text-(--t-ink-base) no-underline hover:bg-(--t-bg-surface)"
         >
-          Country page
+          {tStatic("common.countryPage")}
           <Icon aria-hidden icon="mdi:arrow-top-right" width={15} />
         </GlobalLink>
       ) : null}
@@ -270,13 +280,15 @@ function CountryActions({
 }
 
 function TypesSection({ data }: { readonly data: AtlasCountryDetail }) {
+  const tStatic = useTranslations("staticUi")
+
   const types = [...(data.libraryTypeCounts ?? [])].sort(
     (a, b) => b.count - a.count
   )
   if (!types.length) return null
 
   return (
-    <Section title="By library type">
+    <Section title={tStatic("atlas.by_library_type")}>
       <Bars
         total={types[0]!.count}
         rows={types
@@ -313,10 +325,12 @@ function RegionsSection({
   readonly data: AtlasCountryDetail
   readonly placeHref: string | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!data.regions.length) return null
 
   return (
-    <Section title="Regions with the most libraries">
+    <Section title={tStatic("atlas.regions_with_the_most_libraries")}>
       <Bars
         total={data.regions[0]!.libraryCount}
         rows={data.regions.slice(0, 6).map((region) => ({
@@ -335,7 +349,7 @@ function RegionsSection({
           href={placeHref}
           className="w-fit text-sm font-semibold text-(--t-accent-primary) underline underline-offset-2"
         >
-          All {number(data.regionCount)} regions
+          {tStatic("common.all")} {number(data.regionCount)} regions
         </GlobalLink>
       ) : null}
     </Section>
@@ -363,17 +377,21 @@ function SourceRow({ source }: { readonly source: Source }) {
 }
 
 function SourcesSection({ data }: { readonly data: AtlasCountryDetail }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!data.sources.length && !data.community) return null
 
   return (
-    <Section title="Where the records come from">
+    <Section title={tStatic("atlas.where_the_records_come_from")}>
       <ul className="m-0 grid list-none gap-2 p-0">
         {data.sources.map((source) => (
           <SourceRow key={source.key} source={source} />
         ))}
         {data.community ? (
           <li className="flex items-start justify-between gap-3">
-            <span className="font-semibold">Added by contributors</span>
+            <span className="font-semibold">
+              {tStatic("atlas.added_by_contributors")}
+            </span>
             <span className="shrink-0 text-(--t-ink-dim) tabular-nums">
               {number(data.community)}
             </span>
@@ -391,6 +409,10 @@ function GapsSection({
   readonly data: AtlasCountryDetail
   readonly country: AtlasCountryOption
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const gaps = GAP_ORDER.flatMap((key) => {
     const count = data.gaps[key] ?? 0
 
@@ -399,11 +421,13 @@ function GapsSection({
   if (!gaps.length) return null
 
   return (
-    <Section title="Help fill the gaps">
+    <Section title={tStatic("atlas.help_fill_the_gaps")}>
       <ul className="m-0 grid list-none gap-1.5 p-0">
         {gaps.map((gap) => (
           <li key={gap.key} className="flex items-center justify-between gap-3">
-            <span>Missing {GAP_LABEL.get(gap.key)?.toLowerCase()}</span>
+            <span>
+              {tStatic("atlas.missing")} {GAP_LABEL.get(gap.key)?.toLowerCase()}
+            </span>
             <span className="text-(--t-ink-dim) tabular-nums">
               {number(gap.count)}
             </span>
@@ -418,7 +442,7 @@ function GapsSection({
           })}
           className={ghostPill}
         >
-          Propose a drive
+          {tExisting("dashboard.proposeDrive")}
         </GlobalLink>
         <GlobalLink
           href={placeAddHref({
@@ -427,7 +451,7 @@ function GapsSection({
           })}
           className={ghostPill}
         >
-          Add a missing library
+          {tExisting("libraryPage.addLibrary")}
         </GlobalLink>
       </div>
     </Section>
@@ -448,23 +472,27 @@ function CountryBreakdown({
   readonly placeHref: string | null
   readonly onRetry: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   if (failed)
     return (
       <p role="alert" className="m-0">
-        The breakdown didn’t load.{" "}
+        {tStatic("atlas.the_breakdown_didn_t_load")}{" "}
         <button
           type="button"
           onClick={onRetry}
           className="cursor-pointer font-semibold text-(--t-accent-primary) underline"
         >
-          Try again
+          {tExisting("ui.try_again")}
         </button>
       </p>
     )
   if (!data)
     return (
       <p role="status" className="m-0 text-(--t-ink-dim)">
-        Loading the breakdown…
+        {tStatic("atlas.loading_the_breakdown")}
       </p>
     )
 
@@ -500,6 +528,8 @@ export function AtlasCountryPanel({
   readonly onClearFilter: () => void
   readonly onPick: (slug: string) => void
 }) {
+  const tExisting = useTranslations()
+
   const locale = useLocale()
   const slug = country?.slug ?? null
   const [state, setState] = useState<{
@@ -546,7 +576,7 @@ export function AtlasCountryPanel({
             {flag(country.iso2)}
           </span>
         ) : null}
-        {data?.continent?.name ?? "Country"}
+        {data?.continent?.name ?? tExisting("ui.country")}
       </p>
 
       <CountryStats

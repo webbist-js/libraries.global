@@ -7,6 +7,7 @@ import { use } from "react"
 import { CountryDetailPage } from "@/components/country/CountryDetailPage"
 import { placeLabels } from "@/components/location/location-page.helpers"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { drivesHere } from "@/lib/drives/drives-here-server"
 import { isDevelopment } from "@/lib/general-helpers"
 import { placeGapInsights } from "@/lib/place-insights-server"
@@ -83,7 +84,7 @@ export async function generateStaticParams({
     .map((c) => ({ continent: c.continent!.slug, country: c.slug }))
 }
 
-export default function CountryPage(props: {
+function CountryPage(props: {
   params: Promise<{ locale: string; continent: string; country: string }>
 }) {
   const params = use(props.params)
@@ -153,3 +154,8 @@ export default function CountryPage(props: {
     </>
   )
 }
+
+export default withMessages(
+  CountryPage,
+  "[locale]/(dashboard)/[continent]/[country]/page"
+)

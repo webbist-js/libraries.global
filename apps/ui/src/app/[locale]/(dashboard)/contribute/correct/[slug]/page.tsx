@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { privateMetadata } from "@/lib/seo/metadata"
 
@@ -8,7 +9,7 @@ import { CorrectLibraryForm } from "./_components/CorrectLibraryForm"
 
 export const metadata = privateMetadata("Suggest a correction")
 
-export default async function CorrectLibraryPage({
+async function CorrectLibraryPage({
   params,
   searchParams,
 }: {
@@ -36,3 +37,8 @@ export default async function CorrectLibraryPage({
     />
   )
 }
+
+export default withMessages(
+  CorrectLibraryPage,
+  "[locale]/(dashboard)/contribute/correct/[slug]/page"
+)

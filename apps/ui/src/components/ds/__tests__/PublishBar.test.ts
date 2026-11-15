@@ -1,10 +1,24 @@
 // @vitest-environment happy-dom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { createTranslator } from "next-intl"
+import type * as NextIntl from "next-intl"
 import * as React from "react"
 import { createElement as h } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import en from "../../../../locales/en"
+
 Object.assign(globalThis, { React })
+
+vi.mock("next-intl", async (original) => ({
+  ...(await original<typeof NextIntl>()),
+  useTranslations: () =>
+    createTranslator({
+      locale: "en",
+      messages: en,
+      namespace: "sharedControls.publish",
+    }),
+}))
 
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 

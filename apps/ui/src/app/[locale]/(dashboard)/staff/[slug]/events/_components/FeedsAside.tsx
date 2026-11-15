@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 
@@ -27,6 +28,8 @@ const ASIDE_STEPS = [
 
 /** How feed connections work, for the dashboard's sidebar. */
 export function FeedsAside() {
+  const tStatic = useTranslations("staticUi")
+
   return (
     <aside aria-labelledby="event-feed-aside-heading" className="min-w-0">
       <div
@@ -45,7 +48,7 @@ export function FeedsAside() {
             margin: 0,
           }}
         >
-          How feed connections work
+          {tStatic("staffRoute.how_feed_connections_work")}
         </h2>
         <ol className="m-0 flex list-none flex-col gap-4 p-0">
           {ASIDE_STEPS.map((step) => (
@@ -94,8 +97,9 @@ export function FeedsAside() {
             paddingTop: "16px",
           }}
         >
-          Only Libraries Global staff can read stored details. Every access is
-          logged.
+          {tStatic(
+            "staffRoute.only_libraries_global_staff_can_read_stored_details_every_access_is_logged"
+          )}
         </p>
       </div>
     </aside>

@@ -1,4 +1,5 @@
 "use client"
+import { useTranslations } from "next-intl"
 
 import { FIELD } from "@/components/contribute/wizard-ui"
 import { longDate } from "@/components/drives/focus-meta"
@@ -128,6 +129,8 @@ export function VerifyFields({
   readonly problemField: "sections" | "source" | null
   readonly idPrefix: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const problemId = `${idPrefix}-problem`
 
   const toggle = (section: VerifySection, on: boolean) =>
@@ -145,11 +148,11 @@ export function VerifyFields({
           className="mb-2.5 p-0 text-base font-semibold"
           style={{ color: T.ink.base }}
         >
-          What did you check?
+          {tStatic("library.what_did_you_check")}
         </legend>
         {available.length === 0 ? (
           <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-            There’s nothing on this record to confirm yet.
+            {tStatic("library.there_s_nothing_on_this_record_to_confirm_yet")}
           </p>
         ) : null}
         {available.map((s) => (
@@ -171,9 +174,9 @@ export function VerifyFields({
           htmlFor={`${idPrefix}-source`}
           style={{ color: T.ink.base }}
         >
-          Where did you check?{" "}
+          {tStatic("library.where_did_you_check")}{" "}
           <span className="font-normal" style={{ color: T.ink.dim }}>
-            A link to the page
+            {tStatic("library.a_link_to_the_page")}
           </span>
         </label>
         <input
@@ -202,7 +205,7 @@ export function VerifyFields({
           style={{ accentColor: "var(--t-accent-primary)" }}
           type="checkbox"
         />
-        <span>I checked in person</span>
+        <span>{tStatic("library.i_checked_in_person")}</span>
       </label>
 
       {problem ? (

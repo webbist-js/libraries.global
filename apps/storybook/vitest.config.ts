@@ -14,13 +14,19 @@ export default defineConfig({
     name: "storybook",
     maxWorkers: 1,
     fileParallelism: false,
+    setupFiles: ["./.storybook/collect-retired-frames.ts"],
     browser: {
       enabled: true,
       headless: true,
       provider: playwright({
         // Real map/globe rendering also runs on CI hosts without a GPU.
         launchOptions: {
-          args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+          args: [
+            "--use-angle=swiftshader",
+            "--enable-unsafe-swiftshader",
+            // Lets the setup file reclaim retired story frames between files.
+            "--js-flags=--expose-gc",
+          ],
         },
         contextOptions: {
           colorScheme:

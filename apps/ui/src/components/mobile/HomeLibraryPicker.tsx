@@ -1,5 +1,5 @@
 "use client"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { fieldInputStyle } from "@/components/library-editor/wizard.constants"
@@ -27,7 +27,11 @@ export function HomeLibraryPicker({
   readonly value: string
   readonly onChange: (id: string, home?: HomeLibraryHit) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [query, setQuery] = useState(""),
     [hits, setHits] = useState<Hit[]>([]),
@@ -72,7 +76,7 @@ export function HomeLibraryPicker({
   return (
     <div className="space-y-2">
       <label htmlFor={id} className="block font-semibold">
-        Based at (optional)
+        {tStatic("mobile.based_at_optional")}
       </label>
       {value ? (
         <div
@@ -92,7 +96,7 @@ export function HomeLibraryPicker({
               setSelected(null)
             }}
           >
-            Change
+            {tExisting("atlasNetwork.changeService")}
           </button>
         </div>
       ) : (
@@ -135,7 +139,7 @@ export function HomeLibraryPicker({
               className="m-0 text-sm"
               style={{ color: T.ink.dim }}
             >
-              Searching…
+              {tExisting("siteSearch.loading")}
             </p>
           )}
           {error && (
@@ -150,8 +154,9 @@ export function HomeLibraryPicker({
         </>
       )}
       <p className="text-sm" style={{ color: T.ink.dim }}>
-        The selected branch supplies the home base address and location. Without
-        a branch, add the depot address below.
+        {tStatic(
+          "mobile.the_selected_branch_supplies_the_home_base_address_and_location_without_a_branch_add_the_depot_addre"
+        )}
       </p>
     </div>
   )

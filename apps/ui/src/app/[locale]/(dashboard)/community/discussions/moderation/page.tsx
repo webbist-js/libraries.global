@@ -1,9 +1,10 @@
 import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { redirect } from "@/lib/navigation"
 
 /** Direct discussion review links into the standalone moderation workspace. */
-export default async function DiscussionModerationRedirect({
+async function DiscussionModerationRedirect({
   params,
 }: {
   params: Promise<{ locale: string }>
@@ -14,3 +15,8 @@ export default async function DiscussionModerationRedirect({
     locale: isSupportedLocale(locale) ? locale : DEFAULT_LOCALE,
   })
 }
+
+export default withMessages(
+  DiscussionModerationRedirect,
+  "[locale]/(dashboard)/community/discussions/moderation/page"
+)

@@ -80,7 +80,7 @@ describe("widget framing", () => {
         .created
     ).toMatch(/^[a-f0-9]{32}$/)
   })
-  it("preserves the beta gate for iframe pages, resize helper and reports", () => {
+  it("keeps iframe pages, resize helper and reports public despite retired beta flags", () => {
     vi.stubEnv("BETA_GATE_ENABLED", "true")
     for (const path of [
       `/embed/w/${publicId}`,
@@ -89,7 +89,7 @@ describe("widget framing", () => {
     ])
       expect(
         betaGate(new NextRequest(`https://libraries.example${path}`))
-      ).not.toBeNull()
+      ).toBeNull()
   })
   it("escapes copied markup and includes a fallback outside the iframe", () => {
     const config = {

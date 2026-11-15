@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
-import { act, cleanup, render, screen } from "@testing-library/react"
+import { act, cleanup, screen } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, expect, it, vi } from "vitest"
 
 import { LibraryHomePage } from "@/components/home/LibraryHomePage"
+import { render } from "@/test/render"
 
 const data = vi.hoisted(() => ({
   homepage: Promise.resolve<unknown>(null),

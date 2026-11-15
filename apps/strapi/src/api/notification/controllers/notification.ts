@@ -38,9 +38,9 @@ export default {
       return ctx.send(await runNetworkFulfilmentJob(strapi))
     const service = strapi.service(UID)
     if (action === "betaInvites") {
-      await strapi.plugin("beta-invites").service("invites").prune()
+      ctx.status = 410
 
-      return ctx.send(await service.deliver(new Date(), "beta_invitation"))
+      return ctx.send({ error: "Beta invitations are retired" })
     }
     if (action === "status") {
       const counts: Record<string, number> = {}

@@ -7,7 +7,7 @@ import {
   type FeedTestCode,
 } from "@repo/shared-data"
 import { useRouter } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useRef, useState } from "react"
 
@@ -67,7 +67,9 @@ export function FeedRow({
   readonly librarySlug: string | null
   readonly libraryName: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const providerDef = EVENT_PROVIDERS[feed.provider]
@@ -254,7 +256,7 @@ export function FeedRow({
                   className={SECONDARY_PILL}
                   style={secondaryPillStyle}
                 >
-                  Replace details
+                  {tStatic("frontendExtra.replace_details")}
                 </GlobalLink>
               )}
             {feed.status === "active" && (
@@ -286,7 +288,7 @@ export function FeedRow({
               disabled={busy !== null}
               onClick={() => dialogRef.current?.showModal()}
             >
-              Disconnect
+              {tStatic("common.disconnect")}
             </button>
           </div>
         )}
@@ -301,7 +303,7 @@ export function FeedRow({
             margin: 0,
           }}
         >
-          Managed by Libraries Global.
+          {tStatic("frontendExtra.managed_by_libraries_global")}
         </p>
       ) : (
         <>
@@ -334,7 +336,7 @@ export function FeedRow({
             <Notice
               icon="mdi:message-alert-outline"
               tone="warn"
-              title="A moderator asked for changes"
+              title={tStatic("frontendExtra.a_moderator_asked_for_changes")}
             >
               <p className="m-0">{feed.review.note}</p>
             </Notice>
@@ -420,7 +422,7 @@ export function FeedRow({
                   className="inline-flex min-h-11 items-center rounded-full bg-(--t-action-danger) px-5 text-sm font-semibold text-white"
                   onClick={disconnect}
                 >
-                  Disconnect
+                  {tStatic("common.disconnect")}
                 </button>
               </div>
             </div>

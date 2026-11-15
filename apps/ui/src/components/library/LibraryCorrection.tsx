@@ -1,6 +1,6 @@
 "use client"
-
 import dynamic from "next/dynamic"
+import { useTranslations } from "next-intl"
 import {
   createContext,
   type ReactNode,
@@ -26,6 +26,16 @@ import type { WizardDraftState } from "@/components/library-editor/wizard.types"
 import { pushAnalyticsEvent } from "@/lib/analytics-events"
 import { T } from "@/lib/design-tokens"
 
+function EditorLoading() {
+  const t = useTranslations("libraryExtra")
+
+  return (
+    <p role="status" className="p-6">
+      {t("loadingEditor")}
+    </p>
+  )
+}
+
 const LibraryContributionEditor = dynamic(
   () =>
     import("@/components/library/LibraryContributionEditor").then(
@@ -33,11 +43,7 @@ const LibraryContributionEditor = dynamic(
     ),
   {
     ssr: false,
-    loading: () => (
-      <p role="status" className="p-6">
-        Loading the editor…
-      </p>
-    ),
+    loading: EditorLoading,
   }
 )
 
@@ -69,7 +75,6 @@ const VERIFY_META = {
   icon: "mdi:check-decagram-outline",
   tintBg: "var(--tint-public-bg)",
   tintFg: "var(--tint-public-fg)",
-  title: "Still right?",
 }
 
 function CorrectionDrawer({
@@ -89,17 +94,26 @@ function CorrectionDrawer({
   readonly state: NonNullable<DrawerState>
   readonly onClose: () => void
 }) {
+  const tActions = useTranslations("contributeActions")
+
+  const tStatic = useTranslations("staticUi")
+
   const verify = "verify" in state ? state.verify : null
   const meta = verify
-    ? VERIFY_META
-    : { ...actionMeta("correction"), title: "Improve this library" }
+    ? { ...VERIFY_META, title: tStatic("common.stillRight") }
+    : {
+        ...actionMeta("correction", tActions),
+        title: tStatic("library.improve_this_library"),
+      }
   const editorState = useRef<WizardDraftState | null>(null)
   const trackState = useCallback((value: WizardDraftState) => {
     editorState.current = value
   }, [])
   const requestClose = () => {
     if (editorState.current?.saving) {
-      toast.info("Your draft is still saving. Please wait before closing.")
+      toast.info(
+        tStatic("library.your_draft_is_still_saving_please_wait_before_closing")
+      )
 
       return
     }

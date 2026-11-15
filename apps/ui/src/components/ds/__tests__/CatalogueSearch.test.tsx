@@ -1,11 +1,19 @@
 // @vitest-environment happy-dom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { createTranslator } from "next-intl"
+import type * as NextIntl from "next-intl"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { CatalogueSearch } from "@/components/ds/CatalogueSearch"
 
+import en from "../../../../locales/en"
+
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
-vi.mock("next-intl", () => ({ useTranslations: () => String }))
+vi.mock("next-intl", async (original) => ({
+  ...(await original<typeof NextIntl>()),
+  useTranslations: (namespace: "ui" | "catalogueSearch") =>
+    createTranslator({ locale: "en", messages: en, namespace }),
+}))
 afterEach(cleanup)
 const option = { documentId: "north", name: "North Library Service" }
 

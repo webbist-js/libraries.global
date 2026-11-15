@@ -6,6 +6,7 @@ import type { Locale } from "next-intl"
 import { BetaFooter } from "@/components/beta/BetaFooter"
 import LegalDocumentPage from "@/components/legal/LegalDocumentPage"
 import { JsonLd } from "@/components/seo/JsonLd"
+import { withMessages } from "@/i18n/scoped-messages"
 import { BETA_LEGAL_SLUG } from "@/lib/beta/scope"
 import { buildBreadcrumbSchema } from "@/lib/seo/json-ld"
 import { absoluteUrl, buildMetadata, SITE_NAME } from "@/lib/seo/metadata"
@@ -45,7 +46,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function LegalDocumentRoute({
+async function LegalDocumentRoute({
   params,
 }: {
   params: Promise<{ locale: string; slug: string }>
@@ -85,3 +86,8 @@ export default async function LegalDocumentRoute({
 
   return content
 }
+
+export default withMessages(
+  LegalDocumentRoute,
+  "[locale]/(dashboard)/legal/[slug]/page"
+)

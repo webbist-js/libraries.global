@@ -1,28 +1,18 @@
-import {
-  createTranslator,
-  createFormatter,
-  type AbstractIntlMessages,
-} from "next-intl"
+import { createTranslator, createFormatter } from "next-intl"
 
-import { getFixtureLocale } from "../fixture-locale"
-
-import cs from "../../../ui/locales/cs.json"
-import en from "../../../ui/locales/en.json"
-import es from "../../../ui/locales/es.json"
-import fr from "../../../ui/locales/fr.json"
-
-const messages = { en, cs, es, fr }
+import { loadCatalogue } from "../catalogues"
+import { getFixtureLocale, type FixtureLocale } from "../fixture-locale"
 
 export async function getLocale() {
   return getFixtureLocale()
 }
 export async function getMessages({
   locale = getFixtureLocale(),
-}: { locale?: keyof typeof messages } = {}) {
-  return messages[locale]
+}: { locale?: FixtureLocale } = {}) {
+  return loadCatalogue(locale)
 }
 export async function getTranslations(
-  options?: string | { locale?: keyof typeof messages; namespace?: string }
+  options?: string | { locale?: FixtureLocale; namespace?: string }
 ) {
   const namespace = typeof options === "string" ? options : options?.namespace
   const locale =
@@ -32,7 +22,7 @@ export async function getTranslations(
 
   return createTranslator({
     locale,
-    messages: messages[locale] as AbstractIntlMessages,
+    messages: await loadCatalogue(locale),
     namespace,
   })
 }

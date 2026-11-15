@@ -1,4 +1,4 @@
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { AccountGuard } from "@/components/auth/AccountGuard"
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
@@ -6,6 +6,7 @@ import { builderStateFromPrefill } from "@/components/drives/builder.logic"
 import { DriveBuilder } from "@/components/drives/DriveBuilder"
 import { BOARD_FLOW, DriveFlowPills } from "@/components/drives/DriveFlowPills"
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { T } from "@/lib/design-tokens"
 import { drivePlaceRefs } from "@/lib/drives/drive-view"
@@ -22,14 +23,18 @@ export const metadata = privateMetadata("New drive")
  * A propose link's query (`propose-link.ts`) prefills it, so a board
  * member sent here from "Propose as a drive" keeps the gap and place.
  */
-export default async function NewDrivePage({
+async function NewDrivePage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const tUi = await getUiTranslations("ui")
+  const tStatic = await getTranslations("staticUi")
+
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
 
   const [{ locale }, sp] = await Promise.all([params, searchParams])
   const prefill = prefillFromParams(sp)
@@ -55,8 +60,10 @@ export default async function NewDrivePage({
             { label: tUi("drives"), href: "/community#drives" },
             { label: tUi("new_drive") },
           ]}
-          title="New drive"
-          lead="Create a drive for the community. Pick the job and the place, and the live preview shows what helpers will see."
+          title={tExisting("ui.new_drive")}
+          lead={tStatic(
+            "communityRoute.create_a_drive_for_the_community_pick_the_job_and_the_place_and_the_live_preview_shows_what_helpers_"
+          )}
           actions={<DriveFlowPills steps={BOARD_FLOW} />}
         />
         <MainContent className="mx-auto w-full max-w-[1360px] px-4 pt-8 pb-20 sm:px-8">
@@ -71,3 +78,8 @@ export default async function NewDrivePage({
     </AccountGuard>
   )
 }
+
+export default withMessages(
+  NewDrivePage,
+  "[locale]/(dashboard)/community/drives/new/page"
+)

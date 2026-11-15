@@ -1,5 +1,6 @@
 import { reviewCategoriesInScope } from "@repo/access"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import {
   type OptionSuggestion,
@@ -7,6 +8,7 @@ import {
 } from "@/components/moderation"
 import { ModerationWorkspaceNav } from "@/components/moderation/ModerationWorkspaceNav"
 import type { WorkspaceView } from "@/components/moderation/workspace"
+import { withMessages } from "@/i18n/scoped-messages"
 import type { SuggestionReviewRound } from "@/lib/community/suggestions"
 import { fetchOptionCatalogue } from "@/lib/community/suggestions-server"
 import { T } from "@/lib/design-tokens"
@@ -24,11 +26,13 @@ export const metadata = privateMetadata("Suggested additions")
  * whose scopes cover every queue in every language; Strapi additionally
  * requires an `editorial_board` Role Grant to list or decide.
  */
-export default async function OptionSuggestionsPage({
+async function OptionSuggestionsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const { locale } = await params
   const { user, scopes, accessUnknown } = await requireModerator(
     "/moderation/suggestions"
@@ -36,7 +40,7 @@ export default async function OptionSuggestionsPage({
   if (accessUnknown)
     return (
       <ModerationAccessUnavailable
-        title="Suggested *additions*"
+        title={tStatic("networkModeration.suggested_additions")}
         leaf="Suggested additions"
         path="/moderation/suggestions"
       />
@@ -79,9 +83,11 @@ export default async function OptionSuggestionsPage({
   return (
     <>
       <ModerationHero
-        title="Suggested *additions*"
+        title={tStatic("networkModeration.suggested_additions")}
         leaf="Suggested additions"
-        lead="Review community requests for new accessibility features, services, facilities and library types. Check new suggestions before publication, then explain what will be added."
+        lead={tStatic(
+          "networkModeration.review_community_requests_for_new_accessibility_features_services_facilities_and_library_types_"
+        )}
       />
       <div className="mx-auto grid w-full max-w-[1360px] gap-6 px-4 pt-8 pb-16 sm:px-8">
         <ModerationWorkspaceNav active="optionSuggestions" views={views} />
@@ -109,3 +115,8 @@ export default async function OptionSuggestionsPage({
     </>
   )
 }
+
+export default withMessages(
+  OptionSuggestionsPage,
+  "[locale]/(dashboard)/moderation/suggestions/page"
+)

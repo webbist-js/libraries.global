@@ -1,7 +1,7 @@
 "use client"
 
 import { Navigation, Search, X } from "lucide-react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { DEFAULT_FILTERS } from "@/components/library-index/types"
@@ -49,7 +49,11 @@ export function LibrarySearchBox({
   readonly strong?: boolean
   readonly className?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const locale = useLocale()
   const router = useRouter()
@@ -144,12 +148,18 @@ export function LibrarySearchBox({
   }
 
   const dropOpen = open && query.trim().length > 0
-  const nearLabel = locating ? "Locating…" : nearActive ? "Near you" : "Near me"
+  const nearLabel = locating
+    ? "Locating…"
+    : nearActive
+      ? "Near you"
+      : tStatic("common.nearMe")
 
   return (
     <div ref={containerRef} className={["relative", className].join(" ")}>
       <label htmlFor={id} className="sr-only">
-        Search libraries by name, city, region or country
+        {tStatic(
+          "profileIndex.search_libraries_by_name_city_region_or_country"
+        )}
       </label>
       <div
         className={[
@@ -278,7 +288,7 @@ export function LibrarySearchBox({
             <div className="px-3 py-3.5 text-base" style={{ color: T.ink.dim }}>
               Nothing matches &ldquo;{query}&rdquo; yet.{" "}
               <Link href="/contribute" style={{ color: T.accent.primary }}>
-                Add a missing library
+                {tExisting("libraryPage.addLibrary")}
               </Link>
             </div>
           ) : null}

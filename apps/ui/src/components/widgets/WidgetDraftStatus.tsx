@@ -1,5 +1,6 @@
 "use client"
 import type { TeamWidget } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import { Badge } from "@/components/ds/Badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,8 @@ export function WidgetDraftStatus({
   readonly state: ReturnType<typeof useWidgetDraft>
   readonly active: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const { widget, phase } = state
   const labels = {
     saving: "Saving draft…",
@@ -35,14 +38,14 @@ export function WidgetDraftStatus({
         color={widget.state === "live" ? "ok" : "dim"}
       />
       {widget.hasChanges ? (
-        <Badge label="Unpublished changes" color="warn" />
+        <Badge label={tStatic("widget.unpublished_changes")} color="warn" />
       ) : null}
       <span role="status" className="text-sm">
         {labels[phase]}
       </span>
       {phase === "failed" ? (
         <Button variant="surface" size="pill" onClick={() => state.save()}>
-          Retry save now
+          {tStatic("widget.retry_save_now")}
         </Button>
       ) : null}
     </div>

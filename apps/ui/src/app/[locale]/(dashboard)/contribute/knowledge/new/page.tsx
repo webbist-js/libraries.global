@@ -5,6 +5,7 @@ import { getTranslations as getUiTranslations } from "next-intl/server"
 
 import { isArticleKind } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionCapabilities } from "@/lib/access-server"
 import {
   fetchArticleLocales,
@@ -22,7 +23,7 @@ import { ContributeSectionHeader } from "../../_components/ContributeSectionHead
 export const metadata = privateMetadata("Write an article")
 export const dynamic = "force-dynamic"
 
-export default async function NewArticlePage({
+async function NewArticlePage({
   params,
   searchParams,
 }: {
@@ -107,3 +108,8 @@ export default async function NewArticlePage({
     </div>
   )
 }
+
+export default withMessages(
+  NewArticlePage,
+  "[locale]/(dashboard)/contribute/knowledge/new/page"
+)

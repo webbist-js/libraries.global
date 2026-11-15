@@ -3,6 +3,8 @@ import { fileURLToPath } from "node:url"
 import type { StorybookConfig } from "@storybook/nextjs-vite"
 import tailwindcss from "@tailwindcss/vite"
 
+import { mdiIcons } from "./mdi-icons"
+
 const ui = fileURLToPath(new URL("../../ui/", import.meta.url))
 const config: StorybookConfig = {
   stories: ["../stories/**/*.mdx", "../stories/**/*.stories.@(ts|tsx)"],
@@ -36,7 +38,18 @@ const config: StorybookConfig = {
         process.env.STORYBOOK_APPEARANCE === "dark" ? "dark" : "light"
       ),
     }
-    config.plugins = [...(config.plugins ?? []), tailwindcss()]
+    config.plugins = [
+      ...(config.plugins ?? []),
+      tailwindcss(),
+      mdiIcons(
+        [
+          "../../ui/src",
+          "../../../packages/shared-data",
+          "../stories",
+          ".",
+        ].map((directory) => fileURLToPath(new URL(directory, import.meta.url)))
+      ),
+    ]
     config.resolve ??= {}
     config.resolve.dedupe = [
       "react",

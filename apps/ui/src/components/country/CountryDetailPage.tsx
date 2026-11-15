@@ -1,5 +1,5 @@
 import type { Locale } from "next-intl"
-import { getTranslations as getUiTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordContextIdentity } from "@/components/dashboard/RecordContextIdentity"
@@ -75,8 +75,10 @@ export async function CountryDetailPage({
   gapRows?: readonly PlaceGapInsight[] | null
   drives?: readonly { view: DriveView; here: number }[] | null
 }) {
-  const tUi = await getUiTranslations("ui")
-  const d = await getUiTranslations("dashboard")
+  const tExisting = await getTranslations()
+
+  const tUi = await getTranslations("ui")
+  const d = await getTranslations("dashboard")
 
   const name = country.name ?? ""
   const place = { continent: continentSlug, country: slug }
@@ -105,7 +107,9 @@ export async function CountryDetailPage({
 
   const stats: LocationHeroStat[] = [
     {
-      value: countsAvailable ? formatCount(libraryCount) : "Unavailable",
+      value: countsAvailable
+        ? formatCount(libraryCount)
+        : tExisting("atlasDrawers.unavailable"),
       label: `${countNoun(libraryCount, "Library", "Libraries")} documented`,
       note: "Each library counted once",
     },
@@ -190,7 +194,11 @@ export async function CountryDetailPage({
   )
 
   const sectionItems = [
-    { href: "#overview", label: "Overview", icon: LIB_ICONS.map },
+    {
+      href: "#overview",
+      label: tExisting("dashboard.overview"),
+      icon: LIB_ICONS.map,
+    },
 
     {
       href: "#regions",
@@ -213,7 +221,7 @@ export async function CountryDetailPage({
       navigationHeading={
         <RecordContextIdentity
           title={name}
-          eyebrow="Country"
+          eyebrow={tExisting("ui.country")}
           parent={{
             href: `/${continentSlug}`,
             label: country.continent?.name ?? continentSlug,
@@ -241,7 +249,7 @@ export async function CountryDetailPage({
           proposeHref={proposeHref({ places: { country: [slug] } })}
         />
       }
-      eyebrow="Country"
+      eyebrow={tExisting("ui.country")}
       className="dashboard-place-record"
       toolbar={
         <RecordToolbar
@@ -328,7 +336,7 @@ export async function CountryDetailPage({
                     .slice(0, 2)
                     .map((lib) => ({
                       href: `${basePath}/${child.slug}/${lib.slug}`,
-                      label: lib.name ?? "Library",
+                      label: lib.name ?? tExisting("ui.library"),
                       depth: 3,
                     })),
                 ]),

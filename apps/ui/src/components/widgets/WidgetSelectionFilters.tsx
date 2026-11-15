@@ -4,6 +4,7 @@ import {
   type WidgetSelectionSpec,
   type WidgetResolved,
 } from "@repo/shared-data"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -13,6 +14,7 @@ import {
   WidgetField,
 } from "@/components/widgets/WidgetControls"
 import type { WidgetWorkspace } from "@/lib/widgets/client"
+import { widgetCopy } from "@/lib/widgets/copy"
 
 export function WidgetSelectionFilters({
   team,
@@ -27,6 +29,12 @@ export function WidgetSelectionFilters({
   readonly disabled: boolean
   readonly resolved: WidgetResolved | null
 }) {
+  const tSettings = useTranslations("widgetSettings")
+  const locale = useLocale()
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [countryName, setCountryName] = useState("")
   const [regionName, setRegionName] = useState("")
   const resolution = { data: resolved }
@@ -34,12 +42,13 @@ export function WidgetSelectionFilters({
   return (
     <details className="rounded-3xl border border-(--t-border-line) bg-(--t-bg-deep) p-5 sm:p-6">
       <summary className="min-h-11 cursor-pointer font-sans text-2xl">
-        Filter this selection
+        {tStatic("widget.filter_this_selection")}
       </summary>
       <div className="space-y-4 pt-3">
         <p className="text-sm text-(--t-ink-dim)">
-          Filters narrow every source, including manual additions. Add a
-          filtered source to start from the wider catalogue.
+          {tStatic(
+            "widget.filters_narrow_every_source_including_manual_additions_add_a_filtered_source_to_start_from_the_wider_catalogue"
+          )}
         </p>
         <CataloguePicker
           teamId={team.documentId}
@@ -75,9 +84,9 @@ export function WidgetSelectionFilters({
             }}
           />
         ) : null}
-        <WidgetField label="Library type">
+        <WidgetField label={tExisting("ui.library_type")}>
           <SelectField
-            label="Library type"
+            label={tExisting("ui.library_type")}
             disabled={disabled}
             value={spec.filters.libraryType ?? ""}
             onValueChange={(value) =>
@@ -87,7 +96,7 @@ export function WidgetSelectionFilters({
               })
             }
             options={[
-              { value: "", label: "All types" },
+              { value: "", label: tSettings("allTypes") },
               ...[
                 "Public",
                 "Academic",
@@ -101,9 +110,9 @@ export function WidgetSelectionFilters({
             ]}
           />
         </WidgetField>
-        <WidgetField label="Recorded facility">
+        <WidgetField label={tStatic("widget.recorded_facility")}>
           <SelectField
-            label="Recorded facility"
+            label={tStatic("widget.recorded_facility")}
             disabled={disabled}
             value={String(spec.filters.facility ?? "")}
             onValueChange={(value) =>
@@ -116,10 +125,12 @@ export function WidgetSelectionFilters({
               })
             }
             options={[
-              { value: "", label: "Any recorded state" },
+              { value: "", label: tSettings("anyState") },
               ...FACILITY_CHECKLIST.map((item, index) => ({
                 value: String(index),
-                label: `${item.label}: yes`,
+                label: tSettings("facilityYes", {
+                  facility: widgetCopy(locale, item.label),
+                }),
               })),
             ]}
           />
@@ -141,7 +152,7 @@ export function WidgetSelectionFilters({
             })
           }
         >
-          Include matching catalogue libraries
+          {tStatic("widget.include_matching_catalogue_libraries")}
         </Button>
         <Button
           variant="link"
@@ -159,7 +170,7 @@ export function WidgetSelectionFilters({
             })
           }}
         >
-          Clear filters and filtered source
+          {tStatic("widget.clear_filters_and_filtered_source")}
         </Button>
       </div>
     </details>

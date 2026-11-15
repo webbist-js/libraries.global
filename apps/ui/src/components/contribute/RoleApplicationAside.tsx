@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -8,79 +8,27 @@ import {
   ROLE_APPLICATION_COOLDOWN_DAYS,
 } from "@/lib/role-application"
 
-type Power = { can: boolean; lead: string; rest: string }
-
-const POWERS: Record<ApplicationRole, Power[]> = {
+const POWERS = {
   wiki_editor: [
-    {
-      can: true,
-      lead: "Publish",
-      rest: "approved new and edited Knowledge pages in your permitted languages.",
-    },
-    {
-      can: true,
-      lead: "Translate",
-      rest: "pages into the languages you choose.",
-    },
-    {
-      can: false,
-      lead: "Not",
-      rest: "review other people’s suggestions; moderators do that.",
-    },
-    {
-      can: false,
-      lead: "Not",
-      rest: "edit library records directly. Those still go through review.",
-    },
+    { can: true, key: "publishKnowledge" },
+    { can: true, key: "translateKnowledge" },
+    { can: false, key: "noReview" },
+    { can: false, key: "noRecords" },
   ],
   journal_editor: [
-    {
-      can: true,
-      lead: "Publish",
-      rest: "approved new and edited Journal articles in your permitted languages.",
-    },
-    {
-      can: true,
-      lead: "Translate",
-      rest: "articles into the languages you choose.",
-    },
-    {
-      can: false,
-      lead: "Not",
-      rest: "review other people’s suggestions; moderators do that.",
-    },
-    {
-      can: false,
-      lead: "Not",
-      rest: "edit library records directly. Those still go through review.",
-    },
+    { can: true, key: "publishJournal" },
+    { can: true, key: "translateJournal" },
+    { can: false, key: "noReview" },
+    { can: false, key: "noRecords" },
   ],
   moderator: [
-    {
-      can: true,
-      lead: "Review",
-      rest: "submissions in the queue and languages you choose.",
-    },
-    {
-      can: true,
-      lead: "Approve,",
-      rest: "reject or ask for changes, always with a reason.",
-    },
-    {
-      can: true,
-      lead: "Publish",
-      rest: "approved Knowledge or Journal suggestions in your queue.",
-    },
-    { can: false, lead: "Not", rest: "review your own submissions." },
-    { can: false, lead: "Not", rest: "appoint other moderators." },
+    { can: true, key: "review" },
+    { can: true, key: "approve" },
+    { can: true, key: "publishQueue" },
+    { can: false, key: "noOwn" },
+    { can: false, key: "noAppoint" },
   ],
-}
-
-const ROLE_NOUN: Record<ApplicationRole, string> = {
-  wiki_editor: "knowledge editor",
-  journal_editor: "journal editor",
-  moderator: "moderator",
-}
+} as const
 
 const card = "rounded-[20px] p-5 sm:p-6"
 const cardStyle: React.CSSProperties = {
@@ -98,9 +46,10 @@ export function RoleApplicationAside({
 }: {
   readonly role: ApplicationRole
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
 
-  const reviewer = role === "moderator" ? "The editorial board" : "A moderator"
+  const tExisting = useTranslations()
+  const tPower = useTranslations("rolePowers")
 
   return (
     <>
@@ -114,12 +63,12 @@ export function RoleApplicationAside({
           className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
-          What a {ROLE_NOUN[role]} can do
+          {tPower(role)}
         </h2>
         <ul className="m-0 mt-3 flex list-none flex-col gap-2.5 p-0">
           {POWERS[role].map((p) => (
             <li
-              key={`${p.lead}${p.rest}`}
+              key={p.key}
               className="flex items-start gap-2.5 text-sm leading-[1.5]"
               style={{ color: T.ink.base }}
             >
@@ -132,7 +81,11 @@ export function RoleApplicationAside({
                 style={{ color: p.can ? T.accent.ok : T.accent.danger }}
               />
               <span>
-                <strong className="font-semibold">{p.lead}</strong> {p.rest}
+                {tPower.rich(p.key, {
+                  strong: (chunks) => (
+                    <strong className="font-semibold">{chunks}</strong>
+                  ),
+                })}
               </span>
             </li>
           ))}
@@ -149,35 +102,39 @@ export function RoleApplicationAside({
           className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
-          How applications are reviewed
+          {tStatic("contribute.how_applications_are_reviewed")}
         </h2>
         <ol
           className="m-0 mt-3 flex list-decimal flex-col gap-2 pl-5 text-sm leading-[1.5]"
           style={{ color: T.ink.base }}
         >
-          <li>{reviewer} reads your application and accepted changes.</li>
           <li>
-            They may ask a question in{" "}
-            <Link
-              href="/contribute/submissions"
-              className="underline underline-offset-[3px]"
-              style={{ color: T.accent.primary }}
-            >
-              {tUi("my_submissions")}{" "}
-            </Link>
-            .
+            {tPower(role === "moderator" ? "readsBoard" : "readsModerator")}
           </li>
           <li>
-            You get a decision with a reason. If it’s a no, you can apply again
-            after {ROLE_APPLICATION_COOLDOWN_DAYS} days.
+            {tPower.rich("question", {
+              link: (chunks) => (
+                <Link
+                  href="/contribute/submissions"
+                  className="underline underline-offset-[3px]"
+                  style={{ color: T.accent.primary }}
+                >
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </li>
+          <li>
+            {tPower("decision", { days: ROLE_APPLICATION_COOLDOWN_DAYS })}
           </li>
         </ol>
         <p
           className="mt-4 mb-0 text-sm leading-[1.5]"
           style={{ color: T.ink.dim }}
         >
-          Roles are never bought or earned through points. API Access and
-          sponsorship don’t affect your application.
+          {tStatic(
+            "contribute.roles_are_never_bought_or_earned_through_points_api_access_and_sponsorship_don_t_affect_your_applica"
+          )}
         </p>
       </section>
 
@@ -191,7 +148,7 @@ export function RoleApplicationAside({
           className={`type-h2 ${titleClass}`}
           style={{ color: T.ink.base }}
         >
-          Looking for a different role?
+          {tStatic("contribute.looking_for_a_different_role")}
         </h2>
         <Link
           href="/contribute/claim"
@@ -207,13 +164,15 @@ export function RoleApplicationAside({
           </span>
           <span className="flex flex-col">
             <span className="text-base font-semibold group-hover:underline">
-              Library staff
+              {tExisting("staffOnboarding.eyebrow")}
             </span>
             <span
               className="text-sm leading-[1.5]"
               style={{ color: T.ink.dim }}
             >
-              Verify that you work at a library to look after its record.
+              {tStatic(
+                "contribute.verify_that_you_work_at_a_library_to_look_after_its_record"
+              )}
             </span>
           </span>
         </Link>

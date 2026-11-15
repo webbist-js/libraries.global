@@ -7,7 +7,7 @@
 // attempt. A Google-only account that sets a password here gains one.
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -28,10 +28,13 @@ import {
   newPasswordRefusal,
   newPasswordSchema,
 } from "@/app/[locale]/auth/_components/password-rules"
+import { useAuthFlow } from "@/app/[locale]/auth/_components/useAuthFlow"
 import { useUserMutations } from "@/hooks/useUserMutations"
-import { linkLifetime, RESET_LINK_TTL_SECONDS } from "@/lib/auth-links"
+import { RESET_LINK_TTL_SECONDS } from "@/lib/auth-links"
 
-const ResetPasswordSchema = z.object({ password: newPasswordSchema })
+const ResetPasswordSchema = (
+  tStatic: ReturnType<typeof useTranslations<"staticUi">>
+) => z.object({ password: newPasswordSchema(tStatic) })
 
 type Stage = "missing" | "form" | "expired" | "done"
 
@@ -43,7 +46,11 @@ const LATER_ICONS = [
 const NEW_LINK_HREF = "/auth/forgot-password"
 
 export function ResetPasswordForm({ token }: { token: string | null }) {
-  const tUi = useUiTranslations("ui")
+  const { heading, tFlow, lifetime } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   usePreloadedIcons(LATER_ICONS)
   const [stage, setStage] = useState<Stage>(token ? "form" : "missing")
@@ -55,9 +62,10 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
           layout="utility"
           icon="mdi:check-circle-outline"
           iconTone="ok"
-          title={tUi("password")}
-          italic="saved."
-          subtitle="You've been signed out on every device. Sign in with your new password."
+          title={heading("saved")}
+          subtitle={tStatic(
+            "auth.you_ve_been_signed_out_on_every_device_sign_in_with_your_new_password"
+          )}
         />
         <AuthPrimaryLink href="/auth/signin">{tUi("sign_in")}</AuthPrimaryLink>
       </>
@@ -73,20 +81,23 @@ export function ResetPasswordForm({ token }: { token: string | null }) {
           layout="utility"
           icon={expired ? "mdi:clock-alert-outline" : "mdi:link-variant-off"}
           iconTone="warn"
-          title={expired ? "That link no longer" : "That link isn’t"}
-          italic={expired ? "works." : "complete."}
+          title={heading(expired ? "noLongerWorks" : "incomplete")}
           subtitle={
             expired
-              ? `Reset links work once, for ${linkLifetime(RESET_LINK_TTL_SECONDS)}. Ask for a new one and use it straight away.`
-              : "Open the link from your email again. If it still doesn’t work, ask for a new one."
+              ? tFlow("resetExpired", {
+                  duration: lifetime(RESET_LINK_TTL_SECONDS),
+                })
+              : tStatic(
+                  "auth.open_the_link_from_your_email_again_if_it_still_doesn_t_work_ask_for_a_new_one"
+                )
           }
         />
         <AuthPrimaryLink href={NEW_LINK_HREF}>
-          Send a new reset link
+          {tStatic("auth.send_a_new_reset_link")}
         </AuthPrimaryLink>
         <AuthSwitchPrompt
-          prompt="Remembered it?"
-          linkLabel="Back to sign in"
+          prompt={tStatic("auth.remembered_it")}
+          linkLabel={tStatic("auth.back_to_sign_in")}
           href="/auth/signin"
         />
       </>
@@ -111,11 +122,15 @@ function NewPasswordForm({
   onExpired: () => void
   onDone: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const { heading } = useAuthFlow()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { resetPasswordMutation } = useUserMutations()
-  const form = useForm<z.infer<typeof ResetPasswordSchema>>({
-    resolver: zodResolver(ResetPasswordSchema),
+  const form = useForm<z.infer<ReturnType<typeof ResetPasswordSchema>>>({
+    resolver: zodResolver(ResetPasswordSchema(tStatic)),
     defaultValues: { password: "" },
   })
   const { errors, isSubmitting } = form.formState
@@ -129,7 +144,7 @@ function NewPasswordForm({
         onError: (error) => {
           const { code, status, message } = authErrorParts(error)
           if (code === "INVALID_TOKEN") return onExpired()
-          const refusal = newPasswordRefusal(code)
+          const refusal = newPasswordRefusal(code, tStatic)
           if (refusal) {
             form.setError(
               "password",
@@ -141,8 +156,11 @@ function NewPasswordForm({
           }
           toast.error(
             status === 429
-              ? "Too many attempts. Wait a minute, then try again."
-              : (message ?? "We couldn’t save your password. Please try again.")
+              ? tStatic("auth.too_many_attempts_wait_a_minute_then_try_again")
+              : (message ??
+                  tStatic(
+                    "auth.we_couldn_t_save_your_password_please_try_again"
+                  ))
           )
         },
       }
@@ -160,9 +178,8 @@ function NewPasswordForm({
     <>
       <AuthHeading
         layout="utility"
-        title="Choose a new"
-        italic="password."
-        subtitle="You'll use it to sign in from now on."
+        title={heading("choose")}
+        subtitle={tStatic("auth.you_ll_use_it_to_sign_in_from_now_on")}
       />
 
       {/* A native submit (before hydration) POSTs to this page instead of
@@ -195,13 +212,15 @@ function NewPasswordForm({
         <AuthPrimaryButton
           disabled={resetPasswordMutation.isPending || isSubmitting}
         >
-          {resetPasswordMutation.isPending ? tUi("saving") : "Save password"}
+          {resetPasswordMutation.isPending
+            ? tUi("saving")
+            : tStatic("auth.save_password")}
         </AuthPrimaryButton>
       </form>
 
       <AuthSwitchPrompt
-        prompt="Remembered it?"
-        linkLabel="Back to sign in"
+        prompt={tStatic("auth.remembered_it")}
+        linkLabel={tStatic("auth.back_to_sign_in")}
         href="/auth/signin"
       />
     </>

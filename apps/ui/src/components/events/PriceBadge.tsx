@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { T } from "@/lib/design-tokens"
 
 interface PriceBadgeProps {
@@ -15,13 +17,15 @@ export function PriceBadge({
   priceMax,
   size = "sm",
 }: PriceBadgeProps) {
+  const tExisting = useTranslations()
+
   const label = isFree
-    ? "Free"
+    ? tExisting("ui.free")
     : priceMin != null
       ? priceMax != null && priceMax !== priceMin
         ? `£${priceMin}–£${priceMax}`
         : `£${priceMin}`
-      : "Ticketed"
+      : tExisting("eventBrowse.ticketed")
 
   return (
     <span

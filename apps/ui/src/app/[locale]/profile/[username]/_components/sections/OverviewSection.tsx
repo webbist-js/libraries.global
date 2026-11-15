@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useMemo, useState } from "react"
 
 import type { PublicSubmission } from "@/app/api/profile/[username]/contributions/route"
@@ -24,7 +24,11 @@ export function OverviewSection({
   profile: UserProfile
   isOwner?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [allContribs, setAllContribs] = useState<PublicSubmission[]>([])
   const [now] = useState<number>(() => Date.now())
@@ -68,10 +72,12 @@ export function OverviewSection({
     profile.affiliation && canSee(prefs.showAffiliation)
       ? { label: tUi("affiliation"), value: profile.affiliation }
       : null,
-    profile.jobTitle ? { label: "Role", value: profile.jobTitle } : null,
+    profile.jobTitle
+      ? { label: tStatic("common.role"), value: profile.jobTitle }
+      : null,
     profile.languages?.length
       ? {
-          label: "Languages",
+          label: tExisting("staticUi.moderation.languages"),
           value: profile.languages.map((l) => l.code.toUpperCase()).join(" · "),
         }
       : null,
@@ -110,7 +116,9 @@ export function OverviewSection({
   return (
     <div className="flex flex-col gap-6">
       {/* Stat cards */}
-      <h2 className="type-h2 sr-only">Contribution summary</h2>
+      <h2 className="type-h2 sr-only">
+        {tStatic("common.contributionSummary")}
+      </h2>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard
           label={tUi("changes_accepted")}
@@ -148,7 +156,7 @@ export function OverviewSection({
         <div className="flex min-w-0 flex-col gap-6">
           {canSee(prefs.showActivity) ? (
             <>
-              <h2 className="type-h2 sr-only">Activity</h2>
+              <h2 className="type-h2 sr-only">{tStatic("common.activity")}</h2>
               <ContributionHeatmap submissions={allContribs} now={now} />
             </>
           ) : null}
@@ -157,14 +165,16 @@ export function OverviewSection({
           <section aria-labelledby="ov-contribs" style={CARD}>
             <div className="flex items-center justify-between px-6 pt-5 pb-3">
               <span id="ov-contribs">
-                <SectionTitle>Contributions</SectionTitle>
+                <SectionTitle>
+                  {tExisting("dashboard.contributions")}
+                </SectionTitle>
               </span>
               <Link
                 href={`/profile/${profile.username}/contributions`}
                 className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                 style={{ color: T.accent.primary }}
               >
-                See all
+                {tExisting("contributionDrawer.seeAll")}
               </Link>
             </div>
             {recentContribs.length === 0 ? (
@@ -172,7 +182,7 @@ export function OverviewSection({
                 className="m-0 border-t px-6 py-6 text-base"
                 style={{ borderTopColor: T.border.divider, color: T.ink.dim }}
               >
-                No contributions yet.
+                {tStatic("profileRoute.no_contributions_yet")}
               </p>
             ) : (
               <ul className="m-0 list-none p-0">
@@ -190,14 +200,16 @@ export function OverviewSection({
           >
             <div className="flex items-center justify-between pb-4">
               <span id="ov-recognition">
-                <SectionTitle>Recognition</SectionTitle>
+                <SectionTitle>
+                  {tStatic("profileRoute.recognition")}
+                </SectionTitle>
               </span>
               <Link
                 href={`/profile/${profile.username}/badges`}
                 className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
                 style={{ color: T.accent.primary }}
               >
-                All badges
+                {tStatic("profileRoute.all_badges")}
               </Link>
             </div>
             <ul className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 xl:grid-cols-3">
@@ -228,7 +240,7 @@ export function OverviewSection({
                   className="m-0 mb-1 text-sm font-semibold tracking-wide uppercase"
                   style={{ color: T.ink.low }}
                 >
-                  Represents
+                  {tStatic("profileRoute.represents")}
                 </p>
                 {profile.claimedLibraries!.map((lib) => (
                   <p
@@ -245,7 +257,7 @@ export function OverviewSection({
                       className="text-sm"
                       style={{ color: "var(--tint-public-fg)" }}
                     >
-                      · steward
+                      {tStatic("profileRoute.steward")}
                     </span>
                   </p>
                 ))}
@@ -257,11 +269,11 @@ export function OverviewSection({
                   className="m-0 mb-1 text-sm font-semibold tracking-wide uppercase"
                   style={{ color: T.ink.low }}
                 >
-                  Follows
+                  {tStatic("profileRoute.follows")}
                 </p>
                 {(profile.followedLibraries?.length ?? 0) === 0 ? (
                   <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-                    Not following any libraries yet.
+                    {tStatic("profileRoute.not_following_any_libraries_yet")}
                   </p>
                 ) : (
                   <>
@@ -280,7 +292,8 @@ export function OverviewSection({
                       className="mt-4 flex min-h-12 items-center border-t border-(--t-border-line) pt-3 text-base font-semibold underline underline-offset-4"
                       style={{ color: T.accent.primary }}
                     >
-                      All {profile.followedLibraries!.length} followed
+                      {tStatic("common.all")}{" "}
+                      {profile.followedLibraries!.length} followed
                     </Link>
                   </>
                 )}
@@ -304,7 +317,7 @@ export function OverviewSection({
                 className="type-panel-title m-0 mb-2"
                 style={{ color: "var(--tint-national-fg)" }}
               >
-                Contributor level
+                {tStatic("profileRoute.contributor_level")}
               </h3>
               <p
                 className="m-0"
@@ -315,7 +328,7 @@ export function OverviewSection({
                   color: T.ink.base,
                 }}
               >
-                {profile.tier ?? "Contributor"}
+                {profile.tier ?? tExisting("editorial.contributor")}
               </p>
               {profile.points != null ? (
                 <p className="m-0 mt-1 text-base" style={{ color: T.ink.dim }}>
@@ -328,7 +341,7 @@ export function OverviewSection({
                 className="mt-4 flex min-h-12 items-center border-t border-(--t-border-line) pt-3 text-base font-semibold underline underline-offset-4"
                 style={{ color: T.accent.primary }}
               >
-                How levels work
+                {tStatic("profileRoute.how_levels_work")}
               </Link>
             </section>
           )}
@@ -344,7 +357,7 @@ export function OverviewSection({
                 className="type-panel-title m-0 mb-2"
                 style={{ color: T.ink.base }}
               >
-                About
+                {tExisting("discussions.aboutConversation")}
               </h3>
               <dl className="m-0">
                 {facts.map((f) => (
@@ -384,7 +397,7 @@ export function OverviewSection({
                 className="type-panel-title m-0 mb-2"
                 style={{ color: "var(--tint-national-fg)" }}
               >
-                Links
+                {tStatic("profileRoute.links")}
               </h3>
               <ul className="m-0 list-none divide-y divide-(--t-border-line) border-t border-(--t-border-line) p-0">
                 {links.map((l) => (

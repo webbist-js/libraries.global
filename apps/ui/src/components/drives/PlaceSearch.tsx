@@ -1,7 +1,6 @@
 "use client"
-
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type KeyboardEvent, useEffect, useId, useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -51,7 +50,9 @@ export function PlaceSearch({
   readonly describedBy?: string
   readonly onAdd: (place: BuilderPlace) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const listId = useId()
   const [query, setQuery] = useState("")
@@ -169,7 +170,7 @@ export function PlaceSearch({
     <div className="relative">
       <SearchField
         id={id}
-        placeholder="Add a continent, country, county or area"
+        placeholder={tStatic("drive.add_a_continent_country_county_or_area")}
         label={tUi("add_a_place")}
         className={invalid ? "border-(--t-accent-danger)" : undefined}
         loading={results.status === "loading"}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { UtilityPage } from "@/components/utility/UtilityPage"
+import { withMessages } from "@/i18n/scoped-messages"
 
 import { EmailPreferences } from "./preferences"
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
   referrer: "no-referrer",
 }
-export default async function Page({
+async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ token?: string }>
@@ -22,3 +23,5 @@ export default async function Page({
     </UtilityPage>
   )
 }
+
+export default withMessages(Page, "[locale]/email/preferences/page")

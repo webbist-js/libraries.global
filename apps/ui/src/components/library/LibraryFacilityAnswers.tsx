@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import {
@@ -71,8 +71,12 @@ export function LibraryFacilityAnswers({
   /** Called once the answers are with a reviewer. */
   readonly onSent?: () => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const tPage = useUiTranslations("libraryPage")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const tPage = useTranslations("libraryPage")
 
   const { data: session, isPending } = authClient.useSession()
   const [answers, setAnswers] = useState<Record<string, Answer>>({})
@@ -235,7 +239,7 @@ export function LibraryFacilityAnswers({
                 : "flex shrink-0 gap-1.5"
             }
           >
-            <span className="sr-only">Not recorded. </span>
+            <span className="sr-only">{tStatic("library.not_recorded")} </span>
             {(["yes", "no", "unsure"] as const).map((a) => {
               const on = picked === a
 
@@ -351,7 +355,7 @@ export function LibraryFacilityAnswers({
               icon="mdi:check-circle-outline"
               width={18}
             />
-            Thanks. Your answers are with a reviewer.
+            {tStatic("library.thanks_your_answers_are_with_a_reviewer")}
           </p>
         ) : count > 0 ? (
           <div
@@ -368,14 +372,16 @@ export function LibraryFacilityAnswers({
                 disabled={state === "sending"}
                 className="rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-(--t-action-primary-hover) disabled:opacity-70"
               >
-                {state === "sending" ? tUi("sending") : "Send for review"}
+                {state === "sending"
+                  ? tUi("sending")
+                  : tExisting("discussions.submit")}
               </button>
             ) : (
               <Link
                 href={`/auth/signin?callbackUrl=${encodeURIComponent(`${libraryPath}#access`)}`}
                 className="rounded-full bg-(--t-action-primary) px-4 py-2 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
               >
-                Sign in to send
+                {tStatic("library.sign_in_to_send")}
               </Link>
             )}
           </div>
@@ -392,7 +398,7 @@ export function LibraryFacilityAnswers({
             className="mt-2 rounded-full border border-(--t-border-hi) bg-(--t-bg-deep) px-4 py-2 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface)"
             style={{ color: T.ink.base }}
           >
-            Send without the drive
+            {tStatic("common.sendWithoutDrive")}
           </button>
         ) : null}
       </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type FormEvent, useEffect, useId, useRef, useState } from "react"
 
 import { PRIMARY, SECONDARY } from "@/components/contribute/wizard-ui"
@@ -43,7 +43,9 @@ export function LibraryVerify({
   /** Where sign-in brings the reader back to; defaults to this page. */
   readonly returnTo?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const id = useId()
   const { data: session, isPending } = authClient.useSession()
@@ -140,7 +142,7 @@ export function LibraryVerify({
             style={{ color: T.ink.base }}
             tabIndex={-1}
           >
-            Thanks. A Moderator will check it.
+            {tStatic("library.thanks_a_moderator_will_check_it")}
           </h3>
           <p
             className="m-0 max-w-[56ch] text-base leading-normal"
@@ -159,7 +161,7 @@ export function LibraryVerify({
               {tUi("close")}{" "}
             </button>
             <Link className={CTA} href="/contribute/submissions">
-              See my submissions
+              {tStatic("common.mySubmissions")}
             </Link>
           </div>
         </div>
@@ -181,14 +183,15 @@ export function LibraryVerify({
               className="type-h3 m-0"
               style={{ color: T.ink.base }}
             >
-              Is this still right?
+              {tStatic("library.is_this_still_right")}
             </h3>
             <p
               className="m-0 mt-1.5 max-w-[56ch] text-base leading-normal"
               style={{ color: T.ink.dim }}
             >
-              Confirm what you’ve checked. A Moderator reviews it, then it shows
-              as checked today.
+              {tStatic(
+                "library.confirm_what_you_ve_checked_a_moderator_reviews_it_then_it_shows_as_checked_today"
+              )}
             </p>
           </div>
 
@@ -214,7 +217,7 @@ export function LibraryVerify({
       >
         {signedOut ? (
           <Link className={CTA} href={signInHref}>
-            Sign in to confirm
+            {tStatic("library.sign_in_to_confirm")}
           </Link>
         ) : (
           <button

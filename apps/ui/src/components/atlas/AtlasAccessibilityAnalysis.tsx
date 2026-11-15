@@ -2,10 +2,7 @@
 
 import { EXPLORER_LIMITS } from "@repo/access"
 import type { AtlasExportRequest } from "@repo/shared-data"
-import {
-  useTranslations,
-  useTranslations as useUiTranslations,
-} from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useState } from "react"
 
 import { ACCESS_GAP, ACCESS_MATCH } from "@/components/atlas/atlas-map.style"
@@ -80,7 +77,13 @@ export function AtlasAccessibilityAnalysis({
   readonly onCollapse: () => void
   readonly onClose: () => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tCopy = useTranslations("atlasCopy")
+
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
   const tLock = useTranslations("accessLocks")
 
   const [catalogue, setCatalogue] = useState<string[]>([]),
@@ -180,7 +183,9 @@ export function AtlasAccessibilityAnalysis({
             className="flex flex-col gap-3"
           >
             <div className="flex items-start justify-between gap-3">
-              <h3 className="type-h3 m-0">What do you need?</h3>
+              <h3 className="type-h3 m-0">
+                {tStatic("atlas.what_do_you_need")}
+              </h3>
               <span className="text-right text-sm" style={{ color: T.ink.dim }}>
                 {selected.length
                   ? `${selected.length} chosen`
@@ -219,7 +224,7 @@ export function AtlasAccessibilityAnalysis({
                 className="m-0 text-sm"
                 style={{ color: T.ink.dim }}
               >
-                Loading recorded features…
+                {tStatic("atlas.loading_recorded_features")}
               </p>
             ) : null}
             {selected.length ? (
@@ -229,7 +234,7 @@ export function AtlasAccessibilityAnalysis({
                 className="min-h-11 self-start text-sm font-semibold underline"
                 style={{ color: T.accent.primary }}
               >
-                Clear chosen features
+                {tStatic("atlas.clear_chosen_features")}
               </button>
             ) : null}
             <details>
@@ -237,11 +242,13 @@ export function AtlasAccessibilityAnalysis({
                 className="min-h-11 cursor-pointer list-none py-3 text-sm font-semibold"
                 style={{ color: T.accent.primary }}
               >
-                All {options.length || ""} features{" "}
+                {tStatic("common.all")} {options.length || ""} features{" "}
                 <Icon name="chevD" size={14} className="ml-1 inline" />
               </summary>
               <fieldset className="m-0 min-w-0 border-0 p-0">
-                <legend className="sr-only">All accessibility features</legend>
+                <legend className="sr-only">
+                  {tStatic("atlas.all_accessibility_features")}
+                </legend>
                 <label className="mb-3 flex flex-col gap-1 text-sm font-semibold">
                   {tUi("find_a_feature")}
                   <input
@@ -282,7 +289,7 @@ export function AtlasAccessibilityAnalysis({
                       ? "No features match your search."
                       : optionsLoading ||
                           (!hasServerOptions && catalogueState === "loading")
-                        ? "Loading recorded features…"
+                        ? tStatic("atlas.loading_recorded_features")
                         : !hasServerOptions && catalogueState === "error"
                           ? "The feature catalogue couldn’t load. Try opening the panel again."
                           : "No accessibility features recorded yet."}
@@ -294,7 +301,7 @@ export function AtlasAccessibilityAnalysis({
               className="m-0 text-xs leading-relaxed"
               style={{ color: T.ink.dim }}
             >
-              Feature counts:{" "}
+              {tStatic("atlas.feature_counts")}{" "}
               {hasServerOptions ? "all libraries" : "loaded libraries"} matching
               your Filters.
             </p>
@@ -303,15 +310,16 @@ export function AtlasAccessibilityAnalysis({
                 className="rounded-xl p-3 text-sm leading-relaxed"
                 style={{ background: T.bg.surface }}
               >
-                Browse all features. A free account lets you apply your choices
-                to the map.
+                {tStatic(
+                  "atlas.browse_all_features_a_free_account_lets_you_apply_your_choices_to_the_map"
+                )}
                 <button
                   type="button"
                   onClick={onSignIn}
                   className="mt-1 block min-h-11 font-semibold underline"
                   style={{ color: T.accent.primary }}
                 >
-                  Sign in to apply accessibility features
+                  {tStatic("atlas.sign_in_to_apply_accessibility_features")}
                 </button>
               </div>
             ) : !enabled ? (
@@ -321,7 +329,7 @@ export function AtlasAccessibilityAnalysis({
                 className="min-h-11 self-start text-sm font-semibold underline"
                 style={{ color: T.accent.primary }}
               >
-                Enable accessibility layer
+                {tStatic("atlas.enable_accessibility_layer")}
               </button>
             ) : null}
           </section>
@@ -338,7 +346,7 @@ export function AtlasAccessibilityAnalysis({
             aria-labelledby={`${id}-map`}
           >
             <h3 id={`${id}-map`} className="type-h3 m-0">
-              Show on the map
+              {tStatic("atlas.show_on_the_map")}
             </h3>
             <div
               role="group"
@@ -372,9 +380,9 @@ export function AtlasAccessibilityAnalysis({
                 className="m-0 text-xs leading-relaxed"
                 style={{ color: T.ink.dim }}
               >
-                Filled pins show recorded matches; hollow pins show details not
-                recorded yet. Cluster labels show recorded / total, for example
-                3/5.
+                {tStatic(
+                  "atlas.filled_pins_show_recorded_matches_hollow_pins_show_details_not_recorded_yet_cluster_labels_show_reco"
+                )}
               </p>
             ) : null}
             <p
@@ -384,11 +392,13 @@ export function AtlasAccessibilityAnalysis({
                 borderColor: T.border.divider,
               }}
             >
-              <strong>Not recorded yet doesn’t mean inaccessible.</strong>{" "}
+              <strong>
+                {tStatic("atlas.not_recorded_yet_doesn_t_mean_inaccessible")}
+              </strong>{" "}
               {selected.length
                 ? "Our record doesn’t confirm every feature you chose."
                 : "Our record has no accessibility details yet."}{" "}
-              Check with the library before you visit.
+              {tStatic("atlas.check_with_the_library_before_you_visit")}
             </p>
           </section>
 
@@ -400,17 +410,16 @@ export function AtlasAccessibilityAnalysis({
               className="min-h-11 flex-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap disabled:opacity-50"
               style={{ background: T.action.primary, color: "#fff" }}
             >
-              List these libraries
+              {tStatic("atlas.list_these_libraries")}
             </button>
           </div>
 
           <AtlasInspectTools
             about={
               <p>
-                Filled pins confirm every chosen feature. Hollow pins mean our
-                record does not confirm every chosen feature. Missing
-                information does not mean a library is inaccessible. Check with
-                the library before visiting.
+                {tStatic(
+                  "atlas.filled_pins_confirm_every_chosen_feature_hollow_pins_mean_our_record_does_not_confirm_every_chosen_f"
+                )}
               </p>
             }
             downloads={
@@ -439,7 +448,9 @@ export function AtlasAccessibilityAnalysis({
                   className="flex min-h-12 w-full items-center gap-3 rounded-xl border bg-(--t-bg-deep) px-4 py-3 text-left text-sm font-semibold disabled:opacity-50"
                   style={{ borderColor: T.border.hi }}
                 >
-                  {busy ? "Downloading…" : "Download CSV"}{" "}
+                  {busy
+                    ? "Downloading…"
+                    : tExisting("atlasNetwork.downloadCsv")}{" "}
                   {!canExport ? (
                     <AccessChip>{tLock("signInChip")}</AccessChip>
                   ) : null}
@@ -479,8 +490,9 @@ export function AtlasAccessibilityAnalysis({
                   : "have no accessibility details"}
               </h3>
               <p className="m-0" style={{ color: T.ink.dim }}>
-                Check the library’s website, then open a library record to
-                suggest a correction with confirmed details.
+                {tStatic(
+                  "atlas.check_the_library_s_website_then_open_a_library_record_to_suggest_a_correction_with_confirmed_detail"
+                )}
               </p>
               <button
                 type="button"
@@ -489,14 +501,14 @@ export function AtlasAccessibilityAnalysis({
                 className="min-h-11 self-start rounded-full border bg-(--t-bg-deep) px-4 font-semibold"
                 style={{ borderColor: T.border.hi }}
               >
-                Help fill them
+                {tStatic("atlas.help_fill_them")}
               </button>
             </section>
           ) : null}
 
           <details className="text-sm leading-relaxed">
             <summary className="min-h-11 cursor-pointer py-3 text-base font-bold">
-              About this data
+              {tExisting("atlasAnalysis.aboutData")}
             </summary>
             <div className="flex flex-col gap-3" style={{ color: T.ink.dim }}>
               <p className="m-0">
@@ -507,24 +519,13 @@ export function AtlasAccessibilityAnalysis({
                 matching your Filters; the coverage summary covers{" "}
                 {scope.toLowerCase()} before the map hides any records.
               </p>
+              <p className="m-0">{tStatic("atlas.method_95")}</p>
+              <p className="m-0">{tStatic("atlas.method_96")}</p>
               <p className="m-0">
-                With nothing chosen, any recorded accessibility detail counts.
-                With features chosen, a library must record all of them. Not
-                recorded yet includes records with no details and records that
-                confirm only some chosen features.
-              </p>
-              <p className="m-0">
-                The index records confirmed features. Missing confirmation does
-                not distinguish unknown information from an absent feature, and
-                does not establish that a library is inaccessible. Confirm
-                arrangements with the library before visiting.
-              </p>
-              <p className="m-0">
-                The list and CSV follow your Filters, the map area, and the
-                selected Recorded, Both, or Not yet view. Downloads follow the
-                account export limits: up to{" "}
-                {EXPLORER_LIMITS.exportRows.toLocaleString()} libraries per
-                download and {EXPLORER_LIMITS.exportsPerDay} downloads a day.
+                {tCopy("exportLimits", {
+                  rows: EXPLORER_LIMITS.exportRows,
+                  downloads: EXPLORER_LIMITS.exportsPerDay,
+                })}
               </p>
             </div>
           </details>
@@ -545,7 +546,11 @@ function AccessibilityHeadline({
   readonly scope: string
   readonly enabled: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const share =
     coverage && coverage.total > 0
@@ -560,14 +565,16 @@ function AccessibilityHeadline({
     >
       {!enabled ? (
         <p className="m-0 text-sm">
-          Turn on the layer or choose a feature to see map coverage.
+          {tStatic(
+            "atlas.turn_on_the_layer_or_choose_a_feature_to_see_map_coverage"
+          )}
         </p>
       ) : !coverage ? (
         <p className="m-0 text-sm" role="status">
-          Loading library records…
+          {tStatic("common.loadingLibraries")}
         </p>
       ) : coverage.total === 0 ? (
-        <p className="m-0 text-sm">No library records in this map area.</p>
+        <p className="m-0 text-sm">{tStatic("common.noMapLibraries")}</p>
       ) : (
         <>
           <p
@@ -580,7 +587,8 @@ function AccessibilityHeadline({
             className="m-0 text-sm leading-relaxed"
             style={{ color: T.ink.dim }}
           >
-            of {coverage.total.toLocaleString()} libraries{" "}
+            {tExisting("widgetPublic.of")} {coverage.total.toLocaleString()}{" "}
+            {tExisting("widgetPublic.libraries_lower")}{" "}
             {scope === "Records in view" ? "in view" : "in the loaded records"}{" "}
             record{" "}
             {selected.length
@@ -608,7 +616,7 @@ function AccessibilityHeadline({
               <strong>
                 {share.toLocaleString(undefined, { maximumFractionDigits: 1 })}%
               </strong>{" "}
-              recorded
+              {tExisting("widgetPublic.recorded")}
             </span>
             <span className="flex items-center gap-1.5">
               <i

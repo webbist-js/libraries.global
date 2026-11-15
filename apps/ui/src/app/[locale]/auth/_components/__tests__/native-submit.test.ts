@@ -5,11 +5,12 @@
 // auth form with a secret field must then POST to its own page, never GET
 // its values into a query string, and its submit stays disabled until the
 // form has mounted.
-import { cleanup, render } from "@testing-library/react"
 import * as React from "react"
 import { createElement, type ReactElement } from "react"
-import { renderToString } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { cleanup, render } from "@/test/render"
+import { renderToString } from "@/test/server-render"
 
 // vitest.config has no JSX runtime, so .tsx compiles to React.createElement.
 Object.assign(globalThis, { React })
@@ -18,9 +19,6 @@ Object.assign(globalThis, { React })
 vi.mock("@/lib/env-vars", () => ({ getEnvVar: () => {} }))
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
-}))
-vi.mock("next-intl", () => ({
-  useTranslations: () => (key: string) => key,
 }))
 vi.mock("@iconify/react", () => ({ Icon: () => null, loadIcons: () => {} }))
 vi.mock("@/lib/navigation", async () => {

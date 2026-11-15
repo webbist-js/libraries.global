@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import { profilePalette } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { Breadcrumb } from "@/components/ds/Breadcrumb"
@@ -32,35 +32,6 @@ function countryName(code?: string | null): string | null {
  * Role cards for the derived `contributorRole`. Verified staff has its own
  * card (from `isVerifiedLibrarian`); readers and contributors get none.
  */
-const ROLE_CARDS: Record<
-  string,
-  { icon: string; title: string; note: string; tint: string }
-> = {
-  editorial_board: {
-    icon: "mdi:bookshelf",
-    title: "Editorial board",
-    note: "Reviews every queue and language",
-    tint: "national",
-  },
-  moderator: {
-    icon: "mdi:shield-account-outline",
-    title: "Moderator",
-    note: "Reviews community changes",
-    tint: "academic",
-  },
-  wiki_editor: {
-    icon: "mdi:book-open-page-variant-outline",
-    title: "Knowledge editor",
-    note: "Edits the Knowledge base",
-    tint: "public",
-  },
-  journal_editor: {
-    icon: "mdi:newspaper-variant-outline",
-    title: "Journal editor",
-    note: "Edits the Journal",
-    tint: "public",
-  },
-}
 
 function getInitials(p: UserProfile): string {
   const first = p.firstName?.[0] ?? ""
@@ -138,7 +109,40 @@ export function ProfileHero({
   embedded?: boolean
   showBreadcrumb?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+  const ROLE_CARDS: Record<
+    string,
+    { icon: string; title: string; note: string; tint: string }
+  > = {
+    editorial_board: {
+      icon: "mdi:bookshelf",
+      title: tStatic("profileRoute.editorial_board"),
+      note: tStatic("contributeModule.reviews_every_queue_and_language"),
+      tint: "national",
+    },
+    moderator: {
+      icon: "mdi:shield-account-outline",
+      title: tStatic("profileRoute.moderator"),
+      note: tStatic("contributeModule.reviews_community_changes"),
+      tint: "academic",
+    },
+    wiki_editor: {
+      icon: "mdi:book-open-page-variant-outline",
+      title: tStatic("profileRoute.knowledge_editor"),
+      note: tStatic("contributeModule.edits_the_knowledge_base"),
+      tint: "public",
+    },
+    journal_editor: {
+      icon: "mdi:newspaper-variant-outline",
+      title: tStatic("profileRoute.journal_editor"),
+      note: tStatic("contributeModule.edits_the_journal"),
+      tint: "public",
+    },
+  }
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const initials = getInitials(profile)
   const avatar = avatarSrc(profile.avatar, "lg")
@@ -214,7 +218,7 @@ export function ProfileHero({
               >
                 <MetaItem icon="mdi:at">{profile.username}</MetaItem>
                 <MetaItem icon="mdi:calendar-blank-outline">
-                  Contributor since {joined}
+                  {tStatic("profileRoute.contributor_since")} {joined}
                 </MetaItem>
                 {typeof profile.followerCount === "number" ? (
                   <MetaItem icon="mdi:account-multiple-outline">
@@ -275,7 +279,9 @@ export function ProfileHero({
                         {affiliationName && showAffiliation ? (
                           <>
                             <span aria-hidden="true"> · </span>
-                            <span className="sr-only">at </span>
+                            <span className="sr-only">
+                              {tExisting("eventListing.at")}{" "}
+                            </span>
                             {staffLibrary?.path ? (
                               <GlobalLink
                                 href={staffLibrary.path}

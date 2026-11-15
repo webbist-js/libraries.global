@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,10 @@ export function ApiPlaygroundUsageDialog({
   teamName: string
   onDismiss: () => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [open, setOpen] = useState(true)
   const [dontShowAgain, setDontShowAgain] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -76,7 +80,7 @@ export function ApiPlaygroundUsageDialog({
             className="type-h2 m-0 pr-12 outline-none"
             style={{ outline: "none" }}
           >
-            These requests use your API allowance
+            {tStatic("frontendExtra.these_requests_use_your_api_allowance")}
           </DialogTitle>
           <DialogDescription className="m-0 text-base leading-relaxed [overflow-wrap:anywhere] text-(--t-ink-dim)">
             This playground calls the real API. Successful requests and response
@@ -85,9 +89,9 @@ export function ApiPlaygroundUsageDialog({
           </DialogDescription>
         </DialogHeader>
         <p className="m-0 rounded-2xl bg-(--t-accent-chip) p-4 text-sm leading-relaxed">
-          “Run request” and “Read this record” each send a request. Opening this
-          page does not use any allowance. Errors do not consume monthly
-          allowance.
+          {tStatic(
+            "frontendExtra.run_request_and_read_this_record_each_send_a_request_opening_this_page_does_not_use_any_allowance_er"
+          )}
         </p>
         <div>
           <label className="flex min-h-11 cursor-pointer items-start gap-3 py-2 text-base">
@@ -102,17 +106,17 @@ export function ApiPlaygroundUsageDialog({
               }}
               className="mt-1 size-5 shrink-0 accent-(--t-accent-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--t-accent-primary)"
             />
-            Don’t show this again
+            {tExisting("atlasDataGaps.dontShowAgain")}
           </label>
           <p className="m-0 mt-1 text-sm text-(--t-ink-dim)">
-            You can turn this warning back on in Settings → Notifications →
-            Prompts.
+            {tStatic(
+              "frontendExtra.you_can_turn_this_warning_back_on_in_settings_notifications_prompts"
+            )}
           </p>
         </div>
         {error ? (
           <p role="alert" className="m-0 text-sm">
-            Couldn’t save your preference. Try again, or uncheck “Don’t show
-            this again” to continue for this visit.
+            {tExisting("atlasDataGaps.saveError")}
           </p>
         ) : null}
         <Button
@@ -122,7 +126,7 @@ export function ApiPlaygroundUsageDialog({
           disabled={saving}
           onClick={() => void acknowledge()}
         >
-          {saving ? "Saving…" : "Continue to playground"}
+          {saving ? tExisting("ui.saving") : "Continue to playground"}
         </Button>
       </DialogContent>
     </Dialog>

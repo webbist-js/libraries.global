@@ -1,10 +1,8 @@
 import { Icon } from "@iconify/react"
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import {
-  getLocale,
-  getTranslations as getUiTranslations,
-} from "next-intl/server"
+import { useTranslations } from "next-intl"
+import { getLocale, getTranslations } from "next-intl/server"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Badge, HealthList, Notice } from "@/components/ds"
@@ -17,6 +15,7 @@ import { StaffAreaTabs } from "@/components/staff/StaffAreaTabs"
 import { StaffClaimSteps } from "@/components/staff/StaffClaimSteps"
 import { StaffPanel } from "@/components/staff/StaffPanel"
 import { YourTeamCard } from "@/components/staff/YourTeamCard"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
@@ -67,6 +66,8 @@ function StaffOauthNotice({
   oauth: ReturnType<typeof oauthNotice>
   libraries: ReturnType<typeof staffLibrariesOf>
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (!oauth) return null
 
   return (
@@ -82,7 +83,7 @@ function StaffOauthNotice({
               className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Open Event feeds
+              {tStatic("staffRoute.open_event_feeds")}
               <Icon
                 aria-hidden="true"
                 height={15}
@@ -101,13 +102,17 @@ function StaffOauthNotice({
  * Your libraries as cards, "Claim another library", and for team members
  * a "Your team" card. Single-library accounts keep this overview too.
  */
-export default async function StaffLibrariesPage({
+async function StaffLibrariesPage({
   searchParams,
 }: {
   readonly searchParams: Promise<{ oauth?: string | string[] }>
 }) {
-  const tUi = await getUiTranslations("ui")
-  const t = await getUiTranslations("staffWorkspace")
+  const tExisting = await getTranslations()
+
+  const tStatic = await getTranslations("staticUi")
+
+  const tUi = await getTranslations("ui")
+  const t = await getTranslations("staffWorkspace")
   const locale = await getLocale()
 
   const [session, query] = await Promise.all([
@@ -144,7 +149,9 @@ export default async function StaffLibrariesPage({
     <>
       <WorkspacePageHeader
         title={t("yourLibraries")}
-        lead="Publish record changes, answer suggestions and post notices for the libraries you run."
+        lead={tStatic(
+          "staffRoute.publish_record_changes_answer_suggestions_and_post_notices_for_the_libraries_you_run"
+        )}
         tabs={
           <StaffAreaTabs
             active="overview"
@@ -182,7 +189,7 @@ export default async function StaffLibrariesPage({
                   width={16}
                   style={{ color: T.accent.primary }}
                 />
-                Add a new library
+                {tStatic("common.addNewLibrary")}
               </Link>
             )}
           </div>
@@ -234,7 +241,7 @@ export default async function StaffLibrariesPage({
                             width={14}
                           />
                           {mobile
-                            ? "Mobile library"
+                            ? tStatic("common.mobileLibrary")
                             : `${lib.libraryType} library`}
                         </span>
                         <Badge label={ROLE_LABEL[lib.role]} color="dim" />
@@ -260,7 +267,8 @@ export default async function StaffLibrariesPage({
                               className="font-semibold"
                               style={{ color: T.ink.base }}
                             >
-                              {done} of {overview.health.length}
+                              {done} {tExisting("widgetPublic.of")}{" "}
+                              {overview.health.length}
                             </span>{" "}
                             record checks complete ·{" "}
                             {waiting === 0 ? (
@@ -281,9 +289,9 @@ export default async function StaffLibrariesPage({
                         )}
                       </p>
                       <p className="m-0 rounded-xl bg-(--t-accent-chip) p-3 text-sm text-(--t-ink-dim)">
-                        Your changes to this record publish straight away.
-                        Moves, type changes and permanent closures still need
-                        review.
+                        {tStatic(
+                          "staffRoute.your_changes_to_this_record_publish_straight_away_moves_type_changes_and_permanent_closures_still_ne"
+                        )}
                       </p>
                       <RenounceLibraryClaim
                         libraryId={lib.id}
@@ -301,7 +309,7 @@ export default async function StaffLibrariesPage({
                           href={base}
                           className="inline-flex min-h-11 items-center gap-1 rounded-full bg-(--t-action-primary) px-4 text-sm font-semibold text-white no-underline transition-colors hover:bg-(--t-action-primary-hover)"
                         >
-                          Open Staff area
+                          {tStatic("common.openStaffArea")}
                           <Icon
                             aria-hidden="true"
                             height={14}
@@ -357,7 +365,7 @@ export default async function StaffLibrariesPage({
                               color: T.ink.base,
                             }}
                           >
-                            Edit timetable
+                            {tStatic("staffRoute.edit_timetable")}
                           </Link>
                         ) : null}
                         <Link
@@ -411,3 +419,8 @@ export default async function StaffLibrariesPage({
     </>
   )
 }
+
+export default withMessages(
+  StaffLibrariesPage,
+  "[locale]/(dashboard)/staff/page"
+)

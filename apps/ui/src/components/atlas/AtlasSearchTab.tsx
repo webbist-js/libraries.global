@@ -6,7 +6,7 @@ import {
   type PublicLiveState,
   type AtlasScope,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { type ReactNode, useId, useMemo, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -129,7 +129,11 @@ export function AtlasSearchTab({
   readonly serverPresets?: Preset[]
   readonly onPickRecent?: (item: RecentItem) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const inputId = useId()
   const [mobileStatus, setMobileStatus] = useState<MobileSearchStatus | null>(
@@ -173,19 +177,28 @@ export function AtlasSearchTab({
     const all: Preset[] = [
       { label: tUi("open_now"), patch: { opening: "now" } },
       {
-        label: "Open on Sundays",
+        label: tStatic("atlas.open_on_sundays"),
         patch: { opening: "at", atDay: 6, atMinutes: 12 * 60 },
       },
-      { label: "Community-run libraries", patch: { operators: ["community"] } },
-      { label: "Live catalogue", patch: { catalogue: true } },
-      { label: "Monastic libraries", patch: { types: ["monastic"] } },
-      { label: "Academic libraries", patch: { types: ["academic"] } },
+      {
+        label: tStatic("atlas.community_run_libraries"),
+        patch: { operators: ["community"] },
+      },
+      { label: tStatic("atlas.live_catalogue"), patch: { catalogue: true } },
+      {
+        label: tStatic("atlas.monastic_libraries"),
+        patch: { types: ["monastic"] },
+      },
+      {
+        label: tExisting("staticUi.home.academicLibraries"),
+        patch: { types: ["academic"] },
+      },
     ]
 
     return all
       .filter((p) => countWith(libraries, filters, p.patch, now) > 0)
       .slice(0, 5)
-  }, [libraries, filters, now, serverPresets, tUi])
+  }, [libraries, filters, now, serverPresets, tUi, tExisting, tStatic])
 
   const placeByKey = useMemo(
     () => new Map(places.map((p) => [p.key, p])),
@@ -208,7 +221,9 @@ export function AtlasSearchTab({
         style={{ borderColor: T.border.hi, background: "var(--t-bg-deep)" }}
       >
         <Icon name="search" size={20} color={T.ink.base} />
-        <span className="sr-only">Search libraries, stops and places</span>
+        <span className="sr-only">
+          {tStatic("atlas.search_libraries_stops_and_places")}
+        </span>
         <input
           id={inputId}
           type="search"
@@ -371,7 +386,9 @@ export function AtlasSearchTab({
           ) : null}
           {presets.length > 0 || onMobilePreset ? (
             <div className="flex flex-col gap-2.5">
-              <p className="m-0 text-sm font-bold">Try</p>
+              <p className="m-0 text-sm font-bold">
+                {tExisting("staticUi.home.try")}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {onMobilePreset ? (
                   <>
@@ -382,7 +399,7 @@ export function AtlasSearchTab({
                       style={{ borderColor: T.border.hi }}
                     >
                       <Icon name="bus" size={16} color={T.map.stopRing} />
-                      Stops visited today
+                      {tStatic("atlas.stops_visited_today")}
                     </button>
                     <button
                       type="button"
@@ -423,8 +440,12 @@ export function AtlasSearchTab({
             <Icon name="layers" size={20} />
           </span>
           <span className="text-sm leading-normal">
-            <strong className="block text-base">Add context to the map</strong>
-            Density, opening hours and more live in the Layers tab.
+            <strong className="block text-base">
+              {tStatic("atlas.add_context_to_the_map")}
+            </strong>
+            {tStatic(
+              "atlas.density_opening_hours_and_more_live_in_the_layers_tab"
+            )}
           </span>
         </button>
         {contributePrompt}

@@ -1,5 +1,4 @@
 "use client"
-
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
@@ -29,6 +28,11 @@ export function LibraryClaimButton({
   libraryName,
   libraryEntityRef,
 }: LibraryClaimButtonProps) {
+  const tExtra = useTranslations("libraryExtra")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const t = useTranslations("libraryPage")
   const refParam = libraryEntityRef
     ? `&libraryEntityRef=${encodeURIComponent(libraryEntityRef)}`
@@ -104,7 +108,7 @@ export function LibraryClaimButton({
 
   return (
     <p className="m-0 px-1 text-sm leading-normal" style={{ color: T.ink.dim }}>
-      Work here?{" "}
+      {tExisting("libraryPage.workHere")}{" "}
       <Link
         href={
           session?.user
@@ -114,10 +118,9 @@ export function LibraryClaimButton({
         className="font-semibold underline underline-offset-[3px]"
         style={{ color: T.accent.primary }}
       >
-        Ask to look after this record
+        {tStatic("library.ask_to_look_after_this_record")}
       </Link>
-      . A moderator checks each claim first. Claiming a record doesn&rsquo;t
-      mean the library endorses Libraries Global.
+      . {tExtra("claimNote")}
     </p>
   )
 }

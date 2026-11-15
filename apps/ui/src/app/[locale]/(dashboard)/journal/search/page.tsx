@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 
+import { withMessages } from "@/i18n/scoped-messages"
 import { SITE_NAME } from "@/lib/constants"
 import { T } from "@/lib/design-tokens"
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 }
 
-export default function BlogSearchPage() {
+function BlogSearchPage() {
   return (
     <div
       className="relative isolate flex min-h-0 w-full flex-col"
@@ -21,3 +22,8 @@ export default function BlogSearchPage() {
     </div>
   )
 }
+
+export default withMessages(
+  BlogSearchPage,
+  "[locale]/(dashboard)/journal/search/page"
+)

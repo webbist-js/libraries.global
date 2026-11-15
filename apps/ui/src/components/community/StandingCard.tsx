@@ -1,6 +1,6 @@
 import { Icon } from "@iconify/react"
 import { profilePalette, type ProfileBackground } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { ProfileAvatar } from "@/components/ds/ProfileAvatar"
@@ -31,6 +31,8 @@ function Header({
   readonly avatarUrl?: string | null
   readonly background?: ProfileBackground | null
 }) {
+  const tExisting = useTranslations()
+
   const palette = profilePalette(background)
 
   return (
@@ -58,7 +60,7 @@ function Header({
             color: T.ink.base,
           }}
         >
-          Your standing
+          {tExisting("membershipPage.title")}
         </h2>
         {subtitle ? (
           <p className="m-0 mt-0.5 text-base" style={{ color: T.ink.dim }}>
@@ -141,6 +143,8 @@ function Tile({
 }
 
 function Progress({ standing }: { readonly standing: Standing }) {
+  const tExisting = useTranslations()
+
   const { nextName, nextThreshold } = standing.tier
 
   if (!nextName || !nextThreshold) {
@@ -160,7 +164,7 @@ function Progress({ standing }: { readonly standing: Standing }) {
       <div className="flex flex-wrap justify-between gap-x-3 text-base">
         <strong style={{ color: T.ink.base }}>Progress to {nextName}</strong>
         <span style={{ color: T.ink.dim }}>
-          {fmt(points)} of {fmt(nextThreshold)} pts
+          {fmt(points)} {tExisting("widgetPublic.of")} {fmt(nextThreshold)} pts
         </span>
       </div>
       <div
@@ -215,7 +219,7 @@ export function StandingCard({
   readonly avatarUrl?: string | null
   readonly background?: ProfileBackground | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   if (!signedIn) {
     return (

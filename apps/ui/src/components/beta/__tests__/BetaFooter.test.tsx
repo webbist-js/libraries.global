@@ -2,9 +2,9 @@ import { createTranslator } from "next-intl"
 import { renderToStaticMarkup } from "react-dom/server"
 import { expect, it, vi } from "vitest"
 
-import cs from "../../../../locales/cs.json"
-import en from "../../../../locales/en.json"
-import fr from "../../../../locales/fr.json"
+import cs from "../../../../locales/cs"
+import en from "../../../../locales/en"
+import fr from "../../../../locales/fr"
 
 vi.mock("next-intl/server", () => ({
   getTranslations: async ({

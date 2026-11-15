@@ -6,7 +6,7 @@ import {
   FEED_TEST_LABEL,
   type FeedTestCode,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Notice } from "@/components/ds/Notice"
 import { T } from "@/lib/design-tokens"
@@ -86,12 +86,14 @@ export function EventFeedPanel({
   readonly status: string
   readonly review: EventFeedReview | null
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   if (!review)
     return (
       <p className="m-0" style={{ color: T.ink.dim }}>
-        This feed&rsquo;s details could not be loaded.
+        {tStatic("moderation.this_feed_rsquo_s_details_could_not_be_loaded")}
       </p>
     )
   const def = EVENT_PROVIDERS[review.provider as EventProviderKey]
@@ -107,22 +109,24 @@ export function EventFeedPanel({
           tone="warn"
           title={tUi("claim_lost")}
         >
-          The submitter no longer holds a claim on this library. Reject this
-          submission.
+          {tStatic(
+            "moderation.the_submitter_no_longer_holds_a_claim_on_this_library_reject_this_submission"
+          )}
         </Notice>
       ) : null}
       {!review.exists ? (
         <Notice icon="mdi:link-off" tone="warn" title={tUi("feed_withdrawn")}>
-          The library withdrew or disconnected this feed. Reject this
-          submission.
+          {tStatic(
+            "moderation.the_library_withdrew_or_disconnected_this_feed_reject_this_submission"
+          )}
         </Notice>
       ) : null}
       <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
-        <dt style={{ color: T.ink.dim }}>Platform</dt>
+        <dt style={{ color: T.ink.dim }}>{tStatic("common.platform")}</dt>
         <dd className="m-0">{def?.label ?? review.provider}</dd>
         <dt style={{ color: T.ink.dim }}>{tUi("library")}</dt>
         <dd className="m-0">{review.library?.name ?? tUi("unknown")}</dd>
-        <dt style={{ color: T.ink.dim }}>Kind</dt>
+        <dt style={{ color: T.ink.dim }}>{tStatic("common.kind")}</dt>
         <dd className="m-0">
           {review.kind === "replace"
             ? "New details for an active feed"
@@ -148,7 +152,9 @@ export function EventFeedPanel({
         {review.kind === "replace"
           ? Object.entries(review.currentHints).map(([k, v]) => (
               <div key={`c-${k}`} className="contents">
-                <dt style={{ color: T.ink.dim }}>{label(k)} (current)</dt>
+                <dt style={{ color: T.ink.dim }}>
+                  {label(k)} {tStatic("moderation.current")}
+                </dt>
                 <dd
                   className="m-0"
                   style={{
@@ -170,8 +176,9 @@ export function EventFeedPanel({
         <FeedTestButton documentId={documentId} />
       ) : null}
       <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-        Details are encrypted. Moderators see only these masked hints; only
-        Libraries Global staff can read a value.
+        {tStatic(
+          "moderation.details_are_encrypted_moderators_see_only_these_masked_hints_only_libraries_global_staff_can_read_a_"
+        )}
       </p>
     </div>
   )

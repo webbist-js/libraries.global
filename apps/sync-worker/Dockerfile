@@ -16,6 +16,7 @@ FROM base AS builder
 COPY --from=prepare /app/out/json/ .
 COPY --from=prepare /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 COPY --from=prepare /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=prepare /app/.pnpmfile.cjs ./.pnpmfile.cjs
 RUN --mount=type=cache,id=worker-pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 COPY --from=prepare /app/out/full/ .

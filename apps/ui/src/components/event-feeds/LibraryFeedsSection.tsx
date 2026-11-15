@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useRef } from "react"
 
 import { EmptyState } from "@/components/ds"
@@ -31,7 +30,9 @@ export function LibraryFeedsSection({
   /** One line under the heading. */
   readonly intro?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const ref = useRef<HTMLElement>(null)
   const { library, feeds } = entry
@@ -86,7 +87,7 @@ export function LibraryFeedsSection({
             href={staffLibraryHref(library.slug, "/events/connect")}
             className={PRIMARY_PILL}
           >
-            Connect a feed
+            {tStatic("common.connectFeed")}
           </GlobalLink>
         ) : null}
       </div>
@@ -102,7 +103,7 @@ export function LibraryFeedsSection({
               href={staffLibraryHref(library.slug, "/events/connect")}
               className={PRIMARY_PILL}
             >
-              Connect a feed
+              {tStatic("common.connectFeed")}
             </GlobalLink>
           }
         />

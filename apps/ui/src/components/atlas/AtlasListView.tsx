@@ -1,12 +1,11 @@
 "use client"
-
 import {
   ATLAS_LIST_SORTS,
   type AtlasSort,
   type AtlasListResponse,
   type AtlasScope,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMemo, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -76,8 +75,12 @@ export function AtlasListView({
   readonly onSortChange?: (sort: AtlasSort) => void
   readonly onShowAnalysis?: () => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("atlasList")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const t = useTranslations("atlasList")
 
   const [localSort, setLocalSort] = useState<AtlasSort>("name")
   const sort = controlledSort ?? localSort
@@ -277,15 +280,16 @@ export function AtlasListView({
                 setRefresh((value) => value + 1)
               }}
             >
-              Reload list
+              {tStatic("atlas.reload_list")}
             </button>
           ) : null}
         </p>
       ) : null}
       {remoteScope && !remote.value ? null : libraries.length === 0 ? (
         <p className="m-0 p-6 text-base" style={{ color: T.ink.dim }}>
-          No libraries in this part of the map match your filters. Zoom out or
-          loosen a filter.
+          {tStatic(
+            "atlas.no_libraries_in_this_part_of_the_map_match_your_filters_zoom_out_or_loosen_a_filter"
+          )}
         </p>
       ) : (
         <div className="min-h-0 flex-1 overflow-auto">
@@ -348,7 +352,7 @@ export function AtlasListView({
                   className="border-b px-3.5 py-3 text-left text-sm font-bold"
                   style={{ borderColor: T.border.hi }}
                 >
-                  Now
+                  {tStatic("atlas.now")}
                 </th>
                 {!compact ? (
                   <>
@@ -357,7 +361,7 @@ export function AtlasListView({
                       className="border-b px-3.5 py-3 text-left text-sm font-bold"
                       style={{ borderColor: T.border.hi }}
                     >
-                      Today
+                      {tExisting("discussions.today")}
                     </th>
                     <th
                       scope="col"
@@ -450,7 +454,7 @@ export function AtlasListView({
                           />
                           {hasAccessibility(l, accessibility)
                             ? "Confirmed"
-                            : "Not confirmed"}
+                            : tStatic("atlas.not_confirmed")}
                         </span>
                       </td>
                     ) : null}
@@ -586,7 +590,7 @@ function LibraryName({
   readonly compact: boolean
   readonly onSelect: LibrarySelect
 }) {
-  const t = useUiTranslations("atlasList")
+  const t = useTranslations("atlasList")
 
   return (
     <>
@@ -618,7 +622,7 @@ function OpenState({
 }: {
   readonly state: "open" | "closed" | "unknown"
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   if (state === "open")
     return (

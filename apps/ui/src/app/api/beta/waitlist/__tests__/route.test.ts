@@ -30,50 +30,10 @@ afterEach(() => {
 })
 
 describe("subscription purpose and identity", () => {
-  it("stores beta consent without consulting or forwarding a user session", async () => {
-    const response = await POST(
-      request(
-        { email: "  Reader@Example.org ", locale: "cs" },
-        { cookie: "account=session", "x-ba-user-id": "forged" }
-      )
-    )
-    expect(response.status).toBe(200)
-    const init = fetchMock.mock.calls[0]![1]
-    expect(JSON.parse(init.body)).toEqual({
-      email: "reader@example.org",
-      type: "beta_waitlist",
-      source: "beta_landing",
-      locale: "cs",
-    })
-    expect(init.headers["X-Ba-User-Id"]).toBeUndefined()
-    expect(session).not.toHaveBeenCalled()
-    expect(response.headers.get("set-cookie")).toBeNull()
-  })
-  it("rejects cross-origin, identity and purpose injection", async () => {
-    expect(
-      (
-        await POST(
-          request({ email: "a@example.org" }, { origin: "https://other.test" })
-        )
-      ).status
-    ).toBe(403)
-    expect(
-      (await POST(request({ email: "a@example.org", type: "newsletter" })))
-        .status
-    ).toBe(400)
-    expect(
-      (await POST(request({ email: "a@example.org", baUserId: "forged" })))
-        .status
-    ).toBe(400)
+  it("does not collect addresses or send mail through the retired waitlist", async () => {
+    expect((await POST()).status).toBe(410)
     expect(fetchMock).not.toHaveBeenCalled()
-  })
-  it("propagates an upstream rate limit without claiming success", async () => {
-    fetchMock.mockResolvedValue(
-      Response.json({}, { status: 429, headers: { "Retry-After": "90" } })
-    )
-    const response = await POST(request({ email: "a@example.org" }))
-    expect(response.status).toBe(429)
-    expect(response.headers.get("retry-after")).toBe("90")
+    expect(session).not.toHaveBeenCalled()
   })
   it("attributes a newsletter to a verified account only for its own email", async () => {
     session.mockResolvedValue({

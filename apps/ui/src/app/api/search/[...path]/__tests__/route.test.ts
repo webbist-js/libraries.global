@@ -41,12 +41,12 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 describe("search proxy", () => {
-  it("requires a beta pass before calling the private search origin", async () => {
+  it("accepts public searches without a beta pass", async () => {
     expect(
       (await search(["indexes", "library", "search"], { q: "Paris" }, false))
         .status
-    ).toBe(401)
-    expect(fetchMock).not.toHaveBeenCalled()
+    ).toBe(200)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
   })
   it("forwards searches with a server-only key and no upstream credentials in the result", async () => {
     const result = await search(["indexes", "library", "search"], {

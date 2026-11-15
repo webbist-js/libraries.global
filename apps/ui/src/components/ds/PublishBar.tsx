@@ -1,5 +1,6 @@
 "use client"
 import { Icon } from "@iconify/react"
+import { useTranslations } from "next-intl"
 import type { ReactNode } from "react"
 
 import { primaryCtaSm } from "@/components/ui/action-styles"
@@ -18,7 +19,7 @@ export function PublishBar({
   busy,
   onDiscard,
   onPublish,
-  publishLabel = "Publish changes",
+  publishLabel,
 }: {
   count: number
   /** A line in place of the count: "Timetable published.", with links. */
@@ -28,6 +29,7 @@ export function PublishBar({
   onPublish: () => void
   publishLabel?: string
 }) {
+  const t = useTranslations("sharedControls.publish")
   const quiet = count === 0 && !busy
 
   return (
@@ -54,10 +56,7 @@ export function PublishBar({
         />
       ) : null}
       <p className="m-0 flex-1" aria-live="polite">
-        {status ??
-          (quiet
-            ? "No unpublished changes"
-            : `${count} unpublished change${count === 1 ? "" : "s"}`)}
+        {status ?? (quiet ? t("none") : t("count", { count }))}
       </p>
       {quiet ? null : (
         <>
@@ -68,7 +67,7 @@ export function PublishBar({
             className="inline-flex min-h-11 items-center rounded-full border bg-(--t-bg-deep) px-5 text-sm font-semibold transition-colors hover:bg-(--t-bg-surface) disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-(--t-bg-deep)"
             style={{ borderColor: T.border.hi, color: T.ink.base }}
           >
-            Discard
+            {t("discard")}
           </button>
           <button
             type="button"
@@ -76,7 +75,7 @@ export function PublishBar({
             disabled={busy || !count}
             className={`${primaryCtaSm} min-h-11 disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            {busy ? "Publishing…" : publishLabel}
+            {busy ? t("busy") : (publishLabel ?? t("action"))}
           </button>
         </>
       )}

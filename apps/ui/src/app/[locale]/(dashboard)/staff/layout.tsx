@@ -7,6 +7,7 @@ import {
   knowledgeHref,
 } from "@/components/staff/knowledge-links"
 import { StaffWorkspace } from "@/components/staff/StaffWorkspace"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf, staffLibrariesOf } from "@/lib/access-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function StaffSectionLayout({
+async function StaffSectionLayout({
   children,
   params,
 }: {
@@ -57,3 +58,8 @@ export default async function StaffSectionLayout({
     </AccountGuard>
   )
 }
+
+export default withMessages(
+  StaffSectionLayout,
+  "[locale]/(dashboard)/staff/layout"
+)

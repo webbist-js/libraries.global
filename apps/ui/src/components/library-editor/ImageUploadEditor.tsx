@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useRef, useState } from "react"
 
 import { T } from "@/lib/design-tokens"
@@ -14,7 +13,9 @@ export function ImageUploadEditor({
   images: UploadedImage[]
   onChange: (imgs: UploadedImage[]) => void
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,7 +105,7 @@ export function ImageUploadEditor({
             marginTop: "2px",
           }}
         >
-          JPEG · PNG · WebP · max 10 MB each
+          {tStatic("libraryEditor.jpeg_png_webp_max_10_mb_each")}
         </span>
       </button>
       <input

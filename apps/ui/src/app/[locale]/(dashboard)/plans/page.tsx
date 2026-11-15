@@ -14,6 +14,7 @@ import { MainContent } from "@/components/ds/MainContent"
 import { PageHero } from "@/components/ds/PageHero"
 import { Container } from "@/components/elementary/Container"
 import { PlansAccountStrip } from "@/components/membership/PlansAccountStrip"
+import { withMessages } from "@/i18n/scoped-messages"
 import { hasFact, staffLibrariesOf } from "@/lib/access-server"
 import { contributionAccountScope } from "@/lib/contribution-account-scope"
 import { getContributionSession } from "@/lib/contribution-session-server"
@@ -46,11 +47,7 @@ export async function generateMetadata({
   })
 }
 
-export default async function PlansPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>
-}) {
+async function PlansPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params
   const t = await getUiTranslations({ locale, namespace: "membershipPage" })
   const m = await getUiTranslations({
@@ -161,3 +158,5 @@ export default async function PlansPage({
     </InformationPage>
   )
 }
+
+export default withMessages(PlansPage, "[locale]/(dashboard)/plans/page")

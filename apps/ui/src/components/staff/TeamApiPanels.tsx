@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl"
+
 import { Badge } from "@/components/ds/Badge"
 import { BarSeries } from "@/components/ds/BarSeries"
 import { StaffPanel } from "@/components/staff/StaffPanel"
@@ -63,6 +65,8 @@ export function ApiSubscriptionPanel({
   readonly request: (body: unknown) => void
   readonly confirming: boolean
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
   const canSubscribe = maySubscribe(data) && !data.pendingPayment && !confirming
   const status = data.active
@@ -93,19 +97,20 @@ export function ApiSubscriptionPanel({
           disabled={pending}
           onClick={() => request({ action: "portal", locale })}
         >
-          Manage API billing
+          {tStatic("staff.manage_api_billing")}
         </Button>
       ) : null}
     </div>
   )
   if (data.active && !data.membership?.cancelAtPeriodEnd)
     return (
-      <section aria-label="Your API subscription">
+      <section aria-label={tStatic("staff.your_api_subscription")}>
         {summary}
         {!data.organiser ? (
           <p className="mt-2 mb-0 text-sm text-(--t-ink-dim)">
-            Organisers manage the subscription, overage and API keys. You can
-            view usage.
+            {tStatic(
+              "staff.organisers_manage_the_subscription_overage_and_api_keys_you_can_view_usage"
+            )}
           </p>
         ) : null}
       </section>
@@ -113,7 +118,7 @@ export function ApiSubscriptionPanel({
 
   return (
     <StaffPanel
-      title="Your API subscription"
+      title={tStatic("staff.your_api_subscription")}
       id="api-subscription"
       aside={
         canSubscribe ? (
@@ -149,16 +154,21 @@ export function ApiSubscriptionPanel({
         </p>
         {!data.teamActive ? (
           <p role="status">
-            Your organisation is inactive. Keys cannot make requests until it is
-            restored. Contact us for help.
+            {tStatic(
+              "staff.your_organisation_is_inactive_keys_cannot_make_requests_until_it_is_restored_contact_us_for_help"
+            )}
           </p>
         ) : null}
         {data.membership?.revoked ? (
-          <p role="status">Access is suspended following a payment reversal.</p>
+          <p role="status">
+            {tStatic("staff.access_is_suspended_following_a_payment_reversal")}
+          </p>
         ) : null}
         {data.membership?.cancelAtPeriodEnd ? (
           <p role="status">
-            Cancellation is scheduled. Manage API billing to change it.
+            {tStatic(
+              "staff.cancellation_is_scheduled_manage_api_billing_to_change_it"
+            )}
           </p>
         ) : null}
         <p className="m-0">
@@ -172,7 +182,9 @@ export function ApiSubscriptionPanel({
       </div>
       {!data.organiser ? (
         <p className="mt-4 mb-0 text-base text-(--t-ink-dim)">
-          Organisers manage the subscription and API keys. You can view usage.
+          {tStatic(
+            "staff.organisers_manage_the_subscription_and_api_keys_you_can_view_usage"
+          )}
         </p>
       ) : null}
     </StaffPanel>
@@ -195,6 +207,8 @@ function UsageTable({
   }[]
   readonly locale: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
 
   return (
@@ -231,7 +245,7 @@ function UsageTable({
                 colSpan={4}
                 className="px-4 py-6 text-center text-(--t-ink-dim)"
               >
-                No usage recorded in this period.
+                {tStatic("staff.no_usage_recorded_in_this_period")}
               </td>
             </tr>
           ) : null}
@@ -260,6 +274,10 @@ export function ApiUsagePanel({
   readonly data: ApiDashboard
   readonly locale: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const count = (n: number) => new Intl.NumberFormat(locale).format(n)
   const firstDay = data.days[0]?.day
   const historyTitle =
@@ -276,19 +294,19 @@ export function ApiUsagePanel({
         : "Requests per day"
   const metrics = [
     {
-      title: "Successful requests",
+      title: tExisting("teamApiSubscription.requests"),
       used: data.usage.requests,
       limit: data.limits.requests,
       display: count,
     },
     {
-      title: "Response data",
+      title: tExisting("teamApiSubscription.responseData"),
       used: data.usage.bytes,
       limit: data.limits.bytes,
       display: (n: number) => formatApiBytes(n, locale),
     },
     {
-      title: "Analysis credits",
+      title: tExisting("teamApiSubscription.credits"),
       used: data.usage.credits,
       limit: data.limits.analysisCredits,
       display: count,
@@ -298,7 +316,7 @@ export function ApiUsagePanel({
 
   return (
     <StaffPanel
-      title="This billing period"
+      title={tStatic("staff.this_billing_period")}
       id="api-usage"
       aside={
         <p className="m-0 text-sm text-(--t-ink-dim)">
@@ -326,7 +344,8 @@ export function ApiUsagePanel({
             <p className="mt-2 mb-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 tabular-nums">
               <span className="type-stat">{metric.display(metric.used)}</span>
               <span className="text-sm text-(--t-ink-dim)">
-                of {metric.display(metric.limit)} included
+                {tExisting("widgetPublic.of")} {metric.display(metric.limit)}{" "}
+                included
               </span>
             </p>
             <progress
@@ -350,7 +369,9 @@ export function ApiUsagePanel({
           role="status"
           className="mt-5 rounded-xl bg-(--t-bg-surface) p-4 text-base"
         >
-          <p className="m-0 font-semibold">Usage alerts this period</p>
+          <p className="m-0 font-semibold">
+            {tStatic("staff.usage_alerts_this_period")}
+          </p>
           <ul className="mt-2 mb-0 list-disc pl-5">
             {warnings.map((text) => (
               <li key={text}>You have used {text}.</li>
@@ -377,7 +398,7 @@ export function ApiUsagePanel({
           }
           dataTable={
             <UsageTable
-              title="Daily API usage"
+              title={tStatic("staff.daily_api_usage")}
               firstColumn="Date (UTC)"
               rows={data.days.map((day) => ({ ...day, label: day.day }))}
               locale={locale}
@@ -386,9 +407,9 @@ export function ApiUsagePanel({
         />
       </div>
       <p className="mt-5 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
-        Response data is uncompressed JSON; media downloads aren’t counted.
-        Totals include capacity reserved for requests still in progress. Failed,
-        refused and timed-out requests don’t use your allowance.
+        {tStatic(
+          "staff.response_data_is_uncompressed_json_media_downloads_aren_t_counted_totals_include_capacity_reserved_f"
+        )}
       </p>
       <p className="mt-2 mb-0 text-sm leading-relaxed text-(--t-ink-dim)">
         {count(data.limits.perMinute)} requests per minute ·{" "}
@@ -398,9 +419,11 @@ export function ApiUsagePanel({
       </p>
       {data.endpoints.length ? (
         <div className="mt-6">
-          <h3 className="type-small-heading m-0">Usage by API</h3>
+          <h3 className="type-small-heading m-0">
+            {tStatic("staff.usage_by_api")}
+          </h3>
           <UsageTable
-            title="Usage by API"
+            title={tStatic("staff.usage_by_api")}
             firstColumn="API"
             rows={data.endpoints.map((row) => ({
               ...row,
@@ -415,11 +438,15 @@ export function ApiUsagePanel({
 }
 
 export function ApiGuidePanel() {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const endpoints = [
     {
       method: "POST",
       path: "/api/v1/search/libraries",
-      detail: "Search by text, place and filters",
+      detail: tExisting("developersOffer.discover"),
     },
     {
       method: "GET",
@@ -455,7 +482,7 @@ export function ApiGuidePanel() {
       <div className="grid min-w-0 gap-7 lg:grid-cols-2">
         <div className="min-w-0">
           <h2 id="api-guide-title" className="type-h2 m-0">
-            Using the API
+            {tStatic("staff.using_the_api")}
           </h2>
           <p className="mt-3 text-base leading-relaxed text-(--t-ink-dim)">
             Keep keys in your application server’s environment. Requests use{" "}
@@ -492,42 +519,46 @@ export function ApiGuidePanel() {
               </li>
             ))}
           </ul>
-          <h3 className="type-small-heading mt-6 mb-0">
-            Services, analysis and proposals
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
-            These routes are switched on in stages. While one is off it answers
-            404 <code translate="no">resource_not_enabled</code> and nothing is
-            charged. Analysis and proposal scopes must be chosen when you create
-            a key.
-          </p>
-          <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
-            {API_STAGED_RESOURCES.map((endpoint) => (
-              <li
-                key={`${endpoint.method} ${endpoint.path}`}
-                className="flex min-w-0 items-start gap-3 py-3"
-              >
-                <Badge
-                  label={endpoint.method}
-                  color={endpoint.method === "POST" ? "aurora" : "ok"}
-                />
-                <div className="min-w-0">
-                  <code
-                    translate="no"
-                    className="block font-mono text-sm break-all"
-                  >
-                    {endpoint.path}
-                  </code>
-                  <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
-                    {endpoint.detail}{" "}
-                    <code translate="no" className="text-xs">
-                      {endpoint.scope}
+          <details className="mt-6 rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4">
+            <summary className="cursor-pointer rounded text-sm font-semibold focus-visible:outline-2 focus-visible:outline-(--t-accent-primary)">
+              {tStatic(
+                "staff.services_analysis_and_proposals_staged_availability"
+              )}
+            </summary>
+            <p className="mt-2 text-sm leading-relaxed text-(--t-ink-dim)">
+              These routes are switched on in stages. While one is off it
+              answers 404 <code translate="no">resource_not_enabled</code> and
+              nothing is charged. Analysis and proposal scopes must be chosen
+              when you create a key.
+            </p>
+            <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
+              {API_STAGED_RESOURCES.map((endpoint) => (
+                <li
+                  key={`${endpoint.method} ${endpoint.path}`}
+                  className="flex min-w-0 items-start gap-3 py-3"
+                >
+                  <Badge
+                    label={endpoint.method}
+                    color={endpoint.method === "POST" ? "aurora" : "ok"}
+                  />
+                  <div className="min-w-0">
+                    <code
+                      translate="no"
+                      className="block font-mono text-sm break-all"
+                    >
+                      {endpoint.path}
                     </code>
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                    <p className="mt-1 mb-0 text-sm text-(--t-ink-dim)">
+                      {endpoint.detail}{" "}
+                      <code translate="no" className="text-xs">
+                        {endpoint.scope}
+                      </code>
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </details>
           <p className="mt-3 text-sm leading-relaxed text-(--t-ink-dim)">
             Encode the <code translate="no">entityRef</code> from a search or
             list as one path segment with{" "}
@@ -539,34 +570,35 @@ export function ApiGuidePanel() {
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild variant="primary" size="pill">
               <Link href="/knowledge/data-api/team-api-quickstart">
-                First-request guide
+                {tExisting("developersWorkspace.quickstart")}
               </Link>
             </Button>
             <Button asChild variant="surface" size="pill">
               <Link href="/knowledge/data-api/team-api-reference">
-                API reference
+                {tStatic("staff.api_reference")}
               </Link>
             </Button>
           </div>
         </div>
-        <div className="min-w-0 space-y-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <div className="overflow-hidden rounded-2xl bg-(--t-bg-inverse) text-(--t-ink-on-dark)">
             <pre
               translate="no"
               className="m-0 overflow-x-auto p-5 font-mono text-sm leading-[1.8]"
               tabIndex={0}
-              aria-label="Example API request"
+              aria-label={tStatic("staff.example_api_request")}
             >
               <code>{example}</code>
             </pre>
           </div>
           <p className="m-0 text-sm leading-relaxed text-(--t-ink-dim)">
-            Search filters: country, region, libraryType, operationalStatus and
-            near (latitude, longitude and radius in metres).
+            {tStatic(
+              "staff.search_filters_country_region_librarytype_operationalstatus_and_near_latitude_longitude_and_radius_i"
+            )}
           </p>
           <div className="rounded-2xl border border-(--t-border-line) bg-(--t-bg-surface) p-4 sm:p-5">
             <h3 className="type-small-heading m-0 mb-3">
-              When a request fails
+              {tStatic("staff.when_a_request_fails")}
             </h3>
             <dl className="m-0 divide-y divide-(--t-border-line) text-sm leading-relaxed">
               {[
@@ -589,7 +621,7 @@ export function ApiGuidePanel() {
               ))}
             </dl>
             <p className="mt-3 mb-0 text-sm text-(--t-ink-dim)">
-              Cache hits count as requests.
+              {tStatic("staff.cache_hits_count_as_requests")}
             </p>
           </div>
         </div>
@@ -600,14 +632,14 @@ export function ApiGuidePanel() {
       >
         <div className="flex flex-wrap items-center gap-3">
           <h3 id="api-coming-soon" className="type-h3 m-0">
-            More ways to use library data
+            {tStatic("staff.more_ways_to_use_library_data")}
           </h3>
-          <Badge label="Coming soon" color="dim" />
+          <Badge label={tExisting("ui.coming_soon")} color="dim" />
         </div>
         <p className="mt-3 mb-6 text-sm leading-relaxed text-(--t-ink-dim)">
-          Proposed read-only APIs for public data. These endpoints are not
-          available yet; paths and scope may change. They are not included in
-          the current subscription.
+          {tStatic(
+            "staff.proposed_read_only_apis_for_public_data_these_endpoints_are_not_available_yet_paths_and_scope_may_ch"
+          )}
         </p>
         <ul className="m-0 grid list-none gap-3 p-0 sm:grid-cols-2">
           {API_ROADMAP.map((item) => (

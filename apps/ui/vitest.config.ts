@@ -21,6 +21,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // Before "@", which would otherwise match first.
+      "@/i18n/scoped-messages": path.resolve(
+        __dirname,
+        "./src/test/scoped-messages.ts"
+      ),
       "@": path.resolve(__dirname, "./src"),
       "server-only": path.resolve(__dirname, "./src/test/empty.ts"),
     },

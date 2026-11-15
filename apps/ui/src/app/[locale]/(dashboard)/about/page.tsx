@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import type { Locale } from "next-intl"
-import { setRequestLocale } from "next-intl/server"
+import { setRequestLocale, getTranslations } from "next-intl/server"
 
 import { AboutExperience } from "@/components/about/AboutExperience"
 import { InformationPage } from "@/components/dashboard/InformationPage"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   fetchAboutGlobeCountries,
   fetchAboutLibraries,
@@ -31,13 +32,11 @@ export async function generateMetadata({
   })
 }
 
-export default async function AboutPage({
-  params,
-}: {
-  params: Promise<{ locale: Locale }>
-}) {
+async function AboutPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = await params
   setRequestLocale(locale)
+  const tStatic = await getTranslations("staticUi")
+  const tExisting = await getTranslations()
   const continentsPromise = fetchHomepageContinents(locale)
   const [markers, stats, continentResponse, libraries, countries] =
     await Promise.all([
@@ -53,14 +52,26 @@ export default async function AboutPage({
 
   return (
     <InformationPage
-      title="About Libraries Global"
+      title={tStatic("common.aboutLibrariesGlobal")}
       links={[
         { href: "#shared-purpose", label: "Libraries around the world" },
-        { href: "#our-purpose", label: "Our purpose" },
-        { href: "#what-we-include", label: "What we include" },
-        { href: "#how-we-build-it", label: "How records are built" },
+        {
+          href: "#our-purpose",
+          label: tExisting("staticUi.about.our_purpose"),
+        },
+        {
+          href: "#what-we-include",
+          label: tExisting("staticUi.about.what_we_include"),
+        },
+        {
+          href: "#how-we-build-it",
+          label: tExisting("staticUi.about.how_records_are_built"),
+        },
         { href: "#where-we-are", label: "Our coverage" },
-        { href: "#open-by-design", label: "Open by design" },
+        {
+          href: "#open-by-design",
+          label: tExisting("staticUi.home.openDesign"),
+        },
         { href: "#take-part", label: "Take part" },
       ]}
     >
@@ -74,3 +85,5 @@ export default async function AboutPage({
     </InformationPage>
   )
 }
+
+export default withMessages(AboutPage, "[locale]/(dashboard)/about/page")

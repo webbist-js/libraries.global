@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/ui/button"
 import { T, tintForLibraryType } from "@/lib/design-tokens"
@@ -190,7 +190,11 @@ export function FollowedLibrariesGrid({
   /** Replaces the default "Not following any libraries yet." message. */
   emptyState?: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const compact = variant === "compact"
   const items = max ? libraries.slice(0, max) : libraries
@@ -200,8 +204,9 @@ export function FollowedLibrariesGrid({
       emptyState ?? (
         <div className="flex flex-col items-start gap-4">
           <p className="m-0 text-base" style={{ color: T.ink.dim }}>
-            Not following any libraries yet. Find a library and follow its page
-            to keep up with changes.
+            {tStatic(
+              "profileRoute.not_following_any_libraries_yet_find_a_library_and_follow_its_page_to_keep_up_with_changes"
+            )}
           </p>
           <Button asChild className="rounded-full">
             <Link href="/libraries">{tUi("find_libraries")}</Link>
@@ -236,7 +241,7 @@ export function FollowedLibrariesGrid({
             className="text-base font-semibold underline decoration-transparent underline-offset-[3px] transition-colors hover:decoration-current"
             style={{ color: T.accent.primary }}
           >
-            See all {libraries.length}
+            {tExisting("contributionDrawer.seeAll")} {libraries.length}
           </Link>
         </p>
       ) : null}

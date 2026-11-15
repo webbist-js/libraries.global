@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 
 import { useFollowTarget } from "@/hooks/useFollowTarget"
@@ -41,10 +41,12 @@ export function LibraryFollowButton({
   libraryDocumentId: string
   libraryName: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { data: session, isPending } = authClient.useSession()
-  const tFollow = useUiTranslations("publishingFollow")
+  const tFollow = useTranslations("publishingFollow")
   const {
     following,
     saving: loading,
@@ -98,7 +100,7 @@ export function LibraryFollowButton({
         }}
       >
         <Icon icon="mdi:heart-outline" width={13} height={13} />
-        Sign in to follow
+        {tStatic("library.sign_in_to_follow")}
       </Link>
     )
   }

@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import type { Locale } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import { T } from "@/lib/design-tokens"
 import { Link } from "@/lib/navigation"
@@ -20,12 +21,14 @@ export async function LearnMoreLink({
   readonly locale: Locale
   readonly className?: string
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const link = await knowledgeLink(slug, locale)
   if (!link) return null
 
   return (
     <p className={`m-0 text-sm ${className}`} style={{ color: T.ink.dim }}>
-      Learn more:{" "}
+      {tStatic("staff.learn_more")}{" "}
       <Link
         href={link.href}
         className="inline-flex min-h-11 items-center gap-1 font-semibold underline underline-offset-[3px]"

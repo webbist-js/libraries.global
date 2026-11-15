@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react"
 import { driveDateLabel } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { T, TYPE_TINT } from "@/lib/design-tokens"
@@ -39,6 +40,8 @@ export function FinishedDrives({
 }: {
   readonly views: readonly DriveView[]
 }) {
+  const tStatic = useTranslations("staticUi")
+
   if (views.length === 0) return null
 
   return (
@@ -53,7 +56,7 @@ export function FinishedDrives({
           color: T.ink.base,
         }}
       >
-        Recently finished
+        {tStatic("drive.recently_finished")}
       </h2>
       <ul
         className="m-0 list-none overflow-hidden p-0"
@@ -117,7 +120,7 @@ export function FinishedDrives({
                     icon="mdi:check-circle-outline"
                     width={14}
                   />
-                  Goal met
+                  {tStatic("drive.goal_met")}
                 </span>
               ) : null}
             </li>

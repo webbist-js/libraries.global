@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { type FormEvent, useEffect, useState, useTransition } from "react"
 
 import { useMembershipRefresh } from "@/components/billing/useMembershipRefresh"
@@ -16,6 +16,10 @@ export function TeamConfiguration({
   readonly team: TeamDetail
   readonly label?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(team.name)
   const [libraries, setLibraries] = useState(team.libraries)
@@ -70,7 +74,9 @@ export function TeamConfiguration({
         setOpen(false)
       } catch (failure) {
         setError(
-          failure instanceof Error ? failure.message : "Please try again."
+          failure instanceof Error
+            ? failure.message
+            : tExisting("apiIndividualCheckout.retry")
         )
       }
     })
@@ -101,7 +107,7 @@ export function TeamConfiguration({
         }}
         side="right"
         size="lg"
-        title="Team details and libraries"
+        title={tStatic("staff.team_details_and_libraries")}
       >
         <form
           className="min-w-0 space-y-5"
@@ -109,7 +115,7 @@ export function TeamConfiguration({
           onSubmit={saveTeam}
         >
           <label className="grid gap-2 text-base font-semibold">
-            Team name
+            {tStatic("staff.team_name")}
             <input
               className={STAFF_FIELD}
               disabled={pending}
@@ -120,9 +126,9 @@ export function TeamConfiguration({
             />
           </label>
           <p className="rounded-2xl bg-(--t-bg-surface) p-4 text-sm leading-relaxed text-(--t-ink-dim)">
-            Choose the Libraries your Team covers. Adding a Library does not
-            verify staff access. Removing one ends the staff access this Team
-            assigned there.
+            {tStatic(
+              "staff.choose_the_libraries_your_team_covers_adding_a_library_does_not_verify_staff_access_removing_one_end"
+            )}
           </p>
           <ul className="m-0 list-none divide-y divide-(--t-border-line) p-0">
             {libraries.map((library) => (
@@ -138,13 +144,13 @@ export function TeamConfiguration({
                   onClick={() => removeLibrary(library.documentId)}
                   aria-label={`Remove ${library.name}`}
                 >
-                  Remove
+                  {tExisting("ui.remove")}
                 </button>
               </li>
             ))}
           </ul>
           <label className="grid gap-2 text-base font-semibold">
-            Find a Library
+            {tStatic("staff.find_a_library")}
             <input
               className={STAFF_FIELD}
               disabled={pending}
@@ -175,7 +181,7 @@ export function TeamConfiguration({
                         setResults([])
                       }}
                     >
-                      Add {library.name}
+                      {tExisting("ui.add")} {library.name}
                     </button>
                   </li>
                 ))}
@@ -196,7 +202,7 @@ export function TeamConfiguration({
               size="pill"
               disabled={pending}
             >
-              {pending ? "Saving…" : "Save Team details"}
+              {pending ? tExisting("ui.saving") : "Save Team details"}
             </Button>
             <Button
               type="button"
@@ -205,7 +211,7 @@ export function TeamConfiguration({
               disabled={pending}
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {tExisting("ui.cancel")}
             </Button>
           </div>
         </form>

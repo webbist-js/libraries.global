@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { ProfileHero } from "@/app/[locale]/profile/[username]/_components/ProfileHero"
 import { ProfilePrivatePage } from "@/app/[locale]/profile/[username]/_components/ProfilePrivatePage"
@@ -9,6 +10,7 @@ import { AccountGuard } from "@/components/auth/AccountGuard"
 import { DashboardPage } from "@/components/dashboard/DashboardPage"
 import { RecordToolbar } from "@/components/dashboard/RecordToolbar"
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { T } from "@/lib/design-tokens"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
@@ -81,13 +83,15 @@ const followingCount = (profile: UserProfile) =>
   (profile.followedDrives?.length ?? 0) +
   (profile.claimedLibraries?.length ?? 0)
 
-export default async function ProfileLayout({
+async function ProfileLayout({
   children,
   params,
 }: {
   children: React.ReactNode
   params: Promise<{ locale: string; username: string }>
 }) {
+  const tExisting = await getTranslations()
+
   const [{ username }, hdrs] = await Promise.all([params, headers()])
 
   const [publicProfile, session, contributionCount] = await Promise.all([
@@ -144,7 +148,7 @@ export default async function ProfileLayout({
       toolbar={
         <RecordToolbar
           items={[
-            { href: "/community", label: "Community" },
+            { href: "/community", label: tExisting("ui.community") },
             { label: `@${username}` },
           ]}
         />
@@ -186,3 +190,8 @@ export default async function ProfileLayout({
     </DashboardPage>
   )
 }
+
+export default withMessages(
+  ProfileLayout,
+  "[locale]/(dashboard)/profile/[username]/layout"
+)

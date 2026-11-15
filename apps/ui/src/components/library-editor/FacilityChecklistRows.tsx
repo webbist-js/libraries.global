@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import { facilityChecklistFor, type FacilityCheck } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useState } from "react"
 
@@ -44,7 +44,9 @@ export function FacilityChecklistRows({
   readonly f: FormData
   readonly setFormData: React.Dispatch<React.SetStateAction<FormData>>
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const checks = facilityChecklistFor(f.libraryType)
   const [options, setOptions] = useState<
@@ -108,9 +110,9 @@ export function FacilityChecklistRows({
         {tUi("facility_checklist")}{" "}
       </legend>
       <p className="m-0" style={fieldHintStyle}>
-        The questions readers ask on your page. &ldquo;Yes&rdquo; adds the
-        facility to the record; &ldquo;No&rdquo; and &ldquo;Not sure&rdquo;
-        leave it off.
+        {tStatic(
+          "libraryEditor.the_questions_readers_ask_on_your_page_ldquo_yes_rdquo_adds_the_facility_to_the_record_ldquo_no_rdqu"
+        )}
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {checks.map((check) => {

@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import type { SupportersResponse } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState, useTransition, type FormEvent } from "react"
 
 import { Avatar } from "@/components/ds/Avatar"
@@ -54,7 +54,9 @@ export function SupportersDirectory({
   readonly query: SupportersQuery
   readonly locale: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -123,7 +125,7 @@ export function SupportersDirectory({
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <h2 id="supporters-heading" className="type-h2 m-0">
-            Our supporters
+            {tStatic("communityRoute.our_supporters")}
           </h2>
           {directory ? (
             <p className="mt-2 mb-0 text-sm" style={{ color: T.ink.dim }}>
@@ -151,7 +153,7 @@ export function SupportersDirectory({
               }}
             />
             <button type="submit" className="sr-only focus:not-sr-only">
-              Search supporters
+              {tStatic("communityRoute.search_supporters")}
             </button>
           </form>
         ) : null}
@@ -188,7 +190,9 @@ export function SupportersDirectory({
           className="mt-6 rounded-2xl border p-6"
           style={{ background: T.bg.deep, borderColor: T.border.line }}
         >
-          The supporters list is unavailable. Please try again shortly.
+          {tStatic(
+            "communityRoute.the_supporters_list_is_unavailable_please_try_again_shortly"
+          )}
         </p>
       ) : directory.entries.length === 0 ? (
         <EmptyState
@@ -288,7 +292,9 @@ export function SupportersDirectory({
           ) : null}
           {loadError ? (
             <p role="alert" className="m-0 basis-full">
-              Couldn&apos;t load more supporters. Please try again.
+              {tStatic(
+                "communityRoute.couldn_apos_t_load_more_supporters_please_try_again"
+              )}
             </p>
           ) : null}
         </div>

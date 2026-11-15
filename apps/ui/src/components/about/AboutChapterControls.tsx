@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, Check, Plus, RotateCcw } from "lucide-react"
 import Image from "next/image"
+import { useLocale, useTranslations } from "next-intl"
 import {
   createContext,
   type ReactNode,
@@ -56,33 +57,6 @@ export function AboutNarrativeProvider({
   )
 }
 
-const CONTEXTS = [
-  {
-    title: "Reading",
-    text: "A quiet desk. A first library card.",
-    caption: "A place to sit down and begin.",
-    kind: "room",
-  },
-  {
-    title: "Research",
-    text: "A question that leads into a collection.",
-    caption: "Follow a question into a collection.",
-    kind: "shelves",
-  },
-  {
-    title: "Memory",
-    text: "The records a community keeps.",
-    caption: "The things a community chooses to keep.",
-    kind: "archive",
-  },
-  {
-    title: "Mobile",
-    text: "A library that comes to you.",
-    caption: "Sometimes the library comes to you.",
-    kind: "mobile",
-  },
-] as const
-
 export type AboutPhotograph = {
   src: string
   alt: string
@@ -97,6 +71,36 @@ export function LibraryContexts({
 }: {
   readonly photographs?: readonly AboutPhotograph[]
 }) {
+  const tStatic = useTranslations("staticUi")
+  const tDetail = useTranslations("aboutDetail")
+
+  const CONTEXTS = [
+    {
+      title: tStatic("about.reading"),
+      text: tStatic("about.a_quiet_desk_a_first_library_card"),
+      caption: tDetail("sit"),
+      kind: "room",
+    },
+    {
+      title: tStatic("about.research"),
+      text: tStatic("about.a_question_that_leads_into_a_collection"),
+      caption: tDetail("question"),
+      kind: "shelves",
+    },
+    {
+      title: tStatic("about.memory"),
+      text: tStatic("about.the_records_a_community_keeps"),
+      caption: tDetail("keep"),
+      kind: "archive",
+    },
+    {
+      title: tStatic("about.mobile"),
+      text: tStatic("about.a_library_that_comes_to_you"),
+      caption: tDetail("comes"),
+      kind: "mobile",
+    },
+  ] as const
+
   const [selected, setSelected] = useState(0)
   const narrative = useChapterFocus(1, selected)
   const choose = (index: number) => {
@@ -108,7 +112,7 @@ export function LibraryContexts({
     <div
       className="about-context-strip"
       role="group"
-      aria-label="What a library makes possible"
+      aria-label={tStatic("about.what_a_library_makes_possible")}
     >
       {CONTEXTS.map((context, index) => {
         const photograph = photographs[index]
@@ -124,7 +128,7 @@ export function LibraryContexts({
               type="button"
               aria-label={
                 photograph
-                  ? `${photograph.caption ?? photograph.alt}. ${photograph.story ?? "One of the libraries in our shared record."}`
+                  ? `${photograph.caption ?? photograph.alt}. ${photograph.story ?? tDetail("shared")}`
                   : `${context.title} ${context.text}`
               }
               aria-pressed={selected === index}
@@ -156,8 +160,7 @@ export function LibraryContexts({
               </span>
               <span>
                 {photograph
-                  ? (photograph.story ??
-                    "One of the libraries in our shared record.")
+                  ? (photograph.story ?? tDetail("shared"))
                   : context.caption}
               </span>
               {photograph?.credit ? (
@@ -173,52 +176,56 @@ export function LibraryContexts({
   )
 }
 
-const TYPES = [
-  {
-    title: "Public libraries",
-    text: "The local branch, open to its community.",
-    x: 17,
-    y: 24,
-    size: "clamp(40px,5.6vw,96px)",
-  },
-  {
-    title: "University & academic",
-    text: "Collections for study and research.",
-    x: 68,
-    y: 14,
-    size: "clamp(28px,3.4vw,58px)",
-  },
-  {
-    title: "National & parliamentary",
-    text: "The records and collections of a country.",
-    x: 79,
-    y: 47,
-    size: "clamp(30px,3.8vw,66px)",
-  },
-  {
-    title: "Archives & cultural",
-    text: "Manuscripts, memory and specialist knowledge.",
-    x: 22,
-    y: 60,
-    size: "clamp(30px,4vw,70px)",
-  },
-  {
-    title: "Monastic libraries",
-    text: "Collections cared for across generations.",
-    x: 52,
-    y: 86,
-    size: "clamp(26px,3vw,52px)",
-  },
-  {
-    title: "Mobile libraries",
-    text: "Library services that come to their communities.",
-    x: 84,
-    y: 82,
-    size: "clamp(26px,3.2vw,56px)",
-  },
-] as const
-
 export function LibraryTypes() {
+  const tStatic = useTranslations("staticUi")
+
+  const TYPES = [
+    {
+      title: tStatic("about.public_libraries"),
+      text: tStatic("about.the_local_branch_open_to_its_community"),
+      x: 17,
+      y: 24,
+      size: "clamp(40px,5.6vw,96px)",
+    },
+    {
+      title: tStatic("about.university_academic"),
+      text: tStatic("about.collections_for_study_and_research"),
+      x: 68,
+      y: 14,
+      size: "clamp(28px,3.4vw,58px)",
+    },
+    {
+      title: tStatic("about.national_parliamentary"),
+      text: tStatic("about.the_records_and_collections_of_a_country"),
+      x: 79,
+      y: 47,
+      size: "clamp(30px,3.8vw,66px)",
+    },
+    {
+      title: tStatic("about.archives_cultural"),
+      text: tStatic("about.manuscripts_memory_and_specialist_knowledge"),
+      x: 22,
+      y: 60,
+      size: "clamp(30px,4vw,70px)",
+    },
+    {
+      title: tStatic("about.monastic_libraries"),
+      text: tStatic("about.collections_cared_for_across_generations"),
+      x: 52,
+      y: 86,
+      size: "clamp(26px,3vw,52px)",
+    },
+    {
+      title: tStatic("about.mobile_libraries"),
+      text: tStatic("about.library_services_that_come_to_their_communities"),
+      x: 84,
+      y: 82,
+      size: "clamp(26px,3.2vw,56px)",
+    },
+  ] as const
+
+  const tExisting = useTranslations()
+
   const [selected, setSelected] = useState(0)
   const narrative = useChapterFocus(2, selected)
   const choose = (index: number) => {
@@ -248,12 +255,12 @@ export function LibraryTypes() {
       </svg>
       <div className="about-type-center" aria-hidden="true">
         <i />
-        <span>One open index</span>
+        <span>{tStatic("about.one_open_index")}</span>
       </div>
       <div
         className="about-type-labels"
         role="group"
-        aria-label="Kinds of library"
+        aria-label={tStatic("about.kinds_of_library")}
       >
         {TYPES.map((type, index) => (
           <button
@@ -285,29 +292,39 @@ export function LibraryTypes() {
         </span>
         <p>{TYPES[selected]!.text}</p>
         <Link href="/libraries" className="about-text-link">
-          Browse the index <ArrowUpRight size={17} aria-hidden="true" />
+          {tExisting("aboutCoverage.browse")}{" "}
+          <ArrowUpRight size={17} aria-hidden="true" />
         </Link>
       </div>
     </div>
   )
 }
 
-const RECORD_STEPS = [
-  {
-    title: "Start with a source",
-    text: "Published datasets and public references establish a record. Original provenance, publisher credits and licence details stay with it.",
-  },
-  {
-    title: "Add what people know",
-    text: "Library websites, photographs and local knowledge add useful details, with public sources to support them.",
-  },
-  {
-    title: "Review, then keep the history",
-    text: "Community contributions are checked before they appear. Accepted changes leave a history. Approved library staff can publish ordinary updates to their own records.",
-  },
-] as const
-
 export function RecordSteps({ children }: { readonly children?: ReactNode }) {
+  const tStatic = useTranslations("staticUi")
+  const tDetail = useTranslations("aboutDetail")
+
+  const RECORD_STEPS = [
+    {
+      title: tStatic("about.start_with_a_source"),
+      text: tStatic(
+        "about.published_datasets_and_public_references_establish_a_record_original_provenance_publisher_credits_an"
+      ),
+    },
+    {
+      title: tStatic("about.add_what_people_know"),
+      text: tStatic(
+        "about.library_websites_photographs_and_local_knowledge_add_useful_details_with_public_sources_to_support_t"
+      ),
+    },
+    {
+      title: tStatic("about.review_then_keep_the_history"),
+      text: tStatic(
+        "about.community_contributions_are_checked_before_they_appear_accepted_changes_leave_a_history_approved_lib"
+      ),
+    },
+  ] as const
+
   const narrative = useContext(NarrativeContext)
   const [step, setStep] = useState(0)
   useEffect(() => {
@@ -332,7 +349,7 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
         {children}
         <ol
           className="about-record-steps"
-          aria-label="How a library record develops"
+          aria-label={tStatic("about.how_a_library_record_develops")}
         >
           {RECORD_STEPS.map((item, index) => (
             <li key={item.title}>
@@ -355,7 +372,8 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
           ))}
         </ol>
         <Link href="/knowledge" className="about-text-link">
-          See how review works <ArrowUpRight size={17} aria-hidden="true" />
+          {tStatic("about.see_how_review_works")}{" "}
+          <ArrowUpRight size={17} aria-hidden="true" />
         </Link>
       </div>
       <div
@@ -365,22 +383,36 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
       >
         <div className="about-record-grid" aria-hidden="true" />
         <div className="about-record-content">
-          <p className="about-record-kicker">An illustrative record</p>
-          <h3 className="type-h3">A library, better known.</h3>
+          <p className="about-record-kicker">
+            {tStatic("about.an_illustrative_record")}
+          </p>
+          <h3 className="type-h3">{tStatic("about.a_library_better_known")}</h3>
           <div className="about-record-layers">
             <div className="about-record-layer" data-visible="true">
-              <span className="about-record-field-label">The foundation</span>
-              <p>Name, institution type and location</p>
-              <small>A published source, with its credit and licence.</small>
+              <span className="about-record-field-label">
+                {tStatic("about.the_foundation")}
+              </span>
+              <p>{tStatic("about.name_institution_type_and_location")}</p>
+              <small>
+                {tStatic(
+                  "about.a_published_source_with_its_credit_and_licence"
+                )}
+              </small>
             </div>
             <div
               className="about-record-layer"
               data-visible={step >= 1}
               aria-hidden={step < 1}
             >
-              <span className="about-record-field-label">Local knowledge</span>
-              <p>Hours, access details and a photograph</p>
-              <small>Useful information, supported by public references.</small>
+              <span className="about-record-field-label">
+                {tStatic("about.local_knowledge")}
+              </span>
+              <p>{tStatic("about.hours_access_details_and_a_photograph")}</p>
+              <small>
+                {tStatic(
+                  "about.useful_information_supported_by_public_references"
+                )}
+              </small>
             </div>
             <div
               className="about-record-layer"
@@ -388,10 +420,15 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
               aria-hidden={step < 2}
             >
               <span className="about-record-field-label">
-                <Check size={13} aria-hidden="true" /> Reviewed and credited
+                <Check size={13} aria-hidden="true" />{" "}
+                {tStatic("about.reviewed_and_credited")}
               </span>
-              <p>A record with a history</p>
-              <small>Accepted changes stay traceable to their sources.</small>
+              <p>{tStatic("about.a_record_with_a_history")}</p>
+              <small>
+                {tStatic(
+                  "about.accepted_changes_stay_traceable_to_their_sources"
+                )}
+              </small>
             </div>
           </div>
           <p
@@ -399,7 +436,11 @@ export function RecordSteps({ children }: { readonly children?: ReactNode }) {
             aria-live="polite"
             aria-atomic="true"
           >
-            Stage {step + 1} of 3 · {RECORD_STEPS[step]!.title}
+            {tDetail("stage", {
+              stage: step + 1,
+              total: 3,
+              title: RECORD_STEPS[step]!.title,
+            })}
           </p>
         </div>
       </div>
@@ -429,11 +470,16 @@ const CONTINENT_POSITION: Readonly<Record<string, { x: number; y: number }>> = {
 
 export function CoverageExplorer({
   continents,
-  locale = "en-GB",
+  locale,
 }: {
   readonly continents: readonly HomepageContinentSummary[]
   readonly locale?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+  const tDetail = useTranslations("aboutDetail")
+
+  const tExisting = useTranslations()
+
   const [scale, setScale] = useState<"count" | "log">("count")
   const [selected, setSelected] = useState<string | null>(null)
   const [hovered, setHovered] = useState<string | null>(null)
@@ -444,7 +490,8 @@ export function CoverageExplorer({
   const coverage = continents
     .filter((continent) => continent.name && continent.slug)
     .sort((a, b) => b.libraryCount - a.libraryCount)
-  const number = new Intl.NumberFormat(locale)
+  const activeLocale = useLocale()
+  const number = new Intl.NumberFormat(locale ?? activeLocale)
   const total = coverage.reduce(
     (sum, continent) => sum + continent.libraryCount,
     0
@@ -465,7 +512,7 @@ export function CoverageExplorer({
       <div
         className="about-map-slot"
         data-about-scene="4"
-        aria-label="Published library records across the world"
+        aria-label={tStatic("about.published_library_records_across_the_world")}
       >
         {coverage.map((continent) => {
           const slug = continent.slug!
@@ -502,8 +549,12 @@ export function CoverageExplorer({
               }}
             >
               <span>{continent.name}</span>
-              <strong>{number.format(continent.libraryCount)}</strong>
-              <span className="sr-only"> records documented</span>
+              <strong aria-hidden="true">
+                {number.format(continent.libraryCount)}
+              </strong>
+              <span className="sr-only">
+                {tDetail("documented", { count: continent.libraryCount })}
+              </span>
             </button>
           )
         })}
@@ -512,26 +563,26 @@ export function CoverageExplorer({
         <div className="about-coverage-chart">
           <div className="about-coverage-controls">
             <p className="about-interaction-label">
-              Published records by continent
+              {tStatic("about.published_records_by_continent")}
             </p>
             <div
               className="about-scale-buttons"
               role="group"
-              aria-label="Coverage bar scale"
+              aria-label={tStatic("about.coverage_bar_scale")}
             >
               <button
                 type="button"
                 aria-pressed={scale === "count"}
                 onClick={() => setScale("count")}
               >
-                Count
+                {tExisting("widgetSettings.count")}
               </button>
               <button
                 type="button"
                 aria-pressed={scale === "log"}
                 onClick={() => setScale("log")}
               >
-                Log scale
+                {tStatic("about.log_scale")}
               </button>
             </div>
           </div>
@@ -588,14 +639,19 @@ export function CoverageExplorer({
                         <span style={{ transform: `scaleX(${width / 100})` }} />
                       </span>
                       <span className="about-coverage-count">
-                        {number.format(continent.libraryCount)}
-                        <span className="sr-only"> published libraries</span>
+                        <span aria-hidden="true">
+                          {number.format(continent.libraryCount)}
+                        </span>
+                        <span className="sr-only">
+                          {tDetail("publishedLibraries", {
+                            count: continent.libraryCount,
+                          })}
+                        </span>
                       </span>
                       <span className="about-coverage-share">
-                        {shareLabel}
+                        <span aria-hidden="true">{shareLabel}</span>
                         <span className="sr-only">
-                          {" "}
-                          of these continent records
+                          {tDetail("share", { share: shareLabel })}
                         </span>
                       </span>
                     </button>
@@ -605,8 +661,9 @@ export function CoverageExplorer({
             </ul>
           ) : (
             <p className="about-coverage-note">
-              Coverage counts are unavailable at the moment. You can still
-              explore the atlas.
+              {tStatic(
+                "about.coverage_counts_are_unavailable_at_the_moment_you_can_still_explore_the_atlas"
+              )}
             </p>
           )}
         </div>
@@ -616,62 +673,76 @@ export function CoverageExplorer({
           aria-atomic="true"
         >
           <p className="about-interaction-label">
-            {current?.name ?? "A picture still forming"}
+            {current?.name ?? tDetail("forming")}
           </p>
           <p>
             {current
-              ? `${number.format(current.libraryCount)} published ${current.libraryCount === 1 ? "record" : "records"} so far.`
-              : "Choose a continent to see what we have documented."}
+              ? tDetail("soFar", { count: current.libraryCount })
+              : tDetail("choose")}
           </p>
           <span>
-            Counts describe the index. They do not measure how many libraries
-            exist in a place.
+            {tStatic(
+              "about.counts_describe_the_index_they_do_not_measure_how_many_libraries_exist_in_a_place"
+            )}
           </span>
           <Link
             href={current?.slug ? `/${current.slug}` : "/map"}
             className="about-text-link"
           >
-            {current?.name ? `Explore ${current.name}` : "Explore the atlas"}{" "}
+            {current?.name
+              ? tDetail("explore", { place: current.name })
+              : tDetail("atlas")}{" "}
             <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
         </div>
       </div>
       <p className="about-coverage-note">
-        Log scale makes small counts easier to compare. Numbers and shares stay
-        the same.
+        {tStatic(
+          "about.log_scale_makes_small_counts_easier_to_compare_numbers_and_shares_stay_the_same"
+        )}
       </p>
     </div>
   )
 }
 
-const PRINCIPLES = [
-  {
-    title: "Source code",
-    text: "Read the code, report an issue or help improve the platform.",
-    href: "https://github.com/webbist-js/libraries.global",
-    kind: "ring",
-  },
-  {
-    title: "Methodology",
-    text: "What we include, how we count, and where the gaps are.",
-    href: "/knowledge/data-api/how-we-count",
-    kind: "steps",
-  },
-  {
-    title: "Data and attribution",
-    text: "Check the terms for reuse. Datasets and photos keep their own credits.",
-    href: "/legal/data-licence",
-    kind: "link",
-  },
-  {
-    title: "Built by contributors",
-    text: "The people who know libraries improve the record. Support never buys review authority.",
-    href: "/community",
-    kind: "cluster",
-  },
-] as const
-
 export function OpenPrinciples() {
+  const tStatic = useTranslations("staticUi")
+
+  const PRINCIPLES = [
+    {
+      title: tStatic("about.source_code"),
+      text: tStatic(
+        "about.read_the_code_report_an_issue_or_help_improve_the_platform"
+      ),
+      href: "https://github.com/webbist-js/libraries.global",
+      kind: "ring",
+    },
+    {
+      title: tStatic("about.methodology"),
+      text: tStatic(
+        "about.what_we_include_how_we_count_and_where_the_gaps_are"
+      ),
+      href: "/knowledge/data-api/how-we-count",
+      kind: "steps",
+    },
+    {
+      title: tStatic("about.data_and_attribution"),
+      text: tStatic(
+        "about.check_the_terms_for_reuse_datasets_and_photos_keep_their_own_credits"
+      ),
+      href: "/legal/data-licence",
+      kind: "link",
+    },
+    {
+      title: tStatic("about.built_by_contributors"),
+      text: tStatic(
+        "about.the_people_who_know_libraries_improve_the_record_support_never_buys_review_authority"
+      ),
+      href: "/community",
+      kind: "cluster",
+    },
+  ] as const
+
   const [selected, setSelected] = useState<number | null>(null)
   const narrative = useChapterFocus(5, selected ?? 0)
   const choose = (index: number) => {
@@ -728,6 +799,8 @@ export function OpenPrinciples() {
 }
 
 export function ContributionNetwork() {
+  const tStatic = useTranslations("staticUi")
+
   const narrative = useContext(NarrativeContext)
   const [growth, setGrowth] = useState(0)
   useEffect(() => {
@@ -747,18 +820,20 @@ export function ContributionNetwork() {
 
   return (
     <div className="about-network-control">
-      <p className="about-interaction-label">One contribution, connected.</p>
+      <p className="about-interaction-label">
+        {tStatic("about.one_contribution_connected")}
+      </p>
       <p className="about-network-status" aria-live="polite" aria-atomic="true">
         {growth === 0
-          ? "It begins with one record."
+          ? tStatic("aboutControl.begin")
           : growth < 1
-            ? "Local knowledge adds to the picture."
-            : "Small contributions build a shared record."}
+            ? tStatic("aboutControl.local")
+            : tStatic("aboutControl.small")}
       </p>
       <div
         className="about-network-buttons"
         role="group"
-        aria-label="Illustrate a growing record"
+        aria-label={tStatic("about.illustrate_a_growing_record")}
       >
         <button
           type="button"
@@ -766,7 +841,7 @@ export function ContributionNetwork() {
           aria-pressed={growth === 0.5}
           onClick={() => choose(0.5)}
         >
-          <Plus size={17} aria-hidden="true" /> Add a point
+          <Plus size={17} aria-hidden="true" /> {tStatic("about.add_a_point")}
         </button>
         <button
           type="button"
@@ -774,12 +849,13 @@ export function ContributionNetwork() {
           aria-pressed={growth === 1}
           onClick={() => choose(1)}
         >
-          See the connections <ArrowUpRight size={17} aria-hidden="true" />
+          {tStatic("about.see_the_connections")}{" "}
+          <ArrowUpRight size={17} aria-hidden="true" />
         </button>
         <button
           type="button"
           className="about-network-reset"
-          aria-label="Reset the contribution illustration"
+          aria-label={tStatic("about.reset_the_contribution_illustration")}
           onClick={() => choose(0)}
         >
           <RotateCcw size={16} aria-hidden="true" />

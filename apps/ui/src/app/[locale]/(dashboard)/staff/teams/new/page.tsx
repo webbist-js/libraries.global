@@ -1,9 +1,11 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 
 import { WorkspacePageHeader } from "@/components/dashboard/WorkspaceHero"
 import { Container } from "@/components/elementary/Container"
 import { TeamSignup } from "@/components/staff/TeamSignup"
+import { withMessages } from "@/i18n/scoped-messages"
 import { sessionTeamsOf } from "@/lib/access-server"
 import { getSessionSSR } from "@/lib/auth-server"
 import type { NetworkWorkspace } from "@/lib/networks/types"
@@ -16,11 +18,13 @@ function signupReturnPath(network?: string) {
   return `/staff/teams/new${query.size ? `?${query}` : ""}`
 }
 
-export default async function NewTeamPage({
+async function NewTeamPage({
   searchParams,
 }: {
   readonly searchParams: Promise<{ network?: string }>
 }) {
+  const tStatic = await getTranslations("staticUi")
+
   const [session, query] = await Promise.all([
     getSessionSSR(await headers()),
     searchParams,
@@ -47,8 +51,10 @@ export default async function NewTeamPage({
     <>
       <WorkspacePageHeader
         density="task"
-        title="Create your Team"
-        lead="Create a free Team, add your libraries and invite your colleagues."
+        title={tStatic("staffRoute.create_your_team")}
+        lead={tStatic(
+          "staffRoute.create_a_free_team_add_your_libraries_and_invite_your_colleagues"
+        )}
       />
       <Container className="py-10">
         <TeamSignup
@@ -60,3 +66,8 @@ export default async function NewTeamPage({
     </>
   )
 }
+
+export default withMessages(
+  NewTeamPage,
+  "[locale]/(dashboard)/staff/teams/new/page"
+)

@@ -1,0 +1,240 @@
+{
+  "contactModal": {
+    "close": "Close",
+    "choose": "Choose an option",
+    "optional": "(optional)",
+    "continue": "Continue",
+    "back": "Back",
+    "done": "Done",
+    "sending": "Sending…",
+    "invalid": "Please check the required fields. Your message needs at least 10 characters.",
+    "error": "We couldn’t send your message. Your answers are still here — please try again.",
+    "rateLimited": "You’ve sent a few messages recently. Please try again in an hour.",
+    "successTitle": "Thanks for getting in touch.",
+    "received": "Your message has been sent to our team.",
+    "reference": "Reference: {reference}",
+    "step": "Step {current} of 2",
+    "name": "Your name",
+    "email": "Email address",
+    "steps": "How can we reproduce it?",
+    "stepsPlaceholder": "1. I opened…\n2. I selected…\n3. Then…",
+    "private": "Only shared with our team",
+    "contextNote": "Page and device details are included to help us understand your experience.",
+    "privacy": "Privacy",
+    "feedback": {
+      "eyebrow": "Help shape the beta",
+      "title": "How did it go?",
+      "description": "A couple of quick questions help us understand what’s useful and where we can improve.",
+      "stepOne": "Your experience",
+      "stepTwo": "A little more detail",
+      "short": "About a minute",
+      "send": "Send feedback",
+      "success": "Your feedback helps us decide what to improve next.",
+      "emailHint": "Leave an email if you’d like us to follow up. Anonymous feedback is welcome.",
+      "topic": "What would you like to share?",
+      "topics": {
+        "problem": "Something went wrong",
+        "idea": "I have an idea",
+        "experience": "My experience",
+        "praise": "Something I liked"
+      },
+      "task": "What were you here to do?",
+      "tasks": {
+        "find_library": "Find a library",
+        "plan_visit": "Plan a visit",
+        "contribute": "Add or correct information",
+        "manage_library": "Manage my library",
+        "explore": "Explore and learn",
+        "other": "Something else"
+      },
+      "outcome": "Did you manage to do it?",
+      "outcomes": {
+        "yes": "Yes, I did",
+        "partly": "Partly",
+        "no": "No, I got stuck",
+        "browsing": "I was just browsing"
+      },
+      "ease": "How easy was it?",
+      "easeScore": "{value} out of 5",
+      "difficult": "Difficult",
+      "easy": "Easy",
+      "prompts": {
+        "problem": {
+          "label": "What happened, and what did you expect?",
+          "hint": "Tell us where you got stuck. Please leave out passwords and private information.",
+          "placeholder": "I was trying to… I expected… Instead…"
+        },
+        "idea": {
+          "label": "What would make this more useful to you?",
+          "hint": "What would you change or add, and what would it help you do?",
+          "placeholder": "It would help me if… because…"
+        },
+        "experience": {
+          "label": "What felt easy, confusing, or missing?",
+          "hint": "Think about finding information, navigating, or contributing. A specific example helps.",
+          "placeholder": "The part that stood out was…"
+        },
+        "praise": {
+          "label": "What worked well for you?",
+          "hint": "What helped you, and why? We want to keep the good parts.",
+          "placeholder": "I found… useful because…"
+        }
+      }
+    },
+    "atlas": {
+      "eyebrow": "Help shape Atlas",
+      "title": "How was Atlas for you?",
+      "description": "Tell us which parts you used, how they worked, and what you’d like to see next.",
+      "stepOne": "Using Atlas",
+      "stepTwo": "Your feedback and ideas",
+      "short": "About two minutes",
+      "success": "Your feedback helps us make Atlas more useful and choose what to build next.",
+      "task": "What were you using Atlas to do?",
+      "tasks": {
+        "find_library": "Find a library",
+        "plan_visit": "Plan a visit",
+        "compare_areas": "Compare areas or library coverage",
+        "check_accessibility": "Check accessibility",
+        "export_data": "Export library data",
+        "explore": "Explore the map",
+        "other": "Something else"
+      },
+      "features": {
+        "label": "Which parts of Atlas did you use?",
+        "hint": "Select all that apply. Choose Other if none of these fits.",
+        "required": "Choose at least one part of Atlas, or Other.",
+        "options": {
+          "search": "Search",
+          "filters": "Filters",
+          "map_layers": "Map layers and keys",
+          "library_details": "Library details",
+          "list_view": "List view",
+          "area_comparison": "Area comparison",
+          "accessibility": "Accessibility information",
+          "exports": "Data exports",
+          "other": "Other"
+        }
+      },
+      "clarity": "How clear were the map keys and results?",
+      "clarityScore": "Clarity: {value} out of 5",
+      "unclear": "Unclear",
+      "clear": "Clear",
+      "wishlist": {
+        "label": "Things I’d like to see",
+        "hint": "A feature, map layer, or piece of information that would help you. What would you use it for?",
+        "placeholder": "I’d like to be able to… because…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "What happened in Atlas, and what did you expect?",
+          "hint": "Mention the feature or map layer and where you got stuck. Please leave out passwords and private information.",
+          "placeholder": "In Atlas, I was trying to… I expected… Instead…"
+        },
+        "idea": {
+          "label": "Things I’d like to see in Atlas",
+          "hint": "What feature, map layer, or information would you add or change, and what would it help you do?",
+          "placeholder": "I’d like to be able to… because…"
+        },
+        "experience": {
+          "label": "What felt easy, confusing, or missing in Atlas?",
+          "hint": "Think about searching, filters, map keys, or library details. A specific example helps.",
+          "placeholder": "When I used… I found…"
+        },
+        "praise": {
+          "label": "What worked well for you in Atlas?",
+          "hint": "Which feature helped you, and why? We want to keep the good parts.",
+          "placeholder": "I found… useful because…"
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "Talk to the team",
+      "title": "How can we help?",
+      "description": "Choose what you’re contacting us about so your message reaches the right person.",
+      "reason": "What’s your message about?",
+      "send": "Send message",
+      "success": "We’ll reply to the email address you provided when a response is needed.",
+      "emailHint": "We’ll use this address to reply about your message. This doesn’t subscribe you to emails.",
+      "inlineDescription": "Report a problem, ask a question, or discuss working together. A few details help us get you to the right person.",
+      "open": "Contact the team",
+      "types": {
+        "report_issue": "Report an issue",
+        "general_inquiry": "General inquiry",
+        "account_support": "Account help",
+        "membership_support": "API Access and billing",
+        "library_correction": "Correct library information",
+        "plans": "Plans and API Access",
+        "partnership": "Partnership or collaboration",
+        "privacy": "Privacy or data request",
+        "sponsorship": "Sponsorship"
+      },
+      "prompts": {
+        "report_issue": {
+          "label": "What went wrong, and what should have happened?",
+          "hint": "Describe the problem and any error you saw. Don’t include passwords or security codes.",
+          "placeholder": "I was trying to… but…"
+        },
+        "general_inquiry": {
+          "label": "What would you like to know?",
+          "hint": "A little background helps us give you a useful answer.",
+          "placeholder": "I’m getting in touch about…"
+        },
+        "account_support": {
+          "label": "What do you need help with?",
+          "hint": "Describe the account problem. We’ll never ask for your password or sign-in code.",
+          "placeholder": "I’m having trouble with…"
+        },
+        "membership_support": {
+          "label": "What do you need help with?",
+          "hint": "Tell us about your API Access subscription, an older membership, or any problem with billing, access or features. Don’t include card details, passwords or security codes.",
+          "placeholder": "I need help with…"
+        },
+        "library_correction": {
+          "label": "Which library, and what needs correcting?",
+          "hint": "Include the library name or page link, the correct information, and a source if you have one.",
+          "placeholder": "The information for… should say…"
+        },
+        "plans": {
+          "label": "What would you like to discuss?",
+          "hint": "Tell us about your library or service, what you’d like to use, or your verification question.",
+          "placeholder": "We’re interested in… for…"
+        },
+        "partnership": {
+          "label": "What do you have in mind?",
+          "hint": "Tell us about your organisation, your idea, and how we could work together.",
+          "placeholder": "We’re… and would like to…"
+        },
+        "privacy": {
+          "label": "What’s your question or request?",
+          "hint": "Describe the request. Please don’t send identity documents or sensitive personal information here.",
+          "placeholder": "I would like to ask about…"
+        },
+        "sponsorship": {
+          "label": "What would you like to sponsor?",
+          "hint": "Tell us about your organisation, the programme you’re interested in and, if you know them, your budget and timing. Don’t include payment details.",
+          "placeholder": "We’re… and would like to support…"
+        }
+      }
+    }
+  },
+  "contactForm": {
+    "name": "First name and last name",
+    "namePlaceholder": "John Doe",
+    "email": "Email",
+    "emailPlaceholder": "john.doe@gmail.com",
+    "message": "Message",
+    "gdpr": "I agree to the processing of personal data",
+    "submit": "Send",
+    "success": "The form has been sent successfully.",
+    "error": "The form could not be sent. Please try again later.",
+    "gdprLink": "Read more about the processing of personal data"
+  },
+  "newsletterForm": {
+    "rateLimited": "Too many sign-ups from here for now. Please try again later.",
+    "failed": "Sign-up failed. Please try again.",
+    "sent": "Thanks. If confirmation is needed, check your inbox to finish subscribing.",
+    "website": "Website",
+    "invalidEmail": "Enter a valid email address.",
+    "accountEmail": "Use your account email for a newsletter subscription."
+  }
+}

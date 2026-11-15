@@ -9,6 +9,7 @@ import {
 } from "@/components/contribute/article-editor/article.types"
 import { ArticleEditorShell } from "@/components/contribute/article-editor/ArticleEditorShell"
 import { MainContent } from "@/components/ds/MainContent"
+import { withMessages } from "@/i18n/scoped-messages"
 import {
   fetchArticleLocales,
   loadArticleForEditor,
@@ -34,7 +35,7 @@ export async function generateMetadata({
   return privateMetadata(`Edit article: ${slug}`)
 }
 
-export default async function EditKnowledgeArticlePage({
+async function EditKnowledgeArticlePage({
   params,
   searchParams,
 }: {
@@ -140,3 +141,8 @@ export default async function EditKnowledgeArticlePage({
     </div>
   )
 }
+
+export default withMessages(
+  EditKnowledgeArticlePage,
+  "[locale]/(dashboard)/contribute/knowledge/[slug]/page"
+)

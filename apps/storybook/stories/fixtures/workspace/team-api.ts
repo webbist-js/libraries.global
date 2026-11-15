@@ -59,6 +59,15 @@ export const signedInApiAccess = {
   ...guestApiAccess,
   signedIn: true,
   scope: contributionAccountScope(readerSession.user),
+  accountName: readerSession.user.name ?? "Example Reader",
+  prospect: {
+    verified: true,
+    purchasing: apiDashboard.purchasing,
+    price: apiDashboard.price,
+    overageAvailable: apiDashboard.overageAvailable,
+    limits: apiDashboard.limits,
+    rates: apiDashboard.rates,
+  },
 } satisfies ApiWorkspaceAccess
 
 export const memberApiAccess = {

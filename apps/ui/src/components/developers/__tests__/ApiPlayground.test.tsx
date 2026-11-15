@@ -19,6 +19,12 @@ function mount() {
     target: { value: secret },
   })
 }
+function chooseOperation(label: string) {
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Request type" }), {
+    key: "ArrowDown",
+  })
+  fireEvent.click(screen.getByRole("option", { name: label }))
+}
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
@@ -112,7 +118,7 @@ it("lists records through the same metered API", async () => {
     .mockResolvedValue(Response.json({ data: [], meta: { nextCursor: null } }))
   vi.stubGlobal("fetch", fetch)
   mount()
-  fireEvent.click(screen.getByRole("button", { name: "List records" }))
+  chooseOperation("List records")
   fireEvent.change(screen.getByLabelText("Number of records"), {
     target: { value: "5" },
   })
@@ -205,7 +211,7 @@ it("browses places and lists a place's libraries through the metered API", async
     .mockResolvedValueOnce(Response.json({ data: [record], meta: {} }))
   vi.stubGlobal("fetch", fetch)
   mount()
-  fireEvent.click(screen.getByRole("button", { name: "Browse places" }))
+  chooseOperation("Browse places")
   fireEvent.click(screen.getByRole("button", { name: "Run request" }))
   fireEvent.click(await screen.findByRole("button", { name: "Browse England" }))
   fireEvent.click(

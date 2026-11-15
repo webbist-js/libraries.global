@@ -28,6 +28,7 @@ COPY --from=prepare /app/out/json/ .
 COPY --from=prepare /app/package.json /app/pnpm-lock.yaml ./
 COPY --from=prepare /app/patches/ ./patches/
 COPY --from=prepare /app/out/pnpm-workspace.yaml ./pnpm-workspace.yaml
+COPY --from=prepare /app/.pnpmfile.cjs ./.pnpmfile.cjs
 RUN --mount=type=cache,id=cms-pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile --ignore-scripts
 COPY --from=prepare /app/out/full/ .

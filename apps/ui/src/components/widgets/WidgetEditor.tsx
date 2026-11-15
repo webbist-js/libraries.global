@@ -1,6 +1,7 @@
 "use client"
 
 import type { TeamWidget } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { Notice } from "@/components/ds/Notice"
@@ -26,6 +27,8 @@ export function WidgetEditor({
   readonly mode?: "build" | "publish" | "manage"
   readonly siteUrl: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const router = useRouter(),
     team = workspace.team,
     state = useWidgetDraft(team.documentId, initial, team.active),
@@ -113,7 +116,7 @@ export function WidgetEditor({
         <WidgetDraftStatus state={state} active={team.active} />
         <nav
           className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto"
-          aria-label="Widget steps"
+          aria-label={tStatic("widget.widget_steps")}
         >
           {(
             [
@@ -140,14 +143,14 @@ export function WidgetEditor({
       {phase === "conflict" ? (
         <div className="flex flex-wrap gap-3">
           <Button variant="surface" size="pill" onClick={() => state.load()}>
-            Load their version
+            {tStatic("widget.load_their_version")}
           </Button>
           <Button
             variant="surface"
             size="pill"
             onClick={() => state.load(true)}
           >
-            Apply mine on top for review
+            {tStatic("widget.apply_mine_on_top_for_review")}
           </Button>
         </div>
       ) : null}
@@ -160,14 +163,15 @@ export function WidgetEditor({
         <Notice
           tone="warn"
           icon="mdi:pause-circle-outline"
-          title="Workspace closed — editing paused"
+          title={tStatic("widget.workspace_closed_editing_paused")}
         >
           <p>
-            Drafts are retained. Organisers can still pause, unpublish or
-            archive widgets.
+            {tStatic(
+              "widget.drafts_are_retained_organisers_can_still_pause_unpublish_or_archive_widgets"
+            )}
           </p>
           <Link className="font-semibold underline" href="/contact">
-            Contact the site team
+            {tStatic("common.contactSiteTeam")}
           </Link>
         </Notice>
       ) : null}

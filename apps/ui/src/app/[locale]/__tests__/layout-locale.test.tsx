@@ -7,9 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { BETA_COOKIE, createBetaPass } from "@/lib/beta/access"
 import { betaShellRequest } from "@/lib/proxies/betaGate"
 
-import cs from "../../../../locales/cs.json"
-import en from "../../../../locales/en.json"
-import fr from "../../../../locales/fr.json"
+import cs from "../../../../locales/cs"
+import en from "../../../../locales/en"
+import fr from "../../../../locales/fr"
 
 const {
   requestConfig,
@@ -172,7 +172,7 @@ describe("root layout language context for static pages", () => {
   })
 })
 
-describe("legal layout after beta entry", () => {
+describe("public legal layout", () => {
   it("renders the site footer and standard legal links with a verified pass", async () => {
     requestHeaders.mockResolvedValue(
       betaShellRequest(
@@ -194,7 +194,7 @@ describe("legal layout after beta entry", () => {
     expect(html).toContain('href="/legal/membership"')
     expect(fetchLegalDocuments).toHaveBeenCalledWith("en", "published")
   })
-  it("keeps the anonymous notice independent of site footer reads", async () => {
+  it("renders the regular site shell for anonymous legacy notices", async () => {
     requestHeaders.mockResolvedValue(
       betaShellRequest(new NextRequest("https://libraries.global/legal/beta"))
         .headers
@@ -206,8 +206,8 @@ describe("legal layout after beta entry", () => {
       })
     )
     expect(html).toContain("Beta notice")
-    expect(html).not.toContain('data-site-footer=""')
-    expect(fetchFooter).not.toHaveBeenCalled()
-    expect(fetchLegalDocuments).not.toHaveBeenCalled()
+    expect(html).toContain('data-site-footer=""')
+    expect(fetchFooter).toHaveBeenCalled()
+    expect(fetchLegalDocuments).toHaveBeenCalled()
   })
 })

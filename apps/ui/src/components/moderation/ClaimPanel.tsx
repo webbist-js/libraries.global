@@ -1,6 +1,7 @@
 "use client"
+
 import { Icon } from "@iconify/react"
-import { useTranslations as useUiTranslations, useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { NOTICE_TONES } from "@/components/ds"
@@ -85,7 +86,11 @@ export function ClaimPanel({
   /** @deprecated The review page's old prop name; read as `review`. */
   readonly invite?: unknown
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const router = useRouter()
   const locale = useLocale()
@@ -178,23 +183,31 @@ export function ClaimPanel({
         </div>
       ) : (
         <p className="m-0 text-sm" style={{ color: T.ink.dim }}>
-          No domain check: the claim has no email or website domain to compare.
+          {tStatic(
+            "moderation.no_domain_check_the_claim_has_no_email_or_website_domain_to_compare"
+          )}
         </p>
       )}
       <KeyValueList
         rows={[
           { label: tUi("library"), value: f.name ?? targetSlug ?? "" },
-          { label: "Entity ref", value: f.entityRef ?? "" },
+          { label: tStatic("moderation.entity_ref"), value: f.entityRef ?? "" },
           {
-            label: "Role",
+            label: tStatic("common.role"),
             value:
               typeof f.role === "string" ? f.role.replaceAll("_", " ") : "",
           },
-          { label: "Department", value: f.department ?? "" },
-          { label: "Verification method", value: f.verificationMethod ?? "" },
-          { label: "User email domain", value: userDomain },
           {
-            label: "Website given by claimant (unverified)",
+            label: tStatic("moderation.department"),
+            value: f.department ?? "",
+          },
+          {
+            label: tStatic("moderation.verification_method"),
+            value: f.verificationMethod ?? "",
+          },
+          { label: tStatic("moderation.user_email_domain"), value: userDomain },
+          {
+            label: tStatic("moderation.website_given_by_claimant_unverified"),
             value: siteDomain || (f.claimedWebsiteDomain ?? ""),
           },
         ].filter((r) => r.value)}
@@ -205,8 +218,10 @@ export function ClaimPanel({
           style={{ borderColor: T.border.line, background: T.bg.surface }}
         >
           <p className="m-0">
-            <strong>Currently staff</strong> ·{" "}
-            {affiliation.staffRole === "owner" ? "Owner" : "Editor"}
+            <strong>{tStatic("moderation.currently_staff")}</strong> ·{" "}
+            {affiliation.staffRole === "owner"
+              ? tExisting("teamInvitation.owner")
+              : tExisting("authorBadges.editor")}
             {affiliation.approvedAt
               ? ` since ${date(affiliation.approvedAt)}`
               : ""}
@@ -222,7 +237,7 @@ export function ClaimPanel({
                   style={{ background: T.action.danger }}
                   onClick={() => void remove()}
                 >
-                  {busy ? "Removing…" : "Confirm removal"}
+                  {busy ? "Removing…" : tExisting("discussions.confirmRemove")}
                 </button>
                 <button
                   type="button"
@@ -231,7 +246,7 @@ export function ClaimPanel({
                   style={{ borderColor: T.border.hi, color: T.ink.base }}
                   onClick={() => setConfirming(false)}
                 >
-                  Keep
+                  {tStatic("moderation.keep")}
                 </button>
               </span>
             ) : (
@@ -247,7 +262,7 @@ export function ClaimPanel({
                   width={16}
                   height={16}
                 />
-                Remove from staff
+                {tStatic("moderation.remove_from_staff")}
               </button>
             )
           ) : null}
@@ -270,7 +285,7 @@ export function ClaimPanel({
             className="inline-flex min-h-11 items-center gap-1 text-sm font-semibold underline underline-offset-[3px]"
             style={{ color: T.accent.primary }}
           >
-            See everyone with staff access
+            {tStatic("moderation.see_everyone_with_staff_access")}
             <Icon
               aria-hidden="true"
               icon="mdi:arrow-right"
@@ -290,8 +305,9 @@ export function ClaimPanel({
         </p>
       ) : null}
       <p className="m-0 text-sm leading-[1.55]" style={{ color: T.ink.dim }}>
-        Approving records the affiliation and raises the claimant to Verified
-        librarian. Roles are never lowered.
+        {tStatic(
+          "moderation.approving_records_the_affiliation_and_raises_the_claimant_to_verified_librarian_roles_are_never_lowe"
+        )}
       </p>
     </div>
   )

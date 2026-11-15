@@ -1,5 +1,5 @@
 import { fromMinutes, localDateTime } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import { Badge, type BadgeColor } from "@/components/ds"
 import { T } from "@/lib/design-tokens"
@@ -13,36 +13,6 @@ export type SessionLog = ConsoleSession & {
   startedByName?: string
 }
 
-const END: Record<string, { label: string; color: BadgeColor; icon: string }> =
-  {
-    auto: { label: "Automatic", color: "dim", icon: "mdi:timer-outline" },
-    manual: {
-      label: "By hand",
-      color: "dim",
-      icon: "mdi:hand-back-left-outline",
-    },
-    breakdown: { label: "Breakdown", color: "danger", icon: "mdi:bus-alert" },
-    takeover: {
-      label: "Taken over",
-      color: "warn",
-      icon: "mdi:swap-horizontal",
-    },
-    revoked: {
-      label: "Access removed",
-      color: "warn",
-      icon: "mdi:account-off-outline",
-    },
-    expired: {
-      label: "Expired",
-      color: "dim",
-      icon: "mdi:clock-alert-outline",
-    },
-    kill_switch: {
-      label: "Live sharing disabled",
-      color: "warn",
-      icon: "mdi:power",
-    },
-  }
 const DAYS: Record<string, string> = {
   mon: "Mon",
   tue: "Tue",
@@ -61,7 +31,52 @@ export function LiveSessionsTable({
   readonly logs: SessionLog[]
   readonly timezone: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const END: Record<
+    string,
+    { label: string; color: BadgeColor; icon: string }
+  > = {
+    auto: {
+      label: tStatic("mobile.automatic"),
+      color: "dim",
+      icon: "mdi:timer-outline",
+    },
+    manual: {
+      label: tStatic("mobile.by_hand"),
+      color: "dim",
+      icon: "mdi:hand-back-left-outline",
+    },
+    breakdown: {
+      label: tStatic("mobile.breakdown"),
+      color: "danger",
+      icon: "mdi:bus-alert",
+    },
+    takeover: {
+      label: tStatic("mobile.taken_over"),
+      color: "warn",
+      icon: "mdi:swap-horizontal",
+    },
+    revoked: {
+      label: tStatic("mobile.access_removed"),
+      color: "warn",
+      icon: "mdi:account-off-outline",
+    },
+    expired: {
+      label: tStatic("mobile.expired"),
+      color: "dim",
+      icon: "mdi:clock-alert-outline",
+    },
+    kill_switch: {
+      label: tStatic("mobile.live_sharing_disabled"),
+      color: "warn",
+      icon: "mdi:power",
+    },
+  }
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   /** "10:14" in the library's zone, the same on the server and the client. */
   const time = (iso: string) =>
@@ -74,37 +89,39 @@ export function LiveSessionsTable({
       aria-labelledby="live-sessions-heading"
     >
       <h3 id="live-sessions-heading" className="type-h3 m-0">
-        Live sessions · last 90 days
+        {tStatic("mobile.live_sessions_last_90_days")}
       </h3>
       {!logs.length ? (
         <p className="mt-3 mb-0 text-base" style={{ color: T.ink.dim }}>
-          No live sessions yet. The first route you share appears here.
+          {tStatic(
+            "mobile.no_live_sessions_yet_the_first_route_you_share_appears_here"
+          )}
         </p>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">
-              Live sessions in the last 90 days
+              {tStatic("mobile.live_sessions_in_the_last_90_days")}
             </caption>
             <thead>
               <tr style={{ color: T.ink.dim }}>
                 <th scope="col" className="pr-3 pb-2 font-semibold">
-                  Date
+                  {tStatic("common.date")}
                 </th>
                 <th scope="col" className="pr-3 pb-2 font-semibold">
-                  Started by
+                  {tStatic("mobile.started_by")}
                 </th>
                 <th scope="col" className="pr-3 pb-2 font-semibold">
-                  Route
+                  {tStatic("mobile.route")}
                 </th>
                 <th scope="col" className="pr-3 pb-2 font-semibold">
-                  Times
+                  {tStatic("mobile.times")}
                 </th>
                 <th scope="col" className="pr-3 pb-2 font-semibold">
-                  Check-ins
+                  {tStatic("mobile.check_ins")}
                 </th>
                 <th scope="col" className="pb-2 font-semibold">
-                  Ended
+                  {tStatic("mobile.ended")}
                 </th>
               </tr>
             </thead>
@@ -125,7 +142,7 @@ export function LiveSessionsTable({
                       {shortDate(s.serviceDate)}
                     </th>
                     <td className="py-2.5 pr-3">
-                      {s.startedByName ?? "Library staff"}
+                      {s.startedByName ?? tExisting("staffOnboarding.eyebrow")}
                     </td>
                     <td className="py-2.5 pr-3 whitespace-nowrap">
                       {DAYS[s.day] ?? s.day}
@@ -135,7 +152,7 @@ export function LiveSessionsTable({
                       {time(s.startedAt)}–{s.endedAt ? time(s.endedAt) : "now"}
                     </td>
                     <td className="py-2.5 pr-3 tabular-nums">
-                      {s.checkIns} of {s.totalStops}
+                      {s.checkIns} {tExisting("widgetPublic.of")} {s.totalStops}
                       {s.flags.length ? (
                         <span
                           className="block text-sm"

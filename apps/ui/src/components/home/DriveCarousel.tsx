@@ -1,5 +1,4 @@
 "use client"
-
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import {
@@ -25,6 +24,8 @@ export function DriveCarousel({
   readonly children: ReactNode
   readonly label: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const t = useTranslations("homepageContribute")
   const cards = Children.toArray(children)
   const count = cards.length
@@ -232,7 +233,7 @@ export function DriveCarousel({
             <button
               type="button"
               className={styles.control}
-              aria-label="Previous drive"
+              aria-label={tStatic("home.previousDrive")}
               onClick={() => move(-1)}
               disabled={destination !== null}
             >
@@ -241,7 +242,7 @@ export function DriveCarousel({
             <button
               type="button"
               className={styles.control}
-              aria-label="Next drive"
+              aria-label={tStatic("home.nextDrive")}
               onClick={() => move(1)}
               disabled={destination !== null}
             >

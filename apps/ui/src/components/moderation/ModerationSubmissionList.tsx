@@ -1,5 +1,4 @@
 "use client"
-
 import { ArrowUpRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 
@@ -28,12 +27,16 @@ export function ModerationSubmissionList({
   localeNames: Record<string, string>
   returnTo?: string
 }) {
+  const tStatic = useTranslations("staticUi")
+
   const tUi = useTranslations("ui")
 
   return (
     <div className="overflow-x-auto rounded-[24px] border border-(--t-border-line) bg-(--t-bg-deep)">
       <table className="w-full min-w-[760px] border-collapse">
-        <caption className="sr-only">Submissions to review</caption>
+        <caption className="sr-only">
+          {tStatic("moderation.submissions_to_review")}
+        </caption>
         <thead>
           <tr className="bg-(--t-bg-surface)">
             {[

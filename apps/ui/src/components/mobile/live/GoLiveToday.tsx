@@ -7,7 +7,7 @@ import {
   type Occurrence,
   type PublicLiveState,
 } from "@repo/shared-data"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { QrCode } from "@/components/ds/QrCode"
@@ -47,7 +47,11 @@ export function GoLiveToday({
   /** "Going live from your phone" in Knowledge, when the page has it. */
   readonly learnMoreHref?: string
 }) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const [busy, setBusy] = useState(false),
     [note, setNote] = useState<{ tone: "ok" | "danger"; text: string } | null>(
@@ -68,7 +72,7 @@ export function GoLiveToday({
     toMinutes(v.depart) <= local.minute
   const stopName = (stopId: string) =>
     initial.library.timetable?.stops.find((s) => s.id === stopId)?.name ??
-    "Stop"
+    tStatic("mobile.stop")
   const hereIndex =
     live && ["here", "late"].includes(live.kind) && live.stopId
       ? route.findIndex((v) => v.stopId === live.stopId)
@@ -87,7 +91,7 @@ export function GoLiveToday({
           : past(v)
             ? "done"
             : "todo"
-  const dateLabel = today ? shortDate(today) : "Today"
+  const dateLabel = today ? shortDate(today) : tExisting("discussions.today")
   const meta = route.length
     ? `${dateLabel} · ${route.length} ${route.length === 1 ? "stop" : "stops"} · ${route[0]!.arrive}–${route.at(-1)!.depart}`
     : `${dateLabel} · no service today`
@@ -101,7 +105,7 @@ export function GoLiveToday({
       <div className="flex min-w-0 flex-col gap-5">
         <div className="flex flex-col items-start gap-2">
           <h2 id="go-live-today-heading" className="type-h2 m-0">
-            Today and the way in
+            {tStatic("mobile.today_and_the_way_in")}
           </h2>
           <p
             className="m-0 text-sm leading-relaxed"
@@ -181,7 +185,7 @@ export function GoLiveToday({
                         icon="mdi:map-marker"
                         width={13}
                       />
-                      Here now
+                      {tStatic("mobile.here_now")}
                     </span>
                   ) : state === "skipped" ? (
                     <span
@@ -193,7 +197,7 @@ export function GoLiveToday({
                         icon="mdi:close-circle-outline"
                         width={13}
                       />
-                      Not stopping today
+                      {tStatic("mobile.not_stopping_today")}
                     </span>
                   ) : null}
                 </li>
@@ -205,8 +209,9 @@ export function GoLiveToday({
             className="m-0 max-w-2xl text-base leading-relaxed"
             style={{ color: T.ink.dim }}
           >
-            No scheduled service today. The console can use a swapped day’s
-            route.
+            {tStatic(
+              "mobile.no_scheduled_service_today_the_console_can_use_a_swapped_day_s_route"
+            )}
           </p>
         )}
         {!staff.ready ? (
@@ -238,8 +243,9 @@ export function GoLiveToday({
               className="shrink-0"
               style={{ color: T.ink.dim }}
             />
-            Ask an owner to let you go live. They choose who can, person by
-            person.
+            {tStatic(
+              "mobile.ask_an_owner_to_let_you_go_live_they_choose_who_can_person_by_person"
+            )}
           </p>
         ) : (
           <div className="grid gap-2.5 sm:flex sm:flex-wrap sm:items-center">
@@ -248,7 +254,7 @@ export function GoLiveToday({
               href={consoleUrl}
             >
               <Icon aria-hidden="true" icon="mdi:circle" width={10} />
-              Open the live console
+              {tStatic("mobile.open_the_live_console")}
             </a>
             <button
               type="button"
@@ -262,12 +268,16 @@ export function GoLiveToday({
                   await liveRequest(`/api/mobile/${id}/live-link`, { locale })
                   setNote({
                     tone: "ok",
-                    text: "The console link has been emailed to you.",
+                    text: tStatic(
+                      "mobile.the_console_link_has_been_emailed_to_you"
+                    ),
                   })
                 } catch {
                   setNote({
                     tone: "danger",
-                    text: "The link could not be emailed. Open it with the button or the QR code.",
+                    text: tStatic(
+                      "mobile.the_link_could_not_be_emailed_open_it_with_the_button_or_the_qr_code"
+                    ),
                   })
                 } finally {
                   setBusy(false)
@@ -275,7 +285,7 @@ export function GoLiveToday({
               }}
             >
               <Icon aria-hidden="true" icon="mdi:email-outline" width={16} />
-              Email me the link
+              {tStatic("mobile.email_me_the_link")}
             </button>
             <button
               type="button"
@@ -284,11 +294,13 @@ export function GoLiveToday({
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(consoleUrl)
-                  setNote({ tone: "ok", text: "Link copied." })
+                  setNote({ tone: "ok", text: tStatic("mobile.link_copied") })
                 } catch {
                   setNote({
                     tone: "danger",
-                    text: "Copying is blocked here. Use the QR code or email instead.",
+                    text: tStatic(
+                      "mobile.copying_is_blocked_here_use_the_qr_code_or_email_instead"
+                    ),
                   })
                 }
               }}
@@ -305,7 +317,7 @@ export function GoLiveToday({
               className="font-semibold underline underline-offset-[3px]"
               style={{ color: T.accent.primary }}
             >
-              Learn more: Going live from your phone
+              {tStatic("mobile.learn_more_going_live_from_your_phone")}
             </a>
           </p>
         ) : null}
@@ -349,7 +361,9 @@ export function GoLiveToday({
           className="m-0 text-center text-sm leading-relaxed"
           style={{ color: T.ink.dim }}
         >
-          Scan to open the console on your phone. Staff sign-in required.
+          {tStatic(
+            "mobile.scan_to_open_the_console_on_your_phone_staff_sign_in_required"
+          )}
         </p>
       </div>
       <div
@@ -369,9 +383,9 @@ export function GoLiveToday({
             style={{ color: T.ink.dim }}
           >
             <strong className="font-semibold" style={{ color: T.ink.base }}>
-              Add the console to your phone’s home screen.
+              {tStatic("mobile.add_the_console_to_your_phone_s_home_screen")}
             </strong>{" "}
-            Sign in once inside the installed app.
+            {tStatic("mobile.sign_in_once_inside_the_installed_app")}
           </p>
           <dl className="m-0 grid gap-3 text-sm leading-relaxed sm:grid-cols-2 sm:gap-6">
             <div>
@@ -379,7 +393,7 @@ export function GoLiveToday({
                 iPhone
               </dt>
               <dd className="m-0" style={{ color: T.ink.dim }}>
-                Safari → Share → Add to Home Screen
+                {tStatic("mobile.safari_share_add_to_home_screen")}
               </dd>
             </div>
             <div>
@@ -387,7 +401,7 @@ export function GoLiveToday({
                 Android
               </dt>
               <dd className="m-0" style={{ color: T.ink.dim }}>
-                Chrome → menu → Install app
+                {tStatic("mobile.chrome_menu_install_app")}
               </dd>
             </div>
           </dl>

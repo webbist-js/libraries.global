@@ -12,7 +12,11 @@ export default {
     }
   },
   async verifyPassword(ctx: Context) {
-    const password = ctx.request.body?.password
+    const body = ctx.request.body as Record<string, unknown>
+    const password =
+      body && typeof body === "object" && !Array.isArray(body)
+        ? body.password
+        : undefined
     if (typeof password !== "string" || !password || password.length > 1024)
       return ctx.badRequest("Invalid password")
     const auth = strapi.plugin("better-auth").service("auth-service").getAuth()
@@ -27,7 +31,11 @@ export default {
     }
   },
   async verifiedIdentities(ctx: Context) {
-    const ids = ctx.request.body?.ids
+    const body = ctx.request.body as Record<string, unknown>
+    const ids =
+      body && typeof body === "object" && !Array.isArray(body)
+        ? body.ids
+        : undefined
     if (
       !Array.isArray(ids) ||
       ids.length > 100 ||

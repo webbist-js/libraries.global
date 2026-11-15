@@ -1,7 +1,6 @@
 "use client"
-
 import type { ReviewCategory } from "@repo/access"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SearchField } from "@/components/ds"
@@ -47,8 +46,12 @@ export function ModerationFilters({
   readonly counts: Partial<Record<Segment, number>>
   readonly onChange: (patch: Partial<QueueFilters>) => void
 }) {
-  const tUi = useUiTranslations("ui")
-  const workspace = useUiTranslations("moderationWorkspace")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+  const workspace = useTranslations("moderationWorkspace")
 
   const ids = { queue: useId(), locale: useId(), search: useId() }
   const [q, setQ] = useState(value.q)
@@ -123,7 +126,9 @@ export function ModerationFilters({
       </div>
 
       <fieldset className="m-0 flex flex-wrap items-end gap-3 border-0 p-0">
-        <legend className="sr-only">Filter submissions</legend>
+        <legend className="sr-only">
+          {tStatic("moderation.filter_submissions")}
+        </legend>
         {queues.length > 1 ? (
           <div className="flex flex-col gap-1.5">
             <label
@@ -133,14 +138,14 @@ export function ModerationFilters({
             >
               {value.category === "articles"
                 ? workspace("articleType")
-                : "Queue"}
+                : tStatic("moderation.queue")}
             </label>
             <SelectField
               id={ids.queue}
               label={
                 value.category === "articles"
                   ? workspace("articleType")
-                  : "Queue"
+                  : tStatic("moderation.queue")
               }
               value={value.queue}
               onValueChange={(queue) =>
@@ -179,7 +184,7 @@ export function ModerationFilters({
               onValueChange={(locale) => onChange({ locale })}
               className="min-h-11 rounded-full border-(--t-border-hi) px-4 text-sm shadow-none"
               options={[
-                { value: "", label: "All languages" },
+                { value: "", label: tExisting("discovery.allLanguages") },
                 ...locales.map((locale) => ({
                   value: locale.code,
                   label: locale.name,

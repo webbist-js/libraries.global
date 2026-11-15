@@ -1,5 +1,4 @@
 "use client"
-
 import { CircleDot, Save } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
@@ -69,6 +68,10 @@ export function SettingsShell({
   /** Keeps the live save handler and status in the drawer's fixed footer. */
   saveActionsTarget?: HTMLElement | null
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const tUi = useTranslations("ui")
   const settings = useTranslations("profileSettingsToolbar")
 
@@ -90,7 +93,7 @@ export function SettingsShell({
 
   const handleSave = async () => {
     if (form.usernameStatus === "taken") {
-      toast.error("That username is taken")
+      toast.error(tStatic("profileRoute.that_username_is_taken"))
 
       return
     }
@@ -203,14 +206,17 @@ export function SettingsShell({
                 className="w-full border-0 disabled:cursor-not-allowed disabled:opacity-60"
                 style={{ fontFamily: T.font.sans }}
               >
-                {saving ? tUi("saving") : "Save profile"}
+                {saving
+                  ? tUi("saving")
+                  : tExisting("profileSettingsToolbar.save")}
               </Button>
               <p
                 className="m-0 text-sm leading-[1.55]"
                 style={{ color: T.ink.dim }}
               >
-                Saves the profile cards. Privacy and notification changes save
-                as you make them.
+                {tStatic(
+                  "profileRoute.saves_the_profile_cards_privacy_and_notification_changes_save_as_you_make_them"
+                )}
               </p>
             </ProfileProgress>
           </aside>

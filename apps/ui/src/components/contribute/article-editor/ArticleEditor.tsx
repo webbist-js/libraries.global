@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react"
 import type { Editor } from "@tiptap/core"
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { SelectField } from "@/components/ds/SelectField"
@@ -44,7 +44,7 @@ const smallPill =
 
 /** The toolbar's context row: link, quote, code and callout details. */
 function ContextRow({ editor }: { editor: Editor }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const state = useEditorState({
     editor,
@@ -234,7 +234,7 @@ function Toolbar({
   onPickImage: () => void
   uploading: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tUi = useTranslations("ui")
 
   const s = useEditorState({
     editor,
@@ -413,9 +413,9 @@ export function ArticleEditor({
   readonly onDocChange: (doc: TiptapDoc) => void
   readonly uploadImage: (file: File) => Promise<UploadedImage | null>
 }) {
-  const tUi = useUiTranslations("ui")
-  const tEditor = useUiTranslations("articleEditor")
-  const w = useUiTranslations("writeWorkspace")
+  const tUi = useTranslations("ui")
+  const tEditor = useTranslations("articleEditor")
+  const w = useTranslations("writeWorkspace")
 
   const meta = ARTICLE_KIND_META[kind]
   const fileInputId = useId()

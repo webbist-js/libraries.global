@@ -1,5 +1,5 @@
 "use client"
-
+import { useTranslations } from "next-intl"
 import { Children, useEffect, useState, type ReactNode } from "react"
 
 import {
@@ -12,6 +12,8 @@ import {
 
 /** Manual, keyboard-operable carousel; never advances while someone is reading. */
 export function PillarCarousel({ children }: { readonly children: ReactNode }) {
+  const tStatic = useTranslations("staticUi")
+
   const count = Children.count(children)
   const [api, setApi] = useState<CarouselApi>()
   const [current, setCurrent] = useState(1)
@@ -43,7 +45,7 @@ export function PillarCarousel({ children }: { readonly children: ReactNode }) {
           "(prefers-reduced-motion: reduce)": { duration: 0 },
         },
       }}
-      aria-label="Pillar institutions"
+      aria-label={tStatic("home.pillarInstitutions")}
       className="home-pillar-carousel"
     >
       <CarouselContent className="home-pillar-track">

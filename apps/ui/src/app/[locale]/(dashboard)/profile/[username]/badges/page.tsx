@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 
 import { BadgesSection } from "@/app/[locale]/profile/[username]/_components/sections/BadgesSection"
+import { withMessages } from "@/i18n/scoped-messages"
 import { getSessionSSR } from "@/lib/auth-server"
 import { fetchOwnProfile } from "@/lib/own-profile-server"
 import {
@@ -8,7 +9,7 @@ import {
   profileForViewer,
 } from "@/lib/public-profile-server"
 
-export default async function BadgesPage({
+async function BadgesPage({
   params,
 }: {
   params: Promise<{ username: string }>
@@ -43,3 +44,8 @@ export default async function BadgesPage({
     />
   )
 }
+
+export default withMessages(
+  BadgesPage,
+  "[locale]/(dashboard)/profile/[username]/badges/page"
+)

@@ -1,13 +1,26 @@
 // @vitest-environment happy-dom
 import { act, renderHook } from "@testing-library/react"
+import { createTranslator } from "next-intl"
+import type * as NextIntl from "next-intl"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+import { useProfile } from "./useProfile"
+import en from "../../locales/en"
 
 const refetch = vi.hoisted(() => vi.fn(async () => {}))
 vi.mock("@/lib/auth-client", () => ({
   authClient: { useSession: () => ({ refetch }) },
 }))
+vi.mock("next-intl", async (original) => ({
+  ...(await original<typeof NextIntl>()),
+  useTranslations: () =>
+    createTranslator({
+      locale: "en",
+      messages: en,
+      namespace: "profileFeedback",
+    }),
+}))
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
-import { useProfile } from "./useProfile"
 
 beforeEach(() => {
   refetch.mockReset()

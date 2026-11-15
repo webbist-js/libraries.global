@@ -1,4 +1,4 @@
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 
 import GlobalLink from "@/components/global/GlobalLink"
 import { analyticsAttributes } from "@/lib/analytics-events"
@@ -33,7 +33,11 @@ export function DriveCard({
   readonly now?: Date
   readonly preview?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tStatic = useTranslations("staticUi")
+
+  const tUi = useTranslations("ui")
 
   const { drive, progress, helpers, href, place, source } = view
   const { tint } = focusChipOf(drive.focus)
@@ -117,7 +121,8 @@ export function DriveCard({
                 <strong style={{ color: T.ink.base }}>
                   {fmt(progress.done)}
                 </strong>{" "}
-                of {fmt(progress.total)} {unitNoun(drive.unit, progress.total)}
+                {tExisting("widgetPublic.of")} {fmt(progress.total)}{" "}
+                {unitNoun(drive.unit, progress.total)}
               </span>
               {showHelpers && helpers != null ? (
                 <span style={{ color: T.ink.dim }}>{fmt(helpers)} helping</span>
@@ -126,7 +131,7 @@ export function DriveCard({
           </>
         ) : (
           <span className="text-sm" style={{ color: T.ink.dim }}>
-            Not counted yet
+            {tStatic("common.notCounted")}
           </span>
         )}
       </div>

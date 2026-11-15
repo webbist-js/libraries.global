@@ -1,7 +1,6 @@
 "use client"
-
 import { usePathname } from "next/navigation"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useEffect, useId, useRef, useState } from "react"
 
@@ -30,7 +29,9 @@ export function GlobalMobileMenu({
   /** Server-rendered actions (locale switcher, auth, Contribute). */
   readonly actions: React.ReactNode
 }) {
-  const tUi = useUiTranslations("ui")
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
 
   const pathname = normalizePathname(usePathname() ?? "/")
   // Open "for" the page it was opened on, so any navigation closes it.
@@ -74,7 +75,9 @@ export function GlobalMobileMenu({
           color: T.ink.base,
         }}
       >
-        <span className="sr-only">{open ? tUi("close_menu") : "Menu"}</span>
+        <span className="sr-only">
+          {open ? tUi("close_menu") : tExisting("staticUi.mobile.menu")}
+        </span>
         <svg
           aria-hidden="true"
           width="20"

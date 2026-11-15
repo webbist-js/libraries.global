@@ -1,5 +1,6 @@
 "use client"
 import type { WidgetSelectionSpec, WidgetResolved } from "@repo/shared-data"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import { SegmentedControl } from "@/components/ds/SegmentedControl"
@@ -35,6 +36,10 @@ export function WidgetSelectionSources({
   readonly onImportAccess: () => Promise<void>
   readonly onAddLibrary: (value: CatalogueOption) => void
 }) {
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
   const [networkNames, setNetworkNames] = useState<Record<string, string>>(
     team.primaryNetwork
       ? { [team.primaryNetwork.documentId]: team.primaryNetwork.name }
@@ -43,9 +48,9 @@ export function WidgetSelectionSources({
 
   return (
     <div className="space-y-6">
-      <StaffPanel title="Library sources" compact>
+      <StaffPanel title={tStatic("widget.library_sources")} compact>
         <div className="space-y-5">
-          <WidgetField label="Selection name">
+          <WidgetField label={tStatic("widget.selection_name")}>
             <input
               className={STAFF_FIELD}
               value={name}
@@ -70,10 +75,11 @@ export function WidgetSelectionSources({
               }
             />
             <span>
-              <strong>Team libraries</strong>
+              <strong>{tStatic("widget.team_libraries")}</strong>
               <small className="block text-(--t-ink-dim)">
-                {team.libraryCount ?? "Your covered"} libraries. This does not
-                change Team coverage.
+                {team.libraryCount == null
+                  ? tStatic("widget.teamCovered")
+                  : tStatic("widget.teamCount", { count: team.libraryCount })}
               </small>
             </span>
           </label>
@@ -106,7 +112,7 @@ export function WidgetSelectionSources({
           <CataloguePicker
             teamId={team.documentId}
             kind="networks"
-            label="Library service or network"
+            label={tStatic("widget.library_service_or_network")}
             disabled={disabled}
             onPick={(row) => {
               setNetworkNames((n) => ({ ...n, [row.documentId]: row.name }))
@@ -148,7 +154,7 @@ export function WidgetSelectionSources({
                       })
                     }
                   >
-                    Remove source
+                    {tExisting("articleSources.remove")}
                   </Button>
                 </div>
               ) : null
@@ -159,17 +165,17 @@ export function WidgetSelectionSources({
             disabled={disabled || resolving || !resolved}
             onClick={onImportAccess}
           >
-            Import libraries I have access to
+            {tStatic("widget.import_libraries_i_have_access_to")}
           </Button>
           <p className="text-xs text-(--t-ink-dim)">
-            Copies approved staff assignments into a fixed Team-owned list.
-            Pending claims are excluded; leaving the Team does not change that
-            list.
+            {tStatic(
+              "widget.copies_approved_staff_assignments_into_a_fixed_team_owned_list_pending_claims_are_excluded_leaving_the_team_do"
+            )}
           </p>
           <CataloguePicker
             teamId={team.documentId}
             kind="libraries"
-            label="Add any published library"
+            label={tStatic("widget.add_any_published_library")}
             disabled={disabled}
             onPick={onAddLibrary}
           />
@@ -182,9 +188,9 @@ export function WidgetSelectionSources({
         disabled={disabled}
         resolved={resolved}
       />
-      <StaffPanel title="Membership" compact>
+      <StaffPanel title={tExisting("ui.membership")} compact>
         <SegmentedControl
-          label="Selection membership"
+          label={tStatic("widget.selection_membership")}
           value={spec.membership}
           options={[
             { value: "follow_sources", label: "Follow source" },

@@ -1,10 +1,10 @@
 // @vitest-environment happy-dom
 
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { type AnchorHTMLAttributes, useEffect } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { AboutExperience } from "@/components/about/AboutExperience"
+import { act, cleanup, fireEvent, render, screen } from "@/test/render"
 
 type CanvasProps = {
   active: boolean
@@ -18,10 +18,6 @@ const canvas = vi.hoisted(() => ({
   render: vi.fn(),
 }))
 
-vi.mock("next-intl", () => ({
-  useLocale: () => "en",
-  useTranslations: () => (key: string) => key,
-}))
 vi.mock("@iconify/react", () => ({ Icon: () => <span aria-hidden="true" /> }))
 
 vi.mock("next/dynamic", () => ({

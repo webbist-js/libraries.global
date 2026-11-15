@@ -38,12 +38,16 @@ assert.ok(
   local || new URL(origin).port !== "1337",
   "Explicit production connection required"
 )
+// Production never falls back to the local development token.
 const token = local
   ? env.STRAPI_MCP_TOKEN
-  : process.env.STRAPI_PRODUCTION_MCP_TOKEN ||
-    env.STRAPI_PRODUCTION_MCP_TOKEN ||
-    env.STRAPI_MCP_TOKEN
-assert.ok(token, "Selected editorial credential required")
+  : process.env.STRAPI_PRODUCTION_MCP_TOKEN || env.STRAPI_PRODUCTION_MCP_TOKEN
+assert.ok(
+  token,
+  local
+    ? "STRAPI_MCP_TOKEN is missing for the local CMS"
+    : "STRAPI_PRODUCTION_MCP_TOKEN is missing; production never uses the local STRAPI_MCP_TOKEN"
+)
 const folder = new URL("../../../.scratch/atlas-guides/", import.meta.url)
 mkdirSync(folder, { recursive: true, mode: 0o700 })
 const save = (name, value) =>

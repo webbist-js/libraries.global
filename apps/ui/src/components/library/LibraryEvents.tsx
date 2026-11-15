@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react"
 import Link from "next/link"
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 
 import { CalendarSubscribeButton } from "@/components/events/CalendarSubscribeButton"
@@ -31,20 +31,6 @@ export interface LibraryEvent {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  talk: "Talk",
-  exhibition: "Exhibition",
-  storytime: "Storytime",
-  book_club: "Book Club",
-  workshop: "Workshop",
-  tour: "Tour",
-  screening: "Screening",
-  reading_group: "Reading Group",
-  performance: "Performance",
-  drop_in: "Drop-in",
-  other: "Event",
-}
-
 const EVENT_TYPE_ICONS: Record<string, string> = {
   talk: "mdi:microphone-outline",
   exhibition: "mdi:image-frame",
@@ -61,12 +47,13 @@ const EVENT_TYPE_ICONS: Record<string, string> = {
 
 function formatEventDate(
   startTime: string,
+  locale: string,
   endTime?: string | null,
   allDay?: boolean
 ): string {
   const start = new Date(startTime)
 
-  const datePart = start.toLocaleDateString("en-GB", {
+  const datePart = start.toLocaleDateString(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -74,7 +61,7 @@ function formatEventDate(
 
   if (allDay) return datePart
 
-  const timePart = start.toLocaleTimeString("en-GB", {
+  const timePart = start.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
@@ -82,7 +69,7 @@ function formatEventDate(
 
   if (endTime) {
     const end = new Date(endTime)
-    const endTimePart = end.toLocaleTimeString("en-GB", {
+    const endTimePart = end.toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
@@ -94,30 +81,35 @@ function formatEventDate(
   return `${datePart} · ${timePart}`
 }
 
-function formatDayNum(startTime: string): string {
-  return new Date(startTime).toLocaleDateString("en-GB", { day: "numeric" })
+function formatDayNum(startTime: string, locale: string): string {
+  return new Date(startTime).toLocaleDateString(locale, { day: "numeric" })
 }
 
-function formatMonth(startTime: string): string {
+function formatMonth(startTime: string, locale: string): string {
   return new Date(startTime)
-    .toLocaleDateString("en-GB", { month: "short" })
+    .toLocaleDateString(locale, { month: "short" })
     .toUpperCase()
 }
 
 // ── Event Card ─────────────────────────────────────────────────────────────────
 
 function EventCard({ event }: { event: LibraryEvent }) {
-  const typeLabel = EVENT_TYPE_LABELS[event.eventType] ?? "Event"
+  const locale = useLocale()
+  const tExisting = useTranslations()
+
+  const tType = useTranslations("eventListing.types")
+  const typeKey = event.eventType as Parameters<typeof tType>[0]
+  const typeLabel = tType.has(typeKey) ? tType(typeKey) : tType("other")
   const typeIcon =
     EVENT_TYPE_ICONS[event.eventType] ?? "mdi:calendar-blank-outline"
 
   const priceLabel = event.isFree
-    ? "Free"
+    ? tExisting("ui.free")
     : event.priceMin != null
       ? event.priceMax != null && event.priceMax !== event.priceMin
         ? `£${event.priceMin}–£${event.priceMax}`
         : `£${event.priceMin}`
-      : "Ticketed"
+      : tExisting("eventBrowse.ticketed")
 
   return (
     <Link
@@ -143,7 +135,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             fontWeight: 600,
           }}
         >
-          {formatDayNum(event.startTime)}
+          {formatDayNum(event.startTime, locale)}
         </span>
         <span
           style={{
@@ -155,7 +147,7 @@ function EventCard({ event }: { event: LibraryEvent }) {
             marginTop: "3px",
           }}
         >
-          {formatMonth(event.startTime)}
+          {formatMonth(event.startTime, locale)}
         </span>
       </div>
 
@@ -180,7 +172,12 @@ function EventCard({ event }: { event: LibraryEvent }) {
             className="mt-1.5 text-xs"
             style={{ color: T.ink.faint, fontFamily: T.font.mono }}
           >
-            {formatEventDate(event.startTime, event.endTime, event.allDay)}
+            {formatEventDate(
+              event.startTime,
+              locale,
+              event.endTime,
+              event.allDay
+            )}
           </p>
         </div>
 
@@ -236,20 +233,6 @@ function EventCard({ event }: { event: LibraryEvent }) {
 
 // ── Filter Bar ─────────────────────────────────────────────────────────────────
 
-const FILTER_TYPES = [
-  { value: "", label: "All" },
-  { value: "talk", label: "Talks" },
-  { value: "workshop", label: "Workshops" },
-  { value: "storytime", label: "Storytime" },
-  { value: "book_club", label: "Book Clubs" },
-  { value: "exhibition", label: "Exhibitions" },
-  { value: "performance", label: "Performances" },
-  { value: "screening", label: "Screenings" },
-  { value: "reading_group", label: "Reading Groups" },
-  { value: "tour", label: "Tours" },
-  { value: "drop_in", label: "Drop-ins" },
-]
-
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 interface LibraryEventsProps {
@@ -261,7 +244,25 @@ export function LibraryEvents({
   entityRef,
   hasActiveFeed,
 }: LibraryEventsProps) {
-  const tUi = useUiTranslations("ui")
+  const tStatic = useTranslations("staticUi")
+
+  const tExisting = useTranslations()
+
+  const tUi = useTranslations("ui")
+
+  const FILTER_TYPES = [
+    { value: "", label: tStatic("library.all") },
+    { value: "talk", label: tStatic("library.talks") },
+    { value: "workshop", label: tStatic("library.workshops") },
+    { value: "storytime", label: tStatic("library.storytime") },
+    { value: "book_club", label: tStatic("library.book_clubs") },
+    { value: "exhibition", label: tStatic("library.exhibitions") },
+    { value: "performance", label: tStatic("library.performances") },
+    { value: "screening", label: tStatic("library.screenings") },
+    { value: "reading_group", label: tStatic("library.reading_groups") },
+    { value: "tour", label: tStatic("library.tours") },
+    { value: "drop_in", label: tStatic("library.drop_ins") },
+  ]
 
   const [events, setEvents] = useState<LibraryEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -338,7 +339,7 @@ export function LibraryEvents({
             color: T.ink.faint,
           }}
         >
-          Upcoming Events
+          {tStatic("library.upcoming_events")}
         </span>
         {!loading && events.length > 0 ? (
           <span
@@ -370,7 +371,7 @@ export function LibraryEvents({
               className="size-1.5 rounded-full"
               style={{ background: T.accent.ok }}
             />
-            Live feed
+            {tStatic("library.live_feed")}
           </span>
         ) : null}
         {entityRef ? (
@@ -433,7 +434,7 @@ export function LibraryEvents({
                 color: freeOnly ? T.accent.ok : T.ink.low,
               }}
             >
-              Free only
+              {tStatic("library.free_only")}
             </button>
           </div>
         </div>
@@ -451,7 +452,7 @@ export function LibraryEvents({
               color: T.ink.faint,
             }}
           >
-            Loading events…
+            {tExisting("eventListing.loading")}
           </span>
         </div>
       ) : error ? (
@@ -467,7 +468,7 @@ export function LibraryEvents({
               color: T.ink.faint,
             }}
           >
-            Could not load events
+            {tStatic("library.could_not_load_events")}
           </p>
         </div>
       ) : displayed.length === 0 ? (
@@ -483,7 +484,7 @@ export function LibraryEvents({
               color: T.ink.dim,
             }}
           >
-            No upcoming events
+            {tStatic("library.no_upcoming_events")}
           </p>
           <p
             className="max-w-xs text-center text-sm"

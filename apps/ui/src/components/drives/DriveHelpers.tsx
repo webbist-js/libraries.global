@@ -1,6 +1,5 @@
 "use client"
-
-import { useTranslations as useUiTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 
 import GlobalLink from "@/components/global/GlobalLink"
@@ -31,6 +30,8 @@ function HelperList({
   readonly entries: readonly DriveLeaderboardEntry[]
   readonly empty: string
 }) {
+  const tExisting = useTranslations()
+
   const headingId = `helpers-${label.toLowerCase().replaceAll(" ", "-")}`
 
   return (
@@ -54,7 +55,7 @@ function HelperList({
               : TYPE_TINT.neutral
             const name = entry.username
               ? (entry.displayName ?? entry.username)
-              : "A contributor"
+              : tExisting("editorial.anonymousContributor")
 
             return (
               <li
@@ -121,8 +122,8 @@ export function DriveHelpers({
   readonly all: readonly DriveLeaderboardEntry[]
   readonly publicOnly?: boolean
 }) {
-  const tUi = useUiTranslations("ui")
-  const t = useUiTranslations("drivePage")
+  const tUi = useTranslations("ui")
+  const t = useTranslations("drivePage")
   const [period, setPeriod] = useState<"week" | "all">("week")
 
   const shownAll = publicOnly ? all.filter((e) => e.username) : all
