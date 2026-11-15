@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
 import type { Locale } from "next-intl"
 
-import { BETA_COOKIE, betaEnabled } from "@/lib/beta/access"
-import { hasBetaAccess } from "@/lib/beta/invitations"
 import {
   clientIp,
   createRateLimiter,
@@ -19,17 +17,6 @@ const limiter = createRateLimiter({
 const headers = { "Cache-Control": "private, no-store" }
 
 export async function GET(req: Request) {
-  const pass = req.headers
-    .get("cookie")
-    ?.split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${BETA_COOKIE}=`))
-    ?.slice(BETA_COOKIE.length + 1)
-  if (betaEnabled() && !(await hasBetaAccess(pass)))
-    return NextResponse.json(
-      { error: "Beta access required" },
-      { status: 401, headers }
-    )
   const limit = await limiter.check(clientIp(req))
   if (!limit.ok) return rateLimitResponse(limit)
   const params = new URL(req.url).searchParams

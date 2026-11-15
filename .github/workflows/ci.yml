@@ -151,6 +151,15 @@ jobs:
           rm -rf apps/ui/.next
           pnpm build:ui
 
+      - name: Keep robots policy dependent on the runtime environment
+        run: |
+          node --input-type=module -e '
+            import assert from "node:assert/strict";
+            import fs from "node:fs";
+            const manifest = JSON.parse(fs.readFileSync("apps/ui/.next/prerender-manifest.json", "utf8"));
+            assert(!Object.hasOwn(manifest.routes, "/robots.txt"), "robots.txt must not freeze build-time APP_ENV");
+          '
+
       - name: Typecheck UI including tests
         run: pnpm --filter @repo/ui typecheck
 
@@ -177,12 +186,26 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  worker_image:
+    name: Worker production image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Export the committed worker context
+        run: node scripts/release/worker-context.mjs
+      - name: Build the production worker image without publishing
+        run: docker build --tag libraries-global-worker-ci --file "$RUNNER_TEMP/worker-context/apps/sync-worker/Dockerfile" "$RUNNER_TEMP/worker-context"
+
   # Keep the protected-branch and image-publisher check name stable. A failure,
   # cancellation or skipped prerequisite must never produce a passing release.
   build_and_verify:
     name: Install, Lint, Test and Build
     runs-on: ubuntu-24.04
-    needs: [lint, unit_tests, build]
+    needs: [lint, unit_tests, build, worker_image]
     if: ${{ always() }}
     timeout-minutes: 2
     steps:
@@ -191,7 +214,9 @@ jobs:
           LINT_RESULT: ${{ needs.lint.result }}
           UNIT_RESULT: ${{ needs.unit_tests.result }}
           BUILD_RESULT: ${{ needs.build.result }}
+          WORKER_IMAGE_RESULT: ${{ needs.worker_image.result }}
         run: |
           test "$LINT_RESULT" = success
           test "$UNIT_RESULT" = success
           test "$BUILD_RESULT" = success
+          test "$WORKER_IMAGE_RESULT" = success

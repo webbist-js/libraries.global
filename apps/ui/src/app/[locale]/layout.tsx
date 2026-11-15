@@ -19,9 +19,7 @@ import {
   setRequestLocale,
 } from "next-intl/server"
 
-import { AppearanceProvider } from "@/components/appearance/AppearanceProvider"
 import { BetaFeedback } from "@/components/beta/BetaFeedback"
-import { BetaWelcomeMount } from "@/components/beta/BetaWelcomeMount"
 import { ContactModalProvider } from "@/components/contact/ContactModalProvider"
 import { StickyPageLayout } from "@/components/ds/StickyPageLayout"
 import { EditorialDrawerMount } from "@/components/editorial/EditorialDrawerMount"
@@ -42,7 +40,6 @@ import { ServerProviders } from "@/components/providers/ServerProviders"
 import TrackingScripts from "@/components/providers/TrackingScripts"
 import { StaffDrawerMount } from "@/components/staff/StaffDrawerMount"
 import { Toaster } from "@/components/ui/sonner"
-import { betaEnabled } from "@/lib/beta/access"
 import { debugStaticParams } from "@/lib/build"
 import { fontFigtree, fontJetBrainsMono, fontNewsreader } from "@/lib/fonts"
 import { isProduction } from "@/lib/general-helpers"
@@ -117,48 +114,17 @@ export default async function RootLayout({
   const requestHeaders = await headers()
   const liveConsole = requestHeaders.get("x-live-console") === "true"
   const mobileApp = requestHeaders.get("x-mobile-app") === "true"
-  const betaShell = requestHeaders.get("x-beta-public-shell") === "true"
   const nonce = requestHeaders.get("x-nonce") ?? undefined
   const contactAliases = [
     process.env.BETA_CONTACT_EMAIL ?? "info@libraries.global",
   ]
   const [footerRes, legalRes] = await Promise.all([
-    liveConsole || betaShell ? Promise.resolve(null) : fetchFooter(locale),
-    liveConsole || betaShell
+    liveConsole ? Promise.resolve(null) : fetchFooter(locale),
+    liveConsole
       ? Promise.resolve(null)
       : fetchLegalDocuments(locale, "published"),
   ])
   const footer = footerRes?.data
-
-  // Keep the public entrance independent of CMS reads and account/data providers.
-  if (betaShell)
-    return (
-      <html lang={locale} suppressHydrationWarning>
-        <head>
-          <PublicRuntimeConfig nonce={nonce} />
-        </head>
-        <body
-          className={cn(
-            "min-h-screen antialiased",
-            fontFigtree.variable,
-            fontNewsreader.variable,
-            fontJetBrainsMono.variable
-          )}
-        >
-          <ViewTransitionGuard />
-          <SkipToContent>{tUi("skip_to_main_content")}</SkipToContent>
-          <TrackingScripts nonce={nonce} locale={locale} />
-          <ServerProviders>
-            <AppearanceProvider nonce={nonce}>
-              <ContactModalProvider aliases={contactAliases}>
-                <StickyPageLayout id="page-shell">{children}</StickyPageLayout>
-                <BetaFeedback label={tUi("feedback")} />
-              </ContactModalProvider>
-            </AppearanceProvider>
-          </ServerProviders>
-        </body>
-      </html>
-    )
 
   return (
     <html
@@ -231,11 +197,6 @@ export default async function RootLayout({
                 {!liveConsole && <StaffDrawerMount />}
                 {!liveConsole && <EditorialDrawerMount />}
                 {!liveConsole && <BetaFeedback label={tUi("feedback")} />}
-                {betaEnabled() && !liveConsole && (
-                  <BetaWelcomeMount
-                    sandbox={process.env.BILLING_ENV !== "live"}
-                  />
-                )}
               </EventModalProvider>
             </ClientProviders>
           </ContactModalProvider>

@@ -1,0 +1,840 @@
+diff --git a/dist/commonjs/index.d.ts b/dist/commonjs/index.d.ts
+index 0c7db88401507d1e7a07c32ee86e5ee8e0733feb..2d41d48edd10dbbd8f852b013d211c065fa4d5ee 100644
+--- a/dist/commonjs/index.d.ts
++++ b/dist/commonjs/index.d.ts
+@@ -1,256 +1,32 @@
+ import z from 'zod';
+ export declare const SessionOptions: z.ZodObject<{
+-    /**
+-     * cookie key
+-     * Default is `koa.sess`
+-     */
+     key: z.ZodDefault<z.ZodString>;
+-    /**
+-     * maxAge in ms
+-     * Default is `86400000`, one day
+-     * If set to 'session' will result in a cookie that expires when session/browser is closed
+-     *
+-     * Warning: If a session cookie is stolen, this cookie will never expire
+-     */
+-    maxAge: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodLiteral<"session">]>>;
+-    /**
+-     * automatically commit headers
+-     * Default is `true`
+-     */
++    maxAge: z.ZodOptional<z.ZodUnion<readonly [z.ZodNumber, z.ZodLiteral<"session">]>>;
+     autoCommit: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * cookie value can overwrite or not
+-     * Default is `true`
+-     */
+     overwrite: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * httpOnly or not
+-     * Default is `true`
+-     */
+     httpOnly: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * signed or not
+-     * Default is `true`
+-     */
+     signed: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * Force a session identifier cookie to be set on every response.
+-     * The expiration is reset to the original `maxAge`, resetting the expiration countdown.
+-     * Default is `false`
+-     */
+     rolling: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * renew session when session is nearly expired, so we can always keep user logged in.
+-     * Default is `false`
+-     */
+     renew: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * secure cookie
+-     * Default is `undefined`, will be set to `true` if the connection is over HTTPS, otherwise `false`.
+-     */
+     secure: z.ZodOptional<z.ZodBoolean>;
+-    /**
+-     * session cookie sameSite options
+-     * Default is `undefined`, meaning don't set it
+-     */
+     sameSite: z.ZodOptional<z.ZodString>;
+-    /**
+-     * External key is used the cookie by default,
+-     * but you can use `options.externalKey` to customize your own external key methods.
+-     */
+     externalKey: z.ZodOptional<z.ZodObject<{
+-        /**
+-         * get the external key
+-         * `(ctx) => string`
+-         */
+-        get: z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>;
+-        /**
+-         * set the external key
+-         * `(ctx, key) => void`
+-         */
+-        set: z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodString], z.ZodUnknown>, z.ZodVoid>;
+-    }, "strip", z.ZodTypeAny, {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    }, {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    }>>;
+-    /**
+-     * session storage is dependent on your external store
+-     */
++        get: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        set: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++    }, z.z.core.$strip>>;
+     store: z.ZodOptional<z.ZodObject<{
+-        /**
+-         * get session data by key
+-         * `(key, maxAge, { rolling, ctx }) => sessionData | Promise<sessionData>`
+-         */
+-        get: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodNumber, z.ZodObject<{
+-            rolling: z.ZodBoolean;
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, {
+-            rolling: boolean;
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodAny>>;
+-        /**
+-         * set session data for key, with a `maxAge` (in ms)
+-         * `(key, sess, maxAge, { rolling, changed, ctx }) => void | Promise<void>`
+-         */
+-        set: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodAny, z.ZodNumber, z.ZodObject<{
+-            rolling: z.ZodBoolean;
+-            changed: z.ZodBoolean;
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodVoid>>;
+-        /**
+-         * destroy session data for key
+-         * `(key, { ctx })=> void | Promise<void>`
+-         */
+-        destroy: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodObject<{
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            ctx?: any;
+-        }, {
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodVoid>>;
+-    }, "strip", z.ZodTypeAny, {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    }, {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    }>>;
+-    /**
+-     * If your session store requires data or utilities from context, `opts.ContextStore` is also supported.
+-     * `ContextStore` must be a class which claims three instance methods demonstrated above.
+-     * `new ContextStore(ctx)` will be executed on every request.
+-     */
++        get: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        set: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        destroy: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++    }, z.z.core.$strip>>;
+     ContextStore: z.ZodOptional<z.ZodAny>;
+-    encode: z.ZodDefault<z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>>>;
+-    decode: z.ZodDefault<z.ZodFunction<z.ZodTuple<[z.ZodString], z.ZodUnknown>, z.ZodAny>>;
+-    /**
+-     * If you want to generate a new session id, you can use `genid` option to customize it.
+-     * Default is a function that uses `randomUUID()`.
+-     * `(ctx) => string`
+-     */
+-    genid: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>>;
+-    /**
+-     * If you want to prefix the session id, you can use `prefix` option to customize it.
+-     * It will not work if `options.genid(ctx)` present.
+-     */
++    encode: z.ZodDefault<z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>>;
++    decode: z.ZodDefault<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++    genid: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
+     prefix: z.ZodOptional<z.ZodString>;
+-    /**
+-     * valid session value before use it
+-     * `(ctx, sessionData) => boolean`
+-     */
+-    valid: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodAny], z.ZodUnknown>, z.ZodAny>>;
+-    /**
+-     * hook before save session
+-     * `(ctx, sessionModel) => void`
+-     */
+-    beforeSave: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodAny], z.ZodUnknown>, z.ZodVoid>>;
+-}, "strip", z.ZodTypeAny, {
+-    key: string;
+-    autoCommit: boolean;
+-    overwrite: boolean;
+-    httpOnly: boolean;
+-    signed: boolean;
+-    rolling: boolean;
+-    renew: boolean;
+-    encode: (args_0: any, ...args: unknown[]) => string;
+-    decode: (args_0: string, ...args: unknown[]) => any;
+-    maxAge?: number | "session" | undefined;
+-    externalKey?: {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    } | undefined;
+-    valid?: ((args_0: any, args_1: any, ...args: unknown[]) => any) | undefined;
+-    secure?: boolean | undefined;
+-    sameSite?: string | undefined;
+-    store?: {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    } | undefined;
+-    ContextStore?: any;
+-    genid?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    prefix?: string | undefined;
+-    beforeSave?: ((args_0: any, args_1: any, ...args: unknown[]) => void) | undefined;
+-}, {
+-    maxAge?: number | "session" | undefined;
+-    externalKey?: {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    } | undefined;
+-    key?: string | undefined;
+-    valid?: ((args_0: any, args_1: any, ...args: unknown[]) => any) | undefined;
+-    autoCommit?: boolean | undefined;
+-    overwrite?: boolean | undefined;
+-    httpOnly?: boolean | undefined;
+-    signed?: boolean | undefined;
+-    rolling?: boolean | undefined;
+-    renew?: boolean | undefined;
+-    secure?: boolean | undefined;
+-    sameSite?: string | undefined;
+-    store?: {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    } | undefined;
+-    ContextStore?: any;
+-    encode?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    decode?: ((args_0: string, ...args: unknown[]) => any) | undefined;
+-    genid?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    prefix?: string | undefined;
+-    beforeSave?: ((args_0: any, args_1: any, ...args: unknown[]) => void) | undefined;
+-}>;
++    valid: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++    beforeSave: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++}, z.z.core.$strip>;
+ export type SessionOptions = z.infer<typeof SessionOptions>;
+ export type CreateSessionOptions = Partial<SessionOptions>;
+ type Middleware = (ctx: any, next: any) => Promise<void>;
+diff --git a/dist/commonjs/index.js b/dist/commonjs/index.js
+index 57242f6f9525830889c2f9e23525024bcd6a6bf4..ac2871790e0aa7878064be3faa1eb596373d0033 100644
+--- a/dist/commonjs/index.js
++++ b/dist/commonjs/index.js
+@@ -79,16 +79,12 @@ exports.SessionOptions = zod_1.default.object({
+          * get the external key
+          * `(ctx) => string`
+          */
+-        get: zod_1.default.function()
+-            .args(zod_1.default.any())
+-            .returns(zod_1.default.string()),
++        get: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * set the external key
+          * `(ctx, key) => void`
+          */
+-        set: zod_1.default.function()
+-            .args(zod_1.default.any(), zod_1.default.string())
+-            .returns(zod_1.default.void()),
++        set: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" }),
+     }).optional(),
+     /**
+      * session storage is dependent on your external store
+@@ -98,23 +94,17 @@ exports.SessionOptions = zod_1.default.object({
+          * get session data by key
+          * `(key, maxAge, { rolling, ctx }) => sessionData | Promise<sessionData>`
+          */
+-        get: zod_1.default.function()
+-            .args(zod_1.default.string(), zod_1.default.number(), zod_1.default.object({ rolling: zod_1.default.boolean(), ctx: zod_1.default.any() }))
+-            .returns(zod_1.default.promise(zod_1.default.any())),
++        get: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * set session data for key, with a `maxAge` (in ms)
+          * `(key, sess, maxAge, { rolling, changed, ctx }) => void | Promise<void>`
+          */
+-        set: zod_1.default.function()
+-            .args(zod_1.default.string(), zod_1.default.any(), zod_1.default.number(), zod_1.default.object({ rolling: zod_1.default.boolean(), changed: zod_1.default.boolean(), ctx: zod_1.default.any() }))
+-            .returns(zod_1.default.promise(zod_1.default.void())),
++        set: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * destroy session data for key
+          * `(key, { ctx })=> void | Promise<void>`
+          */
+-        destroy: zod_1.default.function()
+-            .args(zod_1.default.string(), zod_1.default.object({ ctx: zod_1.default.any() }))
+-            .returns(zod_1.default.promise(zod_1.default.void())),
++        destroy: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" }),
+     }).optional(),
+     /**
+      * If your session store requires data or utilities from context, `opts.ContextStore` is also supported.
+@@ -122,23 +112,17 @@ exports.SessionOptions = zod_1.default.object({
+      * `new ContextStore(ctx)` will be executed on every request.
+      */
+     ContextStore: zod_1.default.any().optional(),
+-    encode: zod_1.default.function()
+-        .args(zod_1.default.any())
+-        .returns(zod_1.default.string())
++    encode: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional()
+         .default(() => util_js_1.default.encode),
+-    decode: zod_1.default.function()
+-        .args(zod_1.default.string())
+-        .returns(zod_1.default.any())
++    decode: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" })
+         .default(() => util_js_1.default.decode),
+     /**
+      * If you want to generate a new session id, you can use `genid` option to customize it.
+      * Default is a function that uses `randomUUID()`.
+      * `(ctx) => string`
+      */
+-    genid: zod_1.default.function()
+-        .args(zod_1.default.any())
+-        .returns(zod_1.default.string())
++    genid: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+     /**
+      * If you want to prefix the session id, you can use `prefix` option to customize it.
+@@ -149,17 +133,13 @@ exports.SessionOptions = zod_1.default.object({
+      * valid session value before use it
+      * `(ctx, sessionData) => boolean`
+      */
+-    valid: zod_1.default.function()
+-        .args(zod_1.default.any(), zod_1.default.any())
+-        .returns(zod_1.default.any())
++    valid: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+     /**
+      * hook before save session
+      * `(ctx, sessionModel) => void`
+      */
+-    beforeSave: zod_1.default.function()
+-        .args(zod_1.default.any(), zod_1.default.any())
+-        .returns(zod_1.default.void())
++    beforeSave: zod_1.default.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+ });
+ const DEFAULT_SESSION_OPTIONS = exports.SessionOptions.parse({});
+diff --git a/dist/esm/index.d.ts b/dist/esm/index.d.ts
+index 0c7db88401507d1e7a07c32ee86e5ee8e0733feb..2d41d48edd10dbbd8f852b013d211c065fa4d5ee 100644
+--- a/dist/esm/index.d.ts
++++ b/dist/esm/index.d.ts
+@@ -1,256 +1,32 @@
+ import z from 'zod';
+ export declare const SessionOptions: z.ZodObject<{
+-    /**
+-     * cookie key
+-     * Default is `koa.sess`
+-     */
+     key: z.ZodDefault<z.ZodString>;
+-    /**
+-     * maxAge in ms
+-     * Default is `86400000`, one day
+-     * If set to 'session' will result in a cookie that expires when session/browser is closed
+-     *
+-     * Warning: If a session cookie is stolen, this cookie will never expire
+-     */
+-    maxAge: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodLiteral<"session">]>>;
+-    /**
+-     * automatically commit headers
+-     * Default is `true`
+-     */
++    maxAge: z.ZodOptional<z.ZodUnion<readonly [z.ZodNumber, z.ZodLiteral<"session">]>>;
+     autoCommit: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * cookie value can overwrite or not
+-     * Default is `true`
+-     */
+     overwrite: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * httpOnly or not
+-     * Default is `true`
+-     */
+     httpOnly: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * signed or not
+-     * Default is `true`
+-     */
+     signed: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * Force a session identifier cookie to be set on every response.
+-     * The expiration is reset to the original `maxAge`, resetting the expiration countdown.
+-     * Default is `false`
+-     */
+     rolling: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * renew session when session is nearly expired, so we can always keep user logged in.
+-     * Default is `false`
+-     */
+     renew: z.ZodDefault<z.ZodBoolean>;
+-    /**
+-     * secure cookie
+-     * Default is `undefined`, will be set to `true` if the connection is over HTTPS, otherwise `false`.
+-     */
+     secure: z.ZodOptional<z.ZodBoolean>;
+-    /**
+-     * session cookie sameSite options
+-     * Default is `undefined`, meaning don't set it
+-     */
+     sameSite: z.ZodOptional<z.ZodString>;
+-    /**
+-     * External key is used the cookie by default,
+-     * but you can use `options.externalKey` to customize your own external key methods.
+-     */
+     externalKey: z.ZodOptional<z.ZodObject<{
+-        /**
+-         * get the external key
+-         * `(ctx) => string`
+-         */
+-        get: z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>;
+-        /**
+-         * set the external key
+-         * `(ctx, key) => void`
+-         */
+-        set: z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodString], z.ZodUnknown>, z.ZodVoid>;
+-    }, "strip", z.ZodTypeAny, {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    }, {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    }>>;
+-    /**
+-     * session storage is dependent on your external store
+-     */
++        get: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        set: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++    }, z.z.core.$strip>>;
+     store: z.ZodOptional<z.ZodObject<{
+-        /**
+-         * get session data by key
+-         * `(key, maxAge, { rolling, ctx }) => sessionData | Promise<sessionData>`
+-         */
+-        get: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodNumber, z.ZodObject<{
+-            rolling: z.ZodBoolean;
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, {
+-            rolling: boolean;
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodAny>>;
+-        /**
+-         * set session data for key, with a `maxAge` (in ms)
+-         * `(key, sess, maxAge, { rolling, changed, ctx }) => void | Promise<void>`
+-         */
+-        set: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodAny, z.ZodNumber, z.ZodObject<{
+-            rolling: z.ZodBoolean;
+-            changed: z.ZodBoolean;
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodVoid>>;
+-        /**
+-         * destroy session data for key
+-         * `(key, { ctx })=> void | Promise<void>`
+-         */
+-        destroy: z.ZodFunction<z.ZodTuple<[z.ZodString, z.ZodObject<{
+-            ctx: z.ZodAny;
+-        }, "strip", z.ZodTypeAny, {
+-            ctx?: any;
+-        }, {
+-            ctx?: any;
+-        }>], z.ZodUnknown>, z.ZodPromise<z.ZodVoid>>;
+-    }, "strip", z.ZodTypeAny, {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    }, {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    }>>;
+-    /**
+-     * If your session store requires data or utilities from context, `opts.ContextStore` is also supported.
+-     * `ContextStore` must be a class which claims three instance methods demonstrated above.
+-     * `new ContextStore(ctx)` will be executed on every request.
+-     */
++        get: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        set: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++        destroy: z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>;
++    }, z.z.core.$strip>>;
+     ContextStore: z.ZodOptional<z.ZodAny>;
+-    encode: z.ZodDefault<z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>>>;
+-    decode: z.ZodDefault<z.ZodFunction<z.ZodTuple<[z.ZodString], z.ZodUnknown>, z.ZodAny>>;
+-    /**
+-     * If you want to generate a new session id, you can use `genid` option to customize it.
+-     * Default is a function that uses `randomUUID()`.
+-     * `(ctx) => string`
+-     */
+-    genid: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny], z.ZodUnknown>, z.ZodString>>;
+-    /**
+-     * If you want to prefix the session id, you can use `prefix` option to customize it.
+-     * It will not work if `options.genid(ctx)` present.
+-     */
++    encode: z.ZodDefault<z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>>;
++    decode: z.ZodDefault<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++    genid: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
+     prefix: z.ZodOptional<z.ZodString>;
+-    /**
+-     * valid session value before use it
+-     * `(ctx, sessionData) => boolean`
+-     */
+-    valid: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodAny], z.ZodUnknown>, z.ZodAny>>;
+-    /**
+-     * hook before save session
+-     * `(ctx, sessionModel) => void`
+-     */
+-    beforeSave: z.ZodOptional<z.ZodFunction<z.ZodTuple<[z.ZodAny, z.ZodAny], z.ZodUnknown>, z.ZodVoid>>;
+-}, "strip", z.ZodTypeAny, {
+-    key: string;
+-    autoCommit: boolean;
+-    overwrite: boolean;
+-    httpOnly: boolean;
+-    signed: boolean;
+-    rolling: boolean;
+-    renew: boolean;
+-    encode: (args_0: any, ...args: unknown[]) => string;
+-    decode: (args_0: string, ...args: unknown[]) => any;
+-    maxAge?: number | "session" | undefined;
+-    externalKey?: {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    } | undefined;
+-    valid?: ((args_0: any, args_1: any, ...args: unknown[]) => any) | undefined;
+-    secure?: boolean | undefined;
+-    sameSite?: string | undefined;
+-    store?: {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    } | undefined;
+-    ContextStore?: any;
+-    genid?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    prefix?: string | undefined;
+-    beforeSave?: ((args_0: any, args_1: any, ...args: unknown[]) => void) | undefined;
+-}, {
+-    maxAge?: number | "session" | undefined;
+-    externalKey?: {
+-        set: (args_0: any, args_1: string, ...args: unknown[]) => void;
+-        get: (args_0: any, ...args: unknown[]) => string;
+-    } | undefined;
+-    key?: string | undefined;
+-    valid?: ((args_0: any, args_1: any, ...args: unknown[]) => any) | undefined;
+-    autoCommit?: boolean | undefined;
+-    overwrite?: boolean | undefined;
+-    httpOnly?: boolean | undefined;
+-    signed?: boolean | undefined;
+-    rolling?: boolean | undefined;
+-    renew?: boolean | undefined;
+-    secure?: boolean | undefined;
+-    sameSite?: string | undefined;
+-    store?: {
+-        set: (args_0: string, args_1: any, args_2: number, args_3: {
+-            rolling: boolean;
+-            changed: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-        get: (args_0: string, args_1: number, args_2: {
+-            rolling: boolean;
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<any>;
+-        destroy: (args_0: string, args_1: {
+-            ctx?: any;
+-        }, ...args: unknown[]) => Promise<void>;
+-    } | undefined;
+-    ContextStore?: any;
+-    encode?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    decode?: ((args_0: string, ...args: unknown[]) => any) | undefined;
+-    genid?: ((args_0: any, ...args: unknown[]) => string) | undefined;
+-    prefix?: string | undefined;
+-    beforeSave?: ((args_0: any, args_1: any, ...args: unknown[]) => void) | undefined;
+-}>;
++    valid: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++    beforeSave: z.ZodOptional<z.ZodCustom<(...args: any[]) => any, (...args: any[]) => any>>;
++}, z.z.core.$strip>;
+ export type SessionOptions = z.infer<typeof SessionOptions>;
+ export type CreateSessionOptions = Partial<SessionOptions>;
+ type Middleware = (ctx: any, next: any) => Promise<void>;
+diff --git a/dist/esm/index.js b/dist/esm/index.js
+index 0774b09e190fdfb1c1942304cf38317c9f6ec3a0..4992f6f1c2382a9b3cd3c6eae74453022592bd17 100644
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -72,16 +72,12 @@ export const SessionOptions = z.object({
+          * get the external key
+          * `(ctx) => string`
+          */
+-        get: z.function()
+-            .args(z.any())
+-            .returns(z.string()),
++        get: z.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * set the external key
+          * `(ctx, key) => void`
+          */
+-        set: z.function()
+-            .args(z.any(), z.string())
+-            .returns(z.void()),
++        set: z.custom((value) => typeof value === "function", { message: "Expected function" }),
+     }).optional(),
+     /**
+      * session storage is dependent on your external store
+@@ -91,23 +87,17 @@ export const SessionOptions = z.object({
+          * get session data by key
+          * `(key, maxAge, { rolling, ctx }) => sessionData | Promise<sessionData>`
+          */
+-        get: z.function()
+-            .args(z.string(), z.number(), z.object({ rolling: z.boolean(), ctx: z.any() }))
+-            .returns(z.promise(z.any())),
++        get: z.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * set session data for key, with a `maxAge` (in ms)
+          * `(key, sess, maxAge, { rolling, changed, ctx }) => void | Promise<void>`
+          */
+-        set: z.function()
+-            .args(z.string(), z.any(), z.number(), z.object({ rolling: z.boolean(), changed: z.boolean(), ctx: z.any() }))
+-            .returns(z.promise(z.void())),
++        set: z.custom((value) => typeof value === "function", { message: "Expected function" }),
+         /**
+          * destroy session data for key
+          * `(key, { ctx })=> void | Promise<void>`
+          */
+-        destroy: z.function()
+-            .args(z.string(), z.object({ ctx: z.any() }))
+-            .returns(z.promise(z.void())),
++        destroy: z.custom((value) => typeof value === "function", { message: "Expected function" }),
+     }).optional(),
+     /**
+      * If your session store requires data or utilities from context, `opts.ContextStore` is also supported.
+@@ -115,23 +105,17 @@ export const SessionOptions = z.object({
+      * `new ContextStore(ctx)` will be executed on every request.
+      */
+     ContextStore: z.any().optional(),
+-    encode: z.function()
+-        .args(z.any())
+-        .returns(z.string())
++    encode: z.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional()
+         .default(() => util.encode),
+-    decode: z.function()
+-        .args(z.string())
+-        .returns(z.any())
++    decode: z.custom((value) => typeof value === "function", { message: "Expected function" })
+         .default(() => util.decode),
+     /**
+      * If you want to generate a new session id, you can use `genid` option to customize it.
+      * Default is a function that uses `randomUUID()`.
+      * `(ctx) => string`
+      */
+-    genid: z.function()
+-        .args(z.any())
+-        .returns(z.string())
++    genid: z.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+     /**
+      * If you want to prefix the session id, you can use `prefix` option to customize it.
+@@ -142,17 +126,13 @@ export const SessionOptions = z.object({
+      * valid session value before use it
+      * `(ctx, sessionData) => boolean`
+      */
+-    valid: z.function()
+-        .args(z.any(), z.any())
+-        .returns(z.any())
++    valid: z.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+     /**
+      * hook before save session
+      * `(ctx, sessionModel) => void`
+      */
+-    beforeSave: z.function()
+-        .args(z.any(), z.any())
+-        .returns(z.void())
++    beforeSave: z.custom((value) => typeof value === "function", { message: "Expected function" })
+         .optional(),
+ });
+ const DEFAULT_SESSION_OPTIONS = SessionOptions.parse({});
+diff --git a/src/index.ts b/src/index.ts
+index 74ec11af5bbf950dcb5d0b38d243e828fa20c5d1..19df205c795a4b4c017684f47fe9e4c8d1a93966 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -75,16 +75,12 @@ export const SessionOptions = z.object({
+      * get the external key
+      * `(ctx) => string`
+      */
+-    get: z.function()
+-      .args(z.any())
+-      .returns(z.string()),
++    get: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" }),
+     /**
+      * set the external key
+      * `(ctx, key) => void`
+      */
+-    set: z.function()
+-      .args(z.any(), z.string())
+-      .returns(z.void()),
++    set: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" }),
+   }).optional(),
+   /**
+    * session storage is dependent on your external store
+@@ -94,23 +90,17 @@ export const SessionOptions = z.object({
+      * get session data by key
+      * `(key, maxAge, { rolling, ctx }) => sessionData | Promise<sessionData>`
+      */
+-    get: z.function()
+-      .args(z.string(), z.number(), z.object({ rolling: z.boolean(), ctx: z.any() }))
+-      .returns(z.promise(z.any())),
++    get: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" }),
+     /**
+      * set session data for key, with a `maxAge` (in ms)
+      * `(key, sess, maxAge, { rolling, changed, ctx }) => void | Promise<void>`
+      */
+-    set: z.function()
+-      .args(z.string(), z.any(), z.number(), z.object({ rolling: z.boolean(), changed: z.boolean(), ctx: z.any() }))
+-      .returns(z.promise(z.void())),
++    set: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" }),
+     /**
+      * destroy session data for key
+      * `(key, { ctx })=> void | Promise<void>`
+      */
+-    destroy: z.function()
+-      .args(z.string(), z.object({ ctx: z.any() }))
+-      .returns(z.promise(z.void())),
++    destroy: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" }),
+   }).optional(),
+   /**
+    * If your session store requires data or utilities from context, `opts.ContextStore` is also supported.
+@@ -118,23 +108,17 @@ export const SessionOptions = z.object({
+    * `new ContextStore(ctx)` will be executed on every request.
+    */
+   ContextStore: z.any().optional(),
+-  encode: z.function()
+-    .args(z.any())
+-    .returns(z.string())
++  encode: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" })
+     .optional()
+     .default(() => util.encode),
+-  decode: z.function()
+-    .args(z.string())
+-    .returns(z.any())
++  decode: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" })
+     .default(() => util.decode),
+   /**
+    * If you want to generate a new session id, you can use `genid` option to customize it.
+    * Default is a function that uses `randomUUID()`.
+    * `(ctx) => string`
+    */
+-  genid: z.function()
+-    .args(z.any())
+-    .returns(z.string())
++  genid: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" })
+     .optional(),
+   /**
+    * If you want to prefix the session id, you can use `prefix` option to customize it.
+@@ -145,16 +129,12 @@ export const SessionOptions = z.object({
+    * valid session value before use it
+    * `(ctx, sessionData) => boolean`
+    */
+-  valid: z.function()
+-    .args(z.any(), z.any())
+-    .returns(z.any())
++  valid: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" })
+     .optional(),
+   /**
+    * hook before save session
+    * `(ctx, sessionModel) => void`
+    */
+-  beforeSave: z.function()
+-    .args(z.any(), z.any())
+-    .returns(z.void())
++  beforeSave: z.custom<(...args: any[]) => any>((value) => typeof value === "function", { message: "Expected function" })
+     .optional(),
+ });

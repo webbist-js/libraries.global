@@ -2,7 +2,7 @@ import type { Core } from "@strapi/strapi"
 
 import { isValidServiceSecret } from "../utils/service-secret"
 
-/** The CMS origin accepts backend credentials, never the browser's beta pass. */
+/** The private CMS origin accepts server credentials; public browsing uses the UI. */
 export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) =>
   async (ctx: any, next: () => Promise<unknown>) => {
     const path = decodeURIComponent(ctx.path ?? "")
@@ -12,7 +12,6 @@ export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) =>
       strapi.config.get("api.rest.prefix", "/api")
     ).toLowerCase()
     if (
-      process.env.BETA_GATE_ENABLED !== "true" ||
       !(path === prefix || path.startsWith(`${prefix}/`)) ||
       ctx.method === "OPTIONS"
     )
@@ -42,7 +41,7 @@ export default (_config: unknown, { strapi }: { strapi: Core.Strapi }) =>
       error: {
         status: 401,
         name: "UnauthorizedError",
-        message: "Beta access requires the application",
+        message: "Content access requires the application",
       },
     }
   }

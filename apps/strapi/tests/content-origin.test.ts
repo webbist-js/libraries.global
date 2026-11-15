@@ -1,10 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import factory from "../src/middlewares/beta-gate"
+import factory from "../src/middlewares/content-origin"
 
 const next = vi.fn()
 const tokens = { hash: vi.fn((key) => `hash:${key}`), getByAccessKey: vi.fn() }
-const strapi: any = { config: { get: () => "/api" }, service: () => tokens }
+const strapi = {
+  config: { get: () => "/api" },
+  service: () => tokens,
+} as unknown as Parameters<typeof factory>[1]["strapi"]
 const ctx = (path: string, headers = {}) => ({
   path,
   method: "GET",
@@ -20,7 +23,7 @@ beforeEach(() => {
   tokens.getByAccessKey.mockResolvedValue(null)
 })
 afterEach(() => vi.unstubAllEnvs())
-describe("CMS beta origin gate", () => {
+describe("CMS private content origin", () => {
   it.each([
     "/api/libraries",
     "/API/libraries",
@@ -61,10 +64,12 @@ describe("CMS beta origin gate", () => {
     }
     expect(next).not.toHaveBeenCalled()
   })
-  it("preserves admin access and gate-off behaviour", async () => {
+  it("preserves admin access without letting retired flags open the CMS", async () => {
     await factory(null, { strapi })(ctx("/admin"), next)
     vi.stubEnv("BETA_GATE_ENABLED", "false")
-    await factory(null, { strapi })(ctx("/api/libraries"), next)
-    expect(next).toHaveBeenCalledTimes(2)
+    const c = ctx("/api/libraries")
+    await factory(null, { strapi })(c, next)
+    expect(c.status).toBe(401)
+    expect(next).toHaveBeenCalledOnce()
   })
 })
