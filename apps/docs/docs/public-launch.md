@@ -1,8 +1,7 @@
 # Public launch
 
 The release candidate retires closed-beta access. Old `/beta` links redirect to
-validated local destinations. Invitation redemption and waitlist collection return
-410. The CMS invitation plugin is disabled and queued invitation emails are skipped.
+validated local destinations. Invitation redemption and waitlist collection return 410. The CMS invitation plugin is disabled and queued invitation emails are skipped.
 Stale beta flags cannot close frontend access. Public search retains rate limits
 and server-only credentials. Account and staff authorization remain enforced.
 
