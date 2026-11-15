@@ -307,7 +307,7 @@ function authEvent(kind: "users" | "sessions", row: AuthRow): InternalEvent {
   return {
     eventKey: `login:${identity}:${eventAt.slice(0, 13)}`,
     kind: "login",
-    title: "Signed in to beta",
+    title: "Signed in to Libraries Global",
     detail:
       "A successful session started (at most one alert per person per hour).",
     actorId,
