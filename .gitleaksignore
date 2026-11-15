@@ -43,3 +43,8 @@ f8d930bc548f3e2984c7bb4f4837dfeb171625de:apps/ui/src/lib/google-analytics.ts:gen
 # Same reviewed YOUR_API_KEY documentation placeholder after dev integration and release cherry-pick.
 99b2ddb57c46d664c029b150fbb7eace06e6f518:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
 b79741b3dc03c060997ceb202a4559ab72b7536a:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
+# Same public YOUR_API_KEY placeholder in the attribution-corrected public launch.
+0d239ecfe72518db69025079bb37c544ebaf7170:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
+# Retained merged-PR history and the identical attribution-corrected release commit.
+4a683716de937db01f51053aa1d01e04578600e3:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
+30f0123d08ae3bda702dceea7f00526c38393144:apps/ui/src/components/developers/ApiOfferOverview.tsx:curl-auth-header:88
