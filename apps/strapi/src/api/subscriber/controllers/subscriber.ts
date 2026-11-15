@@ -125,23 +125,15 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
 
       return
     }
-    if (!["beta_waitlist", "newsletter"].includes(type))
-      return ctx.badRequest("Invalid subscriber type")
-    const source =
-      type === "beta_waitlist"
-        ? "beta_landing"
-        : (ctx.request.body.source ?? "footer")
-    if (
-      !["beta_landing", "footer", "journal"].includes(source) ||
-      (type === "newsletter" && source === "beta_landing")
-    )
+    if (type !== "newsletter") return ctx.badRequest("Invalid subscriber type")
+    const source = ctx.request.body.source ?? "footer"
+    if (!["footer", "journal"].includes(source))
       return ctx.badRequest("Invalid source")
     const locale = ctx.request.body.locale ?? "en"
     if (!isSupportedLocale(locale)) return ctx.badRequest("Invalid locale")
     const consentVersion =
       CONSENT_VERSIONS[`${type}-${source}`] ?? `${type}-${source}-2026-10-10`
     const baUserId =
-      type === "newsletter" &&
       headers["x-ba-user-email"]?.toLowerCase() === email
         ? bridgeBaUserId(ctx)
         : null
@@ -174,24 +166,16 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
               email,
               type,
               source,
-              state:
-                type === "newsletter" && !baUserId
-                  ? "pending_confirmation"
-                  : "active",
-              confirmedAt:
-                type === "newsletter" && baUserId
-                  ? new Date().toISOString()
-                  : null,
+              state: !baUserId ? "pending_confirmation" : "active",
+              confirmedAt: baUserId ? new Date().toISOString() : null,
               communicationLocale: locale,
               baUserId,
               consentedAt: new Date().toISOString(),
               consentVersion,
               message:
-                type === "beta_waitlist"
-                  ? "Requested beta access only. No newsletter."
-                  : source === "journal"
-                    ? "Agreed to receive project news and Journal articles by email, at most monthly."
-                    : `Signed up via the website footer on ${new Date().toISOString()}`,
+                source === "journal"
+                  ? "Agreed to receive project news and Journal articles by email, at most monthly."
+                  : `Signed up via the website footer on ${new Date().toISOString()}`,
             } as never,
           })
         } else if (
@@ -204,14 +188,8 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
             data: {
               type,
               source,
-              state:
-                type === "newsletter" && !baUserId
-                  ? "pending_confirmation"
-                  : "active",
-              confirmedAt:
-                type === "newsletter" && baUserId
-                  ? new Date().toISOString()
-                  : null,
+              state: !baUserId ? "pending_confirmation" : "active",
+              confirmedAt: baUserId ? new Date().toISOString() : null,
               confirmationSentAt: null,
               communicationLocale: locale,
               baUserId,
@@ -233,7 +211,7 @@ export default factories.createCoreController(SUBSCRIBER, ({ strapi }) => ({
             } as never,
           })
         }
-        if (type === "newsletter" && saved?.state === "pending_confirmation")
+        if (saved?.state === "pending_confirmation")
           await strapi
             .service("api::subscriber.email-preferences")
             .confirmRequest(saved)

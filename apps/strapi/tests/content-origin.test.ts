@@ -4,7 +4,10 @@ import factory from "../src/middlewares/content-origin"
 
 const next = vi.fn()
 const tokens = { hash: vi.fn((key) => `hash:${key}`), getByAccessKey: vi.fn() }
-const strapi: any = { config: { get: () => "/api" }, service: () => tokens }
+const strapi = {
+  config: { get: () => "/api" },
+  service: () => tokens,
+} as unknown as Parameters<typeof factory>[1]["strapi"]
 const ctx = (path: string, headers = {}) => ({
   path,
   method: "GET",
