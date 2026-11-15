@@ -304,7 +304,7 @@ path,layer,role,coverage,exported_symbols,story_modules,composition_modules,boun
 "apps/ui/src/app/api/atlas/reach/route.ts","app","support","support","POST; maxDuration; runtime","","","server; network/session","93472900c9e6"
 "apps/ui/src/app/api/auth/[...all]/route.ts","app","support","support","GET; POST","","","","46399cf8c716"
 "apps/ui/src/app/api/auth/providers/route.ts","app","support","support","GET","","","server; network/session","75956cbf2b1a"
-"apps/ui/src/app/api/beta/access/__tests__/route.test.ts","app","test","test","","","","server","550d1dad897d"
+"apps/ui/src/app/api/beta/access/__tests__/route.test.ts","app","test","test","","","","server","b58c58a6b529"
 "apps/ui/src/app/api/beta/access/route.ts","app","support","support","POST","","","server","ad81d8dee801"
 "apps/ui/src/app/api/beta/waitlist/__tests__/route.test.ts","app","test","test","","","","server; network/session","928efaa0c568"
 "apps/ui/src/app/api/beta/waitlist/route.ts","app","support","support","POST","","","server","ad81d8dee801"
