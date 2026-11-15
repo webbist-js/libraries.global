@@ -1,10 +1,10 @@
-# Internal beta notifications
+# Internal production notifications
 
-Internal notifications report beta access requests, account creation, successful
+Internal notifications report account creation, successful
 session starts, authenticated daily activity, contributions, review decisions,
 Library Notices, option suggestions, discussions, abuse reports, direct article
-publishing and exhausted email delivery retries. Beta invitation sending and
-redemption are reported separately. At 17:00 UTC a daily message counts recorded
+publishing, API billing updates and exhausted email delivery retries. Retired beta
+waitlist and invitation records are no longer collected. At 17:00 UTC a daily message counts recorded
 events in the preceding 24 hours. Session alerts are limited to one per person
 per UTC hour; authenticated activity is limited to one per person per UTC day.
 
@@ -53,7 +53,7 @@ Slack accepts a message can still cause a duplicate on retry.
 ## Data handling
 
 Messages contain short summaries and account references or public usernames.
-Waitlist email addresses are masked. Messages omit session tokens, IP addresses,
+Account email addresses are withheld. Messages omit session tokens, IP addresses,
 user agents, invitation codes, authentication links, claim evidence and submission
 bodies. User-controlled text uses plain text blocks; action links are restricted
 to the configured application origin. Links retain the site's authentication and
