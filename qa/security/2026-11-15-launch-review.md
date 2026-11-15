@@ -21,7 +21,9 @@ Two high-severity findings remain:
   exposure of this particular dependency path but does not patch Zod, establish
   every usage in the final image, or authorize a new exception.
 
-Resolve the findings through supported upstream releases or obtain an explicitly
-reviewed, narrowly scoped exception backed by final-image reachability evidence
-before promotion. Existing exceptions expired on 14 November 2026 and remain
-expired.
+The release decision is to require upstream fixes before launch; temporary
+exceptions were declined. Rechecked registry metadata confirms that current
+Strapi 5.62.0 still pins koa-body 6.0.1 (Zod 3), while iconhub 1.3.1 requires
+SDK 5 and its latest compatible pack-up still pins Vite 5.4.21. Do not force
+cross-major CMS dependency overrides. Existing exceptions expired on
+14 November 2026 and remain expired.
