@@ -24,7 +24,7 @@ export function notificationConfig() {
     webhook,
     feedbackWebhook: process.env.SLACK_FEEDBACK_WEBHOOK_URL ?? "",
     environment:
-      process.env.APP_ENV === "production" ? "production beta" : "development",
+      process.env.APP_ENV === "production" ? "production" : "development",
   }
 }
 

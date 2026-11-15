@@ -30,6 +30,18 @@ afterEach(() => {
 })
 
 describe("configuration and messages", () => {
+  it("labels live operational messages as production", () => {
+    vi.stubEnv("APP_ENV", "production")
+    const config = notificationConfig()!
+    expect(config.environment).toBe("production")
+    expect(slackMessage(event, config.environment).blocks.at(-1)).toMatchObject(
+      {
+        elements: [
+          { text: `production · ${event.eventAt.replace("Z", ".000Z")}` },
+        ],
+      }
+    )
+  })
   it("is disabled by default and requires an explicit activation date", () => {
     vi.stubEnv("INTERNAL_NOTIFICATIONS_ENABLED", "false")
     expect(notificationConfig()).toBeNull()

@@ -39,6 +39,18 @@ describe("public sitemap source", () => {
     )
   })
 
+  it("excludes the archived beta notice from legal counts and rows", async () => {
+    const ctx = context("legal", { locale: "en" })
+    await controller.count(ctx)
+    await controller.rows(ctx)
+    expect(count.mock.calls[0]?.[0].filters.$and).toContainEqual({
+      slug: { $ne: "beta" },
+    })
+    expect(findMany.mock.calls[0]?.[0].filters.$and[0]).toEqual(
+      count.mock.calls[0]?.[0].filters
+    )
+  })
+
   it("caps every response and advances with row ids", async () => {
     findMany.mockResolvedValue(
       Array.from({ length: 1000 }, (_, i) => ({
