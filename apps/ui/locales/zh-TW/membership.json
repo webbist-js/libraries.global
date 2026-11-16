@@ -1,0 +1,489 @@
+{
+  "membershipContent": {
+    "standing": {
+      "public": "尚未登入",
+      "explorer": "探索者",
+      "contributor": "貢獻者",
+      "supporter": "支持者"
+    },
+    "offers": {
+      "explorer": {
+        "name": "探索者",
+        "who": "任何擁有免費帳號的人。",
+        "price": "免費",
+        "priceNote": "使用電子郵件地址註冊。不需信用卡，也沒有試用期。",
+        "cta": {
+          "signUp": "建立免費帳號"
+        },
+        "items": {
+          "records": "無論有無帳號，都可瀏覽所有圖書館資料、地圖與清單",
+          "contribute": "提交更正建議、照片與新增圖書館",
+          "follow": "追蹤圖書館、儲存活動並參與討論",
+          "contextLayers": "Atlas 背景圖層：英國支援地區的貧困程度與無車家戶",
+          "libraryAccess": "圖書館可近性：各國與支援的地方區域之人口比較",
+          "history": "逐欄檢視圖書館的每次變更",
+          "savedViews": "最多可儲存 {savedViews} 個檢視畫面與 {savedViews} 組搜尋",
+          "export": "Atlas 每次最多匯出 {exportRows} 列，每天可匯出 {exportsPerDay} 次",
+          "alerts": "已儲存搜尋的通知",
+          "notes": "為任何圖書館撰寫私人筆記"
+        }
+      },
+      "contributor": {
+        "name": "貢獻者",
+        "who": "至少有一筆貢獻獲採納的人。",
+        "price": "免費",
+        "priceNote": "第一筆貢獻獲採納後即可取得。",
+        "cta": {
+          "contribute": "開始貢獻"
+        },
+        "items": {
+          "everythingExplorer": "Explorer 的所有功能",
+          "reach": "每 7 天可新增 {reachPerWeek} 次單館涵蓋範圍計算；開啟已有的結果不計次",
+          "credit": "每筆獲採納的變更都會標示你的貢獻，並保留貢獻紀錄",
+          "supporter": "累計 {supporterAt} 筆貢獻獲採納，即可獲得支持者肯定",
+          "noAuthority": "獲得肯定不代表取得編輯權限或通過館員驗證。點數與徽章分開計算。"
+        }
+      },
+      "staff": {
+        "name": "已驗證館員",
+        "who": "在圖書館或圖書館服務單位工作的人。",
+        "price": "免費",
+        "priceNote": "我們向圖書館確認你的職務後即可使用。",
+        "cta": {
+          "claim": "認領您的圖書館"
+        },
+        "items": {
+          "workspace": "你已通過驗證的各間圖書館之館員專區",
+          "editing": "編輯所屬圖書館的資料、發布公告並回覆變更建議",
+          "organisation": "免費建立組織，邀請同事並管理圖書館",
+          "widgets": "可嵌入的圖書館搜尋工具、目錄、圖表與統計資料",
+          "traffic": "所屬圖書館頁面的流量報告",
+          "scope": "權限僅適用於你已通過驗證的圖書館。加入組織本身不會授予編輯權限。"
+        }
+      },
+      "api": {
+        "name": "API Access",
+        "who": "串接自有工具的開發人員、研究人員與組織。",
+        "price": "每月 {apiPrice}",
+        "priceNote": "含稅。Stripe 會在付款前顯示最終金額。",
+        "cta": {
+          "developers": "前往開發人員專區"
+        },
+        "items": {
+          "allowance": "每個計費週期含 {apiRequests} 次請求、{apiMib} MiB 回應資料與 {apiCredits} 點分析額度",
+          "keys": "不限數量的金鑰、用量儀表板、請求參考文件與測試環境",
+          "overage": "可選擇啟用超額用量，並自訂每月費用上限（{capMin} 至 {capMax}）。除非你主動開啟，否則維持關閉。",
+          "reach": "組織管理者可使用更多 Atlas 涵蓋範圍計算：每小時新增 {apiReachPerHour} 次計算，並可計算最多 {apiReachLibraries} 間圖書館的服務涵蓋範圍",
+          "noOrganisation": "可為自己或組織購買。",
+          "noAuthority": "API 金鑰用於識別你的應用程式，不會授予圖書館編輯權限、驗證資格或更高的搜尋排名。"
+        }
+      },
+      "sponsor": {
+        "name": "贊助者",
+        "who": "希望資助這項公共服務的組織。",
+        "price": "另行商議",
+        "priceNote": "與你協議資助項目、期間及成果回報方式。",
+        "cta": {
+          "contact": "洽詢贊助",
+          "sponsor": "關於贊助"
+        },
+        "items": {
+          "programmes": "資助公共取用、資料品質、翻譯、地理涵蓋範圍或開放工具",
+          "reporting": "每季活動近況與年度影響力報告",
+          "acknowledgement": "可選擇在贊助者頁面顯示名稱與標誌",
+          "independence": "贊助者無權干預資料、排名、驗證或編輯審核。贊助並非慈善捐款。"
+        }
+      }
+    },
+    "columns": {
+      "public": {
+        "name": "無帳號",
+        "price": "免費"
+      },
+      "explorer": {
+        "name": "探索者",
+        "price": "免費"
+      },
+      "contributor": {
+        "name": "貢獻者",
+        "price": "免費，透過貢獻取得"
+      },
+      "staff": {
+        "name": "已驗證館員",
+        "price": "免費"
+      },
+      "api": {
+        "name": "API Access",
+        "price": "{apiPrice}/月"
+      }
+    },
+    "groups": {
+      "facts": "圖書館基本資料",
+      "account": "參與",
+      "atlas": "Atlas 分析",
+      "watching": "關注與比較圖書館",
+      "staff": "館員專用",
+      "api": "開發人員專用"
+    },
+    "rows": {
+      "records": "所有圖書館資料，包含開放時間與服務",
+      "map": "搜尋、地圖與清單",
+      "reading": "誌刊、知識、活動、公布欄與公開討論",
+      "downloads": "下載圖書館資料",
+      "apiReference": "API 文件與請求參考文件",
+      "contribute": "提交更正建議、照片與新增圖書館",
+      "follow": "追蹤圖書館與儲存活動",
+      "discussions": "發起討論、回覆與表達心情",
+      "drives": "參與社群協作活動",
+      "savedViews": "已儲存的檢視畫面與搜尋",
+      "atlas_contextLayers": "背景圖層：貧困程度與無車家戶（英國支援地區）",
+      "atlas_analysis": "圖書館可近性：人口比較",
+      "atlas_compare": "比較兩個地區的圖書館可近性",
+      "atlas_export": "將 Atlas 結果匯出為 CSV 或 GeoJSON",
+      "atlas_reach": "依交通時間計算單館涵蓋範圍",
+      "atlas_serviceReach": "多間圖書館的服務涵蓋範圍",
+      "library_history": "逐欄檢視圖書館的每次變更",
+      "library_watch": "關注圖書館的變更與閉館情形",
+      "index_alerts": "已儲存搜尋的通知",
+      "index_compare": "並排比較最多六間圖書館",
+      "library_notes": "為任何圖書館撰寫私人筆記",
+      "events_personalFeed": "個人行事曆訂閱來源",
+      "index_export": "匯出附有來源標示的搜尋結果",
+      "data_benchmark": "與類似服務進行基準比較",
+      "data_explorerExport": "匯出衍生指標",
+      "staffWorkspace": "已通過驗證圖書館的館員專區",
+      "staffEditing": "編輯資料、發布公告與回覆建議",
+      "staffOrganisation": "可邀請成員加入的免費組織",
+      "staffWidgets": "可嵌入網站的小工具",
+      "staffTraffic": "流量報告",
+      "api_key": "API 金鑰與用量儀表板",
+      "apiAllowance": "每個計費週期內含的 API 額度",
+      "apiOverage": "可選擇啟用超額用量並自訂上限",
+      "apiPlayground": "在測試環境中使用自己的金鑰發出請求"
+    },
+    "cells": {
+      "savedViews": "{savedViews}",
+      "exportRows": "{exportRows} 列",
+      "reachWeek": "每週 {reachPerWeek} 次",
+      "reachHour": "每小時 {apiReachPerHour} 次",
+      "serviceLibraries": "最多 {apiReachLibraries}",
+      "apiAllowance": "{apiRequests} 次請求"
+    },
+    "copy": {
+      "lead": "圖書館基本資料免費，探索與改善資料的工具也免費。API Access 和贊助用於支付服務營運費用。",
+      "metaDescription": "探索者、貢獻者和已驗證館員皆免費。API Access 每月 {apiPrice}。組織可贊助這項公共服務。付費絕不代表能買到信任。",
+      "promiseAds": "永不刊登廣告",
+      "promiseTrust": "金錢買不到信任",
+      "promiseData": "開放資料持續開放",
+      "offersTitle": "參與方式",
+      "offersLead": "Libraries Global 的大部分功能皆免費。付費選項用於支持服務營運，不會改變資料的審核或排序方式。",
+      "independence": "購買 API Access 或贊助我們，都不會改變你的社群角色、編輯內容的審核方式，或圖書館的顯示位置。",
+      "compare": "並排比較所有項目",
+      "current": "你已擁有",
+      "includes": "包含項目",
+      "signedIn": "你已登入",
+      "openStaff": "開啟館員專區",
+      "manageApi": "管理 API 存取權",
+      "soon": "即將推出",
+      "soonShort": "即將推出",
+      "included": "包含",
+      "notIncluded": "不包含",
+      "feature": "功能",
+      "compareTwo": "比較兩個選項",
+      "comparisonCaption": "{group}：{first} 與 {second}",
+      "availableCount": "目前可用 {count, number} 項",
+      "roadmapCount": "規劃中 {count, number} 項",
+      "questions": "常見問題",
+      "contactLead": "還有其他問題嗎？維護團隊會在 5 個工作天內回覆。",
+      "ask": "提出問題",
+      "supporterEyebrow": "靠貢獻獲得，無法購買",
+      "supporterTitle": "支持者：{supporterAt} 筆貢獻獲採納",
+      "supporterBody": "支持者是對已有 {supporterAt} 筆貢獻獲採納者的肯定。你會獲得個人檔案標記，並可選擇在支持者頁面上列名。此身分不增加工具、額度或權限，也無法購買。",
+      "meetSupporters": "認識支持者",
+      "freeGroupTitle": "人人免費使用",
+      "freeGroupLead": "不需信用卡，也沒有試用期。參與越多，可用工具越多。",
+      "paidGroupTitle": "適用於組織",
+      "paidGroupLead": "支持服務營運的兩種方式。",
+      "moreInComparison": "比較表中還有 {count, plural, one {# 項} other {# 項}}"
+    },
+    "policies": {
+      "heading": "條款與退款",
+      "lead": "購買 API Access 前，請先閱讀這些政策。每個頁面都可列印或儲存。",
+      "languageNote": "這些政策目前提供英文版。",
+      "terms": "會員與 API 條款",
+      "termsBody": "每月費用、內含額度、選用的超額用量、計費週期與你的帳號。",
+      "refunds": "取消與退款",
+      "refundsBody": "停止續訂、申請退款及你的法定取消權利。"
+    },
+    "faq": {
+      "0": {
+        "q": "有哪些免費功能？",
+        "a": "除了 API Access 之外，全部免費。不需帳號即可閱讀所有圖書館資料及使用地圖。免費帳號（探索者）另可使用背景資訊圖層、比較、變更紀錄、已儲存的檢視，以及最多 {exportRows} 列的匯出功能。第一筆貢獻獲採納後，你就會成為貢獻者，每週可進行 {reachPerWeek} 次涵蓋範圍計算。"
+      },
+      "1": {
+        "q": "如何成為支持者？",
+        "a": "每筆獲採納的實質貢獻計算一次，包括新增圖書館、更正資料、照片、翻譯、文章等。連續每日參與、獎勵及管理調整不列入計算。個人檔案會顯示你的累計筆數，以及達到 {supporterAt} 筆的進度。支持者不會獲得額外工具或權限。"
+      },
+      "2": {
+        "q": "API Access 費用是多少？",
+        "a": "每月 {apiPrice}，含稅，每個計費週期包含 {apiRequests} 次請求、{apiMib} MiB 回應資料及 {apiCredits} 分析點數。超額用量預設關閉；啟用後，每次額外請求收費 {requestPrice}、每額外 MiB 收費 {mibPrice}、每額外分析點數收費 {creditPrice}，每月費用上限為 {capMin} 至 {capMax}。"
+      },
+      "3": {
+        "q": "購買 API Access 需要先有組織嗎？",
+        "a": "不需要。如果你以個人身分購買，我們會免費建立一個組織，由你擔任唯一的組織管理員，之後即可加入同事。組織管理員可管理金鑰與帳務；成員則可查看用量。"
+      },
+      "4": {
+        "q": "付費或贊助會讓我獲得編輯權限嗎？",
+        "a": "不會。編輯圖書館資料需要該館已驗證的館員權限，我們會向圖書館確認。API Access、贊助、表揚及組織成員身分都不會授予此權限。"
+      },
+      "5": {
+        "q": "贊助包含哪些項目？",
+        "a": "贊助用於支持資料品質改善或翻譯等工作計畫，並提供每季工作近況與年度影響報告。金額會與各贊助者個別議定：請寄信至 {contactEmail} 或使用聯絡表單。這不是慈善捐款，也不包含 API Access。"
+      },
+      "6": {
+        "q": "可以取消 API Access 嗎？",
+        "a": "可以，隨時都能在開發者頁面的帳務管理中取消。存取權會持續到已付費期間結束。關於你的法定權利，請參閱取消與退款政策。"
+      }
+    },
+    "sheet": {
+      "title": "圖書館基本資料免費。",
+      "titleEmphasis": "永遠如此。",
+      "lead": "地址、開放時間、服務及每筆社群維護的資料，都持續向所有人開放。登入即可使用 Atlas 工具，貢獻一次即可使用涵蓋範圍功能，或購買 API Access 取得更多功能。",
+      "here": "你目前的位置",
+      "signIn": "登入",
+      "contribute": "參與貢獻",
+      "api": "關於 API Access",
+      "reachTitle": "貢獻一次，即可解鎖每週兩次涵蓋範圍計算。",
+      "reachBody": "API 客戶每小時可進行 {apiReachPerHour} 次計算，並可使用服務涵蓋範圍功能。",
+      "allPlans": "查看所有選項",
+      "openTitle": "開放原始碼，開放資料。",
+      "openBody": "圖書館資料是由社群維護的開放資料，Atlas 的程式碼也採開放原始碼。",
+      "layers": {
+        "basics": "密度、夜間開放與閉館圖層",
+        "mobile": "行動圖書館路線與停靠站",
+        "population": "人口密度與支援的網格",
+        "access": "無障礙、活動與資料完整度圖層"
+      }
+    }
+  },
+  "membershipPage": {
+    "title": "你的參與身分",
+    "hero": "你的*參與身分*",
+    "lead": "你的貢獻、館員存取權與 API 帳號，各自分開顯示。",
+    "plansTitle": "方案與價格",
+    "plansEyebrow": "方案與價格",
+    "plansHero": "人人免費使用，*僅 API 存取需付費*",
+    "offersNav": "參與方式",
+    "comparePlans": "比較方案",
+    "questionsPoliciesNav": "問題與政策",
+    "membershipQuestions": "有問題嗎？",
+    "plansHelpLead": "比較包含的項目、閱讀下方解答，或向我們提問。",
+    "askQuestion": "提出問題",
+    "settingsLead": "你的參與身分、館員存取權與 API 帳號都列在個人檔案中。",
+    "plansLink": "方案與價格",
+    "yourStanding": "你的參與身分",
+    "acceptedCount": "{count, plural, one {# 筆貢獻獲採納} other {# 筆貢獻獲採納}}",
+    "recentlyActive": "近期活躍",
+    "notRecentlyActive": "近期不活躍",
+    "viewStanding": "查看你的參與身分",
+    "standingTitle": "你的參與身分",
+    "standingBody": {
+      "public": "登入以查看你的參與身分。",
+      "explorer": "你可以使用所有免費工具。第一筆貢獻獲採納後，你就會成為貢獻者，每週可進行 {reachPerWeek} 次涵蓋範圍計算。",
+      "contributor": "你每 7 天可進行 {reachPerWeek} 次新的單一圖書館涵蓋範圍計算。累計 {supporterAt} 筆貢獻獲採納後，即可獲得支持者肯定。",
+      "supporter": "謝謝你。你已有 {supporterAt} 筆貢獻獲採納。支持者僅代表肯定：你的工具與涵蓋範圍計算額度和貢獻者相同。"
+    },
+    "progressLabel": "成為支持者的進度",
+    "progressValue": "{count, number} / {total, number}",
+    "nextMilestone": {
+      "contributor": "{count, plural, one {# 筆貢獻獲採納即可成為貢獻者} other {# 筆貢獻獲採納即可成為貢獻者}}",
+      "supporter": "{count, plural, one {再有 # 筆貢獻獲採納即可成為支持者} other {再有 # 筆貢獻獲採納即可成為支持者}}"
+    },
+    "milestoneReached": "你已成為支持者。",
+    "activityNote": "「近期活躍」表示你在過去 {activityDays} 天內有貢獻獲採納。此狀態會分開顯示，不影響你的參與身分。",
+    "recognition": "公開表揚",
+    "recognitionLead": "選擇是否在支持者頁面列名，以及是否在個人檔案顯示支持者標記。每項偏好設定會個別儲存。",
+    "recognitionUnavailable": "無法載入你的個人檔案偏好設定。請重新載入此頁再試一次，或開啟帳號設定。",
+    "startContributing": "開始貢獻",
+    "yourContributions": "您的貢獻",
+    "standingIndependence": "參與身分依獲採納的貢獻計算，而非點數或付費。此身分不會授予編輯權限，也不代表館員驗證。",
+    "staffTitle": "已驗證館員存取權",
+    "approvedLibraries": "{count, plural, one {# 間圖書館} other {# 間圖書館}}",
+    "noStaffAccess": "無",
+    "staffLead": "我們已向各館確認你的職務，因此你可以編輯及管理這些圖書館。",
+    "claimExplanation": "如果您在圖書館工作，可以申請認領以更新館舍資料。認領完全免費，審核人員會先確認您的職務。",
+    "staffRoles": {
+      "owner": "擁有者",
+      "editor": "編輯"
+    },
+    "canGoLive": "可上線",
+    "organisations": "您的組織",
+    "organisationOrganiser": "組織管理者",
+    "organisationMember": "成員",
+    "organisationNote": "組織是供同事協作的免費工作空間。加入組織並不會取得圖書館資料的編輯權限。",
+    "manageLibraries": "管理您的圖書館",
+    "claimLibrary": "認領圖書館",
+    "openOrganisation": "開啟您的組織",
+    "apiTitle": "API 帳戶",
+    "organisationUnnamed": "您的組織",
+    "apiLead": "這些帳戶的金鑰、用量及帳務均在開發者頁面管理。",
+    "apiNone": "您尚未擁有 API 帳戶。API Access 每月 {apiPrice}，可在開發者頁面購買。",
+    "apiActive": "已啟用",
+    "apiInactive": "未啟用",
+    "openDevelopers": "前往開發人員專區",
+    "apiIndependence": "API Access 獨立計費，不會授予圖書館編輯權限或館員驗證資格。",
+    "helpAndAccess": "說明與其他選項",
+    "waysToTakePart": "參與方式",
+    "waysLead": "探索者、貢獻者及已驗證館員均為免費。API Access 和贊助則為付費選項。",
+    "sponsorLink": "贊助本服務",
+    "termsAndHelp": "條款與說明",
+    "terms": "會員與 API 條款",
+    "cancellationAndRefunds": "取消與退款"
+  },
+  "membershipStaff": {
+    "eyebrow": "館員專用",
+    "title": "<em>免費</em>維護您圖書館的資料。",
+    "lead": "通過驗證後，您即可免費使用所屬圖書館的館員工具。館員權限不對外販售，任何付費項目都不會授予此權限。",
+    "step0Title": "認領您的圖書館",
+    "step0Body": "從圖書館頁面使用工作電子郵件提出申請。",
+    "step1Title": "我們會向圖書館確認",
+    "step1Body": "通常在 5 個工作天內完成。",
+    "step2Title": "啟用您的館員工具",
+    "step2Body": "工具位於館員專區，僅適用於該圖書館。",
+    "benefit0": "直接編輯您圖書館的資料",
+    "benefit1": "發布公告與休館資訊",
+    "benefit2": "查看並回覆修改建議",
+    "benefit3": "維護並發布開放時間表",
+    "benefit4": "供同事使用的免費組織與可嵌入的小工具",
+    "openStaff": "開啟館員專區",
+    "claim": "認領您的圖書館",
+    "team": "負責整個圖書館體系？建立免費組織",
+    "eachLibrary": "適用於每一所已核准您管理的圖書館。",
+    "endorsement": "資料已驗證表示有館員負責維護其內容，不代表該圖書館為 Libraries Global 背書。"
+  },
+  "membershipPreferences": {
+    "saved": "已儲存支持者偏好設定",
+    "failed": "無法儲存您的偏好設定，請再試一次。",
+    "listedCompact": "在此頁面顯示我",
+    "listed": "在支持者頁面顯示我",
+    "listedDescription": "顯示您的姓名與公開位置。您可隨時取消。",
+    "settings": "支持者標記設定",
+    "badgeDescription": "此標記僅表示您獲得的肯定，不會顯示您的角色或任何付費項目。",
+    "privateProfile": "私人及受限的個人檔案不會列出。請先在設定中將個人檔案設為公開，再選擇是否列出。"
+  },
+  "membershipCompare": {
+    "lead": "每一欄都是獨立的參與方式，而非升級階段。標示「即將推出」的功能仍在規劃中。",
+    "controls": "比較控制項",
+    "availability": "功能可用狀態",
+    "allFeatures": "所有功能",
+    "availableNow": "目前可用",
+    "expandAll": "展開所有群組",
+    "collapseAll": "收合所有群組",
+    "showing": "顯示 {count} 項功能，共 {total} 項",
+    "highlightHint": "選取欄位標題即可醒目顯示該欄。",
+    "firstPlan": "第一個選項",
+    "secondPlan": "第二個選項",
+    "roadmapLink": "規劃中"
+  },
+  "sponsorPage": {
+    "metaTitle": "贊助",
+    "metaDescription": "贊助 Libraries Global 的公眾使用、資料品質、翻譯、地理涵蓋範圍或開放工具：了解贊助資助的工作、贊助者可獲得的回饋，以及我們的獨立性規範。每項贊助都從對話開始。",
+    "title": "贊助",
+    "eyebrow": "贊助",
+    "heroTitle": "資助全球*圖書館*的開放資料庫",
+    "lead": "Libraries Global 是獨立、開放的圖書館索引。贊助用於資助特定的公共服務工作，我們也會報告資金用途。贊助絕不會換取對資料內容的影響力。",
+    "nav": {
+      "programmes": "贊助資助的工作",
+      "recognition": "贊助者可獲得的回饋",
+      "independence": "獨立性",
+      "sponsors": "目前的贊助者",
+      "enquire": "與我們洽談"
+    },
+    "programmes": {
+      "title": "贊助資助的工作",
+      "lead": "每項贊助支持一個或多個計畫。簽署任何文件前，我們會先與您確認支持的計畫。",
+      "items": {
+        "publicAccess": {
+          "title": "公眾使用",
+          "body": "讓所有人都能免費使用索引、地圖和圖書館頁面，且不含廣告。"
+        },
+        "dataQuality": {
+          "title": "資料品質",
+          "body": "查核圖書館資料、確認來源並修正內容，以及審查社群提交的資訊。"
+        },
+        "translation": {
+          "title": "翻譯",
+          "body": "翻譯網站及其指南，讓更多人能以自己的語言使用。"
+        },
+        "coverage": {
+          "title": "地理涵蓋範圍",
+          "body": "針對索引涵蓋尚不完整的國家與地區，匯入並維護圖書館資料。"
+        },
+        "tooling": {
+          "title": "開放工具",
+          "body": "任何人都能重複使用的開放原始碼、開放資料匯出檔及文件。"
+        }
+      },
+      "reportingTitle": "季度與年度報告",
+      "reportingBody": "每位贊助者都會收到所資助計畫的季度活動報告與年度影響報告。"
+    },
+    "recognition": {
+      "title": "贊助者可獲得的回饋",
+      "items": {
+        "acknowledgement": {
+          "title": "列名與標誌致謝",
+          "body": "經您同意後，我們會在此頁面顯示貴組織的名稱與標誌。未經同意，不會顯示任何資訊。"
+        },
+        "entry": {
+          "title": "如實介紹贊助內容",
+          "body": "在此頁面簡要、如實介紹您的贊助所資助的工作。"
+        },
+        "briefings": {
+          "title": "進度簡報",
+          "body": "除了季度與年度報告，也會定期提供計畫進度簡報。"
+        }
+      }
+    },
+    "independence": {
+      "title": "獨立性",
+      "summary": "贊助無法換取影響力",
+      "items": {
+        "influence": "贊助者無權干預圖書館資料、排名、搜尋結果、驗證或編輯審查。",
+        "charity": "贊助並非慈善捐款，我們也不宣稱贊助可抵稅。",
+        "api": "贊助不包含 API 容量。API 存取為獨立方案，每月 {price}，詳見<link>開發者頁面</link>。"
+      }
+    },
+    "sponsors": {
+      "title": "目前的贊助者",
+      "lead": "目前贊助 Libraries Global 並同意公開名稱的組織。",
+      "empty": "目前尚未列出任何贊助者。",
+      "emptyDetail": "贊助者同意公開名稱後，就會顯示在這裡。",
+      "unavailable": "目前無法取得贊助者名單。",
+      "unavailableDetail": "請稍後再試。",
+      "tiers": {
+        "founding": "創始贊助者",
+        "service": "服務贊助者",
+        "community": "社群贊助者",
+        "custom": "贊助者"
+      }
+    },
+    "enquire": {
+      "title": "洽詢贊助",
+      "body": "每項贊助都從對話開始：您希望資助哪些工作、資助多久，以及我們如何報告成果。金額由雙方共同商定。",
+      "action": "洽詢贊助",
+      "email": "或寄信至 <link>{email}</link>。",
+      "terms": {
+        "contract": "每項贊助均個別報價並簽約。",
+        "invoice": "贊助通常以發票請款。",
+        "tax": "稅務適用方式會在各項協議中確認。"
+      }
+    },
+    "sidebar": {
+      "title": "贊助洽詢",
+      "body": "歡迎與我們洽談，資助公眾使用、資料品質、翻譯、涵蓋範圍或開放工具。",
+      "action": "與我們洽談",
+      "api": "API 存取"
+    },
+    "heroHow": "贊助方式"
+  }
+}

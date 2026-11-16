@@ -221,6 +221,7 @@ const preview: Preview = {
           { value: "es", title: "Español" },
           { value: "fr", title: "Français" },
           { value: "ja", title: "日本語" },
+          { value: "zh-TW", title: "繁體中文（臺灣）" },
         ],
       },
     },

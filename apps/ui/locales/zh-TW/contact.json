@@ -1,0 +1,240 @@
+{
+  "contactModal": {
+    "close": "關閉",
+    "choose": "選擇一個選項",
+    "optional": "(選填)",
+    "continue": "繼續",
+    "back": "返回",
+    "done": "完成",
+    "sending": "傳送中…",
+    "invalid": "請檢查必填欄位。訊息至少需要 10 個字元。",
+    "error": "無法送出你的訊息。你填寫的內容仍保留在這裡，請再試一次。",
+    "rateLimited": "你最近已送出幾則訊息，請一小時後再試。",
+    "successTitle": "感謝你與我們聯絡。",
+    "received": "你的訊息已送交我們的團隊。",
+    "reference": "參考編號：{reference}",
+    "step": "第 {current} 步，共 2 步",
+    "name": "你的姓名",
+    "email": "電子郵件地址",
+    "steps": "我們該如何重現這個問題？",
+    "stepsPlaceholder": "1. 我開啟了…\n2. 我選擇了…\n3. 接著…",
+    "private": "僅與我們的團隊分享",
+    "contextNote": "系統會附上頁面和裝置詳細資訊，協助我們了解你的使用體驗。",
+    "privacy": "隱私權",
+    "feedback": {
+      "eyebrow": "協助改善測試版",
+      "title": "使用起來如何？",
+      "description": "幾個簡短問題，幫助我們了解哪些功能實用，以及哪些地方可以改善。",
+      "stepOne": "你的使用體驗",
+      "stepTwo": "再多一點細節",
+      "short": "約一分鐘",
+      "send": "傳送意見回饋",
+      "success": "你的意見能幫助我們決定接下來要改善什麼。",
+      "emailHint": "如果希望我們後續聯絡你，請留下電子郵件地址。也歡迎匿名提供意見。",
+      "topic": "你想分享什麼？",
+      "topics": {
+        "problem": "遇到問題",
+        "idea": "我有個點子",
+        "experience": "我的使用體驗",
+        "praise": "我喜歡的地方"
+      },
+      "task": "你來這裡想做什麼？",
+      "tasks": {
+        "find_library": "尋找圖書館",
+        "plan_visit": "規劃到訪",
+        "contribute": "新增或更正資訊",
+        "manage_library": "管理我的圖書館",
+        "explore": "探索與學習",
+        "other": "其他"
+      },
+      "outcome": "你有順利完成嗎？",
+      "outcomes": {
+        "yes": "有，已完成",
+        "partly": "完成了一部分",
+        "no": "沒有，我卡住了",
+        "browsing": "我只是隨意瀏覽"
+      },
+      "ease": "操作起來容易嗎？",
+      "easeScore": "{value} 分，滿分 5 分",
+      "difficult": "困難",
+      "easy": "容易",
+      "prompts": {
+        "problem": {
+          "label": "發生了什麼事？你原本預期會如何？",
+          "hint": "請告訴我們你在哪裡卡住了。請勿提供密碼或私人資訊。",
+          "placeholder": "我想要…我原本預期…結果卻…"
+        },
+        "idea": {
+          "label": "怎樣能讓這裡對你更實用？",
+          "hint": "你想變更或新增什麼？這能幫助你做什麼？",
+          "placeholder": "如果能…會對我有幫助，因為…"
+        },
+        "experience": {
+          "label": "哪些地方容易使用、令人困惑，或有所不足？",
+          "hint": "想想您查找資訊、瀏覽或參與貢獻的經驗。具體範例會很有幫助。",
+          "placeholder": "讓我印象深刻的是…"
+        },
+        "praise": {
+          "label": "哪些部分讓您覺得好用？",
+          "hint": "什麼對您有幫助？為什麼？我們希望保留做得好的部分。",
+          "placeholder": "我覺得…很實用，因為…"
+        }
+      }
+    },
+    "atlas": {
+      "eyebrow": "協助塑造 Atlas",
+      "title": "您使用 Atlas 的體驗如何？",
+      "description": "請告訴我們您使用了哪些部分、使用情況如何，以及希望接下來新增什麼。",
+      "stepOne": "使用 Atlas",
+      "stepTwo": "您的意見與想法",
+      "short": "約兩分鐘",
+      "success": "您的意見能幫助我們讓 Atlas 更實用，並決定接下來開發的功能。",
+      "task": "您使用 Atlas 做什麼？",
+      "tasks": {
+        "find_library": "尋找圖書館",
+        "plan_visit": "規劃到訪",
+        "compare_areas": "比較地區或圖書館服務涵蓋範圍",
+        "check_accessibility": "查看無障礙資訊",
+        "export_data": "匯出圖書館資料",
+        "explore": "探索地圖",
+        "other": "其他"
+      },
+      "features": {
+        "label": "您使用了 Atlas 的哪些部分？",
+        "hint": "請選取所有適用項目。若沒有符合的項目，請選擇「其他」。",
+        "required": "請至少選擇 Atlas 的一個部分，或選擇「其他」。",
+        "options": {
+          "search": "搜尋",
+          "filters": "篩選條件",
+          "map_layers": "地圖圖層與圖例",
+          "library_details": "圖書館詳細資訊",
+          "list_view": "清單檢視",
+          "area_comparison": "地區比較",
+          "accessibility": "無障礙資訊",
+          "exports": "資料匯出",
+          "other": "其他"
+        }
+      },
+      "clarity": "地圖圖例與結果是否清楚易懂？",
+      "clarityScore": "清楚程度：{value} 分，滿分 5 分",
+      "unclear": "不清楚",
+      "clear": "清除",
+      "wishlist": {
+        "label": "我希望新增的內容",
+        "hint": "有哪些功能、地圖圖層或資訊對您有幫助？您會用來做什麼？",
+        "placeholder": "我希望能夠…，因為…"
+      },
+      "prompts": {
+        "problem": {
+          "label": "在 Atlas 中發生了什麼情況？您原本預期會如何？",
+          "hint": "請說明使用的功能或地圖圖層，以及在哪裡遇到困難。請勿提供密碼或私人資訊。",
+          "placeholder": "在 Atlas 中，我想要…，原本預期…，結果卻…"
+        },
+        "idea": {
+          "label": "我希望 Atlas 新增的內容",
+          "hint": "您想新增或調整哪些功能、地圖圖層或資訊？這能幫助您做什麼？",
+          "placeholder": "我希望能夠…，因為…"
+        },
+        "experience": {
+          "label": "Atlas 有哪些部分容易使用、令人困惑，或有所欠缺？",
+          "hint": "想想搜尋、篩選條件、地圖圖例或圖書館詳細資訊。具體範例會很有幫助。",
+          "placeholder": "使用…時，我發現…"
+        },
+        "praise": {
+          "label": "Atlas 的哪些部分讓您覺得好用？",
+          "hint": "哪項功能對您有幫助？為什麼？我們希望保留做得好的部分。",
+          "placeholder": "我覺得…很實用，因為…"
+        }
+      }
+    },
+    "contact": {
+      "eyebrow": "與團隊交流",
+      "title": "我們可以如何協助您？",
+      "description": "請選擇聯絡事由，讓我們將您的訊息轉交給適當的人員。",
+      "reason": "您的訊息與什麼有關？",
+      "send": "傳送訊息",
+      "success": "如需回覆，我們會寄信至您提供的電子郵件地址。",
+      "emailHint": "我們會使用此地址回覆您的訊息，不會因此為您訂閱電子報。",
+      "inlineDescription": "回報問題、提出疑問或洽談合作。提供一些詳細資訊，有助於我們為您轉介適當的人員。",
+      "open": "聯絡團隊",
+      "types": {
+        "report_issue": "回報問題",
+        "general_inquiry": "一般詢問",
+        "account_support": "帳號協助",
+        "membership_support": "API Access 與帳務",
+        "library_correction": "更正圖書館資訊",
+        "plans": "方案與 API Access",
+        "partnership": "夥伴關係或合作",
+        "privacy": "隱私或資料請求",
+        "sponsorship": "贊助"
+      },
+      "prompts": {
+        "report_issue": {
+          "label": "發生了什麼問題？原本應該如何？",
+          "hint": "請描述問題及您看到的錯誤。請勿提供密碼或安全驗證碼。",
+          "placeholder": "我想要…，但是…"
+        },
+        "general_inquiry": {
+          "label": "您想了解什麼？",
+          "hint": "提供一些背景資訊，有助於我們給您實用的答覆。",
+          "placeholder": "我想詢問關於…"
+        },
+        "account_support": {
+          "label": "您需要哪方面的協助？",
+          "hint": "請描述帳號問題。我們絕不會要求您提供密碼或登入驗證碼。",
+          "placeholder": "我在…遇到困難"
+        },
+        "membership_support": {
+          "label": "您需要哪方面的協助？",
+          "hint": "請說明您的 API Access 訂閱、舊有會員資格，或帳務、存取權限及功能方面的問題。請勿提供信用卡資料、密碼或安全驗證碼。",
+          "placeholder": "我需要協助處理…"
+        },
+        "library_correction": {
+          "label": "哪間圖書館的哪些資訊需要更正？",
+          "hint": "請提供圖書館名稱或頁面連結、正確資訊，以及資料來源（如有）。",
+          "placeholder": "關於…的資訊應改為…"
+        },
+        "plans": {
+          "label": "您想討論什麼？",
+          "hint": "請介紹您的圖書館或服務、想使用的項目，或您對驗證程序的疑問。",
+          "placeholder": "我們對…有興趣，想用於…"
+        },
+        "partnership": {
+          "label": "您有什麼想法？",
+          "hint": "請介紹您的組織、想法，以及我們可以如何合作。",
+          "placeholder": "我們是…，希望能…"
+        },
+        "privacy": {
+          "label": "您有什麼問題或請求？",
+          "hint": "請描述您的請求。請勿在此傳送身分證明文件或敏感個人資訊。",
+          "placeholder": "我想詢問關於…"
+        },
+        "sponsorship": {
+          "label": "您想贊助什麼？",
+          "hint": "請介紹您的組織、感興趣的計畫，以及預算和時程（如已確定）。請勿提供付款資料。",
+          "placeholder": "我們是…，希望支持…"
+        }
+      }
+    }
+  },
+  "contactForm": {
+    "name": "姓名",
+    "namePlaceholder": "John Doe",
+    "email": "電子郵件",
+    "emailPlaceholder": "john.doe@gmail.com",
+    "message": "訊息",
+    "gdpr": "我同意個人資料的處理",
+    "submit": "傳送",
+    "success": "表單已成功送出。",
+    "error": "無法送出表單，請稍後再試。",
+    "gdprLink": "進一步了解個人資料的處理方式"
+  },
+  "newsletterForm": {
+    "rateLimited": "目前來自此處的訂閱申請過多，請稍後再試。",
+    "failed": "訂閱失敗，請再試一次。",
+    "sent": "謝謝您。如果需要確認，請查看收件匣以完成訂閱。",
+    "website": "網站",
+    "invalidEmail": "請輸入有效的電子郵件地址。",
+    "accountEmail": "請使用帳號的電子郵件地址訂閱電子報。"
+  }
+}
