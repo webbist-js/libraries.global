@@ -58,6 +58,9 @@ jobs:
       - name: Check production dependency advisories
         run: node scripts/release/check-dependencies.mjs
 
+      - name: Reject high and critical advisories in every workspace
+        run: pnpm audit --audit-level=high
+
       - name: Prepare Environment Variables
         run: |
           cp apps/strapi/.env.example apps/strapi/.env
@@ -66,6 +69,9 @@ jobs:
       # Workspace exports point to dist files; clean runners have no local dev artifacts.
       - name: Build workspace libraries
         run: pnpm exec turbo run build --filter='./packages/*' --concurrency=1
+
+      - name: Typecheck browser QA tools
+        run: pnpm --filter @repo/tests-playwright typecheck
 
       - name: Run linter
         run: pnpm lint:ratchet
