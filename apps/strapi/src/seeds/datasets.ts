@@ -402,11 +402,12 @@ export const DATASET_SEED: DatasetSeed[] = [
       "Ministerio de Cultura, Subdirección General de Coordinación Bibliotecaria",
     sourceUrl:
       "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=descarga",
-    licence: "Not yet confirmed: reuse terms requested from the Ministry",
+    licence:
+      "Reuse permitted under the general conditions of Royal Decree 1495/2011, confirmed in writing by the Ministerio de Cultura.",
     licenceUrl:
-      "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=enlaces&accion=aviso_legal",
-    licenceStatus: "unconfirmed",
-    redistribution: "unconfirmed",
+      "https://www.cultura.gob.es/comunes/aviso-legal.html",
+    licenceStatus: "confirmed_in_writing",
+    redistribution: "permitted_with_attribution",
     attribution:
       "Source: Directorio de Bibliotecas Españolas, Ministerio de Cultura.",
     coverage:
@@ -414,7 +415,7 @@ export const DATASET_SEED: DatasetSeed[] = [
     importMechanism:
       "pnpm ingest --dataset=es-mcu-libraries; JSON export from MCU directory portal, mapped by NIDEN code, resumable draft writes with --local or --production.",
     notes:
-      "Not imported until the Ministry confirms in writing that the downloads may be republished: the portal’s legal notice permits reproducing texts with attribution and limits other content to private use. Update the licence fields from the reply before any production run. Coordinates included from directory. Mobile libraries' pins omitted. Type mapping covers national, regional, public, university, special, archive, cultural and specific-user-group types.",
+      "The Ministerio de Cultura confirmed in writing on 16 November 2026 that the Directory content may be reused under Royal Decree 1495/2011 and the Ministry Legal Notice, subject to the general conditions. Credit the source; preserve any source update and reuse metadata; do not distort the information or imply Ministry endorsement. The saved export has 7,497 rows: 7,343 in Spain, including one existing National Library reference; 154 foreign rows remain held. Coordinates came from the directory; mobile-library pins were omitted. No source update date was supplied in the Dataset record.",
   },
 ]
 
