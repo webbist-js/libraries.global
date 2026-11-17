@@ -9,6 +9,7 @@ const catalogues = {
   es: () => import("../../locales/es"),
   fr: () => import("../../locales/fr"),
   ja: () => import("../../locales/ja"),
+  "zh-TW": () => import("../../locales/zh-TW"),
 } satisfies Record<Locale, () => Promise<unknown>>
 
 /** The whole catalogue for a locale. Server only: never send it as is. */

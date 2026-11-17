@@ -64,7 +64,7 @@ export function checkMessages(catalogues) {
   return errors
 }
 
-export const LOCALES = ["en", "cs", "es", "fr", "ja"]
+export const LOCALES = ["en", "cs", "es", "fr", "ja", "zh-TW"]
 const localesDir = path.join(root, "locales")
 
 function mergeTree(target, source, file, prefix = "") {

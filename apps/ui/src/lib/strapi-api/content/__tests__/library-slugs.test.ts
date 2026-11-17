@@ -107,6 +107,18 @@ describe("fetchLibrarySlugRange", () => {
     expect(init.next).toEqual({ revalidate: 3600, tags: ["strapi", "library"] })
   })
 
+  it("uses Strapi's Taiwan locale for a zh-TW sitemap", async () => {
+    fetchMock.mockImplementation(strapi(1))
+    await fetchLibrarySlugRange("zh-TW", 0, 1)
+    await fetchLibrarySlugCount("zh-TW")
+    await fetchLibraryLocationCounts("zh-TW")
+    expect(
+      fetchMock.mock.calls.map(([url]) =>
+        new URL(url).searchParams.get("locale")
+      )
+    ).toEqual(["zh-Hant-TW", "zh-Hant-TW", "zh-Hant-TW"])
+  })
+
   it("is empty past the last row", async () => {
     fetchMock.mockImplementation(strapi(5))
 

@@ -6,6 +6,7 @@ import enCatalogue from "../../../locales/en/widget-public.json"
 import esCatalogue from "../../../locales/es/widget-public.json"
 import frCatalogue from "../../../locales/fr/widget-public.json"
 import jaCatalogue from "../../../locales/ja/widget-public.json"
+import zhTwCatalogue from "../../../locales/zh-TW/widget-public.json"
 
 // Embeds use their configured content language without the site's providers.
 // Each locale's widget-public file holds only this namespace, so the embed
@@ -17,6 +18,10 @@ const translators = {
   es: createTranslator({ locale: "es", messages: esCatalogue.widgetPublic }),
   fr: createTranslator({ locale: "fr", messages: frCatalogue.widgetPublic }),
   ja: createTranslator({ locale: "ja", messages: jaCatalogue.widgetPublic }),
+  "zh-TW": createTranslator({
+    locale: "zh-TW",
+    messages: zhTwCatalogue.widgetPublic,
+  }),
 }
 const keys = new Map(
   Object.entries(en).map(([key, value]) => [value, key as keyof typeof en])

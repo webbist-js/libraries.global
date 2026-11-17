@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
-import { readStatus } from "../src/utils/read-status"
+import { readLocale, readStatus } from "../src/utils/read-status"
 
 describe("readStatus", () => {
   beforeEach(() => {
@@ -20,4 +20,11 @@ describe("readStatus", () => {
     expect(readStatus(ctx("draft", "nope"))).toBe("published"))
   it("allows draft with the secret", () =>
     expect(readStatus(ctx("draft", "s3cret"))).toBe("draft"))
+})
+
+describe("readLocale", () => {
+  it("resolves the public Taiwan code to Strapi's saved locale", () => {
+    expect(readLocale({ query: { locale: "zh-TW" } })).toBe("zh-Hant-TW")
+    expect(readLocale({ query: { locale: "ja" } })).toBe("ja")
+  })
 })

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import { cmsLocale, DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 
 import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
@@ -119,7 +119,7 @@ function localizedChoices(
   for (const row of rows)
     variants.set(row.documentId, [...(variants.get(row.documentId) ?? []), row])
   const rank = (row: Choice) =>
-    (row.locale ?? DEFAULT_LOCALE) === locale
+    (row.locale ?? DEFAULT_LOCALE) === cmsLocale(locale)
       ? 0
       : (row.locale ?? DEFAULT_LOCALE) === defaultLocale
         ? 1
@@ -205,10 +205,13 @@ async function expandPlaceVariants(
 
 /** Curated, approved topics from the topics plugin (its own route shape). */
 async function approvedTopics(locale: string) {
-  const res = await fetch(`${STRAPI}/api/topics/approved?locale=${locale}`, {
-    headers: strapiServiceHeaders(),
-    next: { revalidate: 300, tags: cacheTagsFor("/topics", {}) },
-  })
+  const res = await fetch(
+    `${STRAPI}/api/topics/approved?locale=${cmsLocale(locale)}`,
+    {
+      headers: strapiServiceHeaders(),
+      next: { revalidate: 300, tags: cacheTagsFor("/topics", {}) },
+    }
+  )
   if (!res.ok) return NextResponse.json({ data: [] })
   const json = (await res.json()) as {
     data?: { documentId?: string; name?: string; slug?: string }[]
@@ -314,7 +317,7 @@ export async function GET(
   if (type === "library-types") {
     try {
       const response = await fetch(
-        `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(locale)}`,
+        `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(cmsLocale(locale))}`,
         { headers: strapiServiceHeaders(), cache: "no-store" }
       )
       if (!response.ok) return NextResponse.json({ data: [] }, { status: 503 })
@@ -377,7 +380,7 @@ export async function GET(
       : FALLBACK_TYPES.has(type)
         ? "sort[0]=name:asc&sort[1]=documentId:asc&sort[2]=locale:asc"
         : "sort=name:asc"
-  const url = `${STRAPI}/api/${strapiPlural}?locale=${FALLBACK_TYPES.has(type) ? "*" : locale}&${sort}&pagination[limit]=${limit}${status}&${fieldParams}${filterParam}`
+  const url = `${STRAPI}/api/${strapiPlural}?locale=${FALLBACK_TYPES.has(type) ? "*" : cmsLocale(locale)}&${sort}&pagination[limit]=${limit}${status}&${fieldParams}${filterParam}`
 
   // The world place import adds Regions and Areas and sets each Country's
   // Place Labels (the wizard's select labels), so those lists refresh within

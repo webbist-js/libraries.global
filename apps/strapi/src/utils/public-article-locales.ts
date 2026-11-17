@@ -1,3 +1,5 @@
+import { routeLocale } from "@repo/shared-data"
+
 /** Locale metadata is public only for published variants of the same logical document. */
 export async function publishedArticleLocales(
   strapi: any,
@@ -15,7 +17,7 @@ export async function publishedArticleLocales(
   return [
     ...new Set<string>(
       variants.flatMap((variant: any) =>
-        typeof variant.locale === "string" ? [variant.locale] : []
+        typeof variant.locale === "string" ? [routeLocale(variant.locale)] : []
       )
     ),
   ]

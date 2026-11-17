@@ -1,5 +1,6 @@
 import {
   SUPPORTED_LOCALES,
+  cmsLocale,
   libraryTypeName,
   normalizeOpeningSchedule,
   atlasWeeklyIntervals,
@@ -198,8 +199,8 @@ export default factories.createCoreController(
       }
       const q = stringQuery(ctx.query as Record<string, unknown>, ["locale"])
       if (!q) return ctx.badRequest("Query parameters must be single strings")
-      const locale = q.locale
-      if (locale && !(SUPPORTED_LOCALES as readonly string[]).includes(locale))
+      const locale = q.locale ? cmsLocale(q.locale) : undefined
+      if (locale && !SUPPORTED_LOCALES.map(cmsLocale).includes(locale))
         return ctx.badRequest("Unsupported locale")
 
       const build = async () => {
@@ -321,7 +322,7 @@ export default factories.createCoreController(
           country: { fields: ["slug"] },
           region: { fields: ["slug"] },
         } as never,
-        locale: q.locale,
+        locale: q.locale ? cmsLocale(q.locale) : undefined,
         status,
         sort: "id:asc" as never,
         start,
@@ -347,7 +348,7 @@ export default factories.createCoreController(
       if (!q) return ctx.badRequest("Query parameters must be single strings")
 
       const count = await strapi.documents("api::library.library").count({
-        locale: q.locale,
+        locale: q.locale ? cmsLocale(q.locale) : undefined,
         status: readStatus(ctx),
       } as never)
 
@@ -366,7 +367,7 @@ export default factories.createCoreController(
 
       ctx.body = {
         data: await countLibrariesByLocationPath(strapi, {
-          locale: q.locale,
+          locale: q.locale ? cmsLocale(q.locale) : undefined,
           status: readStatus(ctx),
         }),
       }

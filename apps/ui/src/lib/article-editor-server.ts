@@ -4,6 +4,7 @@ import { createHash } from "node:crypto"
 
 import {
   articleContentVersion,
+  cmsLocale,
   parseArticleSources,
   articleSectionKeys,
   isSupportedLocale,
@@ -201,7 +202,7 @@ export async function loadArticleWriteContext(
     const [libraryResponse, event] = await Promise.all([
       libraryId
         ? publicGet(
-            `libraries?filters[documentId][$eq]=${encodeURIComponent(libraryId)}&status=published&locale=${encodeURIComponent(locale)}&fields[0]=name&fields[1]=slug&fields[2]=entityRef&pagination[limit]=1`
+            `libraries?filters[documentId][$eq]=${encodeURIComponent(libraryId)}&status=published&locale=${encodeURIComponent(cmsLocale(locale))}&fields[0]=name&fields[1]=slug&fields[2]=entityRef&pagination[limit]=1`
           )
         : null,
       eventId ? publicGet(`events/event/${encodeURIComponent(eventId)}`) : null,
@@ -214,7 +215,7 @@ export async function loadArticleWriteContext(
       event.libraryEntityRef !== library?.entityRef
     ) {
       const related = await publicGet(
-        `libraries?filters[entityRef][$eq]=${encodeURIComponent(event.libraryEntityRef)}&status=published&locale=${encodeURIComponent(locale)}&fields[0]=name&fields[1]=slug&pagination[limit]=1`
+        `libraries?filters[entityRef][$eq]=${encodeURIComponent(event.libraryEntityRef)}&status=published&locale=${encodeURIComponent(cmsLocale(locale))}&fields[0]=name&fields[1]=slug&pagination[limit]=1`
       )
       library = related?.data?.[0]
     }
