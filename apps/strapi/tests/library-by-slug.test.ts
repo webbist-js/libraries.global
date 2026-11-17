@@ -181,7 +181,7 @@ describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
 
     expect(c.status).toBeUndefined()
     expect(c.body.data).toEqual([])
-    expect((find.mock.calls[0] as [any])[0].query.filters).toEqual({
+    expect(find.mock.calls[0]![0].query.filters).toEqual({
       slug: { $eq: "nope" },
     })
   })
