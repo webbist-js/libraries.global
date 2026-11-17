@@ -37,6 +37,15 @@ const rows = [
     mobileTimetable: null,
     publishedAt: "2026-09-01T00:00:00.000Z",
   },
+  {
+    id: 3,
+    documentId: "lib00000000000000000003",
+    name: "Keelung Public Library",
+    slug: "-tw-9cce7a9c6540d9443e602269",
+    locale: "en",
+    libraryType: { name: "Public" },
+    publishedAt: "2026-09-01T00:00:00.000Z",
+  },
 ]
 
 /** The ctx the route middleware and controller see, as Koa builds it. */
@@ -177,12 +186,29 @@ describe("GET /libraries/by-slug/:slug (the library page's read)", () => {
     })
   })
 
+  it("serves a published imported slug with one leading hyphen", async () => {
+    const { controller, find } = build()
+    const c = ctx(
+      { slug: "-tw-9cce7a9c6540d9443e602269" },
+      shaped({ locale: "en", status: "published" })
+    )
+    await controller.findBySlug(c)
+
+    expect(c.status).toBeUndefined()
+    expect(c.body.data).toHaveLength(1)
+    expect(c.body.data[0].documentId).toBe("lib00000000000000000003")
+    expect((find.mock.calls[0] as [any])[0].query.filters).toEqual({
+      slug: { $eq: "-tw-9cce7a9c6540d9443e602269" },
+    })
+  })
+
   it.each([
     [""],
     ["a/b"],
     ["../x"],
     ["sp ace"],
-    ["-leading"],
+    ["--leading"],
+    ["-"],
     ["x".repeat(256)],
   ])("refuses the slug %j with 400 before reading anything", async (slug) => {
     const { controller, find } = build()
