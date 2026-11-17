@@ -59,9 +59,7 @@ jobs:
         run: node scripts/release/check-dependencies.mjs
 
       - name: Reject high and critical advisories in every workspace
-        # CVE-2026-112366 has no upstream fix and is confined to build tools;
-        # the separate application-runtime audit above remains unexcepted.
-        run: pnpm audit --audit-level=high --ignore CVE-2026-112366
+        run: pnpm audit --audit-level=high
 
       - name: Prepare Environment Variables
         run: |
