@@ -113,6 +113,17 @@ export async function fetchPage(
   requestInit?: RequestInit,
   options?: CustomFetchOptions
 ) {
+  return withLocaleFallback(locale, (l) =>
+    fetchPageIn(slug, l, requestInit, options)
+  )
+}
+
+async function fetchPageIn(
+  slug: string,
+  locale: Locale,
+  requestInit?: RequestInit,
+  options?: CustomFetchOptions
+) {
   const dm = await draftMode()
 
   try {
@@ -167,6 +178,14 @@ export async function fetchAllPages(
 export async function fetchSeo(
   // eslint-disable-next-line @typescript-eslint/default-param-last
   uid: Extract<UID.ContentType, "api::page.page"> = "api::page.page",
+  slug: string | null,
+  locale: Locale
+) {
+  return withLocaleFallback(locale, (l) => fetchSeoIn(uid, slug, l))
+}
+
+async function fetchSeoIn(
+  uid: Extract<UID.ContentType, "api::page.page">,
   slug: string | null,
   locale: Locale
 ) {
@@ -242,6 +261,10 @@ export async function fetchHomepagePillars(
 }
 
 export async function fetchHomepage(locale: Locale) {
+  return withLocaleFallback(locale, fetchHomepageIn)
+}
+
+async function fetchHomepageIn(locale: Locale) {
   const dm = await draftMode()
 
   try {
@@ -1711,6 +1734,10 @@ async function fetchLegalDocumentIn(slug: string, locale: Locale) {
 // ------ Footer fetching functions
 
 export async function fetchFooter(locale: Locale) {
+  return withLocaleFallback(locale, fetchFooterIn)
+}
+
+async function fetchFooterIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchOne("api::footer.footer", undefined, {
       locale,

@@ -1,7 +1,13 @@
 import { beforeEach, expect, it, vi } from "vitest"
 
-const { fetchAPI } = vi.hoisted(() => ({ fetchAPI: vi.fn() }))
-vi.mock("@/lib/strapi-api", () => ({ PublicStrapiClient: { fetchAPI } }))
+const { fetchAPI, fetchOne, fetchOneBySlug } = vi.hoisted(() => ({
+  fetchAPI: vi.fn(),
+  fetchOne: vi.fn(),
+  fetchOneBySlug: vi.fn(),
+}))
+vi.mock("@/lib/strapi-api", () => ({
+  PublicStrapiClient: { fetchAPI, fetchOne, fetchOneBySlug },
+}))
 vi.mock("@/lib/logging", () => ({ logNonBlockingError: vi.fn() }))
 vi.mock("next/headers", () => ({
   draftMode: async () => ({ isEnabled: false }),
@@ -10,11 +16,20 @@ vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["en", "fr", "zh-TW"] },
 }))
 
-const { fetchBlogLanding, fetchBlogSections, fetchWikiLanding } =
-  await import("../server")
+const {
+  fetchBlogLanding,
+  fetchBlogSections,
+  fetchFooter,
+  fetchHomepage,
+  fetchPage,
+  fetchSeo,
+  fetchWikiLanding,
+} = await import("../server")
 
 beforeEach(() => {
   fetchAPI.mockReset()
+  fetchOne.mockReset()
+  fetchOneBySlug.mockReset()
   fetchAPI.mockImplementation(
     async (path: string, { locale }: { locale: string }) => ({
       data:
@@ -63,4 +78,29 @@ it("fills untranslated Journal sections from English by document", async () => {
     { documentId: "data", name: "Data", slug: "data" },
   ])
   expect(fetchAPI).toHaveBeenCalledTimes(2)
+})
+
+it("fills missing CMS page, homepage, footer and SEO records from English", async () => {
+  fetchOne.mockImplementation(
+    async (_uid: string, _id: unknown, { locale }) => ({
+      data: locale === "en" ? { title: "English" } : null,
+    })
+  )
+  fetchOneBySlug.mockImplementation(
+    async (_uid: string, _slug: string, { locale }) => ({
+      data: locale === "en" ? { title: "English" } : null,
+    })
+  )
+
+  const [page, homepage, footer, seo] = await Promise.all([
+    fetchPage("about", "fr"),
+    fetchHomepage("fr"),
+    fetchFooter("fr"),
+    fetchSeo("api::page.page", "about", "fr"),
+  ])
+
+  for (const result of [page, homepage, footer, seo]) {
+    expect(result?.data).toEqual({ title: "English" })
+    expect(result?.localeFallback).toBe(true)
+  }
 })
