@@ -1,6 +1,6 @@
 import "server-only"
 
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import { DEFAULT_LOCALE, cmsLocale, isSupportedLocale } from "@repo/shared-data"
 import qs from "qs"
 
 import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
@@ -52,7 +52,7 @@ export async function findPlaceCatalogue(
     const query = qs.stringify(
       {
         ...shapes[place.level],
-        locale: language,
+        locale: cmsLocale(language),
         status: "published",
         filters: { slug: { $eq: place.slug } },
         pagination: { limit: 1 },

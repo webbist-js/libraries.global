@@ -1,3 +1,5 @@
+import { cmsLocale } from "@repo/shared-data"
+
 import { isValidServiceSecret } from "./service-secret"
 
 /** Draft content is only served to the Next.js server (bridge secret), never to the public. */
@@ -17,5 +19,7 @@ export function readLocale(ctx: {
 }): string | undefined {
   const locale = ctx.query?.locale
 
-  return typeof locale === "string" && locale.length > 0 ? locale : undefined
+  return typeof locale === "string" && locale.length > 0
+    ? cmsLocale(locale)
+    : undefined
 }

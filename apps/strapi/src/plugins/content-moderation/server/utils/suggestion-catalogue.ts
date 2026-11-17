@@ -1,4 +1,9 @@
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import {
+  cmsLocale,
+  DEFAULT_LOCALE,
+  isSupportedLocale,
+  routeLocale,
+} from "@repo/shared-data"
 
 import { allDocuments } from "./documents-all"
 import { OPTION_UIDS } from "./option-suggestions"
@@ -9,8 +14,8 @@ export async function suggestionCatalogue(
   strapi: any,
   requestedLocale: unknown
 ) {
-  const locale = isSupportedLocale(requestedLocale)
-    ? requestedLocale
+  const locale = isSupportedLocale(routeLocale(String(requestedLocale)))
+    ? cmsLocale(routeLocale(String(requestedLocale)))
     : DEFAULT_LOCALE
   const uids = { ...OPTION_UIDS, library_types: LIBRARY_TYPE }
   const categories: Record<string, string[]> = {}

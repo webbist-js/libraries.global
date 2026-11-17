@@ -1,3 +1,4 @@
+import { cmsLocale } from "@repo/shared-data"
 import { Meilisearch, type SearchParams } from "meilisearch"
 
 import {
@@ -26,9 +27,11 @@ export const meiliClient = new Meilisearch({ host, apiKey: searchKey })
 
 /** The route locale when its content is live, else the default locale. */
 export function searchLocale(routeLocale?: string | null): string {
-  return routeLocale && LIVE_LOCALES.includes(routeLocale)
-    ? routeLocale
-    : routing.defaultLocale
+  return cmsLocale(
+    routeLocale && LIVE_LOCALES.includes(routeLocale)
+      ? routeLocale
+      : routing.defaultLocale
+  )
 }
 
 /**
