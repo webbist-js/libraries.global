@@ -6,6 +6,7 @@ import en from "../../../locales/en"
 import es from "../../../locales/es"
 import fr from "../../../locales/fr"
 import ja from "../../../locales/ja"
+import zhTW from "../../../locales/zh-TW"
 import {
   checkCatalogueFiles,
   checkMessages,
@@ -14,7 +15,7 @@ import {
 
 describe("translation catalogues", () => {
   it("cover the same keys with valid ICU arguments in every supported language", () => {
-    expect(checkMessages({ en, cs, es, fr, ja })).toEqual([])
+    expect(checkMessages({ en, cs, es, fr, ja, "zh-TW": zhTW })).toEqual([])
   })
   it("keeps each locale's feature files in step with English", () => {
     expect(checkCatalogueFiles(readCatalogueFiles())).toEqual([])

@@ -1,4 +1,4 @@
-export type FixtureLocale = "en" | "cs" | "es" | "fr" | "ja"
+export type FixtureLocale = "en" | "cs" | "es" | "fr" | "ja" | "zh-TW"
 let locale: FixtureLocale = "en"
 
 export function setFixtureLocale(value: FixtureLocale) {

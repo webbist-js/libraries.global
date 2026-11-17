@@ -25,6 +25,7 @@ const localeTranslation = {
   es: "Español",
   fr: "Français",
   ja: "日本語",
+  "zh-TW": "繁體中文（臺灣）",
 }
 
 function LocaleSwitcher({
