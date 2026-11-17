@@ -1321,6 +1321,10 @@ export async function countJournalArticles(
 }
 
 export async function fetchBlogSections(locale: Locale) {
+  return withLocaleNavigation(locale, fetchBlogSectionsIn)
+}
+
+async function fetchBlogSectionsIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-sections", {
       locale,

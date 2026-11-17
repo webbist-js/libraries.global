@@ -10,7 +10,8 @@ vi.mock("@/lib/navigation", () => ({
   routing: { defaultLocale: "en", locales: ["en", "fr", "zh-TW"] },
 }))
 
-const { fetchBlogLanding, fetchWikiLanding } = await import("../server")
+const { fetchBlogLanding, fetchBlogSections, fetchWikiLanding } =
+  await import("../server")
 
 beforeEach(() => {
   fetchAPI.mockReset()
@@ -42,4 +43,24 @@ it("keeps a published translation when it exists", async () => {
   expect(blog?.data?.heroTitle).toBe("Journal français")
   expect(blog?.localeFallback).toBe(false)
   expect(fetchAPI).toHaveBeenCalledTimes(1)
+})
+
+it("fills untranslated Journal sections from English by document", async () => {
+  fetchAPI.mockImplementation(async (_path: string, { locale }) => ({
+    data:
+      locale === "fr"
+        ? [{ documentId: "news", name: "Actualités", slug: "news" }]
+        : [
+            { documentId: "news", name: "News", slug: "news" },
+            { documentId: "data", name: "Data", slug: "data" },
+          ],
+  }))
+
+  const sections = await fetchBlogSections("fr")
+
+  expect(sections.data).toEqual([
+    { documentId: "news", name: "Actualités", slug: "news" },
+    { documentId: "data", name: "Data", slug: "data" },
+  ])
+  expect(fetchAPI).toHaveBeenCalledTimes(2)
 })
