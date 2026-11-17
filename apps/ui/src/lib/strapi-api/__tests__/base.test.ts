@@ -107,3 +107,24 @@ describe("BaseStrapiClient.fetchAll", () => {
     ])
   })
 })
+
+it("uses Strapi's Taiwan locale while retaining the public route code", async () => {
+  class LocaleClient extends BaseStrapiClient {
+    params: object | undefined
+
+    protected async prepareRequest(_path: string, params: object) {
+      this.params = params
+
+      return { url: "http://strapi.test/api/libraries", headers: {} }
+    }
+  }
+
+  const client = new LocaleClient()
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ data: [] })))
+  try {
+    await client.fetchAPI("/libraries", { locale: "zh-TW" })
+    expect(client.params).toMatchObject({ locale: "zh-Hant-TW" })
+  } finally {
+    vi.unstubAllGlobals()
+  }
+})

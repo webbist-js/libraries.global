@@ -2,6 +2,7 @@ import {
   aggregateArticleBrowse,
   isSupportedLocale,
   parseArticleBrowseQuery,
+  routeLocale,
   type ArticleBrowseItem,
   type ArticleFacetKey,
   type ArticleFacetValue,
@@ -54,7 +55,7 @@ export function publicArticleBrowseItem(
 ): ArticleBrowseItem | null {
   const article = record(value)
   const documentId = string(article.documentId)
-  const locale = string(article.locale)
+  const locale = routeLocale(string(article.locale) ?? "")
   const publishedAt = string(article.publishedAt)
   const slug = string(article.slug)
   if (!documentId || !locale || !publishedAt || !slug) return null

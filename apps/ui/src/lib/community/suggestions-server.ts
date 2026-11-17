@@ -1,6 +1,6 @@
 import "server-only"
 
-import { DEFAULT_LOCALE } from "@repo/shared-data"
+import { cmsLocale, DEFAULT_LOCALE } from "@repo/shared-data"
 
 import { strapiServiceHeaders } from "@/lib/bridge-user-headers"
 import type {
@@ -40,7 +40,7 @@ export async function fetchOptionCatalogue(
 ): Promise<OptionCatalogue> {
   try {
     const response = await fetch(
-      `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(locale)}`,
+      `${STRAPI}/api/content-moderation/option-catalogue?locale=${encodeURIComponent(cmsLocale(locale))}`,
       { cache: "no-store", headers: strapiServiceHeaders() }
     )
     if (response.ok) {

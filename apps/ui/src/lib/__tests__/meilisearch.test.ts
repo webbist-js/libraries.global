@@ -23,8 +23,10 @@ vi.mock("meilisearch", () => ({
 vi.mock("@/lib/routing", () => ({
   routing: { defaultLocale: "en", locales: ["cs", "en"] },
 }))
-// `fr` stands in for a second live locale; `cs` is routed but not live.
-vi.mock("@/lib/live-locales", () => ({ LIVE_LOCALES: ["en", "fr"] }))
+// `fr` and `zh-TW` stand in for live locales; `cs` is routed but not live.
+vi.mock("@/lib/live-locales", () => ({
+  LIVE_LOCALES: ["en", "fr", "zh-TW"],
+}))
 
 vi.mock("@/lib/strapi-helpers", () => ({
   formatStrapiMediaUrl: (url: string) => url,
@@ -122,6 +124,8 @@ describe("searchLibraries", () => {
 describe("locale filter", () => {
   it("uses a live route locale", () => {
     expect(searchLocale("en")).toBe("en")
+    expect(searchLocale("zh-TW")).toBe("zh-Hant-TW")
+    expect(searchLocaleFilter("zh-TW")).toBe('locale = "zh-Hant-TW"')
   })
 
   it("uses the default locale for a route locale that isn't live", () => {

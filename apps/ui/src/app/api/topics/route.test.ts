@@ -5,11 +5,13 @@ import { GET } from "./route"
 afterEach(() => vi.unstubAllGlobals())
 
 describe("approved topics locale", () => {
-  it.each(["en", "cs", "fr"])("reads %s topics", async (locale) => {
+  it.each(["en", "cs", "fr", "zh-TW"])("reads %s topics", async (locale) => {
     const fetch = vi.fn().mockResolvedValue(Response.json({ data: [] }))
     vi.stubGlobal("fetch", fetch)
     await GET(new Request(`http://localhost/api/topics?locale=${locale}`))
-    expect(String(fetch.mock.calls[0]?.[0])).toContain(`locale=${locale}`)
+    expect(String(fetch.mock.calls[0]?.[0])).toContain(
+      `locale=${locale === "zh-TW" ? "zh-Hant-TW" : locale}`
+    )
   })
 
   it("falls back to English for an unsupported language", async () => {

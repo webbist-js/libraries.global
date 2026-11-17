@@ -1,3 +1,4 @@
+import { cmsLocale } from "@repo/shared-data"
 import type { FindFirst, FindMany, ID, Result, UID } from "@repo/strapi-types"
 
 import { getEnvVar } from "@/lib/env-vars"
@@ -50,7 +51,9 @@ export default abstract class BaseStrapiClient {
         ...params,
         ...(options?.doNotAddLocaleQueryParams
           ? {}
-          : { locale: params.locale }),
+          : {
+              locale: params.locale ? cmsLocale(params.locale) : params.locale,
+            }),
       },
       requestInit,
       options
