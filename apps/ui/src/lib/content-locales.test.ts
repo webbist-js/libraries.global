@@ -23,6 +23,15 @@ describe("fully supported content languages", () => {
       { code: "fr", name: "French", isDefault: false },
     ])
     expect(supportedContentLocales([])).toEqual([])
+    expect(
+      supportedContentLocales([
+        { code: "en", name: "English", isDefault: true },
+        { code: "zh-Hant-TW", name: "Traditional Chinese", isDefault: false },
+      ])
+    ).toEqual([
+      { code: "en", name: "English", isDefault: true },
+      { code: "zh-TW", name: "Traditional Chinese", isDefault: false },
+    ])
   })
   it("does not offer an unsupported locale from an old link or a stale facet", () => {
     expect(articleLanguageOptions(["en", "de"], ["de", "fr"])).toEqual([
@@ -32,6 +41,7 @@ describe("fully supported content languages", () => {
     expect(supportedContentLanguage("FR_ca")).toBe("fr")
     expect(supportedContentLanguage("ja-JP")).toBe("ja")
     expect(supportedContentLanguage("zh_TW")).toBe("zh-TW")
+    expect(supportedContentLanguage("zh-Hant-TW")).toBe("zh-TW")
     expect(supportedContentLanguage("zh-CN")).toBeNull()
     expect(supportedContentLanguage("jp")).toBeNull()
     expect(supportedContentLanguage("de-AT")).toBeNull()

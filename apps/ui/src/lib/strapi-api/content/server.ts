@@ -2,6 +2,7 @@ import "server-only"
 
 import {
   libraryTypeName,
+  routeLocale,
   type ArticleSource,
   submittedSourceRecords,
   type LibraryTypeValue,
@@ -2016,7 +2017,7 @@ export async function fetchArticleHistory(
         {
           changedAt,
           kind: str(r.kind) ?? "edited",
-          locale: str(r.locale) || routing.defaultLocale,
+          locale: routeLocale(str(r.locale) || routing.defaultLocale),
           actor: toActor(r.actor),
           editSummary: str(r.editSummary),
         },
@@ -2361,7 +2362,10 @@ export async function fetchArticleForEditing(
       `${path}/published-locales/${encodeURIComponent(article.documentId)}`
     )) as { data?: string[] }
 
-    return { ...article, availableLocales: variants.data ?? [] }
+    return {
+      ...article,
+      availableLocales: (variants.data ?? []).map(routeLocale),
+    }
   } catch (e: unknown) {
     logNonBlockingError({
       message: `Error fetching ${kind} article '${slug}' for editing`,

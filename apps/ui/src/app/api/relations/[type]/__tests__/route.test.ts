@@ -84,6 +84,20 @@ describe("article taxonomy server reads", () => {
     expect(response.status).toBe(400)
     expect(fetchMock).not.toHaveBeenCalled()
   })
+  it("uses Strapi's Taiwan locale for direct taxonomy requests", async () => {
+    await GET(
+      new Request("http://localhost/api/relations/services?locale=zh-TW"),
+      { params: Promise.resolve({ type: "services" }) }
+    )
+    expect(strapiUrl()).toContain("locale=zh-Hant-TW")
+
+    fetchMock.mockClear()
+    await GET(
+      new Request("http://localhost/api/relations/topics?locale=zh-TW"),
+      { params: Promise.resolve({ type: "topics" }) }
+    )
+    expect(strapiUrl()).toContain("locale=zh-Hant-TW")
+  })
   it("rejects inherited names before requesting a CMS model", async () => {
     const response = await GET(
       new Request("http://localhost/api/relations/constructor"),
