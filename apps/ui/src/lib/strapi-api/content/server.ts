@@ -1084,6 +1084,10 @@ export type BlogLandingData = {
 }
 
 export async function fetchBlogLanding(locale: Locale) {
+  return withLocaleFallback(locale, fetchBlogLandingIn)
+}
+
+async function fetchBlogLandingIn(locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-landing", {
@@ -1435,6 +1439,10 @@ export type WikiLandingData = {
 
 /** The CMS-selected entry articles, in the editor's display order. */
 export async function fetchWikiLanding(locale: Locale) {
+  return withLocaleFallback(locale, fetchWikiLandingIn)
+}
+
+async function fetchWikiLandingIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-landing", {
       locale,
