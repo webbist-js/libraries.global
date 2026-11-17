@@ -4,6 +4,15 @@ function openCookieSettings() {
   window.dispatchEvent(new Event("open-cookie-settings"))
 }
 
+const labels: Record<string, string> = {
+  en: "Cookie choices",
+  cs: "Nastavení cookies",
+  es: "Opciones de cookies",
+  fr: "Choix des cookies",
+  ja: "Cookie の設定",
+  "zh-TW": "Cookie 偏好設定",
+}
+
 export function CookieSettingsButton({
   locale = "en",
   className,
@@ -24,13 +33,7 @@ export function CookieSettingsButton({
         } else openCookieSettings()
       }}
     >
-      {locale === "fr"
-        ? "Choix des cookies"
-        : locale === "cs"
-          ? "Nastavení cookies"
-          : locale === "es"
-            ? "Opciones de cookies"
-            : "Cookie choices"}
+      {labels[locale] ?? labels.en}
     </button>
   )
 }

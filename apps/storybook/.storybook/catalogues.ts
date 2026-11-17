@@ -18,6 +18,7 @@ const loaders: Record<
   es: () => import("../../ui/locales/es"),
   fr: () => import("../../ui/locales/fr"),
   ja: () => import("../../ui/locales/ja"),
+  "zh-TW": () => import("../../ui/locales/zh-TW"),
 }
 
 const loaded = new Map<FixtureLocale, AbstractIntlMessages>()

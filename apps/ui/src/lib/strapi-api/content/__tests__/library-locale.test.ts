@@ -7,7 +7,7 @@ vi.mock("next/headers", () => ({
   draftMode: async () => ({ isEnabled: false }),
 }))
 vi.mock("@/lib/navigation", () => ({
-  routing: { defaultLocale: "en", locales: ["en", "ja"] },
+  routing: { defaultLocale: "en", locales: ["en", "ja", "zh-TW"] },
 }))
 const { fetchLibrary } = await import("../server")
 beforeEach(() => fetchAPI.mockReset())
@@ -32,6 +32,25 @@ it("keeps a Japanese library translation on the same document and route", async 
   )
 })
 
+it("keeps a Taiwan source-language library on the same document and route", async () => {
+  const library = {
+    documentId: "same-library",
+    slug: "library",
+    name: "臺北市立圖書館",
+  }
+  fetchAPI.mockResolvedValueOnce({ data: [library] })
+  expect(await fetchLibrary("library", "zh-TW")).toEqual({
+    data: library,
+    meta: {},
+    localeFallback: false,
+  })
+  expect(fetchAPI).toHaveBeenCalledWith(
+    "/libraries/by-slug/library",
+    { locale: "zh-TW", status: "published" },
+    undefined
+  )
+})
+
 it.each(["empty", "disabled"])(
   "falls back to English while Japanese content is %s",
   async (state) => {
@@ -51,6 +70,30 @@ it.each(["empty", "disabled"])(
     })
     expect(fetchAPI.mock.calls.map(([, params]) => params.locale)).toEqual([
       "ja",
+      "en",
+    ])
+  }
+)
+
+it.each(["empty", "disabled"])(
+  "falls back to English while Taiwan content is %s",
+  async (state) => {
+    if (state === "disabled")
+      fetchAPI.mockRejectedValueOnce(new Error("Invalid locale"))
+    else fetchAPI.mockResolvedValueOnce({ data: [] })
+    const library = {
+      documentId: "same-library",
+      slug: "library",
+      name: "Taipei Public Library",
+    }
+    fetchAPI.mockResolvedValueOnce({ data: [library] })
+    expect(await fetchLibrary("library", "zh-TW")).toEqual({
+      data: library,
+      meta: {},
+      localeFallback: true,
+    })
+    expect(fetchAPI.mock.calls.map(([, params]) => params.locale)).toEqual([
+      "zh-TW",
       "en",
     ])
   }

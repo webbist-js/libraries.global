@@ -43,7 +43,7 @@
     },
     "communicationLocale": {
       "type": "enumeration",
-      "enum": ["en", "cs", "es", "fr", "ja"],
+      "enum": ["en", "cs", "es", "fr", "ja", "zh-TW"],
       "default": "en"
     },
     "consentedAt": {

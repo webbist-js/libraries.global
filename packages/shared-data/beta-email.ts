@@ -51,6 +51,14 @@ const COPY: Record<
     footer:
       "Vous recevez cet e-mail parce que vous avez demandé l'accès à la bêta. Cela ne vous abonne pas à une newsletter. Pour obtenir de l'aide ou retirer votre demande, répondez à cet e-mail.",
   },
+  "zh-TW": {
+    title: "您的 Libraries Global Beta 測試邀請",
+    body: "您已獲邀參與封閉測試。請開啟邀請並按下「進入 Beta 測試」，或將下方邀請碼貼到 Beta 入口。\n\n邀請僅限使用一次，並於七天後到期。接受邀請後，這部瀏覽器可存取 30 天。請勿分享邀請。\n\n本服務仍在開發中：功能可能無法正常運作，測試資料也可能重設。建立帳號並非必要，且與 Beta 存取權分開。",
+    action: "進入 Beta 測試",
+    codeLabel: "邀請碼",
+    footer:
+      "您收到這封電子郵件，是因為您申請了 Beta 測試存取權。這不會將您訂閱電子報。如需協助或撤回申請，請直接回覆這封郵件。",
+  },
 }
 
 export function betaInvitationEmail(input: {
