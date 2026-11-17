@@ -324,6 +324,16 @@ export async function fetchLibrary(slug: string, locale: Locale) {
   return withLocaleFallback(locale, (l) => fetchLibraryIn(slug, l))
 }
 
+/** Public text exports must ignore draft-mode cookies. */
+export async function fetchPublishedLibrary(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) =>
+    fetchLibraryBySlug<PopulatedLibraryData>(slug, {
+      locale: l,
+      status: "published",
+    })
+  )
+}
+
 /**
  * One library by slug through `GET /libraries/by-slug/:slug`, whose
  * response is Strapi's **detail** shape (`LIBRARY_SHAPES.detail`): the

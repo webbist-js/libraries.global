@@ -4,46 +4,62 @@ import { docsArticlePath } from "@/components/docs/docs.config"
 import { escapeMarkdown } from "@/lib/knowledge-markdown"
 import { localizedPath, publicCanonicalUrl } from "@/lib/seo/metadata"
 
-const INTRODUCTION = `# Libraries Global
+/** A small routing guide. The article catalogue lives under /knowledge/llms.txt. */
+export function renderLlmsTxt(): string {
+  return `# Libraries Global
 
-> Libraries Global is an index and geographic atlas of library institutions around the world. It provides library records, source references, opening hours, services and accessibility information where recorded.
+> An index and geographic atlas of public, national, academic and other institutional libraries. Records include sources, locations, opening hours and services where those facts have been recorded.
 
-The index includes public, national, academic and other institutional libraries. Inclusion does not mean a library admits the general public. Coverage and completeness vary by country and record. The platform links to library catalogues; it does not provide book holdings or real-time lending availability.
+Use Libraries Global to find a library, check its published record or identify the source of a library fact. Search by name or place first, then read the individual record. A listed library may not admit the public. Missing information does not mean a service is unavailable, and an update date is not a verification date. The index links to catalogues but does not provide book holdings or real-time lending availability.
 
-Use the versioned API for programmatic search and record retrieval. It requires an API key belonging to an API account with settled paid coverage. Send Authorization: Bearer YOUR_API_KEY. Browser sessions and beta cookies are unnecessary for these API routes. Check the Knowledge access guide for current purchasing availability and restrictions.
+For citations, link to the library's HTML page and retain its source credits and any dataset licence conditions. A Markdown version is available by appending .md to a library page URL. The sitemap lists the full set of public pages; this file deliberately does not list every library.
 
-The machine API currently accepts locale=en. Search results are summaries; retrieve the full Library record for its source credits. Preserve meta.attribution and sourceRecords.datasetCredit, including source-specific licence and redistribution conditions. Missing information does not establish that a service is unavailable, and updatedAt is not a verification date.
+The versioned API is for programmatic search and record retrieval. It requires a paid API account and a scoped key. This guide does not grant access or permission to redistribute source data.
 
-Take entityRef from a search or list response and URL-encode it as one path segment for a detail request. References can change after a rename or geographic move. They are not public page URLs: an Area can appear in an entityRef but is omitted from the page path. Cite the actual Libraries Global page URL when available and retain relevant supporting source URLs.
+## Find library records
 
-The documented machine API exposes published public Library data. Service reads (services:read), moderated data proposals (submissions:write) and bounded analysis jobs (analysis:run) are switched on in stages by the operator; while a resource is off its routes answer 404 resource_not_enabled. Services carry a serviceType and stable ref; service membership is not staff authority. Submissions are untrusted proposals that moderators review; they never publish directly and earn no rewards. Analysis spends credits once per completed job, never for a cached result or a result fetch. Date-specific opening hours, Events, a changes feed and facility metadata are proposed resources, not callable versioned endpoints. There is no public MCP server. The website's other APIs are not part of the Team API contract.
+- [Search libraries](https://libraries.global/libraries): Find a record by name or place, then follow its page link and append .md for the text version.
+- [Sitemap](https://libraries.global/sitemap.xml): Discover published library and place pages at index scale.
 
-The site is in closed beta. Discovery files and public pages follow the site's beta and staging access rules. This guide does not grant access or permission to redistribute source data.
+## Guides and API
 
-## API description
-
-- [OpenAPI description](https://libraries.global/openapi.json): Request and response schemas for POST /api/v1/search/libraries, GET /api/v1/libraries, GET /api/v1/libraries/{entityRef}, and GET /api/v1/places with its country, region, area and libraries paths, the staged /api/v1/services, /api/v1/submissions and /api/v1/analysis resources (marked x-feature-flag); bearer authentication, scopes, pagination, limits, credits and errors.
-
-## Knowledge articles
-
-Every link below returns the full published article as Markdown. Each export identifies its HTML source, content language and modification date. Append .md to an article's path to request that representation; keep any contentLang query parameter after the extension.
-`
-
-const PLATFORM_LINKS = `## Explore the platform
-
-- [Find libraries](https://libraries.global/libraries): Search and filter library institutions.
-- [Atlas](https://libraries.global/map): Explore libraries geographically; analytical tools depend on access and supported datasets.
-- [Knowledge](https://libraries.global/knowledge): Platform documentation, API usage, data interpretation and contribution guidance.
-- [About Libraries Global](https://libraries.global/about): Scope and geographic coverage of the index.
+- [Knowledge index](https://libraries.global/knowledge/llms.txt): Published guides in Markdown, including data interpretation and contribution guidance.
+- [Developer guide](https://libraries.global/developers/llms.txt): Authentication, API limits, scope and request-reference links.
+- [OpenAPI description](https://libraries.global/openapi.json): Machine-readable API operations and schemas.
 
 ## Optional
 
-- [Journal](https://libraries.global/journal): Editorial features and community stories about libraries.
-- [Terms](https://libraries.global/legal/terms): Platform terms of use.
-- [API purchase terms](https://libraries.global/legal/membership): Terms for paid API access.
+- [About Libraries Global](https://libraries.global/about): What the index includes and how records are built.
+- [Privacy notice](https://libraries.global/legal/privacy): How the site handles personal data.
 `
+}
 
-export function renderLlmsTxt(
+export function renderDevelopersLlmsTxt(): string {
+  return `# Libraries Global API
+
+> A versioned API for searching published library records and reading their source credits. Some service, submission and analysis resources are enabled in stages.
+
+Use the API when software needs structured search or record retrieval. Browser sessions are not API credentials. Send an API account key as Authorization: Bearer YOUR_API_KEY. Keys require settled paid coverage and carry selected scopes; a key identifies software, not a person or verified member of library staff. Keep keys on your server.
+
+The machine API currently accepts locale=en. Search results are summaries; fetch the full record for source credits. Preserve attribution and source-specific licence terms. An entityRef is an API identifier, not a public page URL, and can change after a rename or geographic move. Cite the actual library page when one is available.
+
+Service reads, moderated proposals and analysis jobs are enabled in stages. Disabled resources return 404 resource_not_enabled. Proposals do not publish directly. There is no public MCP server, and the site's other APIs are outside this contract.
+
+## Start here
+
+- [Developer portal](https://libraries.global/developers): Account, keys, usage and billing.
+- [Request reference](https://libraries.global/developers/reference): Endpoints, parameters and examples.
+- [OpenAPI description](https://libraries.global/openapi.json): Schemas, bearer authentication, scopes, limits and errors.
+- [Knowledge API guides](https://libraries.global/knowledge/llms.txt): Published access and interpretation guides in Markdown.
+
+## Optional
+
+- [API purchase terms](https://libraries.global/legal/membership): Terms for paid access.
+`
+}
+
+/** All published Knowledge variants, separate from the short site guide. */
+export function renderKnowledgeLlmsTxt(
   articles: readonly ArticleBrowseItem[],
   sectionsByLocale: ReadonlyMap<string, readonly { slug: string }[]>
 ): string {
@@ -66,5 +82,19 @@ export function renderLlmsTxt(
     return `- [${label} (${article.locale})](${publicCanonicalUrl(`${path}.md`)}): ${summary ? escapeMarkdown(summary) : "Published Knowledge article."}`
   })
 
-  return `${INTRODUCTION}\n${lines.join("\n")}\n\n${PLATFORM_LINKS}`
+  return `# Libraries Global Knowledge
+
+> Published guides about the library index, its data, contributions and API use. Each link opens the complete article as Markdown.
+
+Article exports identify their HTML source, content language and modification date. Follow the canonical HTML link when citing an article. A contentLang query on a translated page stays after the .md extension.
+
+## Published articles
+
+${lines.join("\n")}
+
+## Optional
+
+- [Site guide](https://libraries.global/llms.txt): When to use the library index and how to find records.
+- [Developer guide](https://libraries.global/developers/llms.txt): API authentication and reference links.
+`
 }
