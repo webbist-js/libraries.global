@@ -2,6 +2,7 @@ import {
   libraryTypeName,
   hasOpeningHours,
   normalizeMobileTimetable,
+  routeLocale,
   type LibraryNotice,
 } from "@repo/shared-data"
 import { type Locale, useTranslations } from "next-intl"
@@ -137,7 +138,7 @@ export function LibraryDetailPage({
   const rec = library as unknown as Record<string, unknown>
   const contentLocale =
     typeof rec.locale === "string"
-      ? rec.locale
+      ? routeLocale(rec.locale)
       : untranslatedLocale
         ? routing.defaultLocale
         : locale
