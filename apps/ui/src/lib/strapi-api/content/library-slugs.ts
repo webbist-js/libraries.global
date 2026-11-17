@@ -1,5 +1,6 @@
 import "server-only"
 
+import { cmsLocale } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 
 /**
@@ -51,7 +52,7 @@ async function strapiJson<T>(
 export async function fetchLibrarySlugCount(locale: Locale): Promise<number> {
   const { count } = await strapiJson<{ count?: number }>(
     "/libraries/slugs/count",
-    { locale, status: "published" }
+    { locale: cmsLocale(locale), status: "published" }
   )
 
   return typeof count === "number" ? count : 0
@@ -72,7 +73,7 @@ export async function fetchLibrarySlugRange(
   while (after !== null && rows.length < size) {
     const limit = Math.min(LIBRARY_SLUGS_PAGE_SIZE, size - rows.length)
     const json: SlugsPage = await strapiJson<SlugsPage>("/libraries/slugs", {
-      locale,
+      locale: cmsLocale(locale),
       status: "published",
       after: String(after),
       start: String(after === 0 ? offset : 0),
@@ -95,7 +96,7 @@ export async function fetchLibraryLocationCounts(
 ): Promise<Map<string, number>> {
   const { data } = await strapiJson<{ data?: Record<string, number> }>(
     "/libraries/location-counts",
-    { locale, status: "published" }
+    { locale: cmsLocale(locale), status: "published" }
   )
 
   return new Map(Object.entries(data ?? {}))

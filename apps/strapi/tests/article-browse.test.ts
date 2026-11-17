@@ -60,6 +60,14 @@ const row = {
 }
 
 describe("public article browse projection", () => {
+  it("projects Strapi's Taiwan locale as the public route locale", () => {
+    const item = publicArticleBrowseItem(
+      { ...row, locale: "zh-Hant-TW" },
+      "blog"
+    )
+    expect(item?.locale).toBe("zh-TW")
+    expect(item?.facets.languages).toEqual([{ value: "zh-TW", label: "zh-TW" }])
+  })
   it.each([0, 2367, 7473])(
     "exposes an explicit editorial data-release count of %i",
     (entriesAdded) => {

@@ -1,5 +1,7 @@
 import "server-only"
 
+import { cmsLocale } from "@repo/shared-data"
+
 import type { SitemapSegment } from "./files"
 
 export type Source = Exclude<SitemapSegment, "pages">
@@ -28,7 +30,11 @@ export async function sitemapJson<T>(
 ): Promise<T> {
   const base = process.env.STRAPI_URL ?? "http://127.0.0.1:1337"
   const token = process.env.STRAPI_REST_READONLY_API_KEY
-  const res = await fetch(`${base}/api${path}?${new URLSearchParams(params)}`, {
+  const query = {
+    ...params,
+    ...(params.locale ? { locale: cmsLocale(params.locale) } : {}),
+  }
+  const res = await fetch(`${base}/api${path}?${new URLSearchParams(query)}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     next: { revalidate: 3600, tags: ["strapi"] },
     signal: AbortSignal.timeout(30_000),

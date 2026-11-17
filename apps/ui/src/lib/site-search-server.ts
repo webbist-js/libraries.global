@@ -1,5 +1,6 @@
 import "server-only"
 
+import { routeLocale } from "@repo/shared-data"
 import type { Locale } from "next-intl"
 import { getTranslations } from "next-intl/server"
 
@@ -95,8 +96,8 @@ function result(
       .join(" · ")
   } else if (row.slug) {
     href = `/${group}/${encodeURIComponent(str(row.section_slug) || "general")}/${encodeURIComponent(str(row.slug))}`
-    if (str(row.locale) && row.locale !== locale)
-      href += `?contentLang=${encodeURIComponent(str(row.locale))}`
+    if (str(row.locale) && routeLocale(str(row.locale)) !== locale)
+      href += `?contentLang=${encodeURIComponent(routeLocale(str(row.locale)))}`
     summary = [str(row.section_name), summary].filter(Boolean).join(" · ")
   }
 

@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import { cmsLocale, DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import { NextResponse } from "next/server"
 
 import { cacheTagsFor } from "@/lib/strapi-api/cache-tags"
@@ -11,9 +11,12 @@ export async function GET(req: Request) {
     ? requestedLocale
     : DEFAULT_LOCALE
   try {
-    const res = await fetch(`${STRAPI}/api/topics/approved?locale=${locale}`, {
-      next: { revalidate: 3600, tags: cacheTagsFor("/topics", {}) },
-    })
+    const res = await fetch(
+      `${STRAPI}/api/topics/approved?locale=${cmsLocale(locale)}`,
+      {
+        next: { revalidate: 3600, tags: cacheTagsFor("/topics", {}) },
+      }
+    )
     if (!res.ok) return NextResponse.json({ data: [] })
     const json = await res.json()
 

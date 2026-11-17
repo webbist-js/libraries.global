@@ -16,3 +16,12 @@ export function isSupportedLocale(value: unknown): value is SupportedLocale {
     (SUPPORTED_LOCALES as readonly string[]).includes(value)
   )
 }
+
+/** Strapi's built-in Taiwan locale has an explicit script subtag. Public routes use zh-TW. */
+export function cmsLocale(locale: string): string {
+  return locale === "zh-TW" ? "zh-Hant-TW" : locale
+}
+
+export function routeLocale(locale: string): string {
+  return locale === "zh-Hant-TW" ? "zh-TW" : locale
+}

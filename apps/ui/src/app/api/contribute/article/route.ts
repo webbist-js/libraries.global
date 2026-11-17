@@ -1,4 +1,4 @@
-import { isSupportedLocale } from "@repo/shared-data"
+import { cmsLocale, isSupportedLocale } from "@repo/shared-data"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const apiToken = process.env.STRAPI_REST_READONLY_API_KEY
   try {
     const res = await fetch(
-      `${STRAPI}/api/${plural}/detail/${encodeURIComponent(slug)}?locale=${encodeURIComponent(locale)}`,
+      `${STRAPI}/api/${plural}/detail/${encodeURIComponent(slug)}?locale=${encodeURIComponent(cmsLocale(locale))}`,
       {
         cache: "no-store",
         headers: apiToken ? { Authorization: `Bearer ${apiToken}` } : {},

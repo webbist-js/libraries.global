@@ -103,6 +103,31 @@ describe("site search", () => {
     expect(options.attributesToRetrieve).not.toContain("*")
     expect(options.attributesToRetrieve).not.toContain("body")
   })
+  it("uses public content language codes in links to indexed Taiwan content", async () => {
+    mocks.search.mockImplementation(async (index: string) => ({
+      hits:
+        index === "blog-article"
+          ? [
+              {
+                documentId: "taiwan-story",
+                title: "Story",
+                slug: "story",
+                section_slug: "notes",
+                locale: "zh-Hant-TW",
+              },
+            ]
+          : [],
+      estimatedTotalHits: 1,
+    }))
+    const result = await searchSite("Story", "en")
+    expect(result.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          href: "/journal/notes/story?contentLang=zh-TW",
+        }),
+      ])
+    )
+  })
   it("finds published places with no libraries, including an area without a region", async () => {
     mocks.places.mockImplementation(async (path: string) => ({
       data:

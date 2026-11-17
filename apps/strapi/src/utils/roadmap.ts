@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import { cmsLocale, DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
 import type { Core } from "@strapi/strapi"
 
 /**
@@ -35,7 +35,7 @@ export async function roadmapItems(
 ): Promise<RoadmapItemRef[]> {
   const roadmap = await strapi.documents(ROADMAP).findFirst({
     status: "published",
-    locale: localeOf(locale),
+    locale: cmsLocale(localeOf(locale)),
     fields: ["id"],
     populate: {
       features: { fields: ["key", "title"] },

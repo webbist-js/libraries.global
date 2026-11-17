@@ -1,4 +1,8 @@
-import { DEFAULT_LOCALE, isSupportedLocale } from "@repo/shared-data"
+import {
+  DEFAULT_LOCALE,
+  isSupportedLocale,
+  routeLocale,
+} from "@repo/shared-data"
 
 export type ContentLocale = { code: string; name: string; isDefault: boolean }
 
@@ -7,18 +11,23 @@ export function supportedContentLocales(
   locales: readonly ContentLocale[]
 ): ContentLocale[] {
   const seen = new Set<string>()
-  const supported = locales.filter((locale) => {
-    if (
-      !isSupportedLocale(locale?.code) ||
-      typeof locale.name !== "string" ||
-      !locale.name.trim() ||
-      seen.has(locale.code)
-    )
-      return false
-    seen.add(locale.code)
+  const supported = locales
+    .map((locale) => ({
+      ...locale,
+      code: routeLocale(locale.code),
+    }))
+    .filter((locale) => {
+      if (
+        !isSupportedLocale(locale?.code) ||
+        typeof locale.name !== "string" ||
+        !locale.name.trim() ||
+        seen.has(locale.code)
+      )
+        return false
+      seen.add(locale.code)
 
-    return true
-  })
+      return true
+    })
   const defaultCode =
     supported.find((locale) => locale.isDefault === true)?.code ??
     supported.find((locale) => locale.code === DEFAULT_LOCALE)?.code ??
@@ -34,6 +43,7 @@ export function supportedContentLocales(
 export function supportedContentLanguage(value: string): string | null {
   try {
     const tag = new Intl.Locale(value.replaceAll("_", "-"))
+    if (tag.baseName === "zh-Hant-TW") return "zh-TW"
     if (isSupportedLocale(tag.baseName)) return tag.baseName
 
     return !tag.script && isSupportedLocale(tag.language) ? tag.language : null
