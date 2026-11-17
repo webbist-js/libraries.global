@@ -404,8 +404,7 @@ export const DATASET_SEED: DatasetSeed[] = [
       "https://directoriobibliotecas.mcu.es/dimbe.cmd?apartado=descarga",
     licence:
       "Reuse permitted under the general conditions of Royal Decree 1495/2011, confirmed in writing by the Ministerio de Cultura.",
-    licenceUrl:
-      "https://www.cultura.gob.es/comunes/aviso-legal.html",
+    licenceUrl: "https://www.cultura.gob.es/comunes/aviso-legal.html",
     licenceStatus: "confirmed_in_writing",
     redistribution: "permitted_with_attribution",
     attribution:

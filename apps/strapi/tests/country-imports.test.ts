@@ -115,30 +115,12 @@ describe("country import source contracts", () => {
   })
 })
 
-describe("unconfirmed Spanish source acknowledgement", () => {
-  it("refuses the source by default and with the wrong acknowledgement", async () => {
-    for (const acknowledgement of [undefined, "another-dataset"]) {
-      await expect(
-        executeDirectoryIngest({
-          args: acknowledgement
-            ? { "acknowledge-unconfirmed-licence": acknowledgement }
-            : {},
-          directory: tmpdir(),
-          dataset: "es-mcu-libraries",
-          inputs: [],
-          retrievedAt: "2026-11-03T00:00:00Z",
-          sourceCount: 0,
-          libraries: [],
-          skipped: [],
-        })
-      ).rejects.toThrow("no confirmed redistribution terms")
-    }
-  })
-  it("records an explicit source-specific acknowledgement without changing licence metadata", async () => {
+describe("confirmed Spanish source reuse", () => {
+  it("allows the directory without an unconfirmed-licence acknowledgement", async () => {
     const directory = mkdtempSync(path.join(tmpdir(), "spanish-source-"))
     try {
       const report = await executeDirectoryIngest({
-        args: { "acknowledge-unconfirmed-licence": "es-mcu-libraries" },
+        args: {},
         directory,
         dataset: "es-mcu-libraries",
         inputs: [],
@@ -150,8 +132,8 @@ describe("unconfirmed Spanish source acknowledgement", () => {
       expect(report).toMatchObject({
         dryRun: true,
         cmsChecked: false,
-        redistribution: "unconfirmed",
-        unconfirmedLicenceAcknowledged: true,
+        redistribution: "permitted_with_attribution",
+        unconfirmedLicenceAcknowledged: false,
       })
     } finally {
       rmSync(directory, { recursive: true, force: true })
