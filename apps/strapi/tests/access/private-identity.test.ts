@@ -18,9 +18,12 @@ function refusePrivateDocumentFields(strapi: any) {
       const read = service[method]
       service[method] = async (query: any) => {
         const privateField = query.fields?.find((field: string) =>
-          ["baUserId", "recognitionRevokedAt", "contributorNumber"].includes(
-            field
-          )
+          [
+            "baUserId",
+            "recognitionRevokedAt",
+            "contributorNumber",
+            "unlimitedReach",
+          ].includes(field)
         )
         if (privateField) throw new Error(`Invalid key ${privateField}`)
 

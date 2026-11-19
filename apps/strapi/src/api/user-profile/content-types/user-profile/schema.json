@@ -87,6 +87,11 @@
       "type": "boolean",
       "default": false
     },
+    "unlimitedReach": {
+      "type": "boolean",
+      "default": false,
+      "private": true
+    },
     "contributorNumber": {
       "type": "integer",
       "private": true

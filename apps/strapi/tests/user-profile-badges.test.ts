@@ -50,6 +50,7 @@ describe("user-profile badge endpoints follow profile visibility", () => {
           notifPrefs: { weeklyDigest: true },
           contributorNumber: 7,
           recognitionRevokedAt: "2099-01-01T00:00:00.000Z",
+          unlimitedReach: true,
           acceptedContributions: 4,
         },
         { ...profile("pLim", "lim", "uLim", "limited"), city: "Leeds" },
@@ -298,6 +299,7 @@ describe("user-profile badge endpoints follow profile visibility", () => {
   describe("private fields never leak (findByUsername / findByDocumentId)", () => {
     const PRIVATE_FIELDS = [
       "recognitionRevokedAt",
+      "unlimitedReach",
       "acceptedContributions",
       "baUserId",
       "notifPrefs",

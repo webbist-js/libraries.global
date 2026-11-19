@@ -54,8 +54,11 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
     // Moderator revocation is private; the session carries only a boolean.
     strapi.db.query("api::user-profile.user-profile").findOne({
       where: { baUserId: { $eq: baUserId } },
-      select: ["recognitionRevokedAt"],
-    }) as Promise<{ recognitionRevokedAt?: string | null } | null>,
+      select: ["recognitionRevokedAt", "unlimitedReach"],
+    }) as Promise<{
+      recognitionRevokedAt?: string | null
+      unlimitedReach?: boolean
+    } | null>,
   ])
 
   if (profile && process.env.INTERNAL_NOTIFICATIONS_ENABLED === "true") {
@@ -130,6 +133,7 @@ export async function sessionProfile(strapi: Core.Strapi, baUserId: string) {
         : []
     }),
     username: profile?.username ?? null,
+    unlimitedReach: !!profile && recognition?.unlimitedReach === true,
     country: profile?.country ?? null,
     languages: (profile?.languages ?? []).map(({ code, proficiency }) => ({
       code,

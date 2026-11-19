@@ -13,10 +13,12 @@ import { bonusApiAccountOf, hasFact } from "./access-server"
  *   keyed on the person.
  * - `api`: the API organiser bonus, hourly per person plus a pooled daily
  *   allowance keyed on the API account.
+ * - `unlimited`: an explicit private operator grant, with no job count quota.
  */
 export type ReachAllowance =
   | { kind: "contributor"; weekly: number }
   | { kind: "api"; hourly: number; daily: number; accountKey: string }
+  | { kind: "unlimited" }
 
 const limitsOf = (user: unknown): Record<string, unknown> => {
   const raw =
@@ -44,6 +46,12 @@ export function reachAllowanceOf(
   secret: string,
   { service = false }: { service?: boolean } = {}
 ): ReachAllowance | null {
+  if (
+    user &&
+    typeof user === "object" &&
+    (user as Record<string, unknown>).unlimitedReach === true
+  )
+    return { kind: "unlimited" }
   const limits = limitsOf(user)
   const account = hasFact(user, "apiCustomer") ? bonusApiAccountOf(user) : null
   if (

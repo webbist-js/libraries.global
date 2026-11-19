@@ -156,7 +156,7 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
     // Service Reach is an API organiser allowance only.
-    const allowance = parseReachAllowance(body.allowance, ["api"])
+    const allowance = parseReachAllowance(body.allowance, ["api", "unlimited"])
     if (
       Object.keys(body).some(
         (key) => !["request", "userKey", "allowance"].includes(key)

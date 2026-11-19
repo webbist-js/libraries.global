@@ -7,6 +7,8 @@ import { type Recognition, recognitionOf } from "./recognition"
  * - `explorer`: any signed-in account (free).
  * - `contributor` / `supporter`: earned recognition from accepted contributions.
  * - `apiCustomer`: organiser of an API account with settled paid coverage.
+ * - `unlimitedReach`: a private account-specific operator grant for browser
+ *   Reach, independent of recognition and payment.
  *
  * Verified staff tools are capabilities (`canStaff`), not entitlements:
  * authority comes from roles and library affiliations, and payment,
@@ -78,6 +80,8 @@ export interface ApiAccountInput {
 export interface EntitlementInput {
   signedIn: boolean
   now: Date
+  /** Private operator grant for unmetered browser Reach. */
+  unlimitedReach?: boolean
   /** Distinct accepted, substantive contributions. */
   acceptedContributions?: number | null
   recognitionRevoked?: boolean | null
@@ -185,6 +189,12 @@ export function resolveEntitlements(i: EntitlementInput): Entitlements {
     for (const f of API_CUSTOMER_FEATURES) features.add(f)
     limits.analysisRunsPerHour = API_REACH_PER_HOUR
     limits.analysisRunsPerDay = API_REACH_PER_DAY
+    limits.analysisAreaMultiplier = 1
+    limits.analysisServiceLibraries = API_REACH_SERVICE_LIBRARIES
+  }
+  if (i.unlimitedReach === true) {
+    features.add("atlas.reach")
+    features.add("atlas.serviceReach")
     limits.analysisAreaMultiplier = 1
     limits.analysisServiceLibraries = API_REACH_SERVICE_LIBRARIES
   }
