@@ -26,6 +26,7 @@ describe("buildSessionAccess", () => {
       profileLoaded: false,
       contributorRole: "reader",
       username: null,
+      unlimitedReach: false,
       compositionPreferences: { country: null, languages: [] },
       capabilities: [],
       claimedLibraryIds: [],

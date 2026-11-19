@@ -46,7 +46,7 @@ export async function requestAtlasNetworkReach(
   userKey: string,
   allowance: ReachAllowance
 ) {
-  if (allowance.kind !== "api")
+  if (allowance.kind !== "api" && allowance.kind !== "unlimited")
     throw new RangeError("Service Reach needs an API account allowance")
   // One standard envelope for everyone: the doubled Team capacity is gone.
   const capacity: AtlasReachCapacity = 1

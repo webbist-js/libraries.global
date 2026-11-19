@@ -61,6 +61,8 @@ export type SessionProfile = {
   staff: (StaffClaim & { name: string; slug: string; libraryType: string })[]
   contributorRole: ContributorRole
   username: string | null
+  /** Private operator grant for unmetered browser Reach. */
+  unlimitedReach?: boolean
   tier: string | null
   claims: string[]
   /** Contributor Role grants (capabilities). */
@@ -83,6 +85,7 @@ export type SessionAccess = {
   profileLoaded: boolean
   contributorRole: ContributorRole
   username: string | null
+  unlimitedReach: boolean
   /** Owner-only content defaults; unrelated to capabilities or UI locale. */
   compositionPreferences: CompositionPreferences
   capabilities: Capability[]
@@ -140,12 +143,14 @@ export function buildSessionAccess(
     acceptedContributions: profile?.acceptedContributions ?? 0,
     recognitionRevoked: profile?.recognitionRevoked ?? false,
     apiAccounts,
+    unlimitedReach: profile?.unlimitedReach === true,
   })
 
   return {
     profileLoaded: profile !== null,
     contributorRole: role,
     username: profile?.username ?? null,
+    unlimitedReach: profile?.unlimitedReach === true,
     compositionPreferences: profile?.compositionPreferences ?? {
       country: null,
       languages: [],

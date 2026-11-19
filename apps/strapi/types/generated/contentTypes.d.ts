@@ -4907,6 +4907,9 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    unlimitedReach: Schema.Attribute.Boolean &
+      Schema.Attribute.Private &
+      Schema.Attribute.DefaultTo<false>
     username: Schema.Attribute.String & Schema.Attribute.Unique
     website: Schema.Attribute.String
   }
