@@ -4904,12 +4904,12 @@ export interface ApiUserProfileUserProfile extends Struct.CollectionTypeSchema {
       Schema.Attribute.DefaultTo<"dark">
     tier: Schema.Attribute.String & Schema.Attribute.DefaultTo<"Reader">
     timezone: Schema.Attribute.String
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
     unlimitedReach: Schema.Attribute.Boolean &
       Schema.Attribute.Private &
       Schema.Attribute.DefaultTo<false>
+    updatedAt: Schema.Attribute.DateTime
+    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
+      Schema.Attribute.Private
     username: Schema.Attribute.String & Schema.Attribute.Unique
     website: Schema.Attribute.String
   }
@@ -5806,57 +5806,6 @@ export interface PluginAccessWidgetSelection
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
     version: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<1>
-  }
-}
-
-export interface PluginBetaInvitesInvitation
-  extends Struct.CollectionTypeSchema {
-  collectionName: "beta_invitations"
-  info: {
-    displayName: "Beta invitation"
-    pluralName: "invitations"
-    singularName: "invitation"
-  }
-  options: {
-    draftAndPublish: false
-  }
-  pluginOptions: {
-    "content-manager": {
-      visible: false
-    }
-    "content-type-builder": {
-      visible: false
-    }
-  }
-  attributes: {
-    acceptedAt: Schema.Attribute.DateTime
-    accessExpiresAt: Schema.Attribute.DateTime
-    consentedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
-    createdAt: Schema.Attribute.DateTime
-    createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
-    expiresAt: Schema.Attribute.DateTime & Schema.Attribute.Required
-    issuedAt: Schema.Attribute.DateTime & Schema.Attribute.Required
-    issuedBy: Schema.Attribute.String & Schema.Attribute.Private
-    locale: Schema.Attribute.String & Schema.Attribute.Private
-    localizations: Schema.Attribute.Relation<
-      "oneToMany",
-      "plugin::beta-invites.invitation"
-    > &
-      Schema.Attribute.Private
-    notificationId: Schema.Attribute.String & Schema.Attribute.Private
-    publishedAt: Schema.Attribute.DateTime
-    revokedAt: Schema.Attribute.DateTime
-    revokedBy: Schema.Attribute.String & Schema.Attribute.Private
-    sentAt: Schema.Attribute.DateTime
-    subscriberDocumentId: Schema.Attribute.String & Schema.Attribute.Required
-    tokenCiphertext: Schema.Attribute.Text & Schema.Attribute.Private
-    tokenHash: Schema.Attribute.String &
-      Schema.Attribute.Private &
-      Schema.Attribute.Unique
-    updatedAt: Schema.Attribute.DateTime
-    updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
-      Schema.Attribute.Private
   }
 }
 
@@ -6888,6 +6837,9 @@ export interface PluginContentReleasesRelease
     createdAt: Schema.Attribute.DateTime
     createdBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
+    failureReason: Schema.Attribute.Enumeration<
+      ["missed_schedule", "failed_before_upgrade"]
+    >
     locale: Schema.Attribute.String & Schema.Attribute.Private
     localizations: Schema.Attribute.Relation<
       "oneToMany",
@@ -6896,13 +6848,21 @@ export interface PluginContentReleasesRelease
       Schema.Attribute.Private
     name: Schema.Attribute.String & Schema.Attribute.Required
     publishedAt: Schema.Attribute.DateTime
+    releaseCondition: Schema.Attribute.Enumeration<
+      ["all_or_nothing", "allow_partial"]
+    > &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<"all_or_nothing">
     releasedAt: Schema.Attribute.DateTime
     scheduledAt: Schema.Attribute.DateTime
     status: Schema.Attribute.Enumeration<
-      ["ready", "blocked", "failed", "done", "empty"]
+      ["ready", "blocked", "failed", "done", "partial", "empty"]
     > &
       Schema.Attribute.Required
     timezone: Schema.Attribute.String
+    totalPublishedEntries: Schema.Attribute.Integer
+    totalSkippedEntries: Schema.Attribute.Integer
+    totalUnpublishedEntries: Schema.Attribute.Integer
     updatedAt: Schema.Attribute.DateTime
     updatedBy: Schema.Attribute.Relation<"oneToOne", "admin::user"> &
       Schema.Attribute.Private
@@ -6941,7 +6901,19 @@ export interface PluginContentReleasesReleaseAction
       "plugin::content-releases.release-action"
     > &
       Schema.Attribute.Private
+    outcome: Schema.Attribute.Enumeration<
+      [
+        "published",
+        "unpublished",
+        "skipped_invalid",
+        "skipped_not_approved",
+        "skipped_error",
+        "skipped_held",
+        "skipped_missed",
+      ]
+    >
     publishedAt: Schema.Attribute.DateTime
+    reason: Schema.Attribute.JSON
     release: Schema.Attribute.Relation<
       "manyToOne",
       "plugin::content-releases.release"
@@ -8836,7 +8808,6 @@ declare module "@strapi/strapi" {
       "plugin::access.widget-audit": PluginAccessWidgetAudit
       "plugin::access.widget-release": PluginAccessWidgetRelease
       "plugin::access.widget-selection": PluginAccessWidgetSelection
-      "plugin::beta-invites.invitation": PluginBetaInvitesInvitation
       "plugin::better-auth.account": PluginBetterAuthAccount
       "plugin::better-auth.passkey": PluginBetterAuthPasskey
       "plugin::better-auth.rate-limit": PluginBetterAuthRateLimit
