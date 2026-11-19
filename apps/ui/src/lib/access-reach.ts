@@ -39,7 +39,8 @@ export function reachUserKey(secret: string, userId: string): string {
 
 /**
  * The allowance for this session, or null when it has none. Service Reach
- * (`service: true`) takes only the API organiser bonus.
+ * (`service: true`) takes the API organiser bonus or the private unlimited
+ * grant.
  */
 export function reachAllowanceOf(
   user: unknown,
