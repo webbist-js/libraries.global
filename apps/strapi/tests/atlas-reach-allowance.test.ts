@@ -169,7 +169,7 @@ function bridgeContext(body: object) {
 }
 
 describe("parseReachAllowance", () => {
-  it("accepts exactly the contributor and API shapes", () => {
+  it("accepts exactly the contributor, API and operator shapes", () => {
     expect(parseReachAllowance({ kind: "contributor", weekly: 2 })).toEqual({
       kind: "contributor",
       weekly: 2,
@@ -182,6 +182,9 @@ describe("parseReachAllowance", () => {
         accountKey: ACCOUNT,
       })
     ).toMatchObject({ kind: "api", hourly: 20, daily: 100 })
+    expect(parseReachAllowance({ kind: "unlimited" })).toEqual({
+      kind: "unlimited",
+    })
   })
   it.each([
     null,
@@ -195,6 +198,7 @@ describe("parseReachAllowance", () => {
     { kind: "api", hourly: 101, daily: 100, accountKey: ACCOUNT },
     { kind: "api", hourly: 20, daily: 1001, accountKey: ACCOUNT },
     { kind: "team", hourly: 100, capacity: 2 },
+    { kind: "unlimited", hourly: 1 },
   ])("rejects %j", (value) => {
     expect(parseReachAllowance(value)).toBeNull()
   })
@@ -202,12 +206,21 @@ describe("parseReachAllowance", () => {
     expect(
       parseReachAllowance({ kind: "contributor", weekly: 2 }, ["api"])
     ).toBeNull()
+    expect(parseReachAllowance({ kind: "unlimited" }, ["api"])).toBeNull()
   })
 })
 
 describe("spendReachAllowance", () => {
   const now = new Date("2026-11-06T12:30:00Z")
   const window = new Date(Math.floor(now.getTime() / HOUR) * HOUR)
+
+  it("does not read or write budget rows for an operator grant", async () => {
+    const { trx, rows } = fakeTrx()
+    expect(
+      await spendReachAllowance(trx, USER, { kind: "unlimited" }, now)
+    ).toBeNull()
+    expect(rows).toEqual([])
+  })
 
   it("gives a Contributor two new calculations per rolling seven days", async () => {
     const { trx, rows } = fakeTrx([

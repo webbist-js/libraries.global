@@ -79,6 +79,12 @@ it.each<{
     allowance: { kind: "contributor", weekly: 2 },
   },
   {
+    label: "an account with an operator Reach grant",
+    profile: { unlimitedReach: true },
+    status: 202,
+    allowance: { kind: "unlimited" },
+  },
+  {
     label: "a Supporter, with the same Contributor allowance",
     profile: { acceptedContributions: 150 },
     status: 202,

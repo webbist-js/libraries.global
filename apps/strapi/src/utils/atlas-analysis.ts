@@ -57,6 +57,7 @@ export async function analysisService(path: string, body?: unknown) {
 export type ReachAllowance =
   | { kind: "contributor"; weekly: number }
   | { kind: "api"; hourly: number; daily: number; accountKey: string }
+  | { kind: "unlimited" }
 
 const HEX_KEY = /^[a-f0-9]{64}$/
 const intIn = (value: unknown, min: number, max: number) =>
@@ -67,11 +68,17 @@ const intIn = (value: unknown, min: number, max: number) =>
 /** Strict parse of the bridge's `allowance`; null when malformed. */
 export function parseReachAllowance(
   value: unknown,
-  kinds: readonly ReachAllowance["kind"][] = ["contributor", "api"]
+  kinds: readonly ReachAllowance["kind"][] = ["contributor", "api", "unlimited"]
 ): ReachAllowance | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const v = value as Record<string, unknown>
   const keys = Object.keys(v)
+  if (
+    v.kind === "unlimited" &&
+    kinds.includes("unlimited") &&
+    keys.length === 1
+  )
+    return { kind: "unlimited" }
   if (
     v.kind === "contributor" &&
     kinds.includes("contributor") &&
@@ -128,6 +135,7 @@ export async function spendReachAllowance(
   allowance: ReachAllowance,
   now: Date = new Date()
 ): Promise<ReachRefusal | null> {
+  if (allowance.kind === "unlimited") return null
   const window = new Date(Math.floor(now.getTime() / HOUR) * HOUR)
   const used = async (key: string, since: Date | null) => {
     const query = trx("atlas_analysis_budgets").where({ key })
