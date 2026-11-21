@@ -113,6 +113,17 @@ export async function fetchPage(
   requestInit?: RequestInit,
   options?: CustomFetchOptions
 ) {
+  return withLocaleFallback(locale, (l) =>
+    fetchPageIn(slug, l, requestInit, options)
+  )
+}
+
+async function fetchPageIn(
+  slug: string,
+  locale: Locale,
+  requestInit?: RequestInit,
+  options?: CustomFetchOptions
+) {
   const dm = await draftMode()
 
   try {
@@ -167,6 +178,14 @@ export async function fetchAllPages(
 export async function fetchSeo(
   // eslint-disable-next-line @typescript-eslint/default-param-last
   uid: Extract<UID.ContentType, "api::page.page"> = "api::page.page",
+  slug: string | null,
+  locale: Locale
+) {
+  return withLocaleFallback(locale, (l) => fetchSeoIn(uid, slug, l))
+}
+
+async function fetchSeoIn(
+  uid: Extract<UID.ContentType, "api::page.page">,
   slug: string | null,
   locale: Locale
 ) {
@@ -242,6 +261,10 @@ export async function fetchHomepagePillars(
 }
 
 export async function fetchHomepage(locale: Locale) {
+  return withLocaleFallback(locale, fetchHomepageIn)
+}
+
+async function fetchHomepageIn(locale: Locale) {
   const dm = await draftMode()
 
   try {
@@ -323,6 +346,16 @@ export type PopulatedLibraryData = Data.ContentType<"api::library.library"> & {
 /** A library in `locale`, or the default-locale version flagged `localeFallback`. */
 export async function fetchLibrary(slug: string, locale: Locale) {
   return withLocaleFallback(locale, (l) => fetchLibraryIn(slug, l))
+}
+
+/** Public text exports must ignore draft-mode cookies. */
+export async function fetchPublishedLibrary(slug: string, locale: Locale) {
+  return withLocaleFallback(locale, (l) =>
+    fetchLibraryBySlug<PopulatedLibraryData>(slug, {
+      locale: l,
+      status: "published",
+    })
+  )
 }
 
 /**
@@ -1075,6 +1108,10 @@ export type BlogLandingData = {
 }
 
 export async function fetchBlogLanding(locale: Locale) {
+  return withLocaleFallback(locale, fetchBlogLandingIn)
+}
+
+async function fetchBlogLandingIn(locale: Locale) {
   const dm = await draftMode()
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-landing", {
@@ -1307,6 +1344,10 @@ export async function countJournalArticles(
 }
 
 export async function fetchBlogSections(locale: Locale) {
+  return withLocaleNavigation(locale, fetchBlogSectionsIn)
+}
+
+async function fetchBlogSectionsIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/blog-sections", {
       locale,
@@ -1426,6 +1467,10 @@ export type WikiLandingData = {
 
 /** The CMS-selected entry articles, in the editor's display order. */
 export async function fetchWikiLanding(locale: Locale) {
+  return withLocaleFallback(locale, fetchWikiLandingIn)
+}
+
+async function fetchWikiLandingIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchAPI("/wiki-landing", {
       locale,
@@ -1689,6 +1734,10 @@ async function fetchLegalDocumentIn(slug: string, locale: Locale) {
 // ------ Footer fetching functions
 
 export async function fetchFooter(locale: Locale) {
+  return withLocaleFallback(locale, fetchFooterIn)
+}
+
+async function fetchFooterIn(locale: Locale) {
   try {
     return (await PublicStrapiClient.fetchOne("api::footer.footer", undefined, {
       locale,

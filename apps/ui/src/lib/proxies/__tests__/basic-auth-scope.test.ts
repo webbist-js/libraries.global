@@ -13,7 +13,10 @@ describe("needsBasicAuth", () => {
     "/api/export/atlas",
     "/openapi.json",
     "/llms.txt",
+    "/knowledge/llms.txt",
+    "/developers/llms.txt",
     "/knowledge/data-api/guide.md",
+    "/europe/england/london/central-library.md",
     "/knowledge/data-api/guide/markdown",
     "/api/authors", // not /api/auth
     "/api/previews", // not /api/preview

@@ -40,7 +40,7 @@ export function modelFromPath(path: string): string | null {
 
 export const isCacheModel = (model: string): boolean => MODELS.has(model)
 
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9._-]{0,127}$/i
+const SLUG_PATTERN = /^-?[a-z0-9][a-z0-9._-]{0,126}$/i
 
 /** A tag-safe entry key, or null. */
 export const entryKey = (value: unknown): string | null =>
