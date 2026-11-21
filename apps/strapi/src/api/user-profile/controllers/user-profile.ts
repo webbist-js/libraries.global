@@ -153,6 +153,7 @@ const PRIVATE_PROFILE_FIELDS = [
   "acceptedContributions",
   "lastContributionAt",
   "recognitionRevokedAt",
+  "unlimitedReach",
   "supporterListed",
   "supporterBadgeVisible",
 ] as const
@@ -371,6 +372,7 @@ const OWNER_HIDDEN_FIELDS = [
   "baUserId",
   "authUser",
   "recognitionRevokedAt",
+  "unlimitedReach",
 ] as const
 
 /**

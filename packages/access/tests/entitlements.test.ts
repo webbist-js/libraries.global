@@ -33,6 +33,7 @@ describe("Explorer", () => {
       signedIn: false,
       now: NOW,
       acceptedContributions: 1000,
+      unlimitedReach: true,
       apiAccounts: [{ role: "organiser", paidThrough: days(30) }],
     })
     expect(e.standing).toBe("public")
@@ -149,6 +150,17 @@ describe("API customer browser bonus", () => {
     )
     expect(limitOf(e, "reachRunsPerWeek")).toBe(2)
     expect(limitOf(e, "analysisRunsPerHour")).toBe(20)
+  })
+})
+
+describe("operator Reach grant", () => {
+  it("unlocks single-library and service Reach without inventing API coverage", () => {
+    const e = resolveEntitlements(base({ unlimitedReach: true }))
+    expect(can(e, "atlas.reach")).toBe(true)
+    expect(can(e, "atlas.serviceReach")).toBe(true)
+    expect(can(e, "api.key")).toBe(false)
+    expect(e.standing).toBe("explorer")
+    expect(limitOf(e, "analysisServiceLibraries")).toBe(50)
   })
 })
 

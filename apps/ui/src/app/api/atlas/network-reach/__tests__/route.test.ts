@@ -185,3 +185,29 @@ it("sends only the session's API allowance, never a capacity", async () => {
   expect(sent.allowance.accountKey).toMatch(/^[a-f0-9]{64}$/)
   expect(JSON.stringify(sent)).not.toContain("team-a")
 })
+
+it("sends an unmetered allowance for an explicit operator grant", async () => {
+  session.mockResolvedValue({
+    user: {
+      id: "operator",
+      unlimitedReach: true,
+      features: ["atlas.reach", "atlas.serviceReach"],
+    },
+  })
+  fetcher.mockResolvedValue(
+    Response.json(
+      {
+        schemaVersion: 1,
+        networkId: body.networkId,
+        areaCode: body.areaCode,
+        mode: body.mode,
+        state: "pending",
+      },
+      { status: 202 }
+    )
+  )
+  expect((await POST(request())).status).toBe(202)
+  expect(JSON.parse(fetcher.mock.calls[0]![1].body).allowance).toEqual({
+    kind: "unlimited",
+  })
+})

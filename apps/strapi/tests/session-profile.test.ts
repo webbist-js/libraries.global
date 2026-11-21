@@ -31,6 +31,7 @@ describe("local session profile projection", () => {
           baUserId: "u1",
           contributorRole: "verified_librarian",
           username: "ada",
+          unlimitedReach: true,
           country: "CO",
           languages: [{ code: "es", proficiency: "native", id: 1 }],
           tier: "Indexer",
@@ -109,6 +110,7 @@ describe("local session profile projection", () => {
     expect(result).toEqual({
       contributorRole: "verified_librarian",
       username: "ada",
+      unlimitedReach: true,
       country: "CO",
       languages: [{ code: "es", proficiency: "native" }],
       tier: "Indexer",
@@ -133,6 +135,7 @@ describe("local session profile projection", () => {
     expect(result).toEqual({
       contributorRole: "reader",
       username: null,
+      unlimitedReach: false,
       country: null,
       languages: [],
       tier: null,

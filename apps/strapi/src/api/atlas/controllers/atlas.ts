@@ -124,7 +124,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
     // The site resolves the allowance from the user's entitlements: weekly
-    // for a Contributor, hourly plus pooled daily for an API organiser.
+    // for a Contributor, hourly plus pooled daily for an API organiser, or
+    // the private unlimited grant.
     const allowance = parseReachAllowance(body.allowance)
     if (
       Object.keys(body).some(
@@ -155,8 +156,8 @@ export default ({ strapi }: { strapi: Core.Strapi }) => ({
   async networkReach(ctx: Core.Strapi["server"]["app"]["context"]) {
     if (!authorize(ctx)) return
     const body = ctx.request.body ?? {}
-    // Service Reach is an API organiser allowance only.
-    const allowance = parseReachAllowance(body.allowance, ["api"])
+    // Service Reach accepts an API organiser or private unlimited allowance.
+    const allowance = parseReachAllowance(body.allowance, ["api", "unlimited"])
     if (
       Object.keys(body).some(
         (key) => !["request", "userKey", "allowance"].includes(key)
