@@ -153,7 +153,7 @@ export default factories.createCoreController(
         typeof slug !== "string" ||
         slug.length === 0 ||
         slug.length > 255 ||
-        !/^[a-z0-9][a-z0-9._-]*$/i.test(slug)
+        !/^-?[a-z0-9][a-z0-9._-]*$/i.test(slug)
       )
         return ctx.badRequest("Invalid slug")
       const {

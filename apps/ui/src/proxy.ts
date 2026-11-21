@@ -17,6 +17,7 @@ import { basicAuth } from "@/lib/proxies/basicAuth"
 import { betaShellRequest } from "@/lib/proxies/betaGate"
 import { httpsRedirect } from "@/lib/proxies/httpsRedirect"
 import { knowledgeMarkdownRewrite } from "@/lib/proxies/knowledgeMarkdown"
+import { libraryMarkdownRewrite } from "@/lib/proxies/libraryMarkdown"
 import {
   isMobileHost,
   mobileAppRoute,
@@ -37,12 +38,17 @@ async function independentPublicResponse(req: NextRequest) {
   if (widget) return widget
 
   // Text exports bypass HTML routing; metadata and public files keep root paths.
-  const markdown = knowledgeMarkdownRewrite(req)
+  const markdown = knowledgeMarkdownRewrite(req) ?? libraryMarkdownRewrite(req)
   if (
     markdown ||
-    ["/robots.txt", "/openapi.json", "/llms.txt", "/embed/resize.js"].includes(
-      pathname
-    ) ||
+    [
+      "/robots.txt",
+      "/openapi.json",
+      "/llms.txt",
+      "/knowledge/llms.txt",
+      "/developers/llms.txt",
+      "/embed/resize.js",
+    ].includes(pathname) ||
     pathname.startsWith("/sitemap") ||
     /^\/(?:atlas|images)(?:\/|$)/.test(pathname) ||
     /^\/(?:favicon\.(?:ico|svg)|apple-touch-icon\.png|live-icon\.svg|live-offline\.html|live-sw\.js)$/.test(

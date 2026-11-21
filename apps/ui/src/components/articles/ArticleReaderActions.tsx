@@ -11,7 +11,7 @@ import { useCapabilities, useHydratedSession } from "@/lib/access-client"
 import { articleReaderPath } from "@/lib/article-content-language"
 import { requestArticleDiscussion } from "@/lib/discussion-composer"
 import { languageName } from "@/lib/locale-fallback"
-import { Link } from "@/lib/navigation"
+import { Link, useRouter } from "@/lib/navigation"
 import { useJournalOwnership } from "@/lib/use-journal-ownership"
 
 function handleDiscuss(event: MouseEvent<HTMLAnchorElement>) {
@@ -45,6 +45,7 @@ export function ArticleReaderActions({
   authorUsername?: string | null
 }) {
   const t = useTranslations("publishing")
+  const router = useRouter()
   const actor = useHydratedSession()
   const caps = useCapabilities()
   const signedIn = !actor.isPending && !actor.error && Boolean(actor.data?.user)
@@ -90,32 +91,36 @@ export function ArticleReaderActions({
   const ownJournal = signedIn && ownership.eligibility[slug] === true
   const edit = `/contribute/knowledge/${kind === "journal" ? "journal/" : ""}${encodeURIComponent(slug)}`
   const improve = `${edit}?mode=${direct ? "edit" : "report"}&locale=${encodeURIComponent(contentLocale)}&sourceLocale=${encodeURIComponent(contentLocale)}`
+  const publishedLanguages = [
+    ...new Set([contentLocale, ...availableLocales]),
+  ].filter(isSupportedLocale)
 
   return (
     <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-(--t-divider) py-3 text-xs">
-      <span
-        className="rounded-full bg-(--t-bg-inverse) px-2.5 py-1.5 font-semibold text-white"
-        aria-current="true"
-      >
-        {languageName(contentLocale, [], interfaceLocale)}
-      </span>
-      {availableLocales
-        .filter(
-          (language) =>
-            isSupportedLocale(language) && language !== contentLocale
-        )
-        .map((language) => (
-          <Link
-            key={language}
-            href={articleReaderPath(path, interfaceLocale, language)}
-            className="inline-flex min-h-9 items-center rounded-full bg-(--t-bg-muted) px-2.5 font-semibold text-(--t-ink-dim) hover:bg-(--t-accent-chip)"
-            aria-label={t("alsoLanguage", {
-              language: languageName(language, [], interfaceLocale),
-            })}
-          >
-            {languageName(language, [], interfaceLocale)}
-          </Link>
-        ))}
+      {publishedLanguages.length > 1 ? (
+        <SelectField
+          appearance="pill"
+          label={t("alsoLanguage", {
+            language: languageName(contentLocale, [], interfaceLocale),
+          })}
+          value={contentLocale}
+          onValueChange={(language) => {
+            if (language && language !== contentLocale)
+              router.push(articleReaderPath(path, interfaceLocale, language))
+          }}
+          options={publishedLanguages.map((language) => ({
+            value: language,
+            label: languageName(language, [], interfaceLocale),
+          }))}
+        />
+      ) : (
+        <span
+          className="rounded-full bg-(--t-bg-inverse) px-2.5 py-1.5 font-semibold text-white"
+          aria-current="true"
+        >
+          {languageName(contentLocale, [], interfaceLocale)}
+        </span>
+      )}
       {kind === "knowledge" && (
         <>
           <button

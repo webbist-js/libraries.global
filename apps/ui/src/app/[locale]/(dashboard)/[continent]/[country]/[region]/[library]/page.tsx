@@ -118,7 +118,7 @@ export async function generateMetadata({
   )
   const { path } = libraryPath(library, { continent, country, region })
 
-  return buildMetadata({
+  const metadata = buildMetadata({
     seo,
     alternateLocales: [locale],
     ...libraryTitle(name, library.city, library.country?.name),
@@ -130,6 +130,14 @@ export async function generateMetadata({
     // A default-locale stand-in for a missing translation isn't indexed.
     robots: res?.localeFallback ? "noindex-follow" : "index",
   })
+
+  return {
+    ...metadata,
+    alternates: {
+      ...metadata.alternates,
+      types: { "text/markdown": `${localizedPath(path, locale)}.md` },
+    },
+  }
 }
 
 function LibraryRoutePage(props: {

@@ -1,7 +1,11 @@
 import type { ArticleBrowseItem } from "@repo/shared-data"
 import { describe, expect, it } from "vitest"
 
-import { renderLlmsTxt } from "@/lib/agent-discovery"
+import {
+  renderDevelopersLlmsTxt,
+  renderKnowledgeLlmsTxt,
+  renderLlmsTxt,
+} from "@/lib/agent-discovery"
 
 const article = (input: Partial<ArticleBrowseItem>) =>
   ({
@@ -20,8 +24,26 @@ const sections = new Map([
 ])
 
 describe("agent Knowledge discovery", () => {
+  it("keeps the root guide small and points to record and documentation discovery", () => {
+    const result = renderLlmsTxt()
+    expect(result).toContain("Use Libraries Global to find a library")
+    expect(result).toContain("/knowledge/llms.txt")
+    expect(result).toContain("/developers/llms.txt")
+    expect(result).toContain("/sitemap.xml")
+    expect(result).not.toContain("api-guide.md")
+    expect(result.length).toBeLessThan(4000)
+  })
+
+  it("directs API clients to the public reference and states the access boundary", () => {
+    const result = renderDevelopersLlmsTxt()
+    expect(result).toContain("Authorization: Bearer YOUR_API_KEY")
+    expect(result).toContain("settled paid coverage")
+    expect(result).toContain("/developers/reference")
+    expect(result).toContain("/openapi.json")
+  })
+
   it("links every article to its full Markdown representation and translated home section", () => {
-    const result = renderLlmsTxt(
+    const result = renderKnowledgeLlmsTxt(
       [
         article({}),
         article({
@@ -49,12 +71,12 @@ describe("agent Knowledge discovery", () => {
     expect(result).toContain(
       "[Guide API (fr)](https://libraries.global/fr/knowledge/api-donnees/guide-api.md)"
     )
-    expect(result).toContain("https://libraries.global/openapi.json")
+    expect(result).toContain("# Libraries Global Knowledge")
     expect(result).not.toContain("team-api-quickstart")
   })
 
   it("escapes labels and prevents multiline summaries from injecting discovery entries", () => {
-    const result = renderLlmsTxt(
+    const result = renderKnowledgeLlmsTxt(
       [
         article({
           title: "[API]\nGuide",
@@ -68,7 +90,7 @@ describe("agent Knowledge discovery", () => {
   })
 
   it("refuses a partial index when canonical sections are unavailable", () => {
-    expect(() => renderLlmsTxt([article({})], new Map())).toThrow(
+    expect(() => renderKnowledgeLlmsTxt([article({})], new Map())).toThrow(
       "Knowledge sections are unavailable"
     )
   })

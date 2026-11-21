@@ -34,6 +34,12 @@ describe("cacheTagsFor", () => {
     ).toEqual(["strapi", "library", "library:british-library"])
   })
 
+  it("tags an imported Taiwan slug with one leading hyphen", () => {
+    expect(
+      cacheTagsFor("/libraries/by-slug/-tw-9cce7a9c6540d9443e602269", {})
+    ).toEqual(["strapi", "library", "library:-tw-9cce7a9c6540d9443e602269"])
+  })
+
   it("adds the entry tag for a single-type or a documentId path", () => {
     expect(cacheTagsFor("/homepage", {})).toEqual(["strapi", "homepage"])
     expect(cacheTagsFor("/libraries/abc123", {})).toEqual([
