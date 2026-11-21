@@ -3,6 +3,19 @@ import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
 
 import { StrapiMcpClient } from "./mcp-client"
+import {
+  dictionaryLocales,
+  resolveTargetLocales,
+  skippedLocalesMessage,
+  TRANSLATION_LOCALES,
+} from "./translation-locales"
+
+const USAGE = `Usage: npx tsx scripts/translate-site-content.ts [--locale <code>[,<code>]] [--apply]
+
+Translates English site copy in the local CMS from scripts/i18n/site-translations.json.
+Previews by default; --apply writes. --locale limits the run (${TRANSLATION_LOCALES.join(", ")});
+without it, locales with no dictionary entries are skipped. Run from apps/strapi.`
+const DICTIONARY = "i18n/site-translations.json"
 
 const TYPES = [
   "homepage",
@@ -66,6 +79,23 @@ function translate(
 }
 
 async function main() {
+  const argv = process.argv.slice(2)
+  if (argv.includes("--help")) {
+    console.log(USAGE)
+
+    return
+  }
+  // Choose locales before connecting, so a missing dictionary stops early.
+  const dictionary = JSON.parse(
+    await readFile(path.join(__dirname, DICTIONARY), "utf8")
+  ) as TranslationMap
+  const { locales, skipped } = resolveTargetLocales(
+    argv,
+    dictionaryLocales(dictionary),
+    DICTIONARY
+  )
+  const skipNotice = skippedLocalesMessage(skipped, DICTIONARY)
+  if (skipNotice) console.warn(skipNotice)
   try {
     process.loadEnvFile(".env")
   } catch {
@@ -74,13 +104,10 @@ async function main() {
   const url = process.env.STRAPI_URL || "http://127.0.0.1:1337"
   if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(url))
     throw new Error("This script only writes to the local CMS")
-  const apply = process.argv.includes("--apply")
+  const apply = argv.includes("--apply")
   const client = new StrapiMcpClient(process.env.STRAPI_MCP_TOKEN, `${url}/mcp`)
   await client.initialize()
   const tools = await client.listTools()
-  const dictionary = JSON.parse(
-    await readFile(path.join(__dirname, "i18n/site-translations.json"), "utf8")
-  ) as TranslationMap
   const output = path.resolve(__dirname, "../../../.scratch/i18n-audit")
   await mkdir(output, { recursive: true })
   const plan: any[] = [],
@@ -113,7 +140,7 @@ async function main() {
         ].filter(Boolean)
       : await client.listAll<any>(type, { locale: "en", status: "published" })
     before.push({ type, locale: "en", data: source })
-    for (const locale of ["cs", "fr"]) {
+    for (const locale of locales) {
       const writeTool = `${SINGLES.has(type) ? "write" : "update"}_${type}`
       const allowed = tools.find((t) => t.name === writeTool)?.inputSchema
         .properties?.locale?.enum
@@ -185,6 +212,8 @@ async function main() {
       JSON.stringify(
         {
           apply,
+          locales,
+          skippedLocales: skipped,
           planned: plan.length,
           blocked: [
             ...new Map(
@@ -242,6 +271,8 @@ async function main() {
   console.log(
     JSON.stringify({
       apply,
+      locales,
+      skippedLocales: skipped,
       planned: plan.length,
       permitted: plan.filter(
         (p) => !blocked.some((b) => b.type === p.type && b.locale === p.locale)

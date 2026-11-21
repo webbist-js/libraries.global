@@ -5,6 +5,8 @@ import { cleanup, render, screen, fireEvent, waitFor } from "@/test/render"
 
 import { ArticleReaderActions } from "./ArticleReaderActions"
 
+const routerPush = vi.hoisted(() => vi.fn())
+
 vi.mock("@iconify/react", () => ({ Icon: () => null }))
 vi.mock("@/lib/access-client", () => ({
   useHydratedSession: () => ({
@@ -19,6 +21,7 @@ vi.mock("@/lib/access-client", () => ({
 }))
 vi.mock("@/lib/navigation", () => ({
   routing: { locales: ["en", "fr", "cs"] },
+  useRouter: () => ({ push: routerPush }),
   Link: ({ href, children, ...props }: any) => (
     <a href={href} {...props}>
       {children}
@@ -31,6 +34,7 @@ vi.mock(
 )
 afterEach(() => {
   cleanup()
+  routerPush.mockClear()
   vi.unstubAllGlobals()
 })
 it("keeps published variants tied to the displayed language and chooses a configured missing translation", async () => {
@@ -54,15 +58,16 @@ it("keeps published variants tied to the displayed language and chooses a config
       availableLocales={["cs", "en", "de"]}
     />
   )
-  expect(
-    screen.getByRole("link", { name: "Read in English" }).getAttribute("href")
-  ).toBe("/knowledge/practice/guide")
+  fireEvent.click(screen.getByRole("combobox", { name: "Read in Czech" }))
+  expect(screen.getByRole("option", { name: "English" })).toBeTruthy()
+  expect(screen.queryByRole("option", { name: "German" })).toBeNull()
+  fireEvent.click(screen.getByRole("option", { name: "English" }))
+  expect(routerPush).toHaveBeenCalledWith("/knowledge/practice/guide")
   expect(
     screen
       .getByRole("link", { name: "Suggest an improvement" })
       .getAttribute("href")
   ).toContain("mode=report&locale=cs")
-  expect(screen.queryByRole("link", { name: "Read in German" })).toBeNull()
   fireEvent.click(screen.getByRole("button", { name: "Add a translation" }))
   fireEvent.keyDown(
     await screen.findByLabelText("Choose a translation language"),
