@@ -39,6 +39,9 @@ export { atlasNetworkCatalogue } from "./atlas-network-catalogue"
 const hash = (value: unknown) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex")
 
+const permitsServiceReach = (allowance: ReachAllowance) =>
+  allowance.kind === "api" || allowance.kind === "unlimited"
+
 /** All selection and cache identities come from current canonical CMS facts. */
 export async function requestAtlasNetworkReach(
   strapi: Core.Strapi,
@@ -46,7 +49,7 @@ export async function requestAtlasNetworkReach(
   userKey: string,
   allowance: ReachAllowance
 ) {
-  if (allowance.kind !== "api" && allowance.kind !== "unlimited")
+  if (!permitsServiceReach(allowance))
     throw new RangeError("Service Reach needs an API account allowance")
   // One standard envelope for everyone: the doubled Team capacity is gone.
   const capacity: AtlasReachCapacity = 1
