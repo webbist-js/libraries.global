@@ -20,6 +20,7 @@ vi.mock("@/lib/navigation", () => ({
   Link: ({ href, children }: { href: string; children: ReactNode }) => (
     <a href={href}>{children}</a>
   ),
+  useRouter: () => ({ push: vi.fn() }),
 }))
 vi.mock(
   "@/app/[locale]/profile/[username]/_components/ProfileFollowButton",

@@ -75,7 +75,7 @@ export async function GET(
         headers: {
           ...headers,
           "Content-Language": publication.locale,
-          Link: `<${canonicalUrl}>; rel="canonical", <${publicCanonicalUrl("/llms.txt")}>; rel="describedby"`,
+          Link: `<${canonicalUrl}>; rel="canonical", <${publicCanonicalUrl("/knowledge/llms.txt")}>; rel="describedby"`,
         },
       }
     )
