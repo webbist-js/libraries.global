@@ -14,6 +14,8 @@ vi.mock("@/lib/strapi-api/content/server", () => ({
 }))
 
 import { GET as markdown } from "@/app/[locale]/(dashboard)/knowledge/[section]/[slug]/markdown/route"
+import { GET as developersLlms } from "@/app/developers/llms.txt/route"
+import { GET as knowledgeLlms } from "@/app/knowledge/llms.txt/route"
 import { GET as llms } from "@/app/llms.txt/route"
 
 const article = {
@@ -66,7 +68,7 @@ describe("published Knowledge Markdown route", () => {
       '<https://libraries.global/knowledge/data-api/guide>; rel="canonical"'
     )
     expect(response.headers.get("link")).toContain(
-      '<https://libraries.global/llms.txt>; rel="describedby"'
+      '<https://libraries.global/knowledge/llms.txt>; rel="describedby"'
     )
     expect(await response.text()).toContain("```js\nconst value = 1;\n```")
   })
@@ -91,7 +93,16 @@ describe("published Knowledge Markdown route", () => {
 })
 
 describe("generated llms.txt", () => {
-  it("includes newly published articles without a source-file update", async () => {
+  it("serves the short root and developer guides without a catalogue read", async () => {
+    expect((await llms()).status).toBe(200)
+    expect((await llms()).headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    )
+    expect((await developersLlms()).status).toBe(200)
+    expect(catalogue).not.toHaveBeenCalled()
+  })
+
+  it("includes newly published articles in the Knowledge index", async () => {
     catalogue.mockResolvedValue([
       {
         ...article,
@@ -100,7 +111,7 @@ describe("generated llms.txt", () => {
         summary: "API guide",
       },
     ])
-    const response = await llms()
+    const response = await knowledgeLlms()
     expect(response.status).toBe(200)
     expect(response.headers.get("content-type")).toBe(
       "text/plain; charset=utf-8"
@@ -112,7 +123,7 @@ describe("generated llms.txt", () => {
 
   it("does not serve a successful partial guide when the catalogue is unavailable", async () => {
     catalogue.mockRejectedValue(new Error("Incomplete catalogue"))
-    const response = await llms()
+    const response = await knowledgeLlms()
     expect(response.status).toBe(503)
     expect(await response.text()).not.toContain("# Libraries Global")
   })
