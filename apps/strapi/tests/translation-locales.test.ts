@@ -12,7 +12,7 @@ const DICTIONARY = "i18n/site-translations.json"
 
 describe("CMS translation locales", () => {
   it("targets every supported locale except English", () => {
-    expect(TRANSLATION_LOCALES).toEqual(["cs", "es", "fr", "ja"])
+    expect(TRANSLATION_LOCALES).toEqual(["cs", "es", "fr", "ja", "zh-TW"])
   })
 
   it("reads repeated and comma-separated --locale arguments", () => {
@@ -39,9 +39,12 @@ describe("CMS translation locales", () => {
 
   it("skips locales without a dictionary when none were requested", () => {
     const result = resolveTargetLocales([], new Set(["cs", "fr"]), DICTIONARY)
-    expect(result).toEqual({ locales: ["cs", "fr"], skipped: ["es", "ja"] })
+    expect(result).toEqual({
+      locales: ["cs", "fr"],
+      skipped: ["es", "ja", "zh-TW"],
+    })
     expect(skippedLocalesMessage(result.skipped, DICTIONARY)).toMatch(
-      /^Skipping es, ja: no translations in i18n\/site-translations\.json/
+      /^Skipping es, ja, zh-TW: no translations in i18n\/site-translations\.json/
     )
     expect(skippedLocalesMessage([], DICTIONARY)).toBeUndefined()
   })
